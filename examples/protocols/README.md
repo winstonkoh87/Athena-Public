@@ -1,79 +1,134 @@
 # Athena Protocols
 
 > [!NOTE]
-> **These are reference implementations from Winston's personal system.**
+> **These are reference implementations from a production AI-agent system (1,079+ sessions).**
 >
 > Use them to understand the *pattern* — not as prescriptions. Your protocols will reflect your own context, domain, and decision history.
 >
 > See [Creating Your Own Protocols](#creating-new-protocols) to build yours.
 
-Protocols are reusable thinking patterns that standardize how Athena reasons about specific domains.
+Protocols are reusable thinking patterns that standardize how an AI agent reasons about specific domains. **200 protocols across 17 categories.**
 
 ## Featured Protocols
 
 | ID | Name | Category | Purpose |
 |----|------|----------|---------|
-| **77** | [Adaptive Latency](examples/protocols/architecture/77-adaptive-latency-architecture.md) | Architecture | Scale reasoning depth to query complexity |
-| **96** | [Latency Indicator](examples/protocols/architecture/96-latency-indicator.md) | Architecture | Append [Λ+XX] to show cognitive effort |
-| **98** | [Strategic Depth Theory](examples/protocols/architecture/98-depth-vs-width-theory.md) | Architecture | When to go deep vs. wide |
-| **130** | [Vibe Coding](examples/protocols/workflow/130-vibe-coding.md) | Workflow | Iterative UI development by "feel" |
-| **133** | [Query Archetype Routing](examples/protocols/architecture/133-query-archetype-routing.md) | Architecture | Route queries to optimal processing paths |
-| **158** | [Entity Lookup First](examples/protocols/architecture/158-entity-lookup-before-analysis.md) | Architecture | Always lookup entities before analyzing |
-| **159** | [Verification Before Claim](examples/protocols/architecture/159-verification-before-claim.md) | Research | Verify facts before stating them |
-| **168** | [Context-Driven Development](examples/protocols/architecture/168-context-driven-development.md) | Engineering | Let context guide implementation |
-| **200** | [Feature Context Persistence](examples/protocols/architecture/200-feature-context-persistence.md) | Architecture | Track features across sessions |
-| **202** | [Recovery Patterns](examples/protocols/architecture/202-recovery-patterns.md) | Architecture | Graceful degradation strategies |
-| **408** | [Autonomous Contribution Engine](examples/protocols/workflow/408-autonomous-contribution-engine.md) | Workflow | Transform user insights into contributions |
+| **77** | Adaptive Latency | Architecture | Scale reasoning depth to query complexity |
+| **96** | Latency Indicator | Architecture | Append [Λ+XX] to show cognitive effort |
+| **130** | Vibe Coding | Workflow | Iterative UI development by "feel" |
+| **133** | Query Archetype Routing | Architecture | Route queries to optimal processing paths |
+| **158** | Entity Lookup First | Architecture | Always lookup entities before analyzing |
+| **159** | Verification Before Claim | Architecture | Verify facts before stating them |
+| **168** | Context-Driven Development | Engineering | Let context guide implementation |
+| **200** | Feature Context Persistence | Architecture | Track features across sessions |
+| **202** | Recovery Patterns | Architecture | Graceful degradation strategies |
+| **240** | Context Engineering | Engineering | Manage context window efficiently |
+| **408** | Autonomous Contribution Engine | Workflow | Transform user insights into contributions |
+| **416** | Agent Swarm | Workflow | Parallel multi-agent orchestration |
 
 ## Categories
 
-### 🏗️ Architecture (23 protocols)
+### 🏗️ Architecture (56 protocols)
 
-System design, token management, context handling.
+System design, token management, context handling, state machines.
 
 [Browse Architecture Protocols →](architecture/)
 
-### ⚙️ Engineering (16 protocols)  
+### ⚙️ Engineering (21 protocols)
 
-Code patterns, UI development, implementation standards.
+Code patterns, TDD, git workflows, UI development, infrastructure.
 
 [Browse Engineering Protocols →](engineering/)
 
-### 🧭 Decision (5 protocols)
+### 🧭 Decision (30 protocols)
 
-Decision frameworks, reasoning patterns, strategic analysis.
+Decision frameworks, reasoning patterns, multi-criteria analysis, risk assessment.
 
 [Browse Decision Protocols →](decision/)
 
-### 🔬 Research (3 protocols)
+### 📋 Workflow (22 protocols)
 
-Deep investigation, fact-checking, source validation.
-
-[Browse Research Protocols →](research/)
-
-### 🎯 Strategy (3 protocols)
-
-Business strategy, competitive positioning, market entry.
-
-[Browse Strategy Protocols →](strategy/)
-
-### ✅ Verification (2 protocols)
-
-Testing, validation, quality assurance patterns.
-
-[Browse Verification Protocols →](verification/)
-
-### 📋 Workflow (10 protocols)
-
-Session management, automation, process optimization.
+Session management, automation, agentic loops, multi-agent coordination.
 
 [Browse Workflow Protocols →](workflow/)
 
-### 🧠 Meta (1 protocol)
+### 🧠 Meta (12 protocols)
 
-Protocols about protocols.
+Protocols about protocols — self-improvement, auditing, optimization.
 
 [Browse Meta Protocols →](meta/)
+
+### 🔍 Pattern Detection (10 protocols)
+
+Analytical heuristics — BS detection, form-substance gaps, depth analysis.
+
+[Browse Pattern Detection Protocols →](pattern-detection/)
+
+### 🎯 Strategy (9 protocols)
+
+Competitive positioning, min-max optimization, ecosystem analysis.
+
+[Browse Strategy Protocols →](strategy/)
+
+### 💼 Business (8 protocols)
+
+Unit economics, flywheel architecture, first-principles analysis.
+
+[Browse Business Protocols →](business/)
+
+### 🛡️ Safety (8 protocols)
+
+Risk management, circuit breakers, governance, recovery architecture.
+
+[Browse Safety Protocols →](safety/)
+
+### 💻 Coding (5 protocols)
+
+Spec-driven development, semantic search standards, structured decoding.
+
+[Browse Coding Protocols →](coding/)
+
+### 🔬 Research (5 protocols)
+
+Deep investigation, cyborg methodology, agentic absorption.
+
+[Browse Research Protocols →](research/)
+
+### 🧪 Verification (3 protocols)
+
+Testing, claim atomization, cross-model validation.
+
+[Browse Verification Protocols →](verification/)
+
+### 🧩 Reasoning (3 protocols)
+
+Deep thinking, re-reading strategies, senior-principal review.
+
+[Browse Reasoning Protocols →](reasoning/)
+
+### 💾 Memory (3 protocols)
+
+Semantic compression, graph memory architecture, compaction.
+
+[Browse Memory Protocols →](memory/)
+
+### 🎨 Design (2 protocols)
+
+UI/UX patterns — liquid glass physics, mockup flow.
+
+[Browse Design Protocols →](design/)
+
+### 🎭 Creation (2 protocols)
+
+Creative methodology — metaphorical design, latent cluster activation.
+
+[Browse Creation Protocols →](creation/)
+
+### ✅ Quality (1 protocol)
+
+Code review standards — red team review.
+
+[Browse Quality Protocols →](quality/)
 
 ## Protocol Format
 
@@ -104,6 +159,6 @@ status: active
 
 ## Creating New Protocols
 
-Use the [protocol template](examples/templates/protocol_template.md) to create new protocols.
+Use the [protocol template](../templates/protocol_template.md) to create new protocols.
 
 Assign the next available ID and add an entry to this index.

@@ -1,6 +1,6 @@
 ---
 created: 2026-02-12
-last_updated: 2026-02-12
+last_updated: 2026-02-15
 tags: #references #apa #academic #citations
 ---
 
@@ -80,7 +80,51 @@ Yao, S., Yu, D., Zhao, J., Shafran, I., Griffiths, T. L., Cao, Y., & Narasimhan,
 
 ---
 
+## Agent Architecture & Tool Use
+
+Schick, T., Dwivedi-Yu, J., Dessì, R., Raileanu, R., Lomeli, M., Hambro, E., ... & Scialom, T. (2024). Toolformer: Language models can teach themselves to use tools. *Advances in Neural Information Processing Systems, 36*. <https://arxiv.org/abs/2302.04761>
+
+Shinn, N., Cassano, F., Gopinath, A., Narasimhan, K., & Yao, S. (2024). Reflexion: Language agents with verbal reinforcement learning. *Advances in Neural Information Processing Systems, 36*. <https://arxiv.org/abs/2303.11366>
+
+Wang, L., Ma, C., Feng, X., Zhang, Z., Yang, H., Zhang, J., ... & Wang, J. (2024). A survey on large language model based autonomous agents. *Frontiers of Computer Science, 18*(6), 186345. <https://arxiv.org/abs/2308.11432>
+
+Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K., & Cao, Y. (2023). ReAct: Synergizing reasoning and acting in language models. *International Conference on Learning Representations (ICLR)*. <https://arxiv.org/abs/2210.03629>
+
+---
+
+## Knowledge Graphs & GraphRAG
+
+Edge, D., Trinh, H., Cheng, N., Bradley, J., Chao, A., Mody, A., ... & Larson, J. (2024). From local to global: A graph RAG approach to query-focused summarization. *arXiv preprint arXiv:2404.16130*. <https://arxiv.org/abs/2404.16130>
+
+Traag, V. A., Waltman, L., & van Eck, N. J. (2019). From Louvain to Leiden: Guaranteeing well-connected communities. *Scientific Reports, 9*(1), 5233. <https://doi.org/10.1038/s41598-019-41695-z>
+
+Pan, S., Luo, L., Wang, Y., Chen, C., Wang, J., & Wu, X. (2024). Unifying large language models and knowledge graphs: A roadmap. *IEEE Transactions on Knowledge and Data Engineering, 36*(7), 3580–3599. <https://arxiv.org/abs/2306.08302>
+
+---
+
+## Retrieval & Search
+
+Cormack, G. V., Clarke, C. L. A., & Büttcher, S. (2009). Reciprocal rank fusion outperforms Condorcet and individual rank learning methods. *Proceedings of the 32nd International ACM SIGIR Conference on Research and Development in Information Retrieval*, 758–759. <https://doi.org/10.1145/1571941.1572114>
+
+Nogueira, R., & Cho, K. (2020). Passage re-ranking with BERT. *arXiv preprint arXiv:1901.04085*. <https://arxiv.org/abs/1901.04085>
+
+Reimers, N., & Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. *Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP)*. <https://arxiv.org/abs/1908.10084>
+
+---
+
+## Prompt Engineering & Context Window Management
+
+Wang, X., Wei, J., Schuurmans, D., Le, Q., Chi, E., Narang, S., ... & Zhou, D. (2023). Self-consistency improves chain of thought reasoning in language models. *International Conference on Learning Representations (ICLR)*. <https://arxiv.org/abs/2203.11171>
+
+Xu, F. F., Alon, U., Neubig, G., & Hellendoorn, V. J. (2022). A systematic evaluation of large language models of code. *Proceedings of the 6th ACM SIGPLAN International Symposium on Machine Programming*, 1–10. <https://arxiv.org/abs/2202.13169>
+
+Zhou, D., Schärli, N., Hou, L., Wei, J., Scales, N., Wang, X., ... & Chi, E. (2023). Least-to-most prompting enables complex reasoning in large language models. *International Conference on Learning Representations (ICLR)*. <https://arxiv.org/abs/2205.10625>
+
+---
+
 ## Business Strategy & Productivity
+
+Dalio, R. (2017). *Principles: Life and work*. Simon & Schuster.
 
 Graham, P. (2009). *Maker's schedule, manager's schedule*. <http://www.paulgraham.com/makersschedule.html>
 
@@ -98,6 +142,8 @@ Taleb, N. N. (2012). *Antifragile: Things that gain from disorder*. Random House
 
 ## Epistemology & Frameworks
 
+Frankfurt, H. G. (2005). *On bullshit*. Princeton University Press. [Academic basis for BS-detection heuristics]
+
 Rumsfeld, D. H. (2002, February 12). DoD news briefing — Secretary Rumsfeld and Gen. Myers [Press briefing transcript]. U.S. Department of Defense. [Origin of the "known unknowns" framework, widely attributed]
 
 > **Note**: The "known unknowns" matrix predates Rumsfeld's press conference. The conceptual framework traces to the Johari Window (Luft & Ingham, 1955) and NASA risk management literature from the 1990s. Rumsfeld popularized the terminology.
@@ -111,6 +157,8 @@ Inline citations follow APA format: `(Author, Year)`. For example:
 - *"The Johari Window divides knowledge into four quadrants"* → (Luft & Ingham, 1955)
 - *"Anchoring bias — first number sets the reference point"* → (Tversky & Kahneman, 1974)
 - *"Bounded rationality: execute 'Good Enough' immediately"* → (Simon, 1956)
+- *"Graph RAG: from local to global summarization"* → (Edge et al., 2024)
+- *"Cross-encoder reranking for retrieval quality"* → (Nogueira & Cho, 2020)
 
 When a concept is referenced frequently across multiple documents, the first instance in each document includes the full inline citation. Subsequent mentions within the same document use the short form.
 
@@ -118,4 +166,4 @@ For AI/ML papers, arXiv links are provided alongside formal publication details 
 
 ---
 
-*Last updated: 12 February 2026*
+*Last updated: 15 February 2026*

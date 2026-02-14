@@ -6,7 +6,7 @@
 
 ![GitHub Stars](https://img.shields.io/github/stars/winstonkoh87/Athena-Public?style=social)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Protocols](https://img.shields.io/badge/Protocols-270+-blue)
+![Protocols](https://img.shields.io/badge/Protocols-200+-blue)
 ![Sessions](https://img.shields.io/badge/Sessions-1,079+-green)
 ![Reddit Views](https://img.shields.io/badge/Reddit_Views-700k+-FF4500?logo=reddit&logoColor=white)
 ![Reddit Shares](https://img.shields.io/badge/Shares-5500+-00B2FF?logo=reddit&logoColor=white)
@@ -135,7 +135,7 @@ Athena is a **Hard Drive**.
 | Feature | Description |
 |---------|-------------|
 | 🧠 **Memory That Persists** | Your agent remembers context across sessions, even after IDE restarts |
-| 📚 **270+ Protocols** | Decision frameworks across 23 categories — from architecture to strategy |
+| 📚 **200+ Protocols** | Decision frameworks across 17 categories — from architecture to strategy |
 | 🔄 **Platform Independence** | Your data lives in Markdown files you own — take it anywhere |
 | 🔌 **MCP Server** | 9 standardized tools via [Model Context Protocol](https://modelcontextprotocol.io/) — works with any MCP client |
 | 🛡️ **Permissioning** | 4 capability levels + 3 sensitivity tiers + Secret Mode for demo/external sharing |
@@ -429,7 +429,7 @@ graph TD
 
 | Metric | Private Repo | This Public Repo |
 |--------|--------------|-------------------|
-| **Protocols** | 330 unique | 270 across 23 categories |
+| **Protocols** | 330 unique | 200 across 17 categories |
 | **Python Scripts** | 222 | 118 reference examples |
 | **Case Studies** | 357 | — (private only) |
 | **Workflows** | 43 | 48 starter |
@@ -437,7 +437,7 @@ graph TD
 | **GraphRAG Communities** | 1,460 | — |
 | **Knowledge Graph** | 46MB + 78MB vectors | — |
 
-> **What's in this repo?** This is a **comprehensive reference implementation** — 270+ protocols, 118 scripts, 48 workflows, and templates drawn from 1,079+ production sessions. Think of it as a complete toolkit to build your own persistent AI system.
+> **What's in this repo?** This is a **comprehensive reference implementation** — 200+ protocols, 118 scripts, 48 workflows, and templates drawn from 1,079+ production sessions. Think of it as a complete toolkit to build your own persistent AI system.
 
 > *Pattern*: Every friction ➡️ Protocol. Every failure ➡️ Case Study.
 
@@ -471,7 +471,7 @@ graph TD
 |--------|---------|
 | **User-Driven RSI** | The system improves based on *your* feedback. Every friction you surface becomes a protocol. Every insight gets indexed. You shape the AI; the AI shapes how you think. |
 | **Portability** | Data lives locally (primary) and in the cloud. Not trapped in ChatGPT or Claude. It's mine — I can port it anywhere. |
-| **Principles** | 270+ protocols extracted from real decisions — stored principles I can reuse and refine. Like Ray Dalio's systematized learnings (Dalio, 2017), but for AI collaboration. |
+| **Principles** | 200+ protocols extracted from real decisions — stored principles I can reuse and refine. Like Ray Dalio's systematized learnings (Dalio, 2017), but for AI collaboration. |
 
 <details>
 <summary><strong>📊 Full Benchmarks & Case Studies</strong></summary>
@@ -820,7 +820,7 @@ Think of it like **Git, but for conversations**. Each session builds on the last
 | **Permissioning** | 4 capability levels + 3 sensitivity tiers + Secret Mode (demo/external) |
 | **Evaluator Gate** | 50-query regression suite: MRR@5 = 0.44, Hit@5 = 52% |
 | **Cross-encoder reranking** | Refines top results with `sentence-transformers` |
-| **Protocol library** | [270+ protocols across 23 categories](examples/protocols/) |
+| **Protocol library** | [200+ protocols across 17 categories](examples/protocols/) |
 
 ### Repository Structure
 
@@ -834,14 +834,14 @@ Athena-Public/
 ├── examples/
 │   ├── quickstart/       # Runnable demos
 │   ├── scripts/          # 118 automation scripts
-│   ├── protocols/        # 270+ decision frameworks across 23 categories
+│   ├── protocols/        # 200+ decision frameworks across 17 categories
 │   │   ├── architecture/ #   System design & patterns
 │   │   ├── business/     #   Business strategy & economics
 │   │   ├── coding/       #   Engineering practices
 │   │   ├── safety/       #   Risk management & governance
 │   │   ├── strategy/     #   Strategic frameworks
 │   │   ├── workflow/     #   Process automation
-│   │   └── ...           #   17 more categories
+│   │   └── ...           #   11 more categories
 │   ├── workflows/        # 48 slash commands
 │   └── templates/        # 36 starter templates
 ├── docs/                 # Deep documentation
@@ -890,7 +890,7 @@ See [.agent/workflows/](.agent/workflows/) for source files.
 
 ### February 2026
 
-- **v8.6.0** (Feb 15 2026): **Massive Content Expansion** — 270 protocols (was 75), 118 scripts (was 16), 48 workflows (was 14), 36 templates. 23 protocol categories. Repo audit for recruiter readiness. Content sanitization pass.
+- **v8.6.0** (Feb 15 2026): **Massive Content Expansion** — 200 protocols (was 75), 118 scripts (was 16), 48 workflows (was 14), 36 templates. 23 protocol categories. Repo audit for recruiter readiness. Content sanitization pass.
 - **v8.5.0** (Feb 12 2026): **Phase 1 Complete** — MCP Tool Server (9 tools, 2 resources), Permissioning Layer (4 levels + secret mode), Search MRR +105% (0.21→0.44), Evaluator Gate (50 queries). SDK v2.0.0.
 - **v8.3.1** (Feb 11 2026): **Viral Validation Release** — 654K+ Reddit views, 1,660+ upvotes, 5,300+ shares. #1 All-Time r/ChatGPT, #2 All-Time r/GeminiAI. Three-Phase Token Budget: robustness at `/start`+`/end`, Adaptive Latency in-between.
 - **v8.2.1** (Feb 9 2026): Metrics Sync — Fixed `batch_audit.py` automation, linked orphan files, reconciled tech debt, 8,079 tags indexed
