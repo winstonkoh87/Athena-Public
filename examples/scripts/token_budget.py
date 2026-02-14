@@ -26,7 +26,7 @@ ON_DEMAND_FILES = [
     (".agent/skills/SKILL_INDEX.md", "Protocol/skill request"),
     # User Profile Modules (split from monolithic User_Profile.md)
     (".context/profile/User_Profile_Core.md", "Bio, typology, 'who am I'"),
-    (".context/profile/Psychology_L1L5.md", "L1-L5, trauma, therapy, fantasy"),
+    (".context/profile/Psychology_L1L5.md", "L1-L5, behavioral patterns, decision frameworks"),
     (".context/profile/Operating_Principles.md", "Decision frameworks, strategy"),
     (".context/profile/Business_Frameworks.md", "Marketing, SEO, SWOT, pricing"),
     (".context/profile/Session_Observations.md", "Calibration references, cases"),

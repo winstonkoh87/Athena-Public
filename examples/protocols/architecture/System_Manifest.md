@@ -801,7 +801,7 @@ We are migrating from a "Flat Script" model to a "Package" model.
 │   │   ├── case_studies/
 │   │   │   ├── BIZ-002-pitch-deck-principles.md
 │   │   │   ├── BIZ-DMA-002-digital-marketing-services-exploration.md
-│   │   │   ├── CS-004-sexual-economics.md
+│   │   │   ├── CS-004-behavioral-economics.md
 │   │   │   ├── CS-005-shower-probability.md
 │   │   │   ├── CS-006-agency-economy.md
 │   │   │   ├── CS-007-bukit-batok-solipsism.md
@@ -845,7 +845,7 @@ We are migrating from a "Flat Script" model to a "Package" model.
 │   │   │   ├── CS-064-analysis-thirteen-xyz-audit.md
 │   │   │   ├── CS-065-analysis-vdestiny-market-gap.md
 │   │   │   ├── CS-066-biz-dma-001-digital-marketing-folder.md
-│   │   │   ├── CS-067-12-20-mindfuck-seed.md
+│   │   │   ├── CS-067-12-20-pattern-seed.md
 │   │   │   ├── CS-068-12-21-astroturfing-humblebrag.md
 │   │   │   ├── CS-069-antipatterns-reddit.md
 │   │   │   ├── CS-070-apprenticeship-leverage.md
@@ -874,7 +874,7 @@ We are migrating from a "Flat Script" model to a "Package" model.
 │   │   │   ├── CS-093-influencer-sponsorship-ask.md
 │   │   │   ├── CS-094-jj-sorry-babe-trap.md
 │   │   │   ├── CS-095-joya-onsen-hijack.md
-│   │   │   ├── CS-096-linkedin-shitali.md
+│   │   │   ├── CS-096-linkedin-outreach.md
 │   │   │   ├── CS-097-paradigm-math-productized-service.md
 │   │   │   ├── CS-098-precommitment-asymmetric-downside.md
 │   │   │   ├── CS-099-prison-correspondence-yeo-hoe-soon.md
@@ -901,7 +901,7 @@ We are migrating from a "Flat Script" model to a "Package" model.
 │   │   │   ├── CS-118-tutor-distribution-trap.md
 │   │   │   ├── CS-119-vdestiny-business-model.md
 │   │   │   ├── CS-120-vibe-coding-zero-cost-stack.md
-│   │   │   ├── CS-121-virgin-swimmer.md
+│   │   │   ├── CS-121-first-mover-analysis.md
 │   │   │   ├── CS-122-web-design-2026.md
 │   │   │   ├── CS-123-wordplay-value-collapse.md
 │   │   │   ├── CS-124-idea-carousell-portfolio-service.md
@@ -1390,7 +1390,7 @@ We are migrating from a "Flat Script" model to a "Package" model.
 │   │   ├── integration_protocol.md
 │   │   ├── result.json
 │   │   ├── scenario_processing_framework.md
-│   │   └── t1_t2_seduction_protocol.md
+│   │   └── t1_t2_engagement_protocol.md
 │   └── strategies/
 │       └── Strategy_SEO_Keywords.md
 ├── docs/

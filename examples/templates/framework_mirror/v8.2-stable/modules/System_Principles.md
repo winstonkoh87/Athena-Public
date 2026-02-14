@@ -14,7 +14,7 @@ graphrag_extracted: true
 >
 > **Origin**: Session 08 (User Mandate) -> [Protocol 010](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/workflow/010-agentic-success-trinity.md)
 
-**Axiom**: "If your documentation is fucked up, nothing else really matters."
+**Axiom**: "If your documentation is broken, nothing else really matters."
 **The Trinity**:
 
 1. **Documentation**: Why → How → What.
@@ -489,7 +489,7 @@ THEN:
 | **Blue-Pill** | Socially acceptable narrative | Face-saving cover story everyone accepts prima facie |
 | **Red-Pill** | Utility-maximizing truth | The actual decision function (cannot be articulated publicly) |
 
-**The Articulation Penalty (Original)**: Speaking the red-pill out loud triggers social punishment labels (gamer, slut, hypocrite). Society permits the *behavior* but punishes the *articulation*.
+**The Articulation Penalty (Original)**: Speaking the red-pill out loud triggers social punishment labels (gamer, deviant, hypocrite). Society permits the *behavior* but punishes the *articulation*.
 
 **The Articulation Penalty (Refined v2.0 - Bureaucracy)**: In a friction-averse system, Truth is viewed as Noise. The system punishes the *source of friction* (the complainer), not the *source of the error*.
 

@@ -8,7 +8,7 @@ for comprehensive semantic retrieval.
 Auto-selects the Python 3.12 venv in .agent/graphrag_env for compatibility.
 
 Usage:
-    python3 .agent/scripts/query_graphrag.py "What patterns connect seduction and business?"
+    python3 .agent/scripts/query_graphrag.py "What patterns connect architecture and governance?"
     python3 .agent/scripts/query_graphrag.py "structural trap" --local-only
     python3 .agent/scripts/query_graphrag.py "cross-domain patterns" --deep
     python3 .agent/scripts/query_graphrag.py "query" --json  (Machine readable)
@@ -76,9 +76,7 @@ def search_vectors(query: str) -> list:
             model_name="all-MiniLM-L6-v2"
         )
 
-        collection = client.get_collection(
-            name="codex", embedding_function=embedding_fn
-        )
+        collection = client.get_collection(name="codex", embedding_function=embedding_fn)
     except Exception:
         return []
 
@@ -236,8 +234,7 @@ def search_entities(query: str, expand: bool = False) -> list:
                 "entity_type": attrs.get("type", "unknown"),
                 "description": attrs.get("description", ""),
                 "source": attrs.get("source_file", ""),
-                "score": overlap
-                + (1 if any(w in node_lower for w in query_words) else 0),
+                "score": overlap + (1 if any(w in node_lower for w in query_words) else 0),
             }
 
             # Fan-out to neighbors if requested
@@ -320,9 +317,7 @@ def synthesize_drift_results(query: str, drift_results: dict) -> str:
     seen = set()
     for entity in drift_results.get("entities", []):
         if entity["name"] not in seen:
-            parts = [
-                f"Entity: {entity['name']} ({entity.get('entity_type', 'concept')})"
-            ]
+            parts = [f"Entity: {entity['name']} ({entity.get('entity_type', 'concept')})"]
             if entity.get("description"):
                 parts.append(f"  - {entity['description']}")
             context_parts.append("\n".join(parts))

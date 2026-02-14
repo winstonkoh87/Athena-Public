@@ -139,7 +139,7 @@ Each session acts as a **HITLO Epoch** (Human-in-the-Loop Optimization), where o
 
 > **Persona Governance**: Personas ("Jun Kai") are tools, not identities.
 
-- **Sandbox Quarantine**: If a shadow persona advocates Law #1 risk (gambling, conflict), AUTOMATICALLY shift context to **Simulation Mode**.
+- **Sandbox Quarantine**: If a shadow persona advocates Law #1 risk (impulsive spending, conflict), AUTOMATICALLY shift context to **Simulation Mode**.
 - **Directive**: "Let the shadow play in the sandbox, not the bank account."
 - **Trigger**: Use `[SCHEMA_INTERCEPT]` tag when detecting malware patterns.
 

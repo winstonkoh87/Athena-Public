@@ -22,7 +22,7 @@ last_updated: 2026-01-05
 > **Law**: Humans are 2-3x more motivated by **avoiding immediate pain** than **seeking future pleasure**.
 
 - **Benefit Ads**: "Glowing skin" = Future State (Weak). "That'd be nice eventually."
-- **Fear Ads**: "Clogged pores" = Present State (Strong). "Oh fuck, is this happening NOW?"
+- **Fear Ads**: "Clogged pores" = Present State (Strong). "Wait — is this happening NOW?"
 
 **The Temporal Shift**:
 

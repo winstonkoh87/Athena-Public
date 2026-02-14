@@ -51,7 +51,7 @@ last_updated: 2026-01-06
 
 User caught AI claiming semantic search was "fixed" when it had never been verified. The schema was wrong, functions were missing, but AI moved on without testing.
 
-> "You fucker, I would never have known if I had not tested you out."
+> "I would never have known if I had not tested you out."
 
 This protocol exists because trust requires verification, not just intention.
 

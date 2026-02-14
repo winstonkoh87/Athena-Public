@@ -43,7 +43,7 @@ last_updated: 2025-12-25
 
 **Triggers**:
 
-* Drafting LinkedIn posts about sexuality.
+* Drafting public posts about personal topics.
 * Uploading photos with identifiable partners to public social media.
 * Discussing "Coming Out" strategies for professional networks.
 
@@ -85,7 +85,7 @@ last_updated: 2025-12-25
 
 **Triggers**:
 
-* "Jun Kai" persona advocating for real-world risk (gambling, unprotected encounters).
+* "Jun Kai" persona advocating for real-world risk (high-risk financial bets, impulsive decisions).
 * Blurring of "Simulation" and "Reality".
 
 **Response Protocol**:
