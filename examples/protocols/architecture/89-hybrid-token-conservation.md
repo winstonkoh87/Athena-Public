@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-16
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-16
+last_updated: 2026-01-05
+---
+
 # Protocol 89: Hybrid Token Conservation Architecture
 
 > **Source**: Extracted from [Wanderloots Video](https://www.youtube.com/watch?v=zAjJYkUnTEs) (2025-12-05)
@@ -10,7 +21,7 @@
 | Phase | Agent | Rationale |
 |-------|-------|-----------|
 | **PLAN** | Gemini (large context) | Best for research, web search, architecture. Doesn't burn Claude. |
-| **EXECUTE** | Claude Code (Opus 4.6) | Best for coding. Skip research (already done). |
+| **EXECUTE** | Claude Code (Opus 4.5) | Best for coding. Skip research (already done). |
 | **TEST** | External MCP (Testsprite) | Doesn't burn Gemini or Claude. Reusable test suites. |
 
 ---
@@ -69,7 +80,7 @@
 | Pattern | Our Current State | Action |
 |---------|-------------------|--------|
 | Gemini for planning | ✅ Default in Antigravity | None |
-| Claude for coding | ✅ Opus 4.6 available | None |
+| Claude for coding | ✅ Opus 4.5 available | None |
 | External testing MCP | ❌ Not integrated | **Candidate for future** |
 | `/init` self-documentation | ✅ `Core_Identity.md` | None |
 | Commit after each phase | ✅ `git_commit.py` | None |
@@ -79,8 +90,8 @@
 ## 5. References
 
 - [Video Source](https://www.youtube.com/watch?v=zAjJYkUnTEs)
-- [Protocol 77: Adaptive Latency]()
-- [Skill_MCP_Architecture]()
+- [**Core Mecanich**: Dynamic Context Loading (JIT)](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/architecture/77-adaptive-latency-architecture.md)
+- [Skill_MCP_Architecture](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/capabilities/Skill_MCP_Architecture.md)
 
 ---
 

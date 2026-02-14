@@ -1,7 +1,7 @@
 ---
 id: 350
 title: Humanize AI Writing
-author: mike8111, Street_Smart_Phone, Winston Koh
+author: mike8111, Street_Smart_Phone, [AUTHOR]
 version: 1.0.0
 category: content
 tags: [writing, anti-pattern, humanization, style]

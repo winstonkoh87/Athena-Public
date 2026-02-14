@@ -1,5 +1,10 @@
+---created: 2025-12-15
+last_updated: 2026-01-30
 ---
-description: Supabase-only reindex — sync memory to cloud without full refactor
+
+---description: Supabase-only reindex — sync memory to cloud without full refactor
+created: 2025-12-15
+last_updated: 2025-12-21
 ---
 
 # /reindex — Supabase Memory Sync
@@ -14,7 +19,7 @@ description: Supabase-only reindex — sync memory to cloud without full refacto
 // turbo
 
 ```bash
-# Reference: python3 scripts/supabase_sync.py
+python3 .agent/scripts/supabase_sync.py
 ```
 
 ---
@@ -31,7 +36,7 @@ description: Supabase-only reindex — sync memory to cloud without full refacto
 ## Verification
 
 ```bash
-# Reference: python3 scripts/supabase_search.py "test query" --limit 3
+python3 .agent/scripts/supabase_search.py "test query" --limit 3
 ```
 
 Should return relevant results from recently added content.
@@ -45,7 +50,7 @@ Should return relevant results from recently added content.
 >
 > 1. `python -m venv .agent/graphrag_env`
 > 2. `pip install -r .agent/requirements.txt`
-> 3. `# Reference: python3 scripts/build_graph.py`
+> 3. `python3 .agent/scripts/build_graph.py`
 
 ---
 

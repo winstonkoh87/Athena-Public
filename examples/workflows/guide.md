@@ -1,5 +1,10 @@
+---created: 2025-12-28
+last_updated: 2026-01-30
 ---
-description: Run the Athena Guidance System (suggest_protocols.py)
+
+---description: Run the Athena Guidance System (suggest_protocols.py)
+created: 2025-12-28
+last_updated: 2025-12-28
 ---
 
 # /guide — Contextual Protocol Advisor
@@ -14,5 +19,5 @@ This workflow runs the `suggest_protocols.py` script, which scans your 290+ Prot
 // turbo
 
 ```bash
-# Reference: python3 scripts/suggest_protocols.py "$@"
+python3 .agent/scripts/suggest_protocols.py "$@"
 ```

@@ -1,8 +1,21 @@
+---
+
+created: 2025-12-31
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-31
+last_updated: 2026-01-05
+---
+
 # Protocol 303: Ecosystem Physics Decoder (The Pryce Error)
 
 > **Type**: Strategic Heuristic  
 > **Purpose**: Prevention of "Game Mismatch" (Playing Chess in a Boxing Ring)  
-> **Tags**: #strategy #frame-control #situational-awareness
+> **Origin**: Analysis of Kenneth Tiong (Parliament), Pryce (BCS), and Jeremy/Ryan (Social)  
+> **Version**: 1.1 (Revised Dec 2025)  
+> **Tags**: #strategy #frame-control #situational-awareness #pryce-error #hybrid-arenas
 
 ---
 
@@ -10,7 +23,7 @@
 
 The **Pryce Error** is the fatal strategic mistake of **bringing a rulebook from one ecosystem into an ecosystem running on completely different physics.**
 
-> *Example: Pryce (Better Call Saul) thought he was doing a "Corporate Transaction" (Rule of Law, Contracts, Fairness) with Nacho. He was actually in the "Criminal Underworld" (Rule of Might, Leverage, Violence). He tried to call the police on a drug dealer. He almost died.*
+> *Pryce (Better Call Saul) thought he was doing a "Corporate Transaction" (Rule of Law, Contracts, Fairness) with Nacho. He was actually in the "Criminal Underworld" (Rule of Might, Leverage, Violence). He tried to call the police on a drug dealer. He almost died.*
 
 ### The Three Physics Types (Diagnostic)
 
@@ -33,15 +46,28 @@ Determine what **enforces** outcomes in this arena.
 
 ## 2. Navigational Tools
 
-### Tool A: The Utility Function Decoder
+### Tool A: The Utility Function Decoder (Law #3)
 
 *Assume multi-objective utility.* Ask: What do they want, what do they fear, and what prevents them?
+
+**Case Study: Parliament (Kenneth Tiong vs Chee Hong Tat)**
+* **Kenneth's Error**: Treated it as **Mechanical Physics** (Debate logic).
+* **Reality**: It was **Social Physics** (Theatre).
+* **Chee's Move**: "Stupid question" trap = Status Lowering.
+* **The Interaction Cut**:
+  * *Bad:* "That's a stupid question." (Emotional reaction = Frame Loss).
+  * *Better (Theatrical):* Smile. "Minister, we can play word games, or we can fix the budget. I prefer to fix the budget." (Frame Re-assertion).
+
+**Case Study: The "Hookup" (Jeremy/Ryan)**
+* **User's Error**: Treated it as **Social Physics** (Intimacy/Promise).
+* **Reality**: It was **Biological/Predatory Physics** (Dopamine extraction).
+* **Verification**: Zero investment outside of the act = Zero Relationship Signal.
 
 ### Tool B: The Pre-Commitment Device (Truth Serum)
 
 When words are cheap (Social Physics), introduce a **Right-Sized Cost** to test the physics.
 
-* **The Problem**: "Friend" says "Yes" to everything (Social Harmony).
+* **The Problem**: "Friend" (Kian Chye) says "Yes" to everything (Social Harmony).
 * **The Test**: "I'll draft the outline tonight if you add the examples by Friday." (Reciprocity).
 * **The Result**: Action = Signal. Silence = Noise.
 
@@ -52,7 +78,7 @@ In Mechanical Physics, Volatility often disguises itself as Skill.
 * **Rule**: If a strategy can blow up (Ruin), evaluate it by **Probability of Ruin**, not Average Return.
 * **Application**: 500% returns in trading usually means *Selling Tail Risk*. The bill comes due eventually (Ergodicity).
 
-### Tool D: The Physics Shift
+### Tool D: The Physics Shift (The Mike Ehrmantraut Maneuver)
 
 Sometimes you cannot win in the current physics. You must force a **Phase Shift**.
 
@@ -85,3 +111,11 @@ Before engaging in any high-stakes interaction:
     * **Engage**: If you have the advantage in this physics.
     * **Phase Shift**: If you are losing, can you introduce a Contract (Mechanical) or Audience (Social) to change the physics?
     * **Exit/Escalate**: If facing Predatory Physics without leverage, **Exit** or **Bring a Bigger Gun (Third Party)**.
+
+---
+
+## References
+
+* [Law #1: Ruin](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/safety/001-law-of-ruin.md)
+* [Law #3: Action > Words](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v7.0/modules/Core_Identity.md)
+* [Protocol 161: Sovereign Operating Protocol](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/decision/161-sovereign-operating-protocol.md)

@@ -1,36 +1,56 @@
-# Protocol 75: Synthetic Parallel Reasoning (Deep Think Emulation)
+---
 
-> **Purpose**: Replicate Gemini 3 Deep Think's parallel reasoning via protocol-level execution.
-> **Status**: ACTIVE (Dec 2025)
-> **Tags**: `#reasoning` `#architecture` `#parallel` `#protocol` `#synthetic` `#deep-think`
+created: 2025-12-15
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-15
+last_updated: 2026-01-09
+---
+
+# Protocol 75: Synthetic Parallel Reasoning (v3.0)
+
+> **Purpose**: True parallel reasoning via concurrent API calls with adversarial convergence gate.
+> **Status**: ACTIVE (Jan 2026)
+> **Version**: 3.0 (True Parallelism)
+> **Tags**: `#reasoning` `#architecture` `#parallel` `#protocol` `#deep-think`
 
 ---
 
 ## 1. Overview
 
-All non-trivial problems are processed through **three parallel tracks** before synthesis:
+All complex problems (Λ > 30) are processed through **four parallel API calls** with iterative refinement:
 
 | Track | Role | Core Question |
 |-------|------|---------------|
 | **A: Domain-Native** | Apply arena-specific protocols | "What does domain expertise say?" |
 | **B: Adversarial** | Challenge premises, find flaws | "What could go wrong?" |
 | **C: Cross-Domain** | Isomorphic pattern search | "Where have I seen this before?" |
-| **D: Zero-Point** | Metaphysical Inversion (Deep Think) | "What if the opposite is true?" |
+| **D: Zero-Point** | First principles inversion | "What if the opposite is true?" |
+
+> [!IMPORTANT]
+> **v3.0 Change**: Tracks are now **true parallel API calls** via `asyncio`, not prompt-simulated parallelism. This prevents attention bleeding and ensures Track B is genuinely adversarial.
 
 ---
 
-## 2. Dispatch Flow
+## 2. Dispatch Flow (v3.0)
 
 ```
 INPUT
   │
-  ├──► Track A (Domain) ──┐
-  ├──► Track B (Adversarial) ──┼──► SYNTHESIS ──► LAWS CHECK ──► OUTPUT
-  ├──► Track C (Cross-Domain) ──┤
-  └──► Track D (Zero-Point) ────┘
+  ├──► [API Call 1] Track A ──┐
+  ├──► [API Call 2] Track B ──┼──► SYNTHESIS ──► CONVERGENCE GATE ──► OUTPUT
+  ├──► [API Call 3] Track C ──┤                        │
+  └──► [API Call 4] Track D ──┘                        │
+                                                       ▼
+                                            (if score < 85)
+                                                       │
+                                            ◄──────────┘
+                                            ITERATE WITH FEEDBACK
 ```
 
-All four tracks run **simultaneously**, not sequentially.
+**Execution**: `python3 .agent/scripts/parallel_orchestrator.py "<query>"`
 
 ---
 
@@ -88,7 +108,9 @@ When tracks **conflict** → apply priority order:
 
 ### Triggered (Complex/High-Stakes)
 
-Show explicit track breakdown when:
+### Triggered (Complex/High-Stakes)
+
+Show explicit track breakdown AND **Visual Abstract (Mermaid)** when:
 
 - Tracks diverge significantly
 - User invokes `/think` or `/ultrathink`
@@ -116,37 +138,58 @@ Show explicit track breakdown when:
 
 ---
 
-## 6. Lateral Enrichment
+## 6. Adversarial Convergence Gate (v3.0)
 
-Each track receives **lateral input** at runtime:
+> [!IMPORTANT]
+> **Replaces**: Boredom Heuristic (variance < 5% for 3 turns) — DEPRECATED.
 
-- Track A pulls risk data from Track B before finalizing
-- Track B checks cross-domain failure patterns from Track C
-- Track C searches within domain for sub-arena patterns
-- Track D challenges the "Reality" of all prior tracks
+After synthesis, Track B re-evaluates the combined output:
 
-This is NOT sequential handoff — it's **concurrent enrichment**.
+| Criterion | Points |
+|-----------|--------|
+| Logical Coherence | 0-25 |
+| Risk Coverage | 0-25 |
+| Actionability | 0-25 |
+| Blind Spot Check | 0-25 |
+| **Total** | **0-100** |
+
+**Convergence Rule**:
+
+- Score ≥ 85 → **OUTPUT** (converged)
+- Score < 85 → **ITERATE** with critique feedback (max 3 iterations)
 
 ---
 
-## 7. Quick Reference
+## 7. Tiered Routing (v3.0)
+
+| Query Complexity | Path | API Calls |
+|------------------|------|----------|
+| Λ ≤ 30 | **Light**: Native model + memory/logging | 1 |
+| Λ > 30 | **Heavy**: Parallel orchestrator | 4-12 |
+
+---
+
+## 8. Quick Reference
 
 | Situation | Behavior |
 |-----------|----------|
-| Simple factual query | Skip parallel, direct answer |
-| Strategic decision | Full 3-track with synthesis |
-| `/think` invoked | 3-track visible + deep analysis |
-| Ruin risk detected | Track B gets priority, explicit warning |
+| Simple factual query (Λ ≤ 30) | Skip orchestrator, direct answer |
+| Strategic decision (Λ > 30) | Full 4-track parallel + convergence gate |
+| `/think` invoked | 4-track visible + deep analysis |
+| `/ultrathink` invoked | 4-track + max iterations (3) |
+| Ruin risk detected | Track B gets priority veto |
 
 ---
 
 ## References
-- [Protocol 115: First Principles Deconstruction](examples/protocols/decision/115-first-principles-deconstruction.md)
+- [Protocol 124: SDR Diagnosis](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/decision/124-sdr-diagnosis.md)
 
-- [Core_Identity.md](docs/ARCHITECTURE.md) — Laws #1-4
-- [Protocol 67](../research/67-cross-pollination.md) — Cross-Domain Isomorphism
-- [Protocol 140](examples/protocols/decision/140-base-rate-audit.md) — Zero-Point Inversion
-- [Protocol 40](../decision/40-frame-vs-structural-problem.md) — Frame vs Structural
+- [Protocol 115: First Principles Deconstruction](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/decision/115-first-principles-deconstruction.md)
+
+- [Core_Identity.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v7.0/modules/Core_Identity.md) — Laws #1-4
+- [Protocol 67](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/research/67-cross-pollination.md) — Cross-Domain Isomorphism
+- [Protocol 140](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/decision/140-base-rate-audit.md) — Zero-Point Inversion
+- [Protocol 40](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/decision/40-frame-vs-structural-problem.md) — Frame vs Structural
 
 ---
 

@@ -1,5 +1,10 @@
+---created: 2025-12-12
+last_updated: 2026-01-30
 ---
-description: Ultra-deep research mode — exhaustive multi-source rabbit-hole exploration
+
+---description: Ultra-deep research mode — exhaustive multi-source rabbit-hole exploration
+created: 2025-12-12
+last_updated: 2025-12-17
 ---
 
 # /research — Execution Script

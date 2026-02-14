@@ -1,13 +1,20 @@
 ---
-name: modular-architecture
+created: 2025-12-10
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---name: modular-architecture
 description: Separate USER-SPECIFIC data from GENERIC frameworks at structural level. Frameworks shareable, user data isolated. Modular > Monolithic.
+created: 2025-12-10
+last_updated: 2025-12-31
 ---
 
 # Principle: Modular Architecture for Shareable Knowledge Systems
 
 ## Date Added: 10 December 2025
 
-> **Related Protocol**: [31-anthropic-skills]() (Skills paradigm implements this principle)
+> **Related Protocol**: [31-anthropic-skills](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/psychology/31-anthropic-skills.md) (Skills paradigm implements this principle)
 
 ## 24.1 Core Principle
 

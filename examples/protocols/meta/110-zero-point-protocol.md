@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-20
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-20
+last_updated: 2026-01-05
+---
+
 # Protocol 110: Zero-Point Protocol (终极操作系统)
 
 > **Status**: HARVESTED (Dec 2025)  
@@ -120,12 +131,13 @@ When facing strategic decision:
 ---
 
 ## Cross-References
+- [Protocol 124: SDR Diagnosis](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/decision/124-sdr-diagnosis.md)
 
-- [Protocol 75: Synthetic Parallel Reasoning]()
-- [Protocol 108: Bionic Operational Physics]()
+- [Protocol 75: Synthetic Parallel Reasoning](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/decision/75-synthetic-parallel-reasoning.md)
+- [Protocol 108: Bionic Operational Physics](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/architecture/108-bionic-operational-physics.md)
 
 ---
 
 ## Tagging
 
-# protocol #meta #zero-point #L7 #emergence #wu-wei
+# protocol #meta #zero-point #l7 #emergence #wu-wei

@@ -1,5 +1,10 @@
+---created: 2025-12-18
+last_updated: 2026-01-30
 ---
-description: Ruin override ceremony - explicit user acknowledgment before proceeding with high-risk actions
+
+---description: Ruin override ceremony - explicit user acknowledgment before proceeding with high-risk actions
+created: 2025-12-18
+last_updated: 2025-12-19
 ---
 
 # /circuit — Ruin Override Ceremony

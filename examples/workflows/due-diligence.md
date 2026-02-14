@@ -1,5 +1,10 @@
+---created: 2025-12-24
+last_updated: 2026-01-30
 ---
-description: Real-world due diligence workflow — structured analysis for investment decisions
+
+---description: Real-world due diligence workflow — structured analysis for investment decisions
+created: 2025-12-24
+last_updated: 2025-12-24
 ---
 
 # /due-diligence — Execution Script

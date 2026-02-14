@@ -185,8 +185,8 @@ Why it works:
 
 ## Cross-References
 
-- [Protocol 110: Zero-Point Protocol](../meta/110-zero-point-protocol.md)
-- [RCS Phases](#private-framework) — Reality Calibration System
+- [Protocol 110: Zero-Point Protocol](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/meta/110-zero-point-protocol.md)
+- [RCS Phases](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v7.0/modules/Core_Identity.md) — Reality Calibration System
 
 ---
 

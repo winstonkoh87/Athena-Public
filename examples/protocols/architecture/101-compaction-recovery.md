@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-18
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-18
+last_updated: 2026-01-11
+---
+
 # Protocol 101: Compaction Recovery (Transcript Archaeology)
 
 > **Source**: Harvested from r/ClaudeCode (AVanWithAPlan)

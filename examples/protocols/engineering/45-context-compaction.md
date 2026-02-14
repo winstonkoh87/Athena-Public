@@ -11,7 +11,7 @@ last_updated: 2025-12-18
 
 # Protocol 45: Context Compaction
 
-> **Source**: Adapted from GPT-5.2 + Claude Opus 4.6 features  
+> **Source**: Adapted from GPT-5.2 + Claude Opus 4.5 features  
 > **Purpose**: Enable long-running tasks by compressing context when approaching limits
 
 ---
@@ -140,4 +140,4 @@ AI: [Generates 500-word summary capturing state]
 
 ## Tagging
 
-# protocol #framework #process #45-context-compaction
+#protocol #framework #process #45-context-compaction

@@ -1,4 +1,15 @@
-# Agentic Engineering Strategy: Intent Drift Detector
+---
+
+created: 2025-12-23
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-23
+last_updated: 2026-01-13
+---
+
+# Protocol 166: Intent Drift Detector
 
 > **Purpose**: Prevent silent logic corruption from cumulative AI prompts.
 > **Trigger**: When code "works" but feels wrong, or when explaining logic is harder than it should be.
@@ -55,9 +66,9 @@ Before touching "working" code, ask:
 
 ## Integration
 
-- Links to: [Protocol 130: Vibe Coding](examples/protocols/workflow/130-vibe-coding.md) — when speed matters
-- Links to: [Protocol 93: Forward-Only Architecture]() — freeze after validation
-- Links to: [TASK_LOG.md]() — intent persistence
+- Links to: [Protocol 130: Vibe Coding](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/workflow/130-vibe-coding.md) — when speed matters
+- Links to: [Protocol 93: Forward-Only Architecture](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/architecture/93-forward-only-architecture.md) — freeze after validation
+- Links to: [TASK_LOG.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/TASK_LOG.md) — intent persistence
 - Source: Reddit r/vibecoding (Dec 2025)
 
 ---

@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-27
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-27
+last_updated: 2025-12-31
+---
+
 # Protocol 210: Data Lifecycle Strategy (The Metabolic Cycle)
 
 > **Goal**: Prevent "Digital Hoarding" (Write-Only Memory) via structured accumulation and aggressive periodic refactoring.
@@ -5,29 +16,40 @@
 
 ---
 
-## 1. The Core Loop
+## 1. The Core Loop (Data Metabolism)
 
-We do not aim for a static "clean" state. We aim for a breathing cycle of expansion and contraction.
+ We do not aim for a static "clean" state. We aim for a breathing cycle of expansion and contraction.
 
-**The Cycle**:
+ **The Equation**: `Man + Machine = One` (via Continuous Calibration).
 
-1. **Accumulation Phase (0 - 1,000 Sessions)**:
-    * **Goal**: Maximize raw data capture.
-    * **Action**: Log everything. Create detailed case studies. Do not optimize for brevity; optimize for *capture*.
-    * **Logic**: You cannot synthesize what you did not record.
+ **The Metabolic Cycle**:
 
-2. **The Deep Refactor Event (Trigger: Session #1000)**:
-    * **Goal**: Signal Extraction (Compression).
-    * **Action**: Pause new inputs. Audit the `.context` directory.
-    * **The 20% Rule**:
-        * Keep the top 20% of Case Studies (High Signal).
-        * Merge duplicate Protocols.
-        * Compress 1,000 Session Logs into ~50 "Epoch Summaries".
-        * Archive the rest (Cold Storage).
+ 1. **Ingest (Eat)**:
+     * **Scope**: Unlimited. Share everything.
+     * **Action**: Capture raw logs, streams of consciousness, and dumps.
 
-3. **The Fine-Tune Event (Trigger: Post-Refactor)**:
-    * **Goal**: Crystallization.
-    * **Action**: Use the refined 20% dataset to fine-tune the next-gen local model ("the author Prime").
+ 2. **Digest (Extract)**:
+     * **Goal**: Signal Extraction.
+     * **Action**: Identify durable artifacts.
+     * **Selection Rule (The 20%)**: Keep session IF it contains:
+         * New Protocol / Skill definitions.
+         * Key Strategic Decisions (Project State changes).
+         * Critical Safety Events (Law #1 violations).
+         * High-Recency (Last 14 days) context.
+
+ 3. **Excrete (Discard)**:
+     * **Goal**: Noise Reduction.
+     * **Action**: Permanently delete ephemeral exhaust after 7-day recovery window.
+     * **The Filter**:
+         * ❌ Agenda / Logistics (Calendar coordination).
+         * ❌ Parking Lot (Deferred ideas that never manifested).
+         * ❌ Emotional Venting (Once processed/calibrated).
+         * ❌ Stale Action Items (Transferred to Master List).
+
+ 4. **The Deep Refactor Event (Trigger: Session #1000)**:
+     * **Goal**: Crystallization.
+     * **Action**: Compress 1,000 logs into ~50 "Epoch Summaries". Train next-gen model.
+     * **Outcome**: Prediction replaces Reaction.
 
 ---
 

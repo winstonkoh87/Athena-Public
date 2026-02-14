@@ -1,4 +1,15 @@
-# Development Execution Standard: Visual Verification ("Not Real Until I See It")
+---
+
+created: 2025-12-18
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-18
+last_updated: 2026-01-02
+---
+
+# Protocol 99: Visual Verification ("Not Real Until I See It")
 
 > **Source**: Harvested from r/ClaudeCode (ice9killz)
 > **Status**: ACTIVE

@@ -1,20 +1,16 @@
+---created: 2025-12-23
+last_updated: 2026-01-30
 ---
-description: Deep workspace semantic search — query Supabase + local protocols before answering
+
+---description: Deep workspace semantic search — query Supabase + local protocols before answering
+created: 2025-12-23
+last_updated: 2026-01-11
 ---
 
 # /semantic — Execution Script
 
 > **Latency Profile**: MEDIUM (~5-10s)
 > **Philosophy**: Search before you think. Context before reasoning.
-
----
-
-## When to Use
-
-- Complex analysis requiring historical context
-- Questions about past sessions, patterns, or case studies
-- Before `/ultrathink` (auto-triggered)
-- When user asks "remember when..." or "find sessions about..."
 
 ---
 
@@ -25,20 +21,15 @@ description: Deep workspace semantic search — query Supabase + local protocols
 ### Step 1: Run Hybrid Triangulation Search
 
 ```bash
-# Reference: python3 scripts/smart_search.py "<keywords>" --limit 5
+python3 .agent/scripts/smart_search.py "<keywords>" --limit 5
 ```
 
-> **Mechanism**:
->
-> 1. **Tier 1 (Exact)**: Greps `TAG_INDEX.md` for specific entity matches.
-> 2. **Tier 2 (Semantic)**: Queries Supabase vector DB for conceptual matches.
-> 3. **Tier 3 (Temporal)**: Scans file system for filename matches.
+> **Mechanism**: Tier 1 (Exact Grep), Tier 2 (Semantic Vector), Tier 3 (Filename).
 
 ### Step 2: Inject Context Silently
 
 - Surface top 3-5 relevant protocols/case studies
-- Do NOT announce what you found (unless directly asked)
-- Just use the context to improve response quality
+- Do NOT announce findings unless asked. Just use the context.
 
 ---
 

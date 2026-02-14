@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-18
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-18
+last_updated: 2025-12-20
+---
+
 # Protocol 96: Latency Indicator (Λ)
 
 > **Purpose**: Provide visible output of cognitive effort per response.

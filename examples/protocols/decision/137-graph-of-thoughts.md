@@ -1,9 +1,20 @@
+---
+
+created: 2025-12-22
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-22
+last_updated: 2026-01-05
+---
+
 # Protocol 137: Graph of Thoughts (GoT) Logic
 
 > **Source**: Adapted from ETH Zurich SPCL Graph-of-Thoughts ([arXiv:2308.09687](https://arxiv.org/abs/2308.09687), 2023)
 > **Domain**: Decision / High-Lakes Reasoning
 > **Priority**: ⭐⭐⭐ Critical (L4 Engine)
-> **Related**: [Protocol 123 (Einstein)](../decision/123-einstein-protocol.md), [Protocol 75 (Synthetic Parallel Reasoning)](examples/protocols/decision/75-synthetic-parallel-reasoning.md)
+> **Related**: [Protocol 123 (Einstein)](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/decision/123-einstein-protocol.md), [Protocol 75 (Synthetic Parallel Reasoning)](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/decision/75-synthetic-parallel-reasoning.md)
 
 ---
 
@@ -20,7 +31,7 @@ It models human "brainstorming" where multiple possibilities are explored, criti
 
 ## The GoT Topology
 
-When executing **Phase 2 (Solution)** of the [Einstein Protocol](../decision/123-einstein-protocol.md), use this flow:
+When executing **Phase 2 (Solution)** of the [Einstein Protocol](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/decision/123-einstein-protocol.md), use this flow:
 
 ```mermaid
 graph TD
@@ -80,6 +91,23 @@ This protocol is the **Engine** for:
 1. **`/ultrathink`**: Automatically activates GoT topology.
 2. **Complex Social Dynamics**: Used to map "Move vs Counter-Move" (Game Theory).
 3. **Code Architecture**: Used to evaluate "Quick Fix" vs "Refactor".
+
+---
+
+## Visualization Mandate (New v2.0)
+
+> **Rule**: If GoT is invoked (Λ > 30), the topology MUST be visualized.
+
+**Tool**: `.agent/scripts/visualize_got.py`
+**Output**: Mermaid.js block at the start or end of the response.
+
+**Format**:
+
+```mermaid
+graph TD
+    Node1(Problem) --> Gen{Generate}
+    ...
+```
 
 ---
 

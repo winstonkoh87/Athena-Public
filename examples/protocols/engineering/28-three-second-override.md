@@ -1,6 +1,13 @@
 ---
-name: three-second-override
+created: 2025-12-10
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---name: three-second-override
 description: Universal mechanism explaining acting against better judgment. Scanner detects threat but conviction overrides within 3 seconds. Wait 10+ seconds for prefrontal.
+created: 2025-12-10
+last_updated: 2026-01-13
 ---
 
 # The 3-Second Override
@@ -9,7 +16,7 @@ description: Universal mechanism explaining acting against better judgment. Scan
 
 ## Source: Archived from Case Law Library v8.0
 
-> **Related Protocol**: [01-spindle-buffer]() (same neuroscience basis)
+> **Related Protocol**: [01-spindle-buffer](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/communication/01-spindle-buffer.md) (same neuroscience basis)
 
 ## 28.1 Core Mechanism
 

@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-16
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-16
+last_updated: 2026-01-11
+---
+
 # Protocol 85: Token Hygiene
 
 > **Source**: Harvested from `ykdojo/claude-code-tips` (Dec 2025)
@@ -59,7 +70,7 @@ python3 .agent/scripts/token_budget.py
 
 ## Integration
 
-- Works with: Protocol 77 (Adaptive Latency), Infrastructure & Continuity Hub (Context Compaction)
+- Works with: Protocol 133 (JIT Routing), Infrastructure & Continuity Hub (Context Compaction)
 - Enforced by: `/end` workflow (session telemetry)
 
 ---
@@ -72,4 +83,4 @@ python3 .agent/scripts/token_budget.py
 
 ## Tagging
 
-#protocol #framework #process #85-token-hygiene
+# protocol #framework #process #85-token-hygiene

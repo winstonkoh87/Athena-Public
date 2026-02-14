@@ -5,9 +5,12 @@ Reusable wrapper for Google Gemini API (for Athena).
 """
 
 import os
+import re
+import time
 from pathlib import Path
-from dotenv import load_dotenv
+
 import google.generativeai as genai
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -23,7 +26,9 @@ def get_api_key() -> str:
 class GeminiClient:
     """Stateful Gemini client with conversation history support."""
 
-    def __init__(self, model: str = "gemini-3-flash-preview", system_prompt: str = None):
+    def __init__(
+        self, model: str = "gemini-3-flash-preview", system_prompt: str = None
+    ):
         api_key = get_api_key()
         if not api_key:
             raise ValueError("GOOGLE_API_KEY not found in environment")
@@ -47,15 +52,9 @@ class GeminiClient:
 
     def _generate_with_fallback(self, func, *args, **kwargs):
         """Execute a generation function with model fallback cascade + retry."""
-        import time
-        import re
-
-        # Expanded cascade: priority models (gemini-3-flash-preview first)
+        # Expanded cascade: Strictly Gemini 3 Flash (User Decree 2026-02-01)
         cascade_models = [
-            "gemini-3-flash-preview",  # Default as of 2026-01-11
-            "gemini-2.5-flash",
-            "gemini-2.5-flash-preview-09-2025",
-            "gemini-2.5-flash-lite-preview-09-2025",
+            "gemini-3-flash-preview",
         ]
 
         # Ensure current model is first
@@ -68,11 +67,15 @@ class GeminiClient:
 
         for attempt in range(max_retries):
             for model_name in cascade_models:
-                print(f"✨ Athena thinking with {model_name}... (attempt {attempt + 1})")
+                print(
+                    f"✨ Athena thinking with {model_name}... (attempt {attempt + 1})"
+                )
                 try:
                     temp_model = genai.GenerativeModel(
                         model_name=model_name,
-                        system_instruction=self.system_prompt if self.system_prompt else None,
+                        system_instruction=self.system_prompt
+                        if self.system_prompt
+                        else None,
                         generation_config=genai.GenerationConfig(
                             temperature=1.0,
                             max_output_tokens=8192,
@@ -95,15 +98,18 @@ class GeminiClient:
                     last_error = e
 
                     # Check for retryable errors
-                    if "429" in error_str or "503" in error_str or "ResourceExhausted" in error_str:
+                    if (
+                        "429" in error_str
+                        or "503" in error_str
+                        or "ResourceExhausted" in error_str
+                    ):
                         # Extract retry delay if provided
-                        match = re.search(r"retry in ([\d.]+)s", error_str, re.IGNORECASE)
-                        if match:
-                            wait_time = min(float(match.group(1)) + 1, 30)  # Cap at 30s
-                        else:
-                            wait_time = 20  # Default wait
-
-                        print(f"⚠️ {model_name} rate limited. Trying next model...")
+                        match = re.search(
+                            r"retry in ([\d.]+)s", error_str, re.IGNORECASE
+                        )
+                        wait_time = min(float(match.group(1)) + 1, 30) if match else 20
+                        print(f"⚠️ {model_name} rate limited. Waiting {wait_time}s...")
+                        time.sleep(wait_time)
                         continue
 
                     elif "404" in error_str or "NotFound" in error_str:
@@ -115,7 +121,7 @@ class GeminiClient:
 
             # If we've exhausted all models, wait and retry the whole cascade
             if attempt < max_retries - 1:
-                print(f"⏳ All models exhausted. Waiting 20s before retry...")
+                print("⏳ All models exhausted. Waiting 20s before retry...")
                 time.sleep(20)
 
         raise last_error or Exception("All models exhausted after retries.")
@@ -126,10 +132,32 @@ class GeminiClient:
 
     def chat(self, message: str) -> str:
         """Conversational generation (maintains history)."""
-        # We pass the method name as a string or the bound method?
-        # Let's pass the unbound method 'send_message' conceptually,
-        # but my helper wraps it.
         return self._generate_with_fallback(self.chat_session.send_message, message)
+
+    def chat_structured(self, message: str, schema: dict) -> dict:
+        """Conversational generation enforcing a JSON schema (Protocol 110)."""
+        import json
+
+        # Update generation config for JSON output
+        config = genai.GenerationConfig(
+            temperature=1.0,
+            max_output_tokens=8192,
+            response_mime_type="application/json",
+            response_schema=schema if schema else None,
+        )
+
+        response_text = self._generate_with_fallback(
+            self.chat_session.send_message, message, generation_config=config
+        )
+
+        try:
+            return json.loads(response_text)
+        except json.JSONDecodeError:
+            # Fallback for older models or parsing errors
+            match = re.search(r"\{.*\}", response_text, re.DOTALL)
+            if match:
+                return json.loads(match.group(0))
+            raise ValueError(f"Failed to parse structured response: {response_text}")
 
     def clear_history(self):
         """Reset conversation history."""
@@ -148,8 +176,10 @@ def get_mobile_system_prompt() -> str:
 
     # Try to load Core Identity
     workspace = Path(__file__).resolve().parent.parent.parent
-    core_identity_path = workspace / ".framework" / "v8.2-stable" / "modules" / "Core_Identity.md"
-    user_profile_path = workspace / ".context" / "user" / "User_Profile.md"
+    core_identity_path = (
+        workspace / ".framework" / "v7.0" / "modules" / "Core_Identity.md"
+    )
+    user_profile_path = workspace / "Winston" / "profile" / "User_Profile.md"
 
     identity_snippet = ""
     user_snippet = ""

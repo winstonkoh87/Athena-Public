@@ -13,7 +13,7 @@ last_updated: 2026-01-11
 
 > **Purpose**: Heuristic for detecting "bullshit" (fabrication, delusion, or omission) by comparing claims against statistical baselines.
 > **Source**: Session 31 (Dec 22, 2025) — Condo Girl Example + 20% Guaranteed Returns
-> **Related**: [Strategic Analysis Framework: First Principles](#private-protocol)
+> **Related**: [Strategic Analysis Framework: First Principles](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/strategy/Strategic_Analysis_Framework.md)
 
 ---
 
@@ -93,5 +93,5 @@ Applying this to yourself is **Epistemic Rigor**:
 
 ## Related Protocols
 
-- [Agentic Engineering Strategy: Red-Blue Curve Taxonomy](#private-protocol)
-- [Protocol 115: First Principles Deconstruction](115-first-principles-deconstruction.md)
+- [Agentic Engineering Strategy: Red-Blue Curve Taxonomy](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/strategy/42-red-blue-curve-taxonomy.md)
+- [Protocol 115: First Principles Deconstruction](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/decision/115-first-principles-deconstruction.md)

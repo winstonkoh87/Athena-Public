@@ -1,5 +1,10 @@
+---created: 2025-12-16
+last_updated: 2026-01-30
 ---
-description: Quick thought capture — dump ideas without formatting
+
+---description: Quick thought capture — dump ideas without formatting
+created: 2025-12-16
+last_updated: 2025-12-21
 ---
 
 # /dump — Quick Thought Capture

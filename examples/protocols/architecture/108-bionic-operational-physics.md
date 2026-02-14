@@ -1,8 +1,19 @@
+---
+
+created: 2025-12-20
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-20
+last_updated: 2026-01-05
+---
+
 # Protocol 108: Bionic Operational Physics
 
 > **Redirect**: This file redirects to the canonical protocol.
 
-See: [Protocol 171: Bionic Operational Physics](examples/protocols/workflow/171-bionic-operational-physics.md)
+See: [Protocol 108: Bionic Operational Physics (Workflow)](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/architecture/108-bionic-operational-physics.md)
 
 ---
 

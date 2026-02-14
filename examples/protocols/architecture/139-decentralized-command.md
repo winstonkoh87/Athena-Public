@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-22
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-22
+last_updated: 2026-01-05
+---
+
 # Protocol 139: Decentralized Command Architecture
 
 > **Purpose**: Sustainable leadership model for high-cognitive-load / low-social-battery individuals (6w5).
@@ -107,9 +118,9 @@ Hybrid Model:
 
 ## Visualization Assets
 
-- [Command Structures Comparison]()
-- [Hybrid Model Diagram]()
+- [Command Structures Comparison](file:///Users/[AUTHOR]/Desktop/Project Athena/.context/memories/case_studies/assets/command_structures.png)
+- [Hybrid Model Diagram](file:///Users/[AUTHOR]/Desktop/Project Athena/.context/memories/case_studies/assets/hybrid_command.png)
 
 ---
 
-# leadership #Morena #decentralized #6w5 #scalability
+# leadership #morena #decentralized #6w5 #scalability

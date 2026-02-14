@@ -27,23 +27,30 @@ User defines the objective.
 **Command**:
 
 ```bash
-# Create isolated environments (via git worktrees)
-git worktree add ../.worktrees/swarm-fe -b feature/swarm-fe
-git worktree add ../.worktrees/swarm-be -b feature/swarm-be
-git worktree add ../.worktrees/swarm-qa -b feature/swarm-qa
+### Phase 1: The Split (Commander)
+
+User defines the objective.
+**Command**:
+
+```bash
+# Create isolated environments (via worktrunk)
+python3 examples/scripts/worktrunk.py add frontend
+python3 examples/scripts/worktrunk.py add backend
+python3 examples/scripts/worktrunk.py add qa
 ```
 
 ### Phase 2: The Swarm (Build)
 
-You (The Orchestrator) assign tasks to each "Seat" (simulated or real).
-
-> **Note**: In a single-window interface, we simulate this by switching context windows or rapidly context-switching between worktrees.
-> *True Parallelism requires multiple terminal windows.*
+You (The Orchestrator) assign tasks to each "Seat".
 
 **Context Switch**:
 
 ```bash
-cd ../.worktrees/swarm-fe
+# List active swarms
+python3 examples/scripts/worktrunk.py list
+
+# Switch to swarm (manual cd)
+cd ../Athena-Public-swarms/frontend
 # Build Frontend...
 ```
 
@@ -54,12 +61,11 @@ When tasks are done, merge back to Main.
 ```bash
 # 1. Commit in worktree
 git commit -am "Feat: Frontend complete"
-git push origin feature/swarm-fe
+git push origin swarm/frontend
 
-# 2. Merge in Main
-cd ../main-project
-git merge feature/swarm-fe
-git merge feature/swarm-be
+# 2. Merge via Worktrunk
+python3 examples/scripts/worktrunk.py merge frontend
+python3 examples/scripts/worktrunk.py merge backend
 ```
 
 ## 3. Safety Constraints

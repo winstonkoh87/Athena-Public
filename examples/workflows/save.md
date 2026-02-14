@@ -1,5 +1,10 @@
+---created: 2025-12-13
+last_updated: 2026-01-30
 ---
-description: Mid-session checkpoint — save progress without full maintenance
+
+---description: Mid-session checkpoint — save progress without full maintenance
+created: 2025-12-13
+last_updated: 2025-12-31
 ---
 
 # /save — Checkpoint Script
@@ -49,7 +54,7 @@ description: Mid-session checkpoint — save progress without full maintenance
 
 ## References
 
-- [Session 2025-12-13-04]() — Documents this workflow's creation
+- [Session 2025-12-13-04](file:///Users/[AUTHOR]/Desktop/Project Athena/.context/memories/session_logs/archive/2025-12-13-session-04.md) — Documents this workflow's creation
 
 ---
 

@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-15
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-15
+last_updated: 2025-12-18
+---
+
 # Protocol 74: Iterative Creative Production
 
 > **Purpose**: Universal workflow for any deliverable (presentations, copy, designs, code)
@@ -158,3 +169,7 @@ AI: [Archives to .projects/, commits, offers transcript]
 ## Tagging
 
 #protocol #framework #process #74-iterative-creative-production
+
+## Related Protocols
+
+- [Protocol 121: Decision Frameworks (MCDA / WEU / Pairwise)](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/decision/121-mcda-weu-framework.md)

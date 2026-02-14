@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-23
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-23
+last_updated: 2026-01-11
+---
+
 # Protocol 158: Universal Cross-Linking
 
 > **Type**: Autonomic Behavior  
@@ -46,7 +57,7 @@ python3 .agent/scripts/supabase_search.py "<topic>" --limit 5
 |--------|---------------|---------------|
 | Psychology | "Why do I act out?" | Protocol 43, 121, acting-out phases |
 | Relationships | "JJ said..." | result.json, prior JJ analysis |
-| Business | "What's the market gap?" | Content agency cases, business protocols |
+| Business | "What's the market gap?" | VDestiny case study, business protocols |
 | Strategy | "Should I do X?" | Operating Principles, Law #1-4 |
 | Patterns | "This feels familiar" | case_studies/, TAG_INDEX |
 

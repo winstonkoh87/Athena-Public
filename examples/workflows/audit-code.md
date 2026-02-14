@@ -1,5 +1,10 @@
+---created: 2025-12-25
+last_updated: 2026-01-30
 ---
-description: Retroactive audit of coding sessions to fine-tune AI skills and prevent regression
+
+---description: Retroactive audit of coding sessions to fine-tune AI skills and prevent regression
+created: 2025-12-25
+last_updated: 2025-12-25
 ---
 
 # /audit-code — The "Scrubber" Protocol
@@ -27,7 +32,7 @@ Analyze the current session log to find the "Breakpoints" (where logic failed).
 
 ```bash
 # Finds the active session log
-# Reference: python3 scripts/smart_search.py "session log" --limit 1 --sessions-only
+python3 .agent/scripts/smart_search.py "session log" --limit 1 --sessions-only
 ```
 
 ### Step 2: Extract the "Failure Patterns"

@@ -1,6 +1,13 @@
 ---
-description: Iterative self-referential development loop. "Siege" a problem until solved, rather than "Try once and quit". Inspired by 'ralph-wiggum' plugin.
-tags: ["#protocol", "#iteration", "#loop", "#sieging", "#ralph-wiggum"]
+created: 2025-12-14
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---description: Iterative self-referential development loop. "Siege" a problem until solved, rather than "Try once and quit". Inspired by 'ralph-wiggum' plugin.
+tags: [#protocol, #iteration, #loop, #sieging, #ralph-wiggum]
+created: 2025-12-14
+last_updated: 2026-01-06
 ---
 
 # Protocol 69: Iterative Siege (Ralph Loop)
@@ -43,7 +50,7 @@ WHILE (Current_State != Success_Condition) AND (Attempts < Max_Retries):
     6. Increment Attempts
 ```
 
-1. **Exit Strategy**:
+4. **Exit Strategy**:
     * **Success**: Report victory + method.
     * **Failure**: Report "Siege Broken" + summary of failed hypotheses (to save user time).
 
@@ -73,11 +80,11 @@ A "Smart Siege" uses **Gradient Descent**:
 
 ## References
 
-* [Protocol 54: Cyborg Methodology]() — The parent philosophy
+* [Protocol 54: Cyborg Methodology](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/research/54-cyborg-methodology.md) — The parent philosophy
 * [Claude Code 'ralph-wiggum'](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum) — The inspiration
 
 ---
 
 ## Tagging
 
-# protocol #framework #69-iterative-siege
+#protocol #framework #69-iterative-siege

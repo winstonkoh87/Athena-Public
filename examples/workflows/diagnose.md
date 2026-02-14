@@ -1,5 +1,10 @@
+---created: 2025-12-18
+last_updated: 2026-01-30
 ---
-description: Read-only workspace diagnostics — safe to run frequently
+
+---description: Read-only workspace diagnostics — safe to run frequently
+created: 2025-12-18
+last_updated: 2025-12-26
 ---
 
 # /diagnose — Workspace Diagnostics
@@ -29,7 +34,7 @@ python3 -c "from supabase import create_client; print('✅ Supabase SDK OK')" 2>
 // turbo
 
 ```bash
-# Reference: python3 scripts/diagnose.py
+python3 .agent/scripts/diagnose.py
 ```
 
 **What it runs**:

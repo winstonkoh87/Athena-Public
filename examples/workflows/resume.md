@@ -1,5 +1,10 @@
+---created: 2025-12-28
+last_updated: 2026-01-30
 ---
-description: Resume interrupted session — recover context and continue
+
+---description: Resume interrupted session — recover context and continue
+created: 2025-12-28
+last_updated: 2026-01-06
 ---
 
 # /resume — Session Recovery
@@ -71,15 +76,15 @@ When `/resume` is invoked:
 // turbo
 
 ```bash
-# Reference: python3 scripts/resume_session.py
+python3 .agent/scripts/resume_session.py
 ```
 
 ---
 
 ## References
 
-- [/start](examples/workflows/start.md) — Fresh session boot
-- [/save](examples/workflows/save.md) — Mid-session checkpoint
+- [/start](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/workflows/start.md) — Fresh session boot
+- [/save](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/workflows/save.md) — Mid-session checkpoint
 
 ---
 

@@ -1,12 +1,19 @@
 ---
-name: proactive-extrapolation-framework
+created: 2025-12-15
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---name: proactive-extrapolation-framework
 description: Signal detection and projection framework for anticipating outcomes from early warning signs
-tags: ["#risk-management", "#decision-making", "#early-warning", "#scenario-planning", "#prevention"]
+tags: [#risk-management, #decision-making, #early-warning, #scenario-planning, #prevention]
+created: 2025-12-15
+last_updated: 2025-12-18
 ---
 
 # Protocol 72: Proactive Extrapolation Framework (PEF)
 
-> **Source**: Extracted from retrospective notes (May 2025). Core insight: *"Take early warning signs of success/failure and project into the future to proactively avoid train wrecks."*
+> **Source**: Extracted from therapy session notes (May 2025). Core insight: *"Take early warning signs of success/failure and project into the future to proactively avoid train wrecks."*
 
 ---
 
@@ -128,4 +135,4 @@ Before committing further resources (time, money, emotion), ask:
 
 ## Tagging
 
-# protocol #framework #72-proactive-extrapolation-framework
+#protocol #framework #72-proactive-extrapolation-fra

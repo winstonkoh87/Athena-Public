@@ -13,7 +13,7 @@ last_updated: 2026-01-06
 
 > **Tags**: `#pmod` `#business` `#distribution` `#framework`
 > **Created**: 2025-12-26
-> **Related**: [CS-010](../../docs/protocols/131-bimodal-arena-analysis.md)
+> **Related**: [CS-010](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/docs/protocols/131-bimodal-arena-analysis.md)
 
 ---
 

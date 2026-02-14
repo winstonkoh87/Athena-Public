@@ -1,5 +1,10 @@
+---created: 2025-12-25
+last_updated: 2026-01-30
 ---
-description: Public Repo Synchronization & Sanitization
+
+---description: Public Repo Synchronization & Sanitization
+created: 2025-12-25
+last_updated: 2025-12-31
 ---
 
 ## 1. Context Assessment
@@ -20,7 +25,7 @@ description: Public Repo Synchronization & Sanitization
 
 ## 3. Deployment Execution
 
-- **Target Repo**: `/Users/winstonkoh/Desktop/Athena-Public`
+- **Target Repo**: `/Users/[AUTHOR]/Desktop/Athena-Public`
 - **Action**: Copy *sanitized* versions of files to the target repo structure.
 - **Structure Mapping**:
   - `Athena/.agent/skills/protocols/` -> `Athena-Public/docs/protocols/`
@@ -31,7 +36,7 @@ description: Public Repo Synchronization & Sanitization
 
 // turbo
 
-1. `cd /Users/winstonkoh/Desktop/Athena-Public`
+1. `cd /Users/[AUTHOR]/Desktop/Athena-Public`
 2. `git add .`
 3. `git commit -m "Deployment: [Summary of Changes]"`
 4. `git push origin main`

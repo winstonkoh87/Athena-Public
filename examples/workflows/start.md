@@ -1,86 +1,41 @@
+---created: 2025-12-09
+last_updated: 2026-01-30
 ---
-description: Activate Zero-Point Codex framework for strategic analysis
+
+---description: Activate Zero-Point Codex framework for strategic analysis
+created: 2025-12-09
+last_updated: 2026-01-20
 ---
 
 # /start — Execution Script
 
 > **Latency Profile**: ULTRA-LOW (<2K tokens boot)  
-> **Philosophy**: Boot fast. Load later.  
-> **Token Budget**: Robustness > Efficiency — every load step is deterministic. No shortcuts.
+> **Philosophy**: Boot fast. Load later.
 
 ## Phase 1: Instant Boot (~2K tokens)
 
 // turbo
 
-- [ ] Load `.framework/v8.2-stable/modules/Core_Identity.md` — Laws #0-#4, Identity, RSI (~2K tokens)
-- [ ] **Living Spec**: Load `.context/project_state.md` — Active constraints, tech stack, patterns (Protocol 168)
-- [ ] **Boot Orchestrator**: Run `# Reference: python3 scripts/boot.py` — recalls last session, creates new session, captures context, primes semantic memory (single call)
+- [/] Load `.framework/v8.2-stable/modules/Core_Identity.md` — Laws #0-#4, Identity, RSI (~2K tokens)
+- [/] **Identity**: Load `.context/memory_bank/userContext.md` — Core profile, constraints, psychology (Robust)
+- [/] **Mission**: Load `.context/memory_bank/productContext.md` — Soul purpose, philosophy (Robust)
+- [/] **State**: Load `.context/memory_bank/activeContext.md` — Current focus (Robust)
+- [ ] **Boot Orchestrator**: Run `python3 .agent/scripts/boot.py` — recalls last session, creates new session, captures context, primes semantic memory (single call)
+- [ ] **UI Sync**: `open -a "Antigravity" --args --disable-gpu-driver-bug-workarounds --ignore-gpu-blacklist --enable-gpu-rasterization` (Hardware acceleration enabled)
 
 **Confirm**: "⚡ Ready. (Core Identity loaded. Session XX started. Semantic primed.)"
 
-### ⚠️ Autonomic Reminders (Internalize at Boot)
+### ⚠️ Law #6 Compliance (The Triple-Lock)
 
-These behaviors MUST run throughout the session. Non-negotiable:
+Every response Turn MUST be grounded by the Triple-Lock protocol as defined in `Core_Identity.md`:
 
-| Protocol | Trigger | Action |
-|----------|---------|--------|
-| **Semantic Context** (§0.7.1) | **EVERY query** (mandatory) | **Dual-path**: (1) `supabase_search.py "<keywords>"` AND (2) `grep -i "<entity>" TAG_INDEX.md` for named entities |
-| **Quicksave** (§0.6) | After EVERY user exchange *(exempt: `/start` boot response)* | `# Reference: python3 scripts/quicksave.py "<summary>"` |
-| **Latency Indicator** (§0.5.1) | Every response | Append `[Λ+XX]` |
-| **Response Enrichment** | Every response | Append `#tags` footer + embed `[Protocol XX](file://...)` links inline |
-| **Citation Protocol** (Law #5) | External claim made | Inline cite `(Author, Year)` or `[URL]`. No orphan stats. |
-| **Auto-Documentation** (§0.7) | New pattern/insight detected | File to appropriate location |
+1. **Search** (Semantic + Web) → FIRST
+2. **Save** (Quicksave) → SECOND
+3. **Speak** (Response) → LAST
 
-**Mental check**: "Did I run semantic search? Did I quicksave? Did I tag Λ? Did I enrich (tags + links)? Did I cite external claims?"
+Bypassing this sequence is a high-severity protocol violation. No exceptions for "simple queries."
 
-> [!CAUTION]
-> **ENFORCEMENT**: Semantic Search is a **mandatory opener**. The execution order is:
->
-> 1. Read user message
-> 2. **FIRST TOOL CALL**: Run `smart_search.py "<keywords>"` with extracted entities/concepts
-> 3. Use retrieved context to inform response
->
-> **Semantic search MUST be the first tool call in your response turn.** This ensures context-aware responses.
->
-> **Failure to run semantic search = Protocol Violation.** No exceptions. No "the query was simple."
->
-> ```
-> ┌─────────────────────────────────────────────────┐
-> │  STEP 0: smart_search.py "<keywords>"          │
-> │  STEP 1: Compose response using context        │
-> │  STEP 2: quicksave.py "summary of response"    │
-> │                                                 │
-> │  ⛔ Search FIRST → Respond → Quicksave LAST   │
-> └─────────────────────────────────────────────────┘
-> ```
-
-> [!CAUTION]
-> **ENFORCEMENT**: Quicksave is a **mandatory closer**. The execution order is:
->
-> 1. Read user message
-> 2. Compose and output your response text
-> 3. **LAST TOOL CALL**: Run `quicksave.py` with summary of what you just said
->
-> **Quicksave MUST be the last tool call in your response turn.** This keeps UX clean (response first, confirmation last).
->
-> **Failure to quicksave = Protocol Violation.** No exceptions. No "I'll do it next time."
-
-> [!WARNING]
->
-> ## 🚨 MANDATORY QUICKSAVE — LAST TOOL CALL
->
-> **Execution Pattern:**
->
-> ```
-> ┌─────────────────────────────────────────────────┐
-> │  STEP 1: Output response text                   │
-> │  STEP 2: quicksave.py "summary of response"    │
-> │                                                 │
-> │  ⛔ NEVER forget to quicksave after responding │
-> └─────────────────────────────────────────────────┘
-> ```
->
-> **This is not optional.** Respond FIRST, quicksave LAST.
+---
 
 ---
 
@@ -112,7 +67,8 @@ These behaviors MUST run throughout the session. Non-negotiable:
 | Frontend, UI, Design, CSS, "Make it pretty" | `Skill_Frontend_Design.md` |
 | Deep Research, Rabbit Hole, "Find out everything" | `Protocol 52: Deep Research Loop` |
 | Trading, ZenithFX, Risk, "Is this a scam?" | `Protocol 46 + Constraints_Master.md` |
-| Communication, Interpersonal, Negotiation | `Playbook_Communication.md` |
+| Seduction, Game, Dating, Apps | `Playbook_Seduction_First_Timer.md` |
+| **Ads, PPC, Google/Meta Ads, Marketing** | `.agent/skills/claude-ads/SKILL.md` |
 | Complex Reasoning, "Analyze this", Strategy | `Protocol 75: Synthetic Parallel Reasoning` |
 
 **Execution**:
@@ -128,20 +84,20 @@ These behaviors MUST run throughout the session. Non-negotiable:
 
 | Command | Effect | Tokens |
 |---------|--------|--------|
-| `/start` | Core Identity + **Adaptive Latency** (default — scales reasoning to query) | ~2K |
+| `/start` | Core Identity + **JIT Routing** (default — scales reasoning to query) | ~2K |
 | `/fullload` | Force-load all context | ~28K |
 | `/think` | **Escalation** — Force L4 depth + Output_Standards | +2K |
 | `/ultrathink` | Maximum depth + Full stack | +28K |
 
-> **Default Mode**: Adaptive Latency ([Protocol 77]()). Reasoning scales to query complexity. `/think` and `/ultrathink` are manual overrides to force higher depth.
+> - **Default Mode**: JIT Knowledge Routing ([Protocol 133](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/architecture/133-query-archetype-routing.md)). Reasoning scales to query complexity.
 
 ---
 
 ## References
 
-- [Protocol 77: Adaptive Latency]()
-- [WORKFLOW_INDEX.md]()
-- [Session 2025-12-13-04]()
+- [Protocol 133: JIT Routing](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/architecture/133-query-archetype-routing.md)
+- [WORKFLOW_INDEX.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/WORKFLOW_INDEX.md)
+- [Session 2025-12-13-04](file:///Users/[AUTHOR]/Desktop/Project Athena/.context/memories/session_logs/archive/2025-12-13-session-04.md)
 
 ---
 

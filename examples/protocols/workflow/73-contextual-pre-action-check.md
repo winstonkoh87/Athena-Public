@@ -1,14 +1,21 @@
 ---
-name: contextual-pre-action-check
+created: 2025-12-15
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---name: contextual-pre-action-check
 description: Pre-action mental checklist to assess context before speaking or acting
-tags: ["#communication", "#context", "#decision-making", "#de-escalation", "#strategic"]
+tags: [#communication, #context, #decision-making, #de-escalation, #strategic]
+created: 2025-12-15
+last_updated: 2025-12-18
 ---
 
 # Protocol 73: Contextual Pre-Action Check
 
 > **Principle**: 看人看事, 然后讲话 — *"Observe the person and situation, then speak."*
 >
-> **Source**: Extracted from retrospective notes (March 2025). Core insight: *"Rushing in without sizing up context, intent, and stakeholders can screw you over."*
+> **Source**: Extracted from therapy session notes (March 2025). Core insight: *"Rushing in without sizing up context, intent, and stakeholders can screw you over."*
 
 ---
 
@@ -117,4 +124,4 @@ If any answer is "no" or "unclear" → **pause**.
 
 ## Tagging
 
-# protocol #framework #73-contextual-pre-action-check
+#protocol #framework #73-contextual-pre-action-check

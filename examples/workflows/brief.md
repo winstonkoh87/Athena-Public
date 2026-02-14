@@ -1,5 +1,10 @@
+---created: 2025-12-19
+last_updated: 2026-01-30
 ---
-description: Pre-prompt fact-finding and scope clarification before executing complex tasks
+
+---description: Pre-prompt fact-finding and scope clarification before executing complex tasks
+created: 2025-12-19
+last_updated: 2026-01-11
 ---
 
 # /brief v2.1 — Pre-Prompt Clarification Protocol
@@ -33,53 +38,125 @@ Hybrid Flow (if selected): [ ] Research → Build  [ ] Build → Research  [ ] I
 
 ---
 
-## Phase 2: Core Brief (Default — 7 Fields)
+## Phase 1.5: Interview Mode (Iterative Clarification)
+
+> **Source:** [@trq212 viral tweet](https://x.com/trq212/status/2005315275026260309) (1.5M views, Dec 2025)
+> **Philosophy:** Don't assume. Interview. Extract tacit knowledge before writing specs.
+> **v3.1 Fix:** Iterative questioning (10 max per turn) instead of 50-question dump.
+
+**Trigger:** User invokes `/brief interview` OR `/brief` on underspecified request.
+
+---
+
+### The Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                      /brief interview FLOW                          │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  USER: "I want to build X" (even one line is fine)                   │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  TURN 1: AI asks up to 10 questions (most critical first)     │  │
+│  │          → User answers                                        │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                              ↓                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  TURN 2: AI asks follow-up questions (if needed)               │  │
+│  │          → User answers                                        │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                              ↓                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  TURN N: Continue until AI is FULLY SATISFIED                  │  │
+│  │          → No arbitrary cap. Stop when clarity is achieved.    │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                              ↓                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  AI writes → .context/specs/[PROJECT]_SPEC.md                  │  │
+│  │  User reviews spec → Iterates if needed                        │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                              ↓                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  NEW SESSION: Paste spec → Implement                           │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Interview Rules
+
+| Rule | Description |
+|------|-------------|
+| **Max 10 questions per turn** | Don't overwhelm. Batch intelligently. |
+| **Non-obvious questions only** | No "what color?" — ask what the user hasn't thought about. |
+| **Iterate until satisfied** | No arbitrary cap. Keep asking until full clarity. |
+| **User controls pace** | User can say "that's enough" or "ask me more" at any turn. |
+| **No execution during interview** | Only ask + synthesize. Don't build yet. |
+
+---
+
+### Question Categories
+
+| Category | Example Questions |
+|----------|-------------------|
+| **Scope** | "What does success look like? What's explicitly out of scope?" |
+| **Users** | "Who are the primary users? What's their technical sophistication?" |
+| **Edge Cases** | "What happens if [X] fails? What's the fallback?" |
+| **Data** | "Where does data come from? What's the sensitivity level?" |
+| **Integration** | "What does this need to talk to? Any API constraints?" |
+| **Constraints** | "What can NOT change? What's the hard deadline?" |
+| **Tradeoffs** | "If you had to cut one feature, which would it be?" |
+| **Anti-goals** | "What should this explicitly NOT do?" |
+| **Ruin Vectors** | "What would make this a disaster? Security/privacy concerns?" |
+| **Precedent** | "Any existing examples you like/hate?" |
+| **Hidden** | "What am I not asking that I should be?" |
+
+---
+
+### Completion Signal
+
+When interview is complete, AI outputs:
+
+```
+✅ Interview Complete
+   Questions asked: XX | Turns: Y
+
+📄 Writing spec to: .context/specs/[PROJECT_NAME]_SPEC.md
+
+📋 Key Decisions Captured:
+   - [Decision 1]
+   - [Decision 2]
+   - [Decision 3]
+
+─────────────────────────────────────────────────────
+NEXT STEP: Review the spec. When satisfied:
+
+   1. Start a NEW session
+   2. Paste or reference: .context/specs/[PROJECT_NAME]_SPEC.md
+   3. Say: "Implement this spec"
+─────────────────────────────────────────────────────
+```
+
+---
+
+## Phase 2: Core Brief (Default)
 
 > **Design Principle:** Progressive Disclosure. This is the *minimum viable brief*. Expand only when complexity demands it.
 
-```
-+-------------------------------------------+
-|       /brief: [TASK TITLE]                |
-+-------------------------------------------+
-|                                           |
-|  1. OUTCOME                               |
-|     What will be true when successful?    |
-|     _________________________________     |
-|                                           |
-|  2. AUDIENCE + CONTEXT                    |
-|     Who uses it, where, and why?          |
-|     _________________________________     |
-|                                           |
-|  3. CONSTRAINTS & BOUNDARIES              |
-|     Must-haves:                           |
-|     Must-nots:                            |
-|     Scope boundaries:                     |
-|     Canonical source of truth:            |
-|                                           |
-|  4. DEFINITION OF DONE                    |
-|     Acceptance criteria (testable):       |
-|     Non-goals (explicit exclusions):      |
-|     Quality bar (what "good" means):      |
-|                                           |
-|  5. DELIVERY                              |
-|     Format:        _______________        |
-|     Length/Depth:  _______________        |
-|     Tone:          _______________        |
-|     Data sensitivity: [ ] Public  [ ] Internal  [ ] Confidential/PII  |
-|                                           |
-|  6. TIMELINE                              |
-|     Ship date:     _______________        |
-|     Confidence:    [ ] 70%  [✓] 85%  [ ] 95%   |
-|     Tradeoff priority: (1)___ (2)___ (3)___    |
-|       ↳ Options: Speed / Quality / Scope  |
-|                                           |
-|  7. BUDGET                                |
-|     [ ] 5 min  [ ] 20 min  [ ] 1 hr  [ ] Deep dive  |
-|                                           |
-+-------------------------------------------+
-```
+### Core Brief Checklist
 
-> **Rule:** If `Mode: Ship` is selected, DoD fields become **mandatory**. If `Mode: Explore`, DoD can be loose.
+1. **OUTCOME**: What will be true when successful?
+2. **AUDIENCE + CONTEXT**: Who uses it, where, and why?
+3. **CONSTRAINTS & BOUNDARIES**: Must-haves, must-nots, scope boundaries, source of truth.
+4. **DEFINITION OF DONE**: Acceptance criteria, non-goals, quality bar.
+5. **DELIVERY**: Format, Length/Depth, Tone, Data sensitivity (Public/Internal/PII).
+6. **TIMELINE**: Ship date, Confidence (70/85/95%), Tradeoff priority (Speed/Quality/Scope).
+7. **BUDGET**: Time-box (5m / 20m / 1h / Deep dive).
+
+> **Rule:** If `Mode: Ship` is selected, DoD fields become **mandatory**.
 
 ---
 
@@ -89,33 +166,9 @@ Hybrid Flow (if selected): [ ] Research → Build  [ ] Build → Research  [ ] I
 
 Add these to Core Brief:
 
-```
-+-------------------------------------------+
-|  8. INPUTS                                |
-|     References (good examples):           |
-|     Anti-examples (what to avoid):        |
-|     Source material (docs, repos):        |
-|     Canonical source of truth:            |
-|                                           |
-|  9. EXECUTION MODE                        |
-|     Mode: [ ] Explore  [ ] Draft  [ ] Revise  [ ] Ship  |
-|     Review path:                          |
-|       Reviewers: _______________          |
-|       Rounds: _______________             |
-|       Approval rule: _______________      |
-|                                           |
-|  10. DEPENDENCIES & UNKNOWNS              |
-|     Blockers (outside my control):        |
-|     Assumptions (things taken as true):   |
-|     Open decisions (needs decider):       |
-|     Decision maker: _______________       |
-|     Veto holders: _______________         |
-|     Approval criterion:                   |
-|       [ ] Unanimous  [ ] Single-decider   |
-|       [ ] Majority   [ ] Client final     |
-|                                           |
-+-------------------------------------------+
-```
+1. **INPUTS**: References, anti-examples, source material.
+2. **EXECUTION MODE**: Explore/Draft/Revise/Ship, Review path (Reviewers, Rounds, Approval rule).
+3. **DEPENDENCIES & UNKNOWNS**: Blockers, assumptions, open decisions (Decider, Veto holders, Approval criterion).
 
 ---
 
@@ -123,53 +176,13 @@ Add these to Core Brief:
 
 > **Trigger:** "Build X", "Code Y", or any technical implementation task.
 
-```
-+-------------------------------------------+
-|  BUILD EXTENSION                          |
-+-------------------------------------------+
-|                                           |
-|  A. SYSTEM CONTEXT                        |
-|     Tech stack:                           |
-|     Environment (dev/staging/prod):       |
-|     Hosting/runtime constraints:          |
-|     Tech debt acceptance:                 |
-|       [ ] Quick & dirty OK                |
-|       [ ] Pattern-matched enterprise      |
-|                                           |
-|  B. INTERFACES                            |
-|     APIs / data contracts:                |
-|     I/O shapes:                           |
-|     Permissions required:                 |
-|                                           |
-|  C. RUIN VECTORS (Law #1 Check)           |
-|     [ ] Security leak (auth, secrets)     |
-|     [ ] Privacy/PII exposure              |
-|     [ ] Data loss/corruption              |
-|     [ ] Prod outage risk                  |
-|     [ ] Cost blowup (APIs, infra)         |
-|     [ ] Compliance/licensing issue        |
-|                                           |
-|  D. OBSERVABILITY + ROLLBACK              |
-|     Logging/metrics plan:                 |
-|     Known failure modes:                  |
-|     Rollback strategy:                    |
-|                                           |
-|  E. TEST PLAN                             |
-|     Unit/integration/e2e expectations:    |
-|     Acceptance test → DoD mapping:        |
-|                                           |
-|  F. SEMANTIC PRE-LOAD (Optional)          |
-|     ⏱️ Time-box: 5 min                   |
-|     Prior art (3 max):                    |
-|     Constraints extracted (5 max):        |
-|     Known pitfalls (5 max):               |
-|     Brief deltas:                         |
-|       - New constraints found:            |
-|       - New risks:                        |
-|       - Recommended scope cuts:           |
-|                                           |
-+-------------------------------------------+
-```
+A. **SYSTEM CONTEXT**: Tech stack, environment, Hosting/runtime constraints, Tech debt acceptance.
+B. **INTERFACES**: APIs / data contracts, I/O shapes, Permissions required.
+C. **RUIN VECTORS (Law #1 Check)**: Security, Privacy, Data loss, Prod outage risk, Cost blowup, Compliance.
+D. **OBSERVABILITY + ROLLBACK**: Logging plan, Known failure modes, Rollback strategy.
+E. **TEST PLAN**: Unit/integration/e2e expectations, Acceptance test map.
+F. **SEMANTIC PRE-LOAD**: Prior art (3 max), Constraints extracted (5 max), Known pitfalls (5 max), Brief deltas.
+G. **ENGINEERING EDGE CASES**: Race conditions, Offline states, Error handling, Data persistence.
 
 ---
 
@@ -293,6 +306,7 @@ Do not auto-trigger. User controls the gate.
 | Multi-step project | `/brief ++` |
 | New feature/code | `/brief build` |
 | Investigation/analysis | `/brief research` |
+| Underspecified idea | `/brief interview` → `/spec` |
 | Client work | Add "Veto holders" field |
 
 ---
@@ -301,6 +315,8 @@ Do not auto-trigger. User controls the gate.
 
 | Version | Changes |
 |---------|---------|
+| v3.1 | **Red-team fixes**: Iterative questioning (10 max/turn, no arbitrary cap), added Ruin Vectors to question categories, clearer flow diagram, user-controlled pacing. `/spec` upgraded with Logic/State section, Documentation Rot warning, sample data. |
+| v3.0 | **Interview Mode** (AskUserQuestionTool pattern from @trq212). AI-driven interview → writes `_SPEC.md`. New `/spec` workflow for output format. |
 | v2.1 | Fixed confidence default (85%), forced tradeoff priority, hybrid direction, budget field, veto holders, semantic pre-load delta, tech debt acceptance, lens/persona, source quality policy, data sensitivity |
 | v2.0 | Progressive disclosure, brief types router, build/research extensions, semantic pre-load |
 | v1.0 | Basic ASCII box template |
@@ -309,4 +325,4 @@ Do not auto-trigger. User controls the gate.
 
 ## Tagging
 
-# workflow #clarification #brief #scope #v2.1
+# workflow #clarification #brief #scope #interview #spec #v3.1

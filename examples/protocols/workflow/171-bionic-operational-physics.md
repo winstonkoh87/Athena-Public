@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-19
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-19
+last_updated: 2026-01-02
+---
+
 # Protocol 108: Bionic Operational Physics (Synthesis)
 
 > **Sources**: Paul Graham (PG) + Taylor Pearson (TP)
@@ -62,3 +73,7 @@ Before starting any new venture or project, we run the **Selection Filter**:
 ## Tagging
 
 # protocol #operations #strategy #velocity #paul-graham #taylor-pearson #bionic-unit
+
+## Related Protocols
+
+- [Protocol 128: Internal Family Systems](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/psychology/128-internal-family-systems.md)

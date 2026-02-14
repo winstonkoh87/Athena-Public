@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-20
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-20
+last_updated: 2025-12-24
+---
+
 # Protocol 130: The Vibe Coding System (System-Assisted Building)
 
 > **Source**: r/vibecoding (User: Tonjiez)
@@ -45,7 +56,7 @@ The Workplan must define:
 
 ## Phase 3: Foundation (The Big Context Shot)
 
-**Tool**: High Context Model (Opus 4.6/Gemini 3 Pro)
+**Tool**: High Context Model (Opus 4.5/Gemini 3 Pro)
 **Action**: Initial Scaffold
 
 1. Feed the *entire* Workplan to the model.
@@ -65,7 +76,7 @@ The Workplan must define:
     * Figma -> Editor.
     * Ensure Figma structure mirrors Code structure (Components).
 4. **Iteration**:
-    * *Small fixes*: Fast Model (Opus 4.6/Gemini 3 Flash).
+    * *Small fixes*: Fast Model (Opus 4.5/Gemini 3 Flash).
     * *Architectural changes*: Reasoning Model (Opus/Gemini Pro/o1).
 
 ---

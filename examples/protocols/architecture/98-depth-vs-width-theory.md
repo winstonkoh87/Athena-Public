@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-18
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-18
+last_updated: 2026-01-11
+---
+
 # Development Execution Standard: Strategic Depth Theory (The Vault)
 
 > **Source**: NeurIPS 2025 "Scaling Depth" (Internal synthesis from Session 20, Dec 2025)

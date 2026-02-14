@@ -1,6 +1,13 @@
 ---
-tags: [protocol, reasoning, interface, collaboration]
+created: 2025-12-14
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---tags: [protocol, reasoning, interface, collaboration]
 description: Forces AI to switch from "Answer Machine" to "Thinking Partner" for vague or high-stakes queries.
+created: 2025-12-14
+last_updated: 2025-12-18
 ---
 
 # 62. Co-Thinking Interface (Maieutic Protocol)

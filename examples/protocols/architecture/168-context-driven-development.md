@@ -1,6 +1,17 @@
+---
+
+created: 2025-12-23
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-23
+last_updated: 2026-01-06
+---
+
 # Protocol 168: Context-Driven Development (CDD)
 
-> **Reference**: [Protocol 215]()
+> **Reference**: [Protocol 215](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/architecture/215-canonical-memory.md)
 
 > **Source**: Google Gemini Conductor / World of AI (2025)
 > **Core Concept**: Code = Content + Context

@@ -1,4 +1,15 @@
-# Infrastructure & Continuity Hub: Conversation Branching
+---
+
+created: 2025-12-16
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-16
+last_updated: 2025-12-18
+---
+
+# Protocol 88: Conversation Branching
 
 > **Source**: Harvested from `ykdojo/claude-code-tips` (Dec 2025)
 > **Use Case**: A/B testing strategies, trying different approaches without losing original thread

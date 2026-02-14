@@ -1,10 +1,15 @@
+---created: 2025-12-16
+last_updated: 2026-01-30
 ---
-description: Full workspace refactor — deep audit, Supabase sync, and remediation
+
+---description: Full workspace refactor — deep audit, Supabase sync, and remediation
+created: 2025-12-16
+last_updated: 2026-01-11
 ---
 
 # /refactor — Ultimate System Optimization
 
-> **Latency Profile**: ULTRATHINK (~10-15 min)
+> **Latency Profile**: HIGH (~15-30 min, Supabase sync can take 5-10 min)  
 > **Philosophy**: "Flawless or nothing. Conceptually dense."
 > **Use Case**: When you want absolute workspace integrity.
 > **Flags**: `--dry-run` to preview changes without committing.
@@ -19,6 +24,21 @@ description: Full workspace refactor — deep audit, Supabase sync, and remediat
 **Dry-Run Check**:
 
 - If `--dry-run` flag passed: Execute all phases but **skip commits**. Log actions to `/tmp/refactor_dryrun.log`.
+
+---
+
+## Phase 0.5: Determine Refactor Level (MANDATORY)
+
+> **Rule**: Never default to Hygiene. Assess the "State of the Union".
+
+1. **Check Last Refactor**: Read `last_refactored` in `project_state.md`.
+2. **Scan Technical Debt**:
+   - **Level 1 (Hygiene)**: < 1 week since last refactor. Formatting only.
+   - **Level 2 (Component)**: Modules broken, schemas drifted, tests failing.
+   - **Level 3 (Architecture)**: Core framework rot, monolithic bloat, perf bottlenecks.
+   - **Level 4 (Rewrite)**: "Red Zone" (Avoid).
+
+**Decision**: "Proceeding with Level [X] Refactor."
 
 ---
 
@@ -85,7 +105,7 @@ git add -A && git commit -m "checkpoint: pre-refactor $(date +%Y-%m-%d-%H%M)" --
 
 ```bash
 # Archive sessions older than 7 days
-# Reference: python3 scripts/compress_sessions.py --archive-days 7 2>/dev/null || echo "⚠️ Session archive skipped"
+python3 .agent/scripts/compress_sessions.py --archive-days 7 2>/dev/null || echo "⚠️ Session archive skipped"
 ```
 
 > **Note**: Moves old logs to `session_logs/archive/` for cleaner workspace.
@@ -97,11 +117,26 @@ git add -A && git commit -m "checkpoint: pre-refactor $(date +%Y-%m-%d-%H%M)" --
 // turbo
 
 ```bash
-# Reference: python3 scripts/compress_memory.py 2>/dev/null || echo "⚠️ Memory compression skipped"
-# Reference: python3 scripts/supabase_sync.py
+python3 .agent/scripts/compress_memory.py 2>/dev/null || echo "⚠️ Memory compression skipped"
+python3 .agent/scripts/supabase_sync.py
 ```
 
 > Sync sessions and case studies to cloud vector database.
+
+---
+
+## Phase 5.7: Cache Maintenance (~20s)
+
+> **Goal**: Refresh dynamic caches for hot files and protocol segments.
+
+// turbo
+
+```bash
+python3 .agent/scripts/update_hot_manifest.py
+python3 .agent/scripts/summarize_protocols.py
+```
+
+> **Note**: Ensures boot prefetch and fast lookup context are up to date.
 
 ---
 
@@ -113,7 +148,7 @@ git add -A && git commit -m "checkpoint: pre-refactor $(date +%Y-%m-%d-%H%M)" --
 
 ```bash
 # Compress scripts for efficient context loading
-# Reference: python3 scripts/compress_context.py --dir .agent/scripts --output .context/cache/scripts_compressed.md 2>/dev/null || echo "⚠️ Compression skipped (no API key or quota)"
+python3 .agent/scripts/compress_context.py --dir .agent/scripts --output .context/cache/scripts_compressed.md 2>/dev/null || echo "⚠️ Compression skipped (no API key or quota)"
 ```
 
 > **Note**: Remove `--mock` flag once `GOOGLE_API_KEY` is set in `.env`.
@@ -125,7 +160,7 @@ git add -A && git commit -m "checkpoint: pre-refactor $(date +%Y-%m-%d-%H%M)" --
 // turbo
 
 ```bash
-# Reference: python3 scripts/orphan_detector.py
+python3 .agent/scripts/orphan_detector.py
 ```
 
 > **GATE**:
@@ -142,7 +177,7 @@ git add -A && git commit -m "checkpoint: pre-refactor $(date +%Y-%m-%d-%H%M)" --
 // turbo
 
 ```bash
-# Reference: python3 scripts/generate_tag_index.py
+python3 .agent/scripts/generate_tag_index.py
 ```
 
 > Updates `TAG_INDEX.md` with current file tags.
@@ -157,7 +192,7 @@ git add -A && git commit -m "checkpoint: pre-refactor $(date +%Y-%m-%d-%H%M)" --
 
 ```bash
 echo "=== Phase 6.5: Regression Tests ==="
-# Future: # Reference: python3 scripts/run_tests.py
+# Future: python3 .agent/scripts/run_tests.py
 # For now: AI manually reviews test cases in .agent/tests/ if Core_Identity.md was modified
 ```
 
@@ -190,7 +225,7 @@ if [ -n "$CURRENT_SESSION" ]; then
   echo "" >> "$CURRENT_SESSION"
   echo "### Checkpoint [$(date +%H:%M) SGT] — /refactor complete" >> "$CURRENT_SESSION"
   echo "- Supabase synced: ✅" >> "$CURRENT_SESSION"
-  echo "- Orphans remaining: $(# Reference: python3 scripts/orphan_detector.py 2>/dev/null | grep -c 'Orphan' || echo 0)" >> "$CURRENT_SESSION"
+  echo "- Orphans remaining: $(python3 .agent/scripts/orphan_detector.py 2>/dev/null | grep -c 'Orphan' || echo 0)" >> "$CURRENT_SESSION"
   echo "✅ Session log appended: $CURRENT_SESSION"
 else
   echo "⚠️ No session log found"
@@ -209,8 +244,8 @@ fi
 
 ```bash
 # Sanity check before commit
-# Reference: python3 scripts/batch_audit.py --skip-graphrag || echo "⚠️ Audit warning"
-# Reference: python3 scripts/git_commit.py
+python3 .agent/scripts/batch_audit.py --skip-graphrag || echo "⚠️ Audit warning"
+python3 .agent/scripts/git_commit.py
 ```
 
 **Output**: "✅ Workspace fully optimized. All systems clean."
@@ -225,7 +260,7 @@ fi
 | `/refactor` | Full optimization (manual phases + automation) | ~10-15 min |
 | `/refactor --dry-run` | Preview changes | ~10 min |
 | `/reindex` | Supabase sync only | ~30s |
-| `# Reference: python3 scripts/refactor.py` | Automated orchestrator (subset of /refactor) | ~5 min |
+| `python3 .agent/scripts/refactor.py` | Automated orchestrator (subset of /refactor) | ~5 min |
 
 ---
 
@@ -240,11 +275,11 @@ git reset --hard <checkpoint-hash>
 
 ## References
 
-- [/diagnose](examples/workflows/diagnose.md) — Read-only diagnostics
-- [/dump](examples/workflows/dump.md) — Quick thought capture
-- [/end](examples/workflows/end.md) — Quick session close
-- [/reindex](examples/workflows/reindex.md) — Supabase sync only
-- [/vibe](examples/workflows/vibe.md) — Vibe engineering mode
+- [/diagnose](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/workflows/diagnose.md) — Read-only diagnostics
+- [/dump](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/workflows/dump.md) — Quick thought capture
+- [/end](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/workflows/end.md) — Quick session close
+- [/reindex](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/workflows/reindex.md) — Supabase sync only
+- [/vibe](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/workflows/vibe.md) — Vibe engineering mode
 
 ---
 

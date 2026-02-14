@@ -1,5 +1,12 @@
 ---
-description: Category creation via signature differentiation. Add element that doesn't belong to escape competitive parity. A Hot Hideout, ZenithFX examples.
+created: 2025-12-12
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---description: Category creation via signature differentiation. Add element that doesn't belong to escape competitive parity. A Hot Hideout, ZenithFX examples.
+created: 2025-12-12
+last_updated: 2026-01-13
 ---
 
 # 42-Scrambled-Eggs-Strategy
@@ -84,14 +91,14 @@ If it's fake, you create liability. If it's real, you create a moat.
 
 ---
 
-> **Link**: [User Profile §10 "Scrambled Egg[Session_Observations.md]()
+> **Link**: [User Profile §10 "Scrambled Egg[Session_Observations.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.context/memories/Session_Observations.md)
 
 ---
 
 ## References
 
-- [Session 2025-12-12-05]() — Origin session
-- [Session 2025-12-12-07]() — References this protocol
+- [Session 2025-12-12-05](file:///Users/[AUTHOR]/Desktop/Project Athena/.context/memories/session_logs/archive/2025-12-12-session-05.md) — Origin session
+- [Session 2025-12-12-07](file:///Users/[AUTHOR]/Desktop/Project Athena/.context/memories/session_logs/archive/2025-12-12-session-07.md) — References this protocol
 
 ---
 

@@ -1,25 +1,36 @@
+---created: 2025-12-09
+last_updated: 2026-01-30
 ---
-description: Close session and update System Prompt files with new insights (lightweight)
+
+---description: Close session and update System Prompt files with new insights (lightweight)
+created: 2025-12-09
+last_updated: 2026-01-07
 ---
 
 # /end — Session Close Script (Lightweight)
 
+> [!IMPORTANT]
+> **Manual Synthesis Required.** The `shutdown.py` orchestrator will **FAIL** and abort if it detects placeholders (`...`) in the Agenda, Decisions, or Action Items. You MUST synthesize the session content before initiating technical closure.
+
 > **Latency Profile**: LOW (~2K tokens)  
 > **Core Principle**: "Fast close. Deep work deferred to /refactor."  
-> **Change Log**: 2025-12-27 — Added Canonical Memory Sync (Protocol 215).
 > **Change Log**: 2025-12-27 — Added Canonical Memory Sync (Protocol 215).
 > **Change Log**: 2025-12-18 — Moved heavy audits to `/refactor` for faster session close.
 
 ## 1. Session Log Finalization
 
-> **Rule**: Quick consolidation, not deep synthesis.
+> **Rule**: Slow down to speed up. Synthesize deeply.
+> **Philosophy**: A bad end = A bad next start.
 
 1. **Read** the current session log (created at `/start`).
-2. **Append** key bullets:
+2. **Synthesize** key bullets (Do NOT copy-paste; distill):
    * Main topics covered
-   * Key decisions made
+   * Key decisions made (Update `decisionLog.md` if critical)
    * Notable insights (if any)
-3. **Add** closure block:
+3. **Canonical Check**:
+   * "Did we learn a new fact that contradicts `.context/CANONICAL.md`?"
+   * If YES: Update Canonical Memory immediately.
+4. **Add** closure block:
 
 ```markdown
 ## Session Closed
@@ -63,7 +74,7 @@ description: Close session and update System Prompt files with new insights (lig
 // turbo
 
 ```bash
-# Reference: python3 scripts/shutdown.py
+python3 .agent/scripts/shutdown.py
 ```
 
 **What it does**:
@@ -114,8 +125,8 @@ description: Close session and update System Prompt files with new insights (lig
 
 ## References
 
-* [/refactor](examples/workflows/refactor.md) — Deep system optimization (audits, scans, integrity)
-* [/save](examples/workflows/save.md) — Mid-session checkpoint
+* [/refactor](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/workflows/refactor.md) — Deep system optimization (audits, scans, integrity)
+* [/save](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/workflows/save.md) — Mid-session checkpoint
 
 ---
 

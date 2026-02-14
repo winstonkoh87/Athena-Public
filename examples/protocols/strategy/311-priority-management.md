@@ -76,4 +76,4 @@ To prevent the "Sand" (Admin) from filling your life, schedule in this exact pri
 
 ## Related Protocols
 
-- [Protocol 128: Internal Family Systems](#private-protocol)
+- [Protocol 128: Internal Family Systems](file:///Users/[AUTHOR]/Desktop/Project Athena/.agent/skills/protocols/psychology/128-internal-family-systems.md)

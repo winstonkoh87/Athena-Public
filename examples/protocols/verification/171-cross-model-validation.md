@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-24
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-24
+last_updated: 2026-01-05
+---
+
 # Protocol 171: Cross-Model Validation (Tri-Lateral Iteration Engine)
 
 > **Created**: 24 December 2025  
@@ -127,7 +138,7 @@ Models validate *reasoning*, but many errors are **fact errors** (regulations, u
 ║  │             │                ▼                │                     │  ║
 ║  │             │       ┌────────────────┐        │                     │  ║
 ║  │             │       │ Human Arbiter  │◄───────┘                     │  ║
-║  │             │       │   (the author)    │                              │  ║
+║  │             │       │   (Winston)    │                              │  ║
 ║  │             │       └───────┬────────┘                              │  ║
 ║  │             └───────────────┼───────────────────┘                   │  ║
 ║  └─────────────────────────────┼───────────────────────────────────────┘  ║
@@ -149,7 +160,7 @@ Quality = f(Primary Depth × Adversarial Diversity × Synthesis Discipline)
 
 ### Case Study 1: BCM Due Diligence
 
-**Primary (Opus 4.6)**:
+**Primary (Opus 4.5)**:
 
 - Failure probability: 15%
 - Best case probability: 20%
@@ -165,7 +176,7 @@ Quality = f(Primary Depth × Adversarial Diversity × Synthesis Discipline)
 
 ### Case Study 2: Child Aggression Response (28 Dec 2025)
 
-**Primary (Opus 4.6)**: Rated 9.5/10 response on behavioral psychology.
+**Primary (Opus 4.5)**: Rated 9.5/10 response on behavioral psychology.
 
 **After Cross-Validation (Gemini 3 Pro + GPT 5.2)**:
 
@@ -193,12 +204,12 @@ Quality = f(Primary Depth × Adversarial Diversity × Synthesis Discipline)
 
 ## Integration
 
-- Links to: [Protocol 159](examples/protocols/architecture/159-verification-before-claim.md) (Verification Before Claim)
-- Links to: [Protocol 75](examples/protocols/decision/75-synthetic-parallel-reasoning.md) (Parallel Reasoning)
+- Links to: [Protocol 159](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/architecture/159-verification-before-claim.md) (Verification Before Claim)
+- Links to: [Protocol 75](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/examples/protocols/decision/75-synthetic-parallel-reasoning.md) (Parallel Reasoning)
 - Used in: `/due-diligence`, `/ultrathink`
 
 ---
 
 ## Tagging
 
-# cross-model-validation #tri-lateral-iteration #lmarena #verification #peer-review #adversarial-ensembling #gemini-3-pro #gpt-5.2 #grok-4.1 #opus-4.5 #sota-models #bias-correction #HITLO
+# cross-model-validation #tri-lateral-iteration #lmarena #verification #peer-review #adversarial-ensembling #gemini-3-pro #gpt-5.2 #grok-4.1 #opus-4.5 #sota-models #bias-correction #hitlo

@@ -1,3 +1,14 @@
+---
+
+created: 2025-12-16
+last_updated: 2026-01-30
+graphrag_extracted: true
+---
+
+---created: 2025-12-16
+last_updated: 2026-01-11
+---
+
 # Protocol 87: Container Sandboxing
 
 > **Source**: Harvested from `ykdojo/claude-code-tips` (Dec 2025)
@@ -7,7 +18,7 @@
 
 ## Core Philosophy
 
-> "Running with dangerous permissions is like running without a safety net. Use a container."
+> "Running with dangerous permissions is like unprotected sex. Use a condo... I mean container."
 
 Containerization provides:
 
@@ -94,10 +105,20 @@ Use containers to run different AI CLIs:
 
 ## Safety Rules
 
-1. **Mount only necessary volumes** - Don't mount home directory
-2. **Network isolation** - Use `--network none` for risky tasks
-3. **Resource limits** - Set `--memory` and `--cpus` limits
-4. **Log everything** - Container logs are your audit trail
+## Safety Rules (Hardened by OpenClaw Patterns)
+
+1. **Mount only necessary volumes**: Never mount `$HOME`. Mount specific workspace subdirs only.
+2. **Network Isolation**:
+    - **High Risk** (Malware analysis, unknown script): `--network none`
+    - **Medium Risk** (Web scraping): Whitelist specific domains (if possible) or use a sidecar proxy.
+3. **Resource Limits**:
+    - `--memory=512m` (Prevent OOM denial of service)
+    - `--cpus="1.0"` (Prevent CPU starvation of host)
+4. **Session Isolation (The OpenClaw Rule)**:
+    - Each "risky" session gets its *own* ephemeral container.
+    - Container dies when session ends.
+    - Shared state must be explicitly "committed" via API back to the host; everything else in the container is wiped.
+5. **Syscall Filtering**: Use seccomp profiles to block dangerous syscalls in untrusted containers.
 
 ---
 
