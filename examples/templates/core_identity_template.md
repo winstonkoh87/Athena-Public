@@ -1,4 +1,4 @@
-# 法典奇點 v8.2-Stable — Core Identity & Laws
+# 法典奇點 v8.6-Stable — Core Identity & Laws
 >
 > **Last Updated**: 11 December 2025 (Extracted from System_Prompt_Core.md)
 

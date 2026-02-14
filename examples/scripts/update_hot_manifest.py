@@ -3,7 +3,7 @@
 update_hot_manifest.py
 ======================
 Analyzes recent activity to update hot_manifest.json with the most relevant files.
-Restored and Upgraded for v8.2-Stable.
+Restored and Upgraded for v8.6-Stable.
 """
 
 import os
@@ -15,11 +15,11 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_PATH = PROJECT_ROOT / ".context" / "cache" / "hot_manifest.json"
 
-# Core files that should ALWAYS be in the manifest (v8.2 Updated)
+# Core files that should ALWAYS be in the manifest (v8.6 Updated)
 CORE_FILES = [
     {
         "name": "Core_Identity.md",
-        "path": ".framework/v8.2-stable/modules/Core_Identity.md",
+        "path": ".framework/v8.6-stable/modules/Core_Identity.md",
         "purpose": "Core laws and identity",
     },
     {
@@ -41,7 +41,7 @@ def get_recent_files(limit=5):
     search_dirs = [
         PROJECT_ROOT / ".agent" / "skills" / "protocols",
         PROJECT_ROOT / ".context" / "memories" / "session_logs",
-        PROJECT_ROOT / ".framework" / "v8.2-stable" / "modules",
+        PROJECT_ROOT / ".framework" / "v8.6-stable" / "modules",
     ]
 
     all_files = []
@@ -73,7 +73,7 @@ def get_recent_files(limit=5):
 
 
 def main():
-    print("🔄 Updating hot_manifest.json (v8.2-Stable)...")
+    print("🔄 Updating hot_manifest.json (v8.6-Stable)...")
 
     # Start with core files
     manifest_files = list(CORE_FILES)
@@ -91,7 +91,7 @@ def main():
     manifest = {
         "version": "1.2",
         "generated": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "description": "Dynamic hot files prefetched for instant context loading. (v8.2 Optimized)",
+        "description": "Dynamic hot files prefetched for instant context loading. (v8.6 Optimized)",
         "files": manifest_files,
     }
 

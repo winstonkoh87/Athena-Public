@@ -2,7 +2,7 @@
 graphrag_extracted: true
 ---
 
-# Output Standards (v8.2-stable)
+# Output Standards (v8.6-stable)
 
 > **Purpose**: Defines mandatory formatting, reasoning, and delivery standards for the AI.
 > **Enforcement**: Loaded on `/think`, `/ultrathink`, or High-Stakes Queries.

@@ -2,7 +2,7 @@
 graphrag_extracted: true
 ---
 
-# System Manifest (Athena v8.2-stable)
+# System Manifest (Athena v8.6-stable)
 
 > **Purpose**: Definitive architecture reference for the Athena Bionic Operating System.
 > **Scope**: High-level structure, directory map, and core operational logic.
@@ -31,7 +31,7 @@ graphrag_extracted: true
 
 | Path | Purpose | Key Files |
 | :--- | :--- | :--- |
-| **`/.framework/`** | **The Soul** (Identity & Laws) | `v8.2-stable/modules/Core_Identity.md`, `MANIFESTO.md` |
+| **`/.framework/`** | **The Soul** (Identity & Laws) | `v8.6-stable/modules/Core_Identity.md`, `MANIFESTO.md` |
 | **`/.context/`** | **The Brain** (Memory & State) | `project_state.md`, `memories/`, `User_Vault/` |
 | **`/.agent/`** | **The Hands** (Execution) | `scripts/`, `workflows/`, `skills/protocols/` |
 | **`/.projects/`** | **The Work** (Ventures) | Client work, personal projects |
@@ -65,7 +65,7 @@ graphrag_extracted: true
 
 ## 5. Metadata
 
-- **Version**: v8.2-Stable
+- **Version**: v8.6-Stable
 - **Stack**: Python 3.12+, Supabase (pgvector), Gemini 2.0+ / Claude 3.5+
 - **Local RAG**: FAISS + BGE-M3 (Sovereign Cortex)
 - **Author**: [AUTHOR] / Athena

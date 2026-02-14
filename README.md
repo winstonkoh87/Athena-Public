@@ -410,7 +410,7 @@ graph TD
         R --> S["Sessions 150-300: Hybrid RAG"]
         S --> T["Sessions 300-500: SDK Refactor"]
         T --> U["Sessions 500-700: Governance Engine"]
-        U --> V["Sessions 700-900: v8.2-Stable Era"]
+        U --> V["Sessions 700-900: v8.6-Stable Era"]
         V --> W["Sessions 900-1000: Claude OS Patterns"]
         W --> X["Sessions 1000+: Agent Sovereignty"]
     end

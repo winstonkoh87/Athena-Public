@@ -2,26 +2,26 @@
 graphrag_extracted: true
 ---
 
-# 法典奇點 v8.2-stable — Core Identity & Laws
+# 法典奇點 v8.6-stable — Core Identity & Laws
 
-> **Last Updated**: 2026-02-03 (v8.2-Stable Audit)
+> **Last Updated**: 2026-02-15 (v8.6-Stable Audit)
 > **Purpose**: Essential identity, laws, and reasoning standards loaded on every `/start`.
 
-## 📚 Framework Navigation (v8.2-Stable)
+## 📚 Framework Navigation (v8.6-Stable)
 
 | Module | Purpose |
 | :--- | :--- |
-| **[Core Identity](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/Core_Identity.md)** | Core laws, identity, and reasoning standards |
-| [System Manifest](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/System_Manifest.md) | Technical architecture and system components |
-| [System Principles](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/System_Principles.md) | Strategic heuristics and operational constants |
-| [Operating Principles](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/Operating_Principles.md) | Tactical rules of engagement |
-| [Output Standards](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/Output_Standards.md) | Quality, formatting, and tone requirements |
-| [Athena Profile](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/Athena_Profile.md) | Cognitive identity and "Seats" definitions |
-| [User Profile Core](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/User_Profile_Core.md) | Essential user preferences and context |
-| [Constraints Master](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/Constraints_Master.md) | Ethical, legal, and operational boundaries |
-| [Session Observations](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/Session_Observations.md) | High-level insights from recent work |
-| [Governance Audit](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/Governance_Audit_2025.md) | External audit directives and history |
-| [Dead Man Switch](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/DEAD_MAN_SWITCH.md) | Continuity and protocol verification |
+| **[Core Identity](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/Core_Identity.md)** | Core laws, identity, and reasoning standards |
+| [System Manifest](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/System_Manifest.md) | Technical architecture and system components |
+| [System Principles](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/System_Principles.md) | Strategic heuristics and operational constants |
+| [Operating Principles](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/Operating_Principles.md) | Tactical rules of engagement |
+| [Output Standards](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/Output_Standards.md) | Quality, formatting, and tone requirements |
+| [Athena Profile](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/Athena_Profile.md) | Cognitive identity and "Seats" definitions |
+| [User Profile Core](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/User_Profile_Core.md) | Essential user preferences and context |
+| [Constraints Master](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/Constraints_Master.md) | Ethical, legal, and operational boundaries |
+| [Session Observations](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/Session_Observations.md) | High-level insights from recent work |
+| [Governance Audit](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/Governance_Audit_2025.md) | External audit directives and history |
+| [Dead Man Switch](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/DEAD_MAN_SWITCH.md) | Continuity and protocol verification |
 
 ---
 
@@ -45,7 +45,7 @@ Each session acts as a **HITLO Epoch** (Human-in-the-Loop Optimization), where o
 | **Memory** | `GraphRAG` | Microsoft Research (2024) | Holistic knowledge graph search (Community Detection) |
 | **Execution** | **70% Rule** | Pearson (n.d.) | Move fast, break things, ship at 70% readiness |
 | **Context** | `Agents.md` | Anthropic (n.d.) | Standardized agent instruction files |
-| **Identity** | [Athena Profile](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/Athena_Profile.md) | Internal (2025) | Distinct cognitive identity & counterweights |
+| **Identity** | [Athena Profile](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/Athena_Profile.md) | Internal (2025) | Distinct cognitive identity & counterweights |
 
 *See [References.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.context/references/References.md) for full citations.*
 
@@ -60,12 +60,12 @@ Each session acts as a **HITLO Epoch** (Human-in-the-Loop Optimization), where o
 5. **[Protocol 171 (Trilateral)](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/docs/TRILATERAL_FEEDBACK.md)** — Mutual Blindness Breaker (Cross-Model Validation).
 6. [RISK_PLAYBOOKS.md](file:///Users/[AUTHOR]/Desktop/Project Athena/Athena-Public/docs/protocols/RISK_PLAYBOOKS.md) — Pre-compiled responses.
 
-- [Governance_Audit_2025.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/Governance_Audit_2025.md) — External audit directives (Dec 2025).
-- [MANIFESTO.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/MANIFESTO.md) — The Athena Manifesto (Philosophy & Promise).
-- [System_Principles.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/System_Principles.md) — Strategic heuristics and operational constants.
-- [Operating_Principles.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/Operating_Principles.md) — Tactical rules of engagement.
-- [Session_Observations.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/Session_Observations.md) — High-level insights from recent work.
-- [User_Profile_Core.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/User_Profile_Core.md) — Essential user preferences and context.
+- [Governance_Audit_2025.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/Governance_Audit_2025.md) — External audit directives (Dec 2025).
+- [MANIFESTO.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/MANIFESTO.md) — The Athena Manifesto (Philosophy & Promise).
+- [System_Principles.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/System_Principles.md) — Strategic heuristics and operational constants.
+- [Operating_Principles.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/Operating_Principles.md) — Tactical rules of engagement.
+- [Session_Observations.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/Session_Observations.md) — High-level insights from recent work.
+- [User_Profile_Core.md](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/User_Profile_Core.md) — Essential user preferences and context.
 
 ---
 

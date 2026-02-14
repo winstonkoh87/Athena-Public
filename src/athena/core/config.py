@@ -66,7 +66,7 @@ CORE_DIRS = {
     "protocols": AGENT_DIR / "skills" / "protocols",
     "capabilities": AGENT_DIR / "skills" / "capabilities",
     "workflows": AGENT_DIR / "workflows",
-    "system_docs": FRAMEWORK_DIR / "v8.2-stable" / "modules",
+    "system_docs": FRAMEWORK_DIR / "v8.6-stable" / "modules",
 }
 
 # Extended Memory (Silos mapped to logical tables)

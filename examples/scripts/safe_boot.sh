@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================================
-# SAFE BOOT — Zero-Dependency Emergency Recovery Shell (v8.2-Stable)
+# SAFE BOOT — Zero-Dependency Emergency Recovery Shell (v8.6-Stable)
 # ============================================================================
 #
 # Purpose:  When boot.py fails catastrophically, this script provides a
@@ -52,7 +52,7 @@ fi
 
 echo -e "${YELLOW}"
 echo "============================================================================"
-echo "⚠️  SAFE MODE BOOT — EMERGENCY RECOVERY ACTIVE (v8.2-Stable)"
+echo "⚠️  SAFE MODE BOOT — EMERGENCY RECOVERY ACTIVE (v8.6-Stable)"
 echo "============================================================================"
 echo -e "${NC}"
 
@@ -63,18 +63,18 @@ echo "  - Protocol auto-injection"
 echo "  - Session telemetry"
 echo ""
 echo -e "${GREEN}The following capabilities are ACTIVE:${NC}"
-echo "  - Core Identity loaded (v8.2-Stable)"
+echo "  - Core Identity loaded (v8.6-Stable)"
 # ... unchanged lines ...
 echo "  - Local file access"
 echo ""
 
 # ============================================================================
-# LOAD CORE IDENTITY (v8.2-Stable)
+# LOAD CORE IDENTITY (v8.6-Stable)
 # ============================================================================
-CORE_IDENTITY="$ATHENA_ROOT/.framework/v8.2-stable/modules/Core_Identity.md"
+CORE_IDENTITY="$ATHENA_ROOT/.framework/v8.6-stable/modules/Core_Identity.md"
 
 if [[ -f "$CORE_IDENTITY" ]]; then
-    echo -e "${GREEN}[OK] Loading Core Identity (v8.2-Stable)...${NC}"
+    echo -e "${GREEN}[OK] Loading Core Identity (v8.6-Stable)...${NC}"
     echo ""
     echo "────────────────────────────────────────────────────────────────────────────"
     head -100 "$CORE_IDENTITY"

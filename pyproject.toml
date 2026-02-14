@@ -3,31 +3,15 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "athena-cli"
-version = "8.5.0"
-description = "The Linux for AI Agents — A local OS that gives any LLM persistent memory, autonomy, and time-awareness."
+name = "athena-sdk"
+version = "1.0.0"
+description = "Athena Bionic OS SDK"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [
     { name = "Winston Koh", email = "winstonkoh87@gmail.com" }
 ]
-keywords = ["ai-agent", "operating-system", "memory", "rag", "vector-database", "autonomous-agents", "local-first", "mcp-server"]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-]
-
-# Core dependencies (minimal for basic usage)
-# Core dependencies (v8.2-stable stack)
 dependencies = [
     "python-dotenv>=1.0.0",
     "google-generativeai>=0.3.0",
@@ -36,45 +20,30 @@ dependencies = [
     "pydantic>=2.0.0",
     "anthropic>=0.7.0",
     "sentence-transformers>=2.2.0",
-    "torch>=2.0.0",
-    "watchdog>=3.0.0",
+    "torch>=2.0.0"
 ]
-
-[project.scripts]
-athena = "athena.__main__:main"
 
 [project.optional-dependencies]
-# MCP Server support
-mcp = [
-    "fastmcp>=2.0.0",
-]
-
-# MCP Server support
-mcp = [
-    "fastmcp>=2.0.0",
-]
-
-# Development tools
 dev = [
-    "pytest>=7.0.0",
-    "black>=23.0.0",
-    "ruff>=0.1.0",
+    "pytest",
+    "black",
+    "ruff",
+    "pipreqs",
+    "pydeps"
 ]
-
-[project.urls]
-Homepage = "https://github.com/winstonkoh87/Athena-Public"
-Documentation = "https://github.com/winstonkoh87/Athena-Public/blob/main/docs/GETTING_STARTED.md"
-Repository = "https://github.com/winstonkoh87/Athena-Public"
-Issues = "https://github.com/winstonkoh87/Athena-Public/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/athena"]
 
-[tool.black]
-line-length = 100
-target-version = ["py310", "py311", "py312", "py313", "py314"]
-
 [tool.ruff]
-line-length = 100
-select = ["E", "F", "I", "N", "W"]
-ignore = ["E501"]
+line-length = 88
+target-version = "py310"
+select = ["E", "W", "F", "I", "B", "C4", "UP", "SIM"]
+ignore = ["E501", "B008"]
+
+[tool.ruff.isort]
+known-first-party = ["athena"]
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]

@@ -27,7 +27,7 @@ def generate_mermaid() -> str:
     nodes = {
         "CI": PROJECT_ROOT
         / ".framework"
-        / "v8.2-stable"
+        / "v8.6-stable"
         / "modules"
         / "Core_Identity.md",
         "PR": PROJECT_ROOT / ".agent" / "skills" / "protocols",

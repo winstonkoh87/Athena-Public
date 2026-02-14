@@ -29,7 +29,7 @@ last_updated: 2026-02-08
 - **Sovereign Redundancy**: Established the "Cloud-First, Local-Fallback" architecture. Athena now prioritizes Supabase for intelligence but relies on a local SQLite Sidecar (`sidecar.py`) for survival/offline resilience.
 - **The Mute Button Resolution**: Resolved the "Co-Founder vs. Instrument" paradox via the "Challenger Default / Command Override" protocol.
 - **Entropy Control**: Implemented **Protocol 106 (Sunset Protocol)** via `reaper.py` to automatically prune dormant skill files, preventing complexity rot.
-- **Blind Spot Remediation**: Fixed 304 legacy links (v8.2-stable -> v8.0) and integrated 4 orphaned framework modules, restoring full graph connectivity.
+- **Blind Spot Remediation**: Fixed 304 legacy links (v8.6-stable -> v8.0) and integrated 4 orphaned framework modules, restoring full graph connectivity.
 
 ## Session 2026-01-30 (Session 12) - The Athena Paradox & Risk Physics
 

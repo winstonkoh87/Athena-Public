@@ -1,7 +1,7 @@
 # Athena Workspace Architecture
 
 > **Last Updated**: 5 February 2026  
-> **System Version**: v8.2-stable (Agent Sovereignty)
+> **System Version**: v8.6-stable (Agent Sovereignty)
 
 ---
 
@@ -10,7 +10,7 @@
 ```text
 Athena/
 ├── .framework/                    # ← THE CODEX (stable, rarely updated)
-│   ├── v8.2-stable/
+│   ├── v8.6-stable/
 │   │   ├── modules/
 │   │   │   ├── Core_Identity.md   # Laws #0-#4, RSI, Bionic Stack, COS
 │   │   │   └── Output_Standards.md # Response formatting, reasoning levels

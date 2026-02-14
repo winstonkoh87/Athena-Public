@@ -132,7 +132,7 @@ rl.on('line', async (line) => {
 
 function loadAthenaSystemPrompt(): string {
   // Load Core_Identity.md + relevant protocols
-  return fs.readFileSync('.framework/v8.2-stable/modules/Core_Identity.md', 'utf-8');
+  return fs.readFileSync('.framework/v8.6-stable/modules/Core_Identity.md', 'utf-8');
 }
 ```
 

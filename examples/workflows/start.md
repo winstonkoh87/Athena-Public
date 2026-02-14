@@ -16,7 +16,7 @@ last_updated: 2026-01-20
 
 // turbo
 
-- [/] Load `.framework/v8.2-stable/modules/Core_Identity.md` — Laws #0-#4, Identity, RSI (~2K tokens)
+- [/] Load `.framework/v8.6-stable/modules/Core_Identity.md` — Laws #0-#4, Identity, RSI (~2K tokens)
 - [/] **Identity**: Load `.context/memory_bank/userContext.md` — Core profile, constraints, psychology (Robust)
 - [/] **Mission**: Load `.context/memory_bank/productContext.md` — Soul purpose, philosophy (Robust)
 - [/] **State**: Load `.context/memory_bank/activeContext.md` — Current focus (Robust)

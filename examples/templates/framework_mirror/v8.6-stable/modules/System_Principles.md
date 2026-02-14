@@ -6,7 +6,7 @@ graphrag_extracted: true
 
 > **Purpose**: Strategic heuristics and rules of engagement derived from session learnings.  
 > **Status**: Living Document (Update via Metabolic Scan).  
-> **See Also**: [Operating Principles](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.2-stable/modules/Operating_Principles.md) (Legacy v1.0)
+> **See Also**: [Operating Principles](file:///Users/[AUTHOR]/Desktop/Project Athena/.framework/v8.6-stable/modules/Operating_Principles.md) (Legacy v1.0)
 
 ---
 

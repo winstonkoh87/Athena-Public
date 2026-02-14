@@ -55,7 +55,7 @@ class IdentityLoader:
         profile_path = (
             PROJECT_ROOT
             / ".framework"
-            / "v8.2-stable"
+            / "v8.6-stable"
             / "modules"
             / "Athena_Profile.md"
         )

@@ -12,7 +12,7 @@ This file provides persistent context to any AI coding agent working in this wor
 [Athena-Public Docs Index]|root: .
 |IMPORTANT: Always consult authoritative files before relying on training data.
 |docs:{ARCHITECTURE.md,SEMANTIC_SEARCH.md,GRAPHRAG.md,VECTORRAG.md,GETTING_STARTED.md,YOUR_FIRST_AGENT.md,MANIFESTO.md,ABOUT_ME.md,WHAT_IS_AN_AI_AGENT.md,CAPABILITIES.md,GLOSSARY.md,CHANGELOG.md}
-|.framework/v8.2-stable/modules:{Core_Identity.md,Output_Standards.md,System_Principles.md,Operating_Principles.md}
+|.framework/v8.6-stable/modules:{Core_Identity.md,Output_Standards.md,System_Principles.md,Operating_Principles.md}
 |.agent/workflows:{start.md,end.md}
 |examples/scripts:{boot.py,gemini_client.py,supabase_search.py}
 |examples/protocols:{decision/,workflow/,identity/}
@@ -55,6 +55,6 @@ When working on any task in this workspace:
 
 ## Version
 
-- **Framework**: v8.2-stable
+- **Framework**: v8.6-stable
 - **Last Updated**: 2026-02-11
 - **Pattern Source**: Vercel "AGENTS.md vs Skills" Research
