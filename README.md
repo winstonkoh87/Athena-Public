@@ -69,6 +69,8 @@ Athena works out of the box, but if you want **superpowers**, you can build the 
 
 Run `python3 examples/scripts/exocortex.py download` to get started. [Read more →](docs/EXOCORTEX.md)
 
+> **Update (Feb 2026)**: The Exocortex is now **fully fused** into the main search. When you query Athena, she automatically checks both your personal notes and the global Exocortex, ranking facts by relevance.
+
 ---
 
 ## 📣 Community Reception

@@ -61,6 +61,7 @@ WEIGHTS = {
     "reference": 1.8,  # Reference docs (vector search)
     "system_doc": 1.8,  # System docs (vector search)
     "sqlite": 1.5,  # The Sovereign Fallback (Local DB)
+    "exocortex": 1.5,  # The Global Knowledge (Wikipedia Abstracts)
 }
 RRF_K = 60
 CONFIDENCE_HIGH = 0.03
@@ -588,6 +589,48 @@ def collect_sqlite(query: str, limit: int = 10) -> list[SearchResult]:
     return results
 
 
+def collect_exocortex(query: str, limit: int = 5) -> list[SearchResult]:
+    """Search the Exocortex (Wikipedia Abstracts) via SQLite FTS5."""
+    import sqlite3
+
+    # Hardcoded path to standard location
+    db_path = PROJECT_ROOT / ".context" / "knowledge" / "exocortex.db"
+
+    if not db_path.exists():
+        return []
+
+    results = []
+    try:
+        conn = sqlite3.connect(str(db_path))
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        # Sanitize term for FTS5
+        clean_term = f"""{query.replace('"', '""')}"""
+
+        # FTS query syntax
+        sql = "SELECT title, abstract, url FROM abstracts WHERE title MATCH ? OR abstract MATCH ? ORDER BY rank LIMIT ?"
+
+        cursor.execute(sql, (clean_term, clean_term, limit))
+
+        for row in cursor.fetchall():
+            results.append(
+                SearchResult(
+                    id=f"Exocortex:{row['title']}",
+                    content=f"{row['abstract'][:300]}...",
+                    source="exocortex",
+                    score=1.0,  # FTS rank is internal, we normalize flat here
+                    metadata={"url": row["url"]},
+                )
+            )
+
+        conn.close()
+    except Exception as e:
+        print(f"   ⚠️ Exocortex search failed: {e}", file=sys.stderr)
+
+    return results
+
+
 # --- Fusion Logic ---
 
 
@@ -699,6 +742,7 @@ def run_search(
                 "sqlite": lambda: collect_sqlite(query),
                 "filename": lambda: collect_filenames(query),
                 "framework_docs": lambda: collect_framework_docs(query),
+                "exocortex": lambda: collect_exocortex(query),
             }
 
             lists = {}
