@@ -361,13 +361,10 @@ days_covered: {days}
         output_path.write_text(full_report, encoding="utf-8")
         print(f"\n   ✅ Report saved: {output_path}")
     else:
-        print(
-            f"\n   🔍 [DRY RUN] Would save to: {OPTIMIZATION_DIR / f'{today}-W{week_num:02d}.md'}"
-        )
-        # Print only the summary header, not the full report content
-        preview_lines = full_report.split("\n")[:20]
-        print("\n" + "\n".join(preview_lines))
-        print(f"\n   ... ({len(full_report)} chars total, use --save to persist)")
+        output_path = OPTIMIZATION_DIR / f"{today}-W{week_num:02d}.md"
+        print(f"\n   🔍 [DRY RUN] Would save to: {output_path}")
+        print(f"   📏 Report size: {len(full_report)} chars")
+        print("   ℹ️  Run without --dry-run to save the full report.")
 
     return full_report
 

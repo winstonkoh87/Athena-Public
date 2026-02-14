@@ -312,11 +312,10 @@ items_relevant: {len(relevant)}
         output_path.write_text(full_doc, encoding="utf-8")
         print(f"\n   ✅ Saved: {output_path}")
     else:
-        print(f"\n   🔍 [DRY RUN] Would save to: {BRIEFINGS_DIR / f'{today}.md'}")
-        # Print only the summary header, not the full document content
-        preview_lines = full_doc.split("\n")[:15]
-        print("\n" + "\n".join(preview_lines))
-        print(f"\n   ... ({len(full_doc)} chars total, use --save to persist)")
+        output_path = BRIEFINGS_DIR / f"{today}.md"
+        print(f"\n   🔍 [DRY RUN] Would save to: {output_path}")
+        print(f"   📏 Briefing size: {len(full_doc)} chars, {len(relevant)} items")
+        print("   ℹ️  Run without --dry-run to save the full briefing.")
 
     return full_doc
 
