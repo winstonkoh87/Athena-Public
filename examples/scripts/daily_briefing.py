@@ -121,9 +121,7 @@ def fetch_rss(url: str, max_items: int = 10) -> list[dict]:
                 {
                     "title": (item.findtext("title") or "").strip(),
                     "link": (item.findtext("link") or "").strip(),
-                    "description": _clean_html(item.findtext("description") or "")[
-                        :300
-                    ],
+                    "description": _clean_html(item.findtext("description") or "")[:300],
                 }
             )
 
@@ -176,9 +174,7 @@ def filter_by_interest(items: list[dict], keywords: list[str]) -> list[dict]:
 # ── Gemini Synthesis ──────────────────────────────────────────────────────────
 
 
-def synthesize_briefing(
-    categorized_items: dict, model: str = "gemini-2.0-flash"
-) -> str:
+def synthesize_briefing(categorized_items: dict, model: str = "gemini-2.0-flash") -> str:
     """Use Gemini to synthesize a morning briefing from collected items."""
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
@@ -317,7 +313,10 @@ items_relevant: {len(relevant)}
         print(f"\n   ✅ Saved: {output_path}")
     else:
         print(f"\n   🔍 [DRY RUN] Would save to: {BRIEFINGS_DIR / f'{today}.md'}")
-        print("\n" + full_doc)
+        # Print only the summary header, not the full document content
+        preview_lines = full_doc.split("\n")[:15]
+        print("\n" + "\n".join(preview_lines))
+        print(f"\n   ... ({len(full_doc)} chars total, use --save to persist)")
 
     return full_doc
 
@@ -328,9 +327,7 @@ items_relevant: {len(relevant)}
 def main():
     parser = argparse.ArgumentParser(description="Athena Daily Briefing Agent")
     parser.add_argument("--dry-run", action="store_true", help="Fetch and display only")
-    parser.add_argument(
-        "--sources-only", action="store_true", help="List configured sources"
-    )
+    parser.add_argument("--sources-only", action="store_true", help="List configured sources")
     args = parser.parse_args()
 
     config = load_config()

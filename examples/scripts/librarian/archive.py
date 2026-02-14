@@ -12,9 +12,12 @@ from urllib.parse import urlparse
 LIBRARIAN_DIR = Path(__file__).resolve().parent
 
 
+YOUTUBE_DOMAINS = {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"}
+
+
 def is_youtube(url):
-    domain = urlparse(url).netloc
-    return "youtube.com" in domain or "youtu.be" in domain
+    hostname = urlparse(url).hostname or ""
+    return hostname in YOUTUBE_DOMAINS
 
 
 def archive(url):
