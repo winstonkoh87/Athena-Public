@@ -45,5 +45,4 @@ ignore = ["E501", "B008"]
 known-first-party = ["athena"]
 
 [tool.black]
-line-length = 88
 target-version = ["py310"]
