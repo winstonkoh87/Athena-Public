@@ -80,6 +80,8 @@ EXTENDED_DIRS = [
     (PROJECT_ROOT / ".athena", "system_docs"),
     (PROJECT_ROOT / ".projects", "system_docs"),
     (PROJECT_ROOT / "Reflection Essay", "case_studies"),
+    (CONTEXT_DIR / "research", "case_studies"),
+    (CONTEXT_DIR / "specs", "system_docs"),
 ]
 
 

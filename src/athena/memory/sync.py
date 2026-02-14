@@ -1,46 +1,23 @@
-#!/usr/bin/env python3
 """
 athena.memory.sync
 ==================
 Core logic for synchronizing workspace content to Supabase pgvector.
-Handles chunking, metadata extraction, and batch uploads.
+Robustness: Handles absolute/relative path mismatches & Exponential Backoff.
 """
 
 import re
 import os
+import time
 import hashlib
 import json
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# ...
-
 from athena.memory.vectors import get_client, get_embedding
+from athena.memory.delta_manifest import DeltaManifest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-MANIFEST_PATH = PROJECT_ROOT / ".agent" / "state" / "sync_manifest.json"
-
-
-def get_file_hash(content: str) -> str:
-    """Calculate MD5 hash of content."""
-    return hashlib.md5(content.encode("utf-8")).hexdigest()
-
-
-def load_manifest() -> Dict:
-    """Load sync manifest."""
-    if MANIFEST_PATH.exists():
-        try:
-            return json.loads(MANIFEST_PATH.read_text())
-        except:
-            return {}
-    return {}
-
-
-def save_manifest(manifest: Dict):
-    """Save sync manifest."""
-    MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
-    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2))
 
 
 def Extract_Metadata_Simplistic(content: str) -> Dict:
@@ -53,8 +30,11 @@ def Extract_Metadata_Simplistic(content: str) -> Dict:
                 yaml_block = content[3:end]
                 for line in yaml_block.splitlines():
                     if ":" in line:
-                        key, val = line.split(":", 1)
-                        meta[key.strip()] = val.strip().strip('"').strip("'")
+                        items = line.split(":", 1)
+                        if len(items) == 2:
+                            meta[items[0].strip()] = (
+                                items[1].strip().strip('"').strip("'")
+                            )
         except:
             pass
     return meta
@@ -65,59 +45,75 @@ def extract_metadata(content: str, filename: str) -> Dict:
     return Extract_Metadata_Simplistic(content)
 
 
-def chunk_markdown(content: str) -> List[str]:
-    """Simple chunking stub (returns full content as list for now)."""
-    # For now, we rely on semantic search handling large contexts or truncation at embedding level
-    return [content]
-
-
 def sync_file_to_supabase(
     file_path: Path,
     table_name: str,
     extra_metadata: Dict = None,
-    manifest: Dict = None,
-    save_on_success: bool = True,
+    manifest: Optional[DeltaManifest] = None,
+    max_retries: int = 3,
 ):
     """
-    Sync a single file to Supabase.
-    Generates embeddings and inserts into the specified table.
+    Sync a single file with Exponential Backoff Retries.
     """
-    if not file_path.exists():
+    abs_root = PROJECT_ROOT.resolve()
+    abs_file = file_path.resolve()
+
+    if not abs_file.exists():
         return False
 
-    content = file_path.read_text(encoding="utf-8")
-
-    # Delta Check
-    current_hash = get_file_hash(content)
-    _manifest = manifest if manifest is not None else load_manifest()
-    relative_path = str(file_path.relative_to(PROJECT_ROOT))
-
-    if _manifest.get(relative_path) == current_hash:
-        # print(f"⏩ Skipping {file_path.name} (unchanged)") # Reduce noise in parallel
+    if manifest and not manifest.should_sync(abs_file):
         return True
 
-    meta = extract_metadata(content, file_path.name)
+    content = abs_file.read_text(encoding="utf-8")
+    meta = extract_metadata(content, abs_file.name)
     if extra_metadata:
         meta.update(extra_metadata)
 
-    chunks = chunk_markdown(content)
     client = get_client()
+    embedding = get_embedding(content[:30000])
 
-    # Check if table supports chunking (legacy schema check)
-    # For now, we sync the whole file as one entry to match search functions
-    print(f"📡 Syncing {file_path.name} to {table_name}...")
+    try:
+        db_path = str(abs_file.relative_to(abs_root))
+    except ValueError:
+        db_path = str(abs_file)
 
-    embedding = get_embedding(content[:30000])  # Cap content for embedding safety
     data = {
         "content": content,
         "embedding": embedding,
-        "file_path": str(file_path.relative_to(PROJECT_ROOT)),
-        "title": meta.get("title", file_path.name),
+        "file_path": db_path,
+        "title": meta.get("title", abs_file.name),
     }
+    _enrich_data_by_table(data, abs_file, table_name, meta)
 
-    # Add table-specific fields based on schema
+    # Retry Loop
+    for attempt in range(max_retries):
+        try:
+            client.table(table_name).upsert(data, on_conflict="file_path").execute()
+            if manifest:
+                manifest.update_entry(abs_file)
+            return True
+        except Exception as e:
+            if "code" in str(e).lower() and table_name in ["protocols", "case_studies"]:
+                try:
+                    client.table(table_name).upsert(data, on_conflict="code").execute()
+                    if manifest:
+                        manifest.update_entry(abs_file)
+                    return True
+                except:
+                    pass
+
+            if attempt < max_retries - 1:
+                wait = (2**attempt) + 0.5
+                # print(f"  ⚠ Retry {attempt+1} for {abs_file.name} in {wait}s...")
+                time.sleep(wait)
+            else:
+                raise e
+
+    return False
+
+
+def _enrich_data_by_table(data: Dict, file_path: Path, table_name: str, meta: Dict):
     if table_name == "sessions":
-        # Extract date from filename YYYY-MM-DD
         date_match = re.search(r"(\d{4}-\d{2}-\d{2})", file_path.name)
         data["date"] = date_match.group(1) if date_match else "2026-01-01"
         data["session_number"] = (
@@ -133,96 +129,40 @@ def sync_file_to_supabase(
         code_match = re.match(r"(CS-\d+)", file_path.name)
         data["code"] = code_match.group(1) if code_match else file_path.stem
     elif table_name == "capabilities":
-        data["title"] = file_path.stem
-        if "name" in data:
-            del data["name"]
-    elif table_name == "frameworks":
         data["name"] = file_path.stem
-        data["title"] = meta.get("title", file_path.name)
     elif table_name == "workflows":
         data["name"] = file_path.stem
         if "title" in data:
             del data["title"]
-    elif table_name == "knowledge":
-        data["title"] = meta.get("title", file_path.name)
-    elif table_name == "playbooks":
-        data["name"] = file_path.stem
-        data["title"] = meta.get("title", file_path.name)
-    elif table_name == "entities":
-        data["entity_name"] = file_path.stem
     elif table_name == "system_docs":
         data["filename"] = file_path.name
         data["doc_type"] = "system"
-        data["title"] = meta.get("title", file_path.name)
-    elif table_name == "user_profile":
+    elif table_name == "memory_bank":
         data["filename"] = file_path.name
-        data["title"] = meta.get("title", file_path.name)
-        data["category"] = "general"
-    elif table_name == "insights":
-        data["filename"] = file_path.name
-        data["title"] = meta.get("title", file_path.name)
+        data["doc_type"] = "memory_bank"
 
-    # Determine conflict target based on table schema
-    conflict_target = "file_path"
-    if table_name in ["workflows", "capabilities"]:
-        conflict_target = "name"
+
+def delete_file_from_vector(file_path_str: str):
+    client = get_client()
+    abs_root = PROJECT_ROOT.resolve()
+    try:
+        abs_file = Path(file_path_str).resolve()
+        db_path = str(abs_file.relative_to(abs_root))
+    except (ValueError, OSError):
+        db_path = file_path_str
+
+    table_name = "system_docs"
+    if "session_logs" in file_path_str:
+        table_name = "sessions"
+    elif "case_studies" in file_path_str:
+        table_name = "case_studies"
+    elif "protocols" in file_path_str:
+        table_name = "protocols"
+    elif "memory_bank" in file_path_str:
+        table_name = "system_docs"  # Map memory_bank to system_docs table
 
     try:
-        client.table(table_name).upsert(data, on_conflict=conflict_target).execute()
-        # Update manifest after success
-        _manifest[relative_path] = current_hash
-        if save_on_success:
-            save_manifest(_manifest)
-    except Exception as e:
-        # Fallback ONLY for tables known to use 'code' as unique key
-        if table_name in ["protocols", "case_studies"] and "code" in str(e).lower():
-            print(f"🔄 Retrying {file_path.name} with 'code' conflict resolution...")
-            client.table(table_name).upsert(data, on_conflict="code").execute()
-            _manifest[relative_path] = current_hash
-            if save_on_success:
-                save_manifest(_manifest)
-        else:
-            raise e
-
-    return True
-
-
-def sync_directory(directory: Path, table_name: str, recursive: bool = True):
-    """Sync an entire directory to a Supabase table."""
-    if not directory.exists():
-        return
-
-    pattern = "**/*.md" if recursive else "*.md"
-    files = list(directory.glob(pattern))
-
-    if not files:
-        return
-
-    print(f"🚀 Syncing {len(files)} files to '{table_name}' (Double-Parallel Mode)...")
-    manifest = load_manifest()
-
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        # Submit all tasks
-        # save_on_success=False to prevent race conditions on file write
-        future_to_file = {
-            executor.submit(
-                sync_file_to_supabase, f, table_name, manifest=manifest, save_on_success=False
-            ): f
-            for f in files
-        }
-
-        completed = 0
-        failed = 0
-
-        for future in as_completed(future_to_file):
-            f = future_to_file[future]
-            try:
-                future.result()
-                completed += 1
-            except Exception as e:
-                print(f"❌ Error syncing {f.name}: {e}")
-                failed += 1
-
-    # Save manifest once at the end
-    save_manifest(manifest)
-    print(f"✅ Sync Complete: {completed} processed, {failed} failed.")
+        client.table(table_name).delete().eq("file_path", db_path).execute()
+        return True
+    except Exception:
+        return False

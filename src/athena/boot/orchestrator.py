@@ -1,264 +1,167 @@
+#!/usr/bin/env python3
 """
-Athena Boot Orchestrator
+athena.boot.orchestrator
 =========================
-
-Modular boot sequence with session creation, integrity verification,
-and semantic memory priming.
-
-This is the FUNCTIONAL version that creates real artifacts.
+Modular boot sequence orchestrator.
+Replaces the monolithic .agent/scripts/boot.py
 """
 
-import hashlib
-import time
+import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, List, Tuple, Optional
+from athena.boot.loaders.ui import UILoader
+from athena.boot.loaders.state import StateLoader
+from athena.boot.loaders.identity import IdentityLoader
+from athena.boot.loaders.memory import MemoryLoader
+from athena.boot.loaders.system import SystemLoader
+from athena.boot.loaders.prefetch import PrefetchLoader
+from athena.boot.constants import (
+    PROJECT_ROOT,
+    RED,
+    GREEN,
+    YELLOW,
+    CYAN,
+    BOLD,
+    DIM,
+    RESET,
+)
 
 
-class BootOrchestrator:
-    """
-    Orchestrates the Athena boot sequence.
+def main():
+    # Phase 0: Check for --verify flag
+    if len(sys.argv) > 1 and sys.argv[1] == "--verify":
+        # We can implement a verify mode here later if needed
+        # For now, just pass
+        pass
 
-    The boot sequence consists of 7 phases:
-    1. Watchdog activation (verify core files exist)
-    2. System sync (check directory structure)
-    3. Semantic prime verification (SHA-384 hash check)
-    4. Session creation (create new session log)
-    5. Context capture (load last session summary)
-    6. Semantic memory priming (query vector DB if available)
-    7. Identity loading (load Core_Identity.md)
+    # Phase 1: Watchdog & Pre-flight
+    StateLoader.enable_watchdog()
+    UILoader.divider("⚡ ATHENA BOOT SEQUENCE")
 
-    Phases 6 & 7 run in parallel for performance optimization.
-    """
+    StateLoader.check_prior_crashes()
+    StateLoader.check_canary_overdue()
 
-    def __init__(self, project_root: Optional[Path] = None):
-        self.phases: List[Tuple[str, Callable]] = []
-        self.boot_time: float = 0
-        self.session_id: str = ""
-        self.project_root = project_root or self._discover_root()
-        self.session_logs_dir = self.project_root / "session_logs"
-        self.last_session: Optional[str] = None
+    # Phase 1.5: System Sync & Boot Timestamp Update
+    SystemLoader.sync_ui()
+    try:
+        last_boot_log = PROJECT_ROOT / ".agent" / "state" / "last_boot.log"
+        last_boot_log.parent.mkdir(parents=True, exist_ok=True)
+        with open(last_boot_log, "w") as f:
+            f.write(datetime.now().isoformat())
+    except Exception as e:
+        print(f"   ⚠️  Boot Log Update Fail: {e}")
 
-    def _discover_root(self) -> Path:
-        """Discover project root by looking for pyproject.toml or .git."""
-        current = Path.cwd()
-        for parent in [current] + list(current.parents):
-            if (parent / "pyproject.toml").exists() or (parent / ".git").exists():
-                return parent
-        return current
+    # Phase 2: Integrity
+    if not IdentityLoader.verify_semantic_prime():
+        return 1
 
-    def register_phase(self, name: str, executor: Callable):
-        """Register a boot phase with its executor function."""
-        self.phases.append((name, executor))
+    # Phase 3: Memory Recall
+    last_session = MemoryLoader.recall_last_session()
 
-    def execute(self, parallel_phases: List[int] = None) -> bool:
-        """
-        Execute all registered boot phases.
+    # Phase 3.5: Semantic Compaction (Protocol 415)
+    try:
+        sys.path.insert(0, str(PROJECT_ROOT / ".agent" / "scripts"))
+        from compact_context import compact_active_context
 
-        Args:
-            parallel_phases: List of phase indices to run in parallel
-                             (e.g., [5, 6] to run phases 6 & 7 concurrently)
+        print(f"   🧹 Compacting Context...", end="\r")
+        compact_active_context()
+        print(f"   🧹 Context Compacted.    ")
+    except Exception as e:
+        print(f"   ⚠️  Compaction Fail: {e}")
 
-        Returns:
-            True if boot completed successfully, False otherwise.
-        """
-        start_time = time.time()
-        parallel_phases = parallel_phases or []
+    # Phase 4: Session Creation
+    session_id = MemoryLoader.create_session()
 
-        print("━" * 60)
-        print("⚡ ATHENA BOOT SEQUENCE")
-        print("━" * 60)
+    # Phase 5: Audit (Reset)
+    try:
+        sys.path.insert(0, str(PROJECT_ROOT / ".agent" / "scripts"))
+        from semantic_audit import reset_audit
 
-        for i, (name, executor) in enumerate(self.phases):
-            phase_num = i + 1
-            try:
-                if i in parallel_phases:
-                    print(f"[{phase_num}/{len(self.phases)}] ⚡ {name} (parallel)")
-                else:
-                    print(f"[{phase_num}/{len(self.phases)}] ⏳ {name}")
+        reset_audit()
+    except Exception:
+        pass
 
-                result = executor()
+    # Phase 6 & 7: Optimized Context & Semantic Activation (Parallel)
+    from concurrent.futures import ThreadPoolExecutor
+    from athena.core.health import HealthCheck
 
-                if result is False:
-                    print(f"❌ Boot failed at phase: {name}")
-                    return False
+    def run_health_check_wrapper():
+        if not HealthCheck.run_all():
+            print(
+                f"{RED}⚠️  System health check failed. Proceeding with caution...{RESET}"
+            )
 
-                print(f"[{phase_num}/{len(self.phases)}] ✅ {name}")
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        # 1. Non-blocking context capture
+        executor.submit(MemoryLoader.capture_context)
 
-            except Exception as e:
-                print(f"❌ Boot error in {name}: {e}")
-                return False
+        # 2. Semantic priming (most expensive)
+        semantic_future = executor.submit(MemoryLoader.prime_semantic)
 
-        self.boot_time = time.time() - start_time
-        print("━" * 60)
-        print(f"⚡ ATHENA ONLINE | Session: {self.session_id} | Boot: {self.boot_time:.1f}s")
-        print("━" * 60)
+        # 3. Protocol injection
+        executor.submit(IdentityLoader.inject_auto_protocols, "startup session boot")
 
-        return True
+        # 4. Search cache pre-warming (new)
+        executor.submit(MemoryLoader.prewarm_search_cache)
 
+        # 5. System Health Check (Moved to background)
+        executor.submit(run_health_check_wrapper)
 
-def create_functional_orchestrator(project_root: Optional[Path] = None) -> BootOrchestrator:
-    """
-    Create boot orchestrator with FUNCTIONAL phase configuration.
+        # 6. Prefetch (Moved to background)
+        executor.submit(PrefetchLoader.prefetch_hot_files)
 
-    This version actually:
-    - Verifies directory structure
-    - Creates session logs
-    - Loads last session context
-    - Primes semantic memory (if Supabase configured)
-    """
-    orchestrator = BootOrchestrator(project_root)
-    root = orchestrator.project_root
-    logs_dir = orchestrator.session_logs_dir
+    # Display remaining sync items
+    MemoryLoader.display_learnings_snapshot()
+    IdentityLoader.display_cognitive_profile()
+    IdentityLoader.display_cos_status()
 
-    # --- Phase 1: Watchdog ---
-    def watchdog():
-        """Verify core files exist."""
-        required = ["pyproject.toml"]
-        for f in required:
-            if not (root / f).exists():
-                print(f"   ⚠️  Missing: {f}")
-        return True
+    # Phase 8: Sidecar Launch (Sovereign Index)
+    try:
+        import subprocess
 
-    orchestrator.register_phase("Watchdog activated", watchdog)
+        sidecar_path = PROJECT_ROOT / ".agent" / "scripts" / "sidecar.py"
+        subprocess.Popen(
+            [sys.executable, str(sidecar_path)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        print(f"   🛡️  Sidecar Launched (PID: Independent)")
+    except Exception as e:
+        print(f"   ⚠️  Sidecar Fail: {e}")
 
-    # --- Phase 2: System Sync ---
-    def system_sync():
-        """Ensure directory structure exists (supports both flat and nested layouts)."""
-        dirs = [
-            logs_dir,
-            root / ".context" / "memories" / "session_logs",  # GETTING_STARTED.md path
-            root / "protocols",
-            root / "case_studies",
-        ]
-        for d in dirs:
-            d.mkdir(parents=True, exist_ok=True)
-        return True
+    # Disable watchdog
+    StateLoader.disable_watchdog()
 
-    orchestrator.register_phase("System sync complete", system_sync)
+    # Final Summary
+    print(f"\n{BOLD}{'─' * 60}{RESET}")
+    print(f"{GREEN}{BOLD}⚡ Ready.{RESET} Session: {session_id}")
+    print(
+        f"{DIM}⚖️  Law #6 Reminder: Run 'python3 .agent/scripts/quicksave.py \"...\"' after completing work.{RESET}"
+    )
+    print(f"{BOLD}{'─' * 60}{RESET}\n")
 
-    # --- Phase 3: Semantic Prime Verification ---
-    def semantic_prime():
-        """Check integrity of core identity (checks multiple possible paths)."""
-        # Check both SDK path and user-created path from guide
-        identity_paths = [
-            root / "examples" / "framework" / "Core_Identity.md",
-            root / ".framework" / "modules" / "Core_Identity.md",
-        ]
-        identity_file = None
-        for path in identity_paths:
-            if path.exists():
-                identity_file = path
-                break
-
-        if identity_file:
-            content = identity_file.read_text()
-            hash_val = hashlib.sha256(content.encode()).hexdigest()[:12]
-            print(f"   🔐 Identity hash: {hash_val}")
-        else:
-            print("   ⚠️  Core_Identity.md not found (first-time setup?)")
-        return True
-
-    orchestrator.register_phase("Semantic prime verified", semantic_prime)
-
-    # --- Phase 4: Session Creation ---
-    def create_session():
-        """Create a new session log file."""
-        logs_dir.mkdir(parents=True, exist_ok=True)
-        today = datetime.now().strftime("%Y-%m-%d")
-
-        # Find next session number for today
-        existing = list(logs_dir.glob(f"{today}-session-*.md"))
-        next_num = len(existing) + 1
-
-        session_id = f"{today}-session-{next_num:02d}"
-        session_file = logs_dir / f"{session_id}.md"
-
-        # Create session log
-        session_file.write_text(f"""# Session Log: {session_id}
-
-> **Created**: {datetime.now().isoformat()}
-> **Status**: Active
-
-## Summary
-
-(Session in progress...)
-
-## Key Decisions
-
--
-
-## Insights
-
--
-
----
-*Auto-generated by Athena Boot Orchestrator*
-""")
-        orchestrator.session_id = session_id
-        print(f"   📝 Created: {session_file.name}")
-        return True
-
-    orchestrator.register_phase("Session created", create_session)
-
-    # --- Phase 5: Context Capture ---
-    def context_capture():
-        """Load summary from last session."""
-        sessions = sorted(logs_dir.glob("*.md"), reverse=True)
-        if len(sessions) > 1:
-            last = sessions[1]  # Skip the one we just created
-            orchestrator.last_session = last.stem
-            print(f"   ⏮️  Last session: {last.stem}")
-        else:
-            print("   📭 No previous sessions found")
-        return True
-
-    orchestrator.register_phase("Context captured", context_capture)
-
-    # --- Phase 6: Semantic Memory Priming ---
-    def semantic_prime_memory():
-        """Prime semantic memory (requires Supabase config)."""
+    # Display Memory Bank Context
+    memory_bank_path = PROJECT_ROOT / ".context" / "memory_bank" / "activeContext.md"
+    if memory_bank_path.exists():
+        print(f"\n{CYAN}{BOLD}🧠 Active Context (Memory Bank):{RESET}")
         try:
-            from athena.memory.vectors import get_client
+            content = memory_bank_path.read_text().strip()
+            # Indent content for readability
+            indented_content = "\n".join(f"   {line}" for line in content.splitlines())
+            print(f"{DIM}{indented_content}{RESET}")
 
-            get_client()  # Verify connection
-            print("   🧠 Supabase connected")
+            # Sentinel Phase (Protocol 420)
+            from athena.intelligence.sentinel import check_boot_sentinel
+
+            sentinel_msg = check_boot_sentinel()
+            if sentinel_msg:
+                print(f"\n{YELLOW}{sentinel_msg}{RESET}")
+
         except Exception:
-            print("   ⚠️  Semantic memory offline (Supabase not configured)")
-        return True
+            pass
 
-    orchestrator.register_phase("Semantic memory primed", semantic_prime_memory)
-
-    # --- Phase 7: Identity Loading ---
-    def load_identity():
-        """Load core identity principles (checks multiple possible paths)."""
-        identity_paths = [
-            root / "examples" / "framework" / "Core_Identity.md",
-            root / ".framework" / "modules" / "Core_Identity.md",
-        ]
-        identity_file = None
-        for path in identity_paths:
-            if path.exists():
-                identity_file = path
-                break
-
-        if identity_file:
-            print(f"   🏛️  Identity loaded from {identity_file.name}")
-        else:
-            print("   ⚠️  Using default identity (create Core_Identity.md to customize)")
-        return True
-
-    orchestrator.register_phase("Identity loaded", load_identity)
-
-    return orchestrator
-
-
-# Legacy alias for backwards compatibility
-def create_default_orchestrator() -> BootOrchestrator:
-    """Alias for create_functional_orchestrator."""
-    return create_functional_orchestrator()
+    return 0
 
 
 if __name__ == "__main__":
-    orchestrator = create_functional_orchestrator()
-    orchestrator.execute(parallel_phases=[4, 5])  # Run phases 6 & 7 in parallel
+    sys.exit(main())

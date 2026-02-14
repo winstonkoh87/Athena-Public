@@ -24,36 +24,35 @@ from athena.core.config import (
 )
 from athena.core.models import SearchResult
 from athena.core.cache import get_search_cache
-from athena.memory.vectors import (
-    get_embedding,
-    get_client,
-    search_sessions,
-    search_case_studies,
-    search_protocols,
-    search_capabilities,
-    search_playbooks,
-    search_references,
-    search_frameworks,
-    search_workflows,
-    search_entities,
-    search_user_profile,
-    search_system_docs,
-)
-from athena.tools.reranker import rerank_results
+# Lazy imports to speed up CLI startup
+# from athena.memory.vectors import ... (Moved inside functions)
+# from athena.tools.reranker import ... (Moved inside functions)
+
+# ANSI Colors
+BLUE = "\033[94m"
+CYAN = "\033[96m"
+GREEN = "\033[92m"
+YELLOW = "\033[93m"
+RED = "\033[91m"
+BOLD = "\033[1m"
+DIM = "\033[2m"
+RESET = "\033[0m"
 
 # Config
 # NOTE: Vector subtypes (case_study, session, protocol, etc.) each get their own
 # weight so RRF applies them correctly. The generic "vector" key is the fallback
 # for any subtype not explicitly listed.
 WEIGHTS = {
-    "canonical": 3.5,  # The Constitution (keyword match on CANONICAL.md)
     "case_study": 3.0,  # User-specific knowledge (vector search)
     "session": 3.0,  # User-specific sessions (vector search)
     "protocol": 2.8,  # Protocol library (vector search)
     "graphrag": 2.5,  # The Context (community/entity graph)
     "user_profile": 2.5,  # User profile data (vector search)
+    "framework_docs": 2.5,  # Framework .md content search (NEW)
     "framework": 2.3,  # Strategic frameworks (vector search)
     "tags": 2.2,  # The Index (keyword grep on TAG_INDEX)
+    "canonical": 2.0,  # The Constitution (NERFED from 3.5 — was drowning results)
+    "filename": 2.0,  # The Map (BOOSTED from 1.0 — file paths are high-signal)
     "vector": 1.8,  # Fallback for unlisted vector subtypes
     "capability": 1.8,  # Capability docs (vector search)
     "playbook": 1.8,  # Playbook docs (vector search)
@@ -62,12 +61,19 @@ WEIGHTS = {
     "reference": 1.8,  # Reference docs (vector search)
     "system_doc": 1.8,  # System docs (vector search)
     "sqlite": 1.5,  # The Sovereign Fallback (Local DB)
-    "filename": 1.0,  # The Map (filesystem filename match)
 }
 RRF_K = 60
 CONFIDENCE_HIGH = 0.03
 CONFIDENCE_MED = 0.02
 CONFIDENCE_LOW = 0.01
+
+# Filter config: Items that should be de-prioritized or hidden
+SKIP_PATHS = [
+    "node_modules/",
+    ".git/",
+    "athena-public/docs/libraries/",
+    "README.md",  # General readmes (often too noisy)
+]
 
 # GraphRAG paths
 GRAPHRAG_DIR = PROJECT_ROOT / ".agent" / "graphrag"
@@ -79,42 +85,66 @@ CHROMA_DIR = PROJECT_ROOT / ".agent" / "chroma_db"
 
 
 def collect_canonical(query: str) -> list[SearchResult]:
-    """Collect matches from CANONICAL.md"""
+    """Collect matches from CANONICAL.md — requires 2+ keyword hits per line."""
     results = []
     if not CANONICAL_PATH.exists():
         return []
 
-    keywords = [
-        w for w in query.split() if len(w) >= 2 and w.lower() not in ["the", "and", "for", "is"]
-    ]
+    stopwords = {
+        "the",
+        "and",
+        "for",
+        "is",
+        "in",
+        "to",
+        "of",
+        "a",
+        "an",
+        "on",
+        "at",
+        "by",
+        "or",
+        "not",
+    }
+    keywords = [w for w in query.split() if len(w) >= 2 and w.lower() not in stopwords]
     if not keywords:
         return []
 
     try:
         text = CANONICAL_PATH.read_text(encoding="utf-8")
         for line_num, line in enumerate(text.splitlines(), 1):
-            if any(k.lower() in line.lower() for k in keywords):
-                if "|" in line and "http" not in line:
-                    results.append(
-                        SearchResult(
-                            id=f"Canonical:L{line_num}",
-                            content=line.strip(),
-                            source="canonical",
-                            score=1.0,
-                        )
+            line_lower = line.lower()
+            # Require 2+ keyword matches to reduce noise
+            hits = sum(1 for k in keywords if k.lower() in line_lower)
+            if hits < min(2, len(keywords)):
+                continue
+
+            # Score based on keyword density
+            density = hits / len(keywords)
+
+            if "|" in line and "http" not in line:
+                results.append(
+                    SearchResult(
+                        id=f"Canonical:L{line_num}",
+                        content=line.strip(),
+                        source="canonical",
+                        score=density,  # Was 1.0 flat — now reflects match quality
                     )
-                elif "##" in line:
-                    results.append(
-                        SearchResult(
-                            id=f"Canonical:Header:L{line_num}",
-                            content=line.strip(),
-                            source="canonical",
-                            score=0.9,
-                        )
+                )
+            elif "##" in line:
+                results.append(
+                    SearchResult(
+                        id=f"Canonical:Header:L{line_num}",
+                        content=line.strip(),
+                        source="canonical",
+                        score=density * 0.9,
                     )
+                )
     except Exception:
         pass
-    return results[:5]
+    # Sort by score and limit to 3 (was 5 — reducing Canonical dominance)
+    results.sort(key=lambda r: r.score, reverse=True)
+    return results[:3]
 
 
 def collect_tags(query: str) -> list[SearchResult]:
@@ -155,12 +185,33 @@ def collect_tags(query: str) -> list[SearchResult]:
 
 
 def collect_vectors(
-    query: str, limit: int = 20, embedding: list[float] | None = None
+    query: str,
+    limit: int = 20,
+    embedding: list[float] | None = None,
+    exclude_domains: list[str] | None = None,
 ) -> list[SearchResult]:
     """Collect semantic matches via Supabase"""
+    if exclude_domains is None:
+        exclude_domains = ["personal"]  # Default: exclude personal domain
+
     results = []
     try:
-        # client = get_client()  # Singleton initialization (Moved to threading.local)
+        from athena.memory.vectors import (
+            get_embedding,
+            get_client,
+            search_sessions,
+            search_case_studies,
+            search_protocols,
+            search_capabilities,
+            search_playbooks,
+            search_references,
+            search_frameworks,
+            search_workflows,
+            search_entities,
+            search_user_profile,
+            search_system_docs,
+        )
+
         query_embedding = embedding if embedding else get_embedding(query)
 
         # Parallel search using ThreadPoolExecutor
@@ -199,6 +250,11 @@ def collect_vectors(
                 if "?" in path:
                     path = path.split("?")[0]
 
+                # Domain filtering: skip items from excluded domains
+                item_domain = item.get("domain", "technical")
+                if item_domain in exclude_domains:
+                    continue
+
                 # Dynamic Title/ID construction
                 item_id = (
                     item.get("title")
@@ -215,13 +271,21 @@ def collect_vectors(
                 elif type_label == "case_study":
                     item_id = f"Case Study: {item.get('title')}"
 
+                # Path filtering (SKIP_PATHS)
+                if any(sp in path for sp in SKIP_PATHS):
+                    continue
+
                 results.append(
                     SearchResult(
                         id=item_id,
                         content=item.get("content", "")[:200],
                         source=type_label,  # Use actual type for correct RRF weighting
                         score=item.get("similarity", 0),
-                        metadata={"type": type_label, "path": path},
+                        metadata={
+                            "type": type_label,
+                            "path": path,
+                            "domain": item_domain,
+                        },
                     )
                 )
 
@@ -246,7 +310,9 @@ def collect_graphrag(query: str, limit: int = 5) -> list[SearchResult]:
         cmd = ["python3", str(script_path), query, "--json", "--global-only"]
 
         # Add strict timeout
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False, timeout=5)
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, check=False, timeout=5
+        )
 
         if result.returncode != 0:
             return []
@@ -307,51 +373,153 @@ def collect_graphrag(query: str, limit: int = 5) -> list[SearchResult]:
 
 
 def collect_filenames(query: str) -> list[SearchResult]:
-    """Collect filename matches in Project Root"""
+    """Collect filename matches in Project Root — splits query into keyword tokens."""
     results = []
+    stopwords = {"the", "and", "for", "is", "in", "to", "of", "a", "an"}
+    keywords = [w for w in query.split() if len(w) >= 2 and w.lower() not in stopwords]
+    if not keywords:
+        return []
+
+    seen_paths = set()
+    for keyword in keywords:
+        try:
+            process = subprocess.run(
+                [
+                    "find",
+                    ".",
+                    "-path",
+                    "./node_modules",
+                    "-prune",
+                    "-o",
+                    "-path",
+                    "./.git",
+                    "-prune",
+                    "-o",
+                    "-path",
+                    "./Athena-Public",
+                    "-prune",
+                    "-o",
+                    "-type",
+                    "f",
+                    "-iname",
+                    f"*{keyword}*",
+                    "-print",
+                ],
+                cwd=PROJECT_ROOT,
+                capture_output=True,
+                text=True,
+                timeout=2,
+            )
+            if process.stdout:
+                lines = process.stdout.strip().split("\n")[:10]
+                for line in lines:
+                    if line.strip() and line not in seen_paths:
+                        seen_paths.add(line)
+                        full_path = PROJECT_ROOT / line
+                        # Score by how many query keywords appear in the filename
+                        fname_lower = full_path.name.lower()
+                        keyword_hits = sum(
+                            1 for k in keywords if k.lower() in fname_lower
+                        )
+                        results.append(
+                            SearchResult(
+                                id=f"File: {full_path.name}",
+                                content=f"Path: {line}",
+                                source="filename",
+                                score=keyword_hits / len(keywords),
+                                metadata={"path": str(full_path)},
+                            )
+                        )
+        except Exception:
+            pass
+    results.sort(key=lambda r: r.score, reverse=True)
+    return results[:10]
+
+
+def collect_framework_docs(query: str) -> list[SearchResult]:
+    """Search .framework/ directory content for matches — surfaces identity/system docs."""
+    results = []
+    framework_dir = PROJECT_ROOT / ".framework"
+    if not framework_dir.exists():
+        return []
+
+    stopwords = {"the", "and", "for", "is", "in", "to", "of", "a", "an", "or", "not"}
+    keywords = [w for w in query.split() if len(w) >= 2 and w.lower() not in stopwords]
+    if not keywords:
+        return []
+
     try:
-        # Use argument list (no shell=True) to prevent shell injection
-        process = subprocess.run(
-            [
-                "find",
-                ".",
-                "-path",
-                "./node_modules",
-                "-prune",
-                "-o",
-                "-path",
-                "./.git",
-                "-prune",
-                "-o",
-                "-type",
-                "f",
-                "-name",
-                f"*{query}*",
-                "-print",
-            ],
-            cwd=PROJECT_ROOT,
-            capture_output=True,
-            text=True,
-            timeout=2,
-        )
-        if process.stdout:
-            lines = process.stdout.strip().split("\n")[:5]  # Limit to 5
-            for line in lines:
-                if line.strip():
-                    # line is relative to PROJECT_ROOT
-                    full_path = PROJECT_ROOT / line
+        # Use grep -rl to find files containing any keyword, then score by density
+        for md_file in framework_dir.rglob("*.md"):
+            try:
+                text = md_file.read_text(encoding="utf-8")[:5000]  # First 5k chars
+                text_lower = text.lower()
+                hits = sum(1 for k in keywords if k.lower() in text_lower)
+                if hits >= min(2, len(keywords)):
+                    # Find the best matching line for the snippet
+                    best_line = ""
+                    best_score = 0
+                    for line in text.splitlines():
+                        line_lower = line.lower()
+                        line_hits = sum(1 for k in keywords if k.lower() in line_lower)
+                        if line_hits > best_score:
+                            best_score = line_hits
+                            best_line = line.strip()
+
+                    density = hits / len(keywords)
+                    rel_path = md_file.relative_to(PROJECT_ROOT)
                     results.append(
                         SearchResult(
-                            id=f"File: {full_path.name}",
-                            content=f"Path: {line}",
-                            source="filename",
-                            score=1.0,
-                            metadata={"path": str(full_path)},
+                            id=f"Framework: {md_file.name}",
+                            content=best_line[:200] if best_line else text[:200],
+                            source="framework_docs",
+                            score=min(density, 1.0),
+                            metadata={"path": str(rel_path)},
                         )
                     )
+            except Exception:
+                pass
+
+        # Also search memory_bank files
+        memory_bank_dir = PROJECT_ROOT / ".context" / "memory_bank"
+        if memory_bank_dir.exists():
+            for md_file in memory_bank_dir.rglob("*.md"):
+                try:
+                    text = md_file.read_text(encoding="utf-8")[:3000]
+                    text_lower = text.lower()
+                    hits = sum(1 for k in keywords if k.lower() in text_lower)
+                    if hits >= min(2, len(keywords)):
+                        best_line = ""
+                        best_score = 0
+                        for line in text.splitlines():
+                            line_lower = line.lower()
+                            line_hits = sum(
+                                1 for k in keywords if k.lower() in line_lower
+                            )
+                            if line_hits > best_score:
+                                best_score = line_hits
+                                best_line = line.strip()
+
+                        density = hits / len(keywords)
+                        results.append(
+                            SearchResult(
+                                id=f"MemoryBank: {md_file.name}",
+                                content=best_line[:200] if best_line else text[:200],
+                                source="framework_docs",
+                                score=min(density, 1.0),
+                                metadata={
+                                    "path": str(md_file.relative_to(PROJECT_ROOT))
+                                },
+                            )
+                        )
+                except Exception:
+                    pass
+
     except Exception:
         pass
-    return results
+
+    results.sort(key=lambda r: r.score, reverse=True)
+    return results[:5]
 
 
 def collect_sqlite(query: str, limit: int = 10) -> list[SearchResult]:
@@ -373,7 +541,9 @@ def collect_sqlite(query: str, limit: int = 10) -> list[SearchResult]:
         query_sanitized = f"%{query}%"
 
         # 1. Search Files by Path/Name
-        cursor.execute("SELECT path FROM files WHERE path LIKE ? LIMIT ?", (query_sanitized, limit))
+        cursor.execute(
+            "SELECT path FROM files WHERE path LIKE ? LIMIT ?", (query_sanitized, limit)
+        )
         for row in cursor.fetchall():
             filepath = Path(row["path"])
             results.append(
@@ -421,7 +591,9 @@ def collect_sqlite(query: str, limit: int = 10) -> list[SearchResult]:
 # --- Fusion Logic ---
 
 
-def weighted_rrf(ranked_lists: dict[str, list[SearchResult]], k: int = 60) -> list[SearchResult]:
+def weighted_rrf(
+    ranked_lists: dict[str, list[SearchResult]], k: int = 60
+) -> list[SearchResult]:
     fused_scores = defaultdict(float)
     doc_map = {}
     doc_signals = defaultdict(dict)
@@ -458,6 +630,7 @@ def run_search(
     rerank: bool = False,
     debug: bool = False,
     json_output: bool = False,
+    include_personal: bool = False,
 ):
     # 0. Check cache first
     cache = get_search_cache()
@@ -478,6 +651,8 @@ def run_search(
         try:
             # We need the embedding for semantic check
             # This corresponds to "Step 2: Fetch embedding" in the plan
+            from athena.memory.vectors import get_embedding
+
             query_embedding = get_embedding(query)
             semantic_hit = cache.get_semantic(query_embedding)
 
@@ -490,7 +665,21 @@ def run_search(
                 pass
             else:
                 raise ValueError("Semantic Miss")
-        except Exception:
+        except Exception as e:
+            # Embedding failed or semantic miss - continue with hybrid search
+            # Make embedding optional for non-vector search methods
+            if "404" in str(e) or "GOOGLE_API_KEY" in str(e):
+                if not json_output:
+                    print(
+                        f"\n   {YELLOW}⚠️  FALLBACK: Vector search unavailable ({e}){RESET}",
+                        file=sys.stderr,
+                    )
+                    print(
+                        f"   {DIM}Primary: TAG_INDEX & GraphRAG active.{RESET}\n",
+                        file=sys.stderr,
+                    )
+                query_embedding = None  # Proceed without vectors
+
             # Fallback to full search
             if not json_output:
                 print(
@@ -499,19 +688,24 @@ def run_search(
                 print("=" * 60)
 
             # 1. Collect (Parallel execution)
+            exclude_domains = [] if include_personal else ["personal"]
             collection_tasks = {
                 "canonical": lambda: collect_canonical(query),
                 "tags": lambda: collect_tags(query),
                 "graphrag": lambda: collect_graphrag(query),
-                "vector": lambda: collect_vectors(query, embedding=query_embedding),
+                "vector": lambda: collect_vectors(
+                    query, embedding=query_embedding, exclude_domains=exclude_domains
+                ),
                 "sqlite": lambda: collect_sqlite(query),
                 "filename": lambda: collect_filenames(query),
+                "framework_docs": lambda: collect_framework_docs(query),
             }
 
             lists = {}
             with ThreadPoolExecutor(max_workers=len(collection_tasks)) as executor:
                 future_to_source = {
-                    executor.submit(func): source for source, func in collection_tasks.items()
+                    executor.submit(func): source
+                    for source, func in collection_tasks.items()
                 }
                 # Wait for results with a global timeout
                 for future in as_completed(future_to_source, timeout=8):
@@ -540,6 +734,8 @@ def run_search(
             candidates = fused_results[:25]
             if not json_output:
                 print(f"   ⚡ Reranking top {len(candidates)} candidates...")
+            from athena.tools.reranker import rerank_results
+
             fused_results = rerank_results(query, candidates, top_k=limit)
 
         # Cache the result (Exact + Semantic)
@@ -556,7 +752,9 @@ def run_search(
         suppressed_count = len(low_conf)
         fused_results = high_conf
         if not json_output and suppressed_count > 0:
-            print(f"\n   🛡️ STRICT MODE: {suppressed_count} low-confidence result(s) suppressed")
+            print(
+                f"\n   🛡️ STRICT MODE: {suppressed_count} low-confidence result(s) suppressed"
+            )
     else:
         suppressed_count = 0
 
@@ -576,7 +774,11 @@ def run_search(
                 )
             )
         else:
-            print("  (No high-confidence results found)" if strict else "  (No results found)")
+            print(
+                "  (No high-confidence results found)"
+                if strict
+                else "  (No results found)"
+            )
         return
 
     if not json_output:
