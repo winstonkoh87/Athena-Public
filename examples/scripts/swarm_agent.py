@@ -55,7 +55,7 @@ Focus on: "What could go wrong? Where is the ruin?"
     },
     "C": {
         "name": "CROSS-DOMAIN MATCHER",
-        "color": "\033[38;5;220m" if "256" in os.environ.get("TERM", "") else YELLOW,  # Fallback
+        "color": YELLOW,
         "icon": "🧬",
         "prompt": """You are Track C (Cross-Domain Matcher).
 Your Goal: Find isomorphic patterns from completely different fields.
@@ -78,9 +78,6 @@ Focus on: "Is this the right game to be playing?"
 """,
     },
 }
-
-# Fix for color definition in dictionary above if it caused syntax error (it shouldn't but being safe)
-TRACK_CONFIGS["C"]["color"] = YELLOW
 
 
 def print_banner(role, config, goal):
