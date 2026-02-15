@@ -127,16 +127,22 @@ def detect_recurring_friction(sessions: list[dict]) -> list[dict]:
     """Find errors, workarounds, or friction points that recur."""
     friction_patterns = [
         (
-            re.compile(r"(?:error|failed|bug|issue|broke|broken)[:\s]+(.+)", re.IGNORECASE),
+            re.compile(
+                r"(?:error|failed|bug|issue|broke|broken)[:\s]+(.+)", re.IGNORECASE
+            ),
             "error",
         ),
         (
-            re.compile(r"(?:workaround|hack|hotfix|temp fix|manual)[:\s]+(.+)", re.IGNORECASE),
+            re.compile(
+                r"(?:workaround|hack|hotfix|temp fix|manual)[:\s]+(.+)", re.IGNORECASE
+            ),
             "workaround",
         ),
         (re.compile(r"(?:TODO|FIXME|HACK)[:\s]+(.+)", re.IGNORECASE), "todo"),
         (
-            re.compile(r"(?:friction|annoying|tedious|repetitive)[:\s]+(.+)", re.IGNORECASE),
+            re.compile(
+                r"(?:friction|annoying|tedious|repetitive)[:\s]+(.+)", re.IGNORECASE
+            ),
             "friction",
         ),
     ]
@@ -362,7 +368,7 @@ days_covered: {days}
         print(f"\n   ✅ Report saved: {output_path}")
     else:
         output_path = OPTIMIZATION_DIR / f"{today}-W{week_num:02d}.md"
-        print(f"\n   🔍 [DRY RUN] Would save to: {output_path}")
+        print(f"\n   🔍 [DRY RUN] Would save to: {output_path.name}")
         print(f"   📏 Report size: {len(full_report)} chars")
         print("   ℹ️  Run without --dry-run to save the full report.")
 
@@ -374,7 +380,9 @@ days_covered: {days}
 
 def main():
     parser = argparse.ArgumentParser(description="Athena Self-Optimization Engine")
-    parser.add_argument("--days", type=int, default=DEFAULT_DAYS, help="Days to analyze")
+    parser.add_argument(
+        "--days", type=int, default=DEFAULT_DAYS, help="Days to analyze"
+    )
     parser.add_argument("--dry-run", action="store_true", help="Analyze without saving")
     args = parser.parse_args()
 

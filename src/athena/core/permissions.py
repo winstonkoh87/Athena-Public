@@ -360,7 +360,9 @@ class PermissionEngine:
 
         return {
             "secret_mode": enabled,
-            "effect": "Only PUBLIC tools accessible" if enabled else "All tools accessible",
+            "effect": "Only PUBLIC tools accessible"
+            if enabled
+            else "All tools accessible",
             "blocked_tools": [
                 name
                 for name, defn in TOOL_REGISTRY.items()
@@ -405,12 +407,14 @@ class PermissionEngine:
             "accessible_tools": [
                 name
                 for name, defn in TOOL_REGISTRY.items()
-                if _PERMISSION_LEVEL[self.caller_level] >= _PERMISSION_LEVEL[defn["permission"]]
+                if _PERMISSION_LEVEL[self.caller_level]
+                >= _PERMISSION_LEVEL[defn["permission"]]
             ],
             "blocked_tools": [
                 name
                 for name, defn in TOOL_REGISTRY.items()
-                if _PERMISSION_LEVEL[self.caller_level] < _PERMISSION_LEVEL[defn["permission"]]
+                if _PERMISSION_LEVEL[self.caller_level]
+                < _PERMISSION_LEVEL[defn["permission"]]
             ],
             "audit_entries": len(self.audit_log),
         }
@@ -441,12 +445,13 @@ class PermissionEngine:
         }
         self.audit_log.append(entry)
 
-        # Keep audit log bounded
         if len(self.audit_log) > 1000:
             self.audit_log = self.audit_log[-500:]
 
         # Log only high-level metadata to avoid exposing potentially sensitive details.
-        logger.debug("Permission %s: %s (details recorded in memory only)", action, target)
+        logger.debug(
+            "Permission %s: [REDACTED_TARGET] (details recorded in memory only)", action
+        )
 
 
 # ---------------------------------------------------------------------------

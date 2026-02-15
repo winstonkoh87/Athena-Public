@@ -16,7 +16,10 @@ YOUTUBE_DOMAINS = {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"
 
 
 def is_youtube(url):
-    hostname = urlparse(url).hostname or ""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        return False
+    hostname = parsed.hostname or ""
     return hostname in YOUTUBE_DOMAINS
 
 

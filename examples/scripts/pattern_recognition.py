@@ -254,8 +254,18 @@ class CostAnalyzer:
     """Accurate API Replacement Cost Estimator."""
 
     PRICING = {
-        "sonnet": {"input": 3.00, "output": 15.00, "cache_read": 0.30, "cache_write": 3.75},
-        "opus": {"input": 5.00, "output": 25.00, "cache_read": 0.50, "cache_write": 6.25},
+        "sonnet": {
+            "input": 3.00,
+            "output": 15.00,
+            "cache_read": 0.30,
+            "cache_write": 3.75,
+        },
+        "opus": {
+            "input": 5.00,
+            "output": 25.00,
+            "cache_read": 0.50,
+            "cache_write": 6.25,
+        },
     }
     DEFAULT_CACHE_HIT_RATE = 0.90
     OUTPUT_TOKENS = {"heavy": 4000, "medium": 1500, "light": 600}
@@ -295,9 +305,12 @@ class CostAnalyzer:
         cacheable = avg_input * cache_rate
         fresh = avg_input * (1 - cache_rate)
 
-        turn1_in = (cacheable / 1e6) * rates["cache_write"] + (fresh / 1e6) * rates["input"]
+        turn1_in = (cacheable / 1e6) * rates["cache_write"] + (fresh / 1e6) * rates[
+            "input"
+        ]
         subs_in = (
-            (turns - 1) * ((cacheable / 1e6) * rates["cache_read"] + (fresh / 1e6) * rates["input"])
+            (turns - 1)
+            * ((cacheable / 1e6) * rates["cache_read"] + (fresh / 1e6) * rates["input"])
             if turns > 1
             else 0
         )
@@ -319,14 +332,20 @@ class CostAnalyzer:
             if "Analysis" in log.name or "README" in log.name:
                 continue
             try:
-                stats = self.calculate_session_value(log.read_text(encoding="utf-8"), model)
+                stats = self.calculate_session_value(
+                    log.read_text(encoding="utf-8"), model
+                )
                 results.append(stats)
             except:
                 continue
 
         total = sum(r["total_value"] for r in results)
-        active = [r for r in results if r["checkpoints"] >= 2 or r["total_value"] > 0.05]
-        weighted_avg = sum(r["total_value"] for r in active) / len(active) if active else 0
+        active = [
+            r for r in results if r["checkpoints"] >= 2 or r["total_value"] > 0.05
+        ]
+        weighted_avg = (
+            sum(r["total_value"] for r in active) / len(active) if active else 0
+        )
         return {
             "total": total,
             "weighted_avg": weighted_avg,
@@ -406,10 +425,10 @@ Examples:
   python pattern_recognition.py chat --file chat.json --mode gemini
   
   # Keyword search in chat
-  python pattern_recognition.py chat --file chat.json --mode keywords --target user123
+  python pattern_recognition.py chat --file chat.json --mode keywords --target <user_id>
   
   # Temporal analysis
-  python pattern_recognition.py chat --file chat.json --mode temporal --user1 id1 --user2 id2
+  python pattern_recognition.py chat --file chat.json --mode temporal --user1 <id1> --user2 <id2>
   
   # Session meta-analysis
   python pattern_recognition.py sessions --num 10
@@ -435,7 +454,9 @@ Examples:
 
     # Sessions subcommand
     sessions_parser = subparsers.add_parser("sessions", help="Analyze session logs")
-    sessions_parser.add_argument("--num", "-n", type=int, default=10, help="Number of sessions")
+    sessions_parser.add_argument(
+        "--num", "-n", type=int, default=10, help="Number of sessions"
+    )
     sessions_parser.add_argument("--output", "-o", help="Save output to file")
 
     args = parser.parse_args()
@@ -449,15 +470,17 @@ Examples:
         analyzer = ChatAnalyzer(chat_file)
 
         if args.mode == "gemini":
-            print(f"🔍 Analyzing with Gemini: {chat_file}")
+            print(f"🔍 Analyzing with Gemini: {chat_file.name}")
             result = analyzer.analyze_gemini()
         elif args.mode == "keywords":
             if not args.target:
                 print("Error: --target required for keywords mode")
                 sys.exit(1)
-            print(f"🔍 Keyword search for user: {args.target}")
+            print(f"🔍 Keyword search for user: [REDACTED]")
             matches = analyzer.analyze_keywords(args.target)
-            result = f"Found {len(matches)} matches:\n\n" + "\n---\n".join(matches[-50:])
+            result = f"Found {len(matches)} matches:\n\n" + "\n---\n".join(
+                matches[-50:]
+            )
         elif args.mode == "temporal":
             if not args.user1 or not args.user2:
                 print("Error: --user1 and --user2 required for temporal mode")
