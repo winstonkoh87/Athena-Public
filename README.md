@@ -785,7 +785,9 @@ cp .env.example .env
 | Layer | Technology | Purpose |
 |-------|------------|---------|
 | **SDK** | `athena` Python package | Core search, reranking, memory |
-| **Reasoning** | Claude Opus 4.6 (primary) | Main reasoning engine |
+| **Reasoning** | Claude Opus (primary) | Main reasoning engine |
+| **Optimization** | DSPy | Prompt optimization & self-correction |
+| **Global Reranking** | FlashRank | Hybrid RAG fusion (Lightweight RRF) |
 | **IDE** | Antigravity (supports Claude, Gemini, GPT) | Agentic development environment |
 | **Local Models** | Ollama, LM Studio (any model) | Model-agnostic — memory is in files, not the model |
 | **Embeddings** | `text-embedding-004` (768-dim) | Google embedding model |
