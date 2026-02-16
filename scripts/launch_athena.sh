@@ -7,14 +7,12 @@
 
 set -e
 
-# Resolve Project Root (Assuming this script is in Athena-Public/scripts/)
-# Structure: Project Athena/Athena-Public/scripts/launch_athena.sh
-# Root:      Project Athena/
+# Resolve Repo Root (this script is in Athena-Public/scripts/)
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# Locate Daemon Script
-DAEMON_SCRIPT="$PROJECT_ROOT/src/athena/core/athenad.py"
+# Locate Daemon Script (within this repo's src/)
+DAEMON_SCRIPT="$REPO_ROOT/src/athena/core/athenad.py"
 
 if [[ ! -f "$DAEMON_SCRIPT" ]]; then
     echo "❌ Error: Daemon script not found at $DAEMON_SCRIPT"
@@ -26,16 +24,16 @@ echo "   Target: $DAEMON_SCRIPT"
 
 if [[ "$1" == "--background" ]]; then
     # Run in background and detach
-    nohup python3 "$DAEMON_SCRIPT" > "$PROJECT_ROOT/athenad.log" 2>&1 &
+    nohup python3 "$DAEMON_SCRIPT" > "$REPO_ROOT/athenad.log" 2>&1 &
     PID=$!
     echo "✅ Athena Daemon started in background."
     echo "   PID: $PID"
-    echo "   Log: $PROJECT_ROOT/athenad.log"
+    echo "   Log: $REPO_ROOT/athenad.log"
     
-    echo "$PID" > "$PROJECT_ROOT/.athenad.pid"
+    echo "$PID" > "$REPO_ROOT/.athenad.pid"
 elif [[ "$1" == "--stop" ]]; then
     # Stop the daemon
-    PID_FILE="$PROJECT_ROOT/.athenad.pid"
+    PID_FILE="$REPO_ROOT/.athenad.pid"
     if [[ -f "$PID_FILE" ]]; then
         PID=$(cat "$PID_FILE")
         if kill -0 "$PID" 2>/dev/null; then

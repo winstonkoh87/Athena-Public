@@ -3,12 +3,13 @@
 # 🏛️ Project Athena — The Linux OS for AI Agents
 
 ![GitHub Stars](https://img.shields.io/github/stars/winstonkoh87/Athena-Public?style=social)
-![Last Updated](https://img.shields.io/badge/Last%20Updated-Feb%202026-blue)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
-![Version](https://img.shields.io/badge/Version-9.0.0-10b981)
+![Version](https://img.shields.io/badge/Version-9.1.0-10b981)
 ![Reddit Views](https://img.shields.io/badge/Reddit_Views-700k+-FF4500?logo=reddit&logoColor=white)
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/winstonkoh87/Athena-Public)
+
+**Last updated: 17 Feb 2026**
 
 > **Athena is not an AI Agent. It is the Linux OS they run on.**
 > Open Source · Sovereign · Model-Agnostic
@@ -221,7 +222,7 @@ Expose Athena's capabilities to any [MCP-compatible](https://modelcontextprotoco
 | `/plan` | Structured planning with pre-mortem |
 | `/vibe` | Ship at 70%, iterate fast |
 
-> 👉 [Full Workflow Documentation](docs/WORKFLOWS.md) — all 20 workflows in [.agent/workflows/](.agent/workflows/)
+> 👉 [Full Workflow Documentation](docs/WORKFLOWS.md) — all 14 workflows in [.agent/workflows/](.agent/workflows/)
 
 ### 🛡️ Permissioning & Governance
 
@@ -243,15 +244,15 @@ Athena-Public/
 │   ├── boot/                #   Orchestrator, loaders, shutdown
 │   ├── cli/                 #   init, save commands
 │   └── mcp_server.py        #   MCP Tool Server (9 tools, 2 resources)
+├── scripts/                 # Operational scripts (boot, shutdown, launch)
 ├── examples/
 │   ├── protocols/           # 120+ starter frameworks (13 categories)
-│   ├── scripts/             # 17 core OS scripts
-│   ├── workflows/           # 20 slash commands
-│   ├── templates/           # 36 starter templates
+│   ├── scripts/             # 17 reference scripts
+│   ├── templates/           # Starter templates (framework, memory bank)
 │   └── quickstart/          # Runnable demos
 ├── docs/                    # Architecture, benchmarks, security, guides
 ├── community/               # Contributing, roadmap
-├── pyproject.toml           # Modern packaging (v9.0.0)
+├── pyproject.toml           # Modern packaging (v9.1.0)
 └── .env.example             # Environment template
 ```
 
@@ -289,7 +290,7 @@ Athena-Public/
 | [YOUR_FIRST_AGENT.md](docs/YOUR_FIRST_AGENT.md) | 5-minute quickstart |
 | [WHAT_IS_AN_AI_AGENT.md](docs/WHAT_IS_AN_AI_AGENT.md) | Beginner primer |
 | [DEMO.md](docs/DEMO.md) | Live walkthrough |
-| [WORKFLOWS.md](docs/WORKFLOWS.md) | All 48 slash commands |
+| [WORKFLOWS.md](docs/WORKFLOWS.md) | All 14 slash commands |
 | [FAQ.md](docs/FAQ.md) | Common questions |
 | [GLOSSARY.md](docs/GLOSSARY.md) | Key terms and definitions |
 
@@ -301,9 +302,9 @@ Athena-Public/
 | Document | Description |
 |:---------|:-----------|
 | [BENCHMARKS.md](docs/BENCHMARKS.md) | Boot time, search latency, token economics |
-| [CS-001: Boot Optimization](examples/case_studies/CS-001-boot-optimization.md) | 85% boot time reduction |
-| [CS-002: Search Quality](examples/case_studies/CS-002-search-quality.md) | RRF fusion results |
-| [CS-003: Protocol Enforcement](examples/case_studies/CS-003-protocol-enforcement.md) | Governance engine |
+| [Blog Evolution](docs/case-studies/Case_Blog_Evolution_2026.md) | Content strategy analysis |
+| [Web Design 2026](docs/case-studies/Case_Web_Design_2026.md) | Design decision framework |
+| [Decision Framework](docs/case-studies/Decision_Framework_Application.md) | Applied decision protocol |
 | [TOP_10_PROTOCOLS.md](docs/TOP_10_PROTOCOLS.md) | MCDA-ranked essential protocols |
 | [ENGINEERING_DEPTH.md](docs/ENGINEERING_DEPTH.md) | Technical depth overview |
 
@@ -386,6 +387,7 @@ cp .env.example .env
 
 ### February 2026
 
+- **v9.1.0** (Feb 17 2026): **Deep Audit & Sync** — Fixed 15 issues (dead links, version drift, dependency sync, AGENTS.md path errors, workflow count corrections). Cleaned tracked artifacts.
 - **v9.0.0** (Feb 16 2026): **First-Principles Workspace Refactor** — Root directory cleaned (28→14 files), 114 stub session logs archived, build artifacts purged, dead `.framework/v7.0` archived, `.gitignore` hardened. Zero regressions (17/17 tests pass).
 - **v8.6.0** (Feb 15 2026): **Massive Content Expansion** — 200 protocols (was 75), 535 scripts (was 16), 48 workflows (was 14), 36 templates. 23 protocol categories. Repo audit for recruiter readiness. Content sanitization pass.
 - **v8.5.0** (Feb 12 2026): **Phase 1 Complete** — MCP Tool Server (9 tools, 2 resources), Permissioning Layer (4 levels + secret mode), Search MRR +105% (0.21→0.44), Evaluator Gate (50 queries). SDK v2.0.0.
