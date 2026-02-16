@@ -13,8 +13,8 @@ set -e
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
-# Locate Daemon Script (Sidecar is the current active watcher)
-DAEMON_SCRIPT="$PROJECT_ROOT/.agent/scripts/sidecar.py"
+# Locate Daemon Script
+DAEMON_SCRIPT="$PROJECT_ROOT/src/athena/core/athenad.py"
 
 if [[ ! -f "$DAEMON_SCRIPT" ]]; then
     echo "❌ Error: Daemon script not found at $DAEMON_SCRIPT"

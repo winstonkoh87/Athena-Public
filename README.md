@@ -1,6 +1,6 @@
 ![Athena Banner](./docs/athena_banner.png)
 
-> **Last Updated**: 15 February 2026
+> **Last Updated**: 16 February 2026
 
 # 🏛️ Project Athena: The Linux OS for AI Agents
 
@@ -415,6 +415,7 @@ graph TD
         U --> V["Sessions 700-900: v8.6-Stable Era"]
         V --> W["Sessions 900-1000: Claude OS Patterns"]
         W --> X["Sessions 1000+: Agent Sovereignty"]
+        X --> Y["v9.0: First-Principles Refactor"]
     end
 
     B --> D
@@ -424,7 +425,7 @@ graph TD
 
     style A fill:#1a1a2e,stroke:#4361ee
     style P fill:#1a1a2e,stroke:#4361ee
-    style X fill:#10b981,stroke:#10b981
+    style Y fill:#10b981,stroke:#10b981
 ```
 
 **The Output** (After 1,079+ Sessions):
@@ -894,6 +895,7 @@ See [.agent/workflows/](.agent/workflows/) for source files.
 
 ### February 2026
 
+- **v9.0.0** (Feb 16 2026): **First-Principles Workspace Refactor** — Root directory cleaned (28→14 files), 114 stub session logs archived, build artifacts purged, dead `.framework/v7.0` archived, `.gitignore` hardened. Zero regressions (17/17 tests pass).
 - **v8.6.0** (Feb 15 2026): **Massive Content Expansion** — 200 protocols (was 75), 118 scripts (was 16), 48 workflows (was 14), 36 templates. 23 protocol categories. Repo audit for recruiter readiness. Content sanitization pass.
 - **v8.5.0** (Feb 12 2026): **Phase 1 Complete** — MCP Tool Server (9 tools, 2 resources), Permissioning Layer (4 levels + secret mode), Search MRR +105% (0.21→0.44), Evaluator Gate (50 queries). SDK v2.0.0.
 - **v8.3.1** (Feb 11 2026): **Viral Validation Release** — 654K+ Reddit views, 1,660+ upvotes, 5,300+ shares. #1 All-Time r/ChatGPT, #2 All-Time r/GeminiAI. Three-Phase Token Budget: robustness at `/start`+`/end`, Adaptive Latency in-between.

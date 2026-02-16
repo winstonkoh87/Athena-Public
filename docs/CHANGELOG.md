@@ -1,8 +1,30 @@
 # Athena Changelog
 
-> **Last Updated**: 11 February 2026
+> **Last Updated**: 16 February 2026
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
+
+---
+
+## v9.0.0 (16 February 2026)
+
+**First-Principles Workspace Refactor**: Complete structural audit and cleanup of the entire workspace. Zero regressions.
+
+### Key Changes
+
+- **Root Cleanup**: Moved 10 loose files (trading sims, drafts, audit docs) to proper `.context/` subdirectories. Deleted 2 root-level duplicates (`safe_boot.sh`, `DEAD_MAN_SWITCH.md`). Root directory reduced from 28 files → 14.
+- **Build Artifacts**: Deleted `.agent/athena_sdk.egg-info/`, cleaned `.agent/temp/` and `.agent/temp_backup/`, removed stale `Athena-Public` runtime files (`athenad.log`, `.athenad.pid`).
+- **Session Log Hygiene**: Archived 114 stub session logs (<500 bytes) to `session_logs/archive/stubs/`. Deleted 3 duplicate `2.md` files and 1 `.bak`. Fixed extensionless `2026-01-09-session-04`.
+- **Dead Weight**: Archived `.framework/v7.0` → `.framework/archive/`. Archived orphan root `skills/` directory. Archived `winstonkoh87_backup/` and `Athena-Public-swarms/` → `.context/archive/`. Removed empty `.context/logs/`.
+- **`.gitignore` Hardened**: Added `athenad.log`, `.athenad.pid`, `*.egg-info/` to prevent runtime artifacts in git.
+
+### Verification
+
+| Metric | Result |
+|--------|--------|
+| Test Suite | 17/17 passed ✅ |
+| Boot Sequence | Clean exit ✅ |
+| Git Status | 166 tracked changes (all expected) ✅ |
 
 ---
 
