@@ -83,11 +83,13 @@ Athena is a Hard Drive.
 | **1. Get an IDE** | [Antigravity](https://antigravity.google/) · [Cursor](https://cursor.com) · [VS Code + Copilot](https://code.visualstudio.com/) · [GitHub Codespaces](https://codespaces.new/winstonkoh87/Athena-Public) |
 | **2. Clone this repo** | `git clone https://github.com/winstonkoh87/Athena-Public.git && cd Athena-Public` |
 | **3. Open folder → Type `/start`** | The AI reads the repo structure and takes it from there |
+| **4. Type `/brief interview`** | Athena asks about YOU — goals, style, domain — and builds your personal profile |
 
 **That's it.** No config files. No API keys. No database setup. The folder *is* the product.
 
 > [!TIP]
 > When you're done, type `/end` to save. Next time you `/start`, the agent picks up exactly where you left off.
+> Your first session takes ~30 minutes (mostly the interview). Every session after that boots in seconds.
 
 <details>
 <summary><strong>🔧 CLI Reference</strong></summary>
@@ -120,6 +122,30 @@ Athena's memory is just Markdown files. Any text you can export becomes part of 
 After importing, run `athena check` to verify files are detected.
 
 </details>
+
+---
+
+## 🪞 Your First Session
+
+Athena is a **skeleton** — protocols, search, and infrastructure. **You** provide the soul.
+
+On your first `/start`, run `/brief interview`. Athena will ask you about **everything** — your name, profession, goals, decision style, strengths, blind spots, even your life context. This isn't small talk. It's the foundation that makes every future session compound.
+
+| What Athena Asks | Why |
+|:----------------|:----|
+| **Identity** — Name, age, nationality | Communication style, cultural context |
+| **Professional** — Role, industry, salary range | Domain expertise, decision-making context |
+| **Goals** — 3-month, 1-year, 5-year | Aligns every response to your actual trajectory |
+| **Decision Style** — Risk appetite, speed vs quality | Calibrates how options and tradeoffs are framed |
+| **Blind Spots** — Recurring mistakes, weak areas | Athena proactively flags these before they bite |
+| **Communication** — Tone, verbosity, directness | Sets the default voice across all interactions |
+
+> [!IMPORTANT]
+> **Everything stays local.** Your profile is stored as a Markdown file on your machine (`user_profile.md`). No cloud. No tracking. Be as candid as you want — this is *your* private operating system.
+
+**Pattern:** The more you share → the faster Athena stops being generic → the sooner it starts thinking like **you**.
+
+> 👉 [Full First Session Guide](docs/YOUR_FIRST_SESSION.md) — detailed walkthrough with examples
 
 ---
 
@@ -158,9 +184,9 @@ Your data lives in **Markdown files you own** — on your machine, git-versioned
 - **Hybrid search**: Canonical + GraphRAG + Tags + Vectors + Filenames, fused via RRF
 - **Auto-quicksave**: Every exchange is logged without manual action
 
-### 📚 200+ Protocols
+### 📚 200+ Starter Protocols
 
-Decision frameworks across [17 categories](examples/protocols/) — from architecture to strategy. Every friction becomes a protocol. Every failure becomes a case study.
+[Starter decision frameworks](examples/protocols/) across 17 categories — architecture, risk, strategy, communication, and more. These are **templates**, not prescriptions. The real value comes when you write your own protocols from your own friction and failures.
 
 ### 🔌 MCP Server (9 Tools)
 
@@ -217,8 +243,8 @@ Athena-Public/
 │   ├── cli/                 #   init, save commands
 │   └── mcp_server.py        #   MCP Tool Server (9 tools, 2 resources)
 ├── examples/
-│   ├── protocols/           # 200+ decision frameworks (17 categories)
-│   ├── scripts/             # 118 automation scripts
+│   ├── protocols/           # 200+ starter frameworks (17 categories)
+│   ├── scripts/             # 535 reference scripts
 │   ├── workflows/           # 48 slash commands
 │   ├── templates/           # 36 starter templates
 │   └── quickstart/          # Runnable demos
@@ -232,12 +258,7 @@ Athena-Public/
 
 ## 📣 Community
 
-> **"I gave Gemini a brain..."** — Viral on r/GeminiAI and r/ChatGPT
-
-| Subreddit | Views | Upvotes | Shares |
-|:----------|:------|:--------|:-------|
-| [**r/ChatGPT**](https://www.reddit.com/r/ChatGPT/comments/1r1b3gl/) | **470K+** | 1,500+ | 4,200+ |
-| [**r/GeminiAI**](https://www.reddit.com/r/GeminiAI/comments/1r18yn1/) | **230K+** | 262+ | 1,300+ |
+> **"I gave Gemini a brain..."** — Viral on r/GeminiAI and r/ChatGPT ([700K+ views](https://www.reddit.com/r/ChatGPT/comments/1r1b3gl/))
 
 ---
 
@@ -365,7 +386,7 @@ cp .env.example .env
 ### February 2026
 
 - **v9.0.0** (Feb 16 2026): **First-Principles Workspace Refactor** — Root directory cleaned (28→14 files), 114 stub session logs archived, build artifacts purged, dead `.framework/v7.0` archived, `.gitignore` hardened. Zero regressions (17/17 tests pass).
-- **v8.6.0** (Feb 15 2026): **Massive Content Expansion** — 200 protocols (was 75), 118 scripts (was 16), 48 workflows (was 14), 36 templates. 23 protocol categories. Repo audit for recruiter readiness. Content sanitization pass.
+- **v8.6.0** (Feb 15 2026): **Massive Content Expansion** — 200 protocols (was 75), 535 scripts (was 16), 48 workflows (was 14), 36 templates. 23 protocol categories. Repo audit for recruiter readiness. Content sanitization pass.
 - **v8.5.0** (Feb 12 2026): **Phase 1 Complete** — MCP Tool Server (9 tools, 2 resources), Permissioning Layer (4 levels + secret mode), Search MRR +105% (0.21→0.44), Evaluator Gate (50 queries). SDK v2.0.0.
 - **v8.3.1** (Feb 11 2026): **Viral Validation Release** — 654K+ Reddit views, 1,660+ upvotes, 5,300+ shares. #1 All-Time r/ChatGPT, #2 All-Time r/GeminiAI.
 - **v8.2.1** (Feb 9 2026): Metrics Sync — Fixed `batch_audit.py` automation, linked orphan files, reconciled tech debt, 8,079 tags indexed
@@ -382,4 +403,4 @@ MIT License — see [LICENSE](LICENSE)
 
 ---
 
-*This is a reference implementation from [1,079+ production sessions](docs/ABOUT_ME.md). Your instance will reflect your domain, your decisions, your voice.*
+*This is a starter kit. Your instance will reflect your domain, your decisions, your voice. Clone it, make it yours.*
