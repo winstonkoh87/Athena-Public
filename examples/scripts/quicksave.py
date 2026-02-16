@@ -52,63 +52,36 @@ def main():
         log_path = append_checkpoint(args.summary, args.bullets)
         print(f"✅ Quicksave → {log_path.name}")
 
-        # [Protocol 104] Semantic Compression Hook
+        # [Protocol 104] Semantic Compression Hook (Fire-and-Forget)
         try:
             import subprocess
-            from datetime import datetime
 
-            print("🧠 Compressing memory...", end="", flush=True)
+            print("🧠 Compressing memory... (Background)", end="", flush=True)
 
-            # Run the compressor script
+            # Run the compressor script in fire-and-forget mode
+            # It will self-append to .context/memory_bank/semantic_log.md
             cmd = [
                 "python3",
                 ".agent/scripts/memory_compressor.py",
                 f"{args.summary} {' '.join(args.bullets) if args.bullets else ''}",
+                "--output-file",
+                ".context/memory_bank/semantic_log.md",
             ]
 
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-
-            if result.returncode == 0:
-                compressed_fact = result.stdout.strip()
-                if compressed_fact and "Error" not in compressed_fact:
-                    # Append to Semantic Log
-                    sem_log = Path(".context/memory_bank/semantic_log.md")
-                    with open(sem_log, "a") as f:
-                        f.write(
-                            f"\n### {datetime.now().strftime('%Y-%m-%d %H:%M')}\n{compressed_fact}\n"
-                        )
-                    print("\r✅ Memory Compressed & Stored.")
-                else:
-                    print("\r⚠️  Compression skipped.")
-            else:
-                print(f"\r⚠️  Compression failed: {result.stderr[:50]}...")
+            subprocess.Popen(
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+            print("\r✅ Memory Compression queued.")
 
         except Exception as e:
-            print(f"\r⚠️  Compression error: {e}")
+            print(f"\r⚠️  Compression trigger error: {e}")
 
         # [Protocol 105] LightRAG Indexing Hook
-        try:
-            print("🕸️  Indexing in GraphRAG...", end="", flush=True)
-
-            # Index the summary into LightRAG
-            rag_cmd = [
-                "python3",
-                ".agent/scripts/lightrag_wrapper.py",
-                "--insert",
-                f"On {datetime.now().strftime('%Y-%m-%d %H:%M')}: {args.summary} "
-                + f"Bullets: {', '.join(args.bullets) if args.bullets else ''}",
-            ]
-
-            rag_result = subprocess.run(
-                rag_cmd, capture_output=True, text=True, timeout=120
-            )
-
-            if rag_result.returncode == 0:
-                print("\r✅ Graph Memory Updated.")
-            else:
-                print(f"\r⚠️  Graph indexing failed: {rag_result.stderr[:50]}...")
-        except Exception as e:
-            print(f"\r⚠️  Graph indexing skip: {e}")
+        # REMOVED: Redundant. The Athena Daemon (athenad.py) watches for file changes
+        # and handles indexing asynchronously. We don't need to block here.
 
         if args.decision or "[CIRCUIT" in args.summary:
             log_to_decision_ledger(args.summary)

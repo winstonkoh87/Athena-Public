@@ -15,8 +15,8 @@ def count_files(base_path, pattern, ignore_dirs=None):
     return count
 
 
-private_root = "/Users/winstonkoh/Desktop/Project Athena"
-public_root = "/Users/winstonkoh/Desktop/Project Athena/Athena-Public"
+private_root = "/Users/[AUTHOR]/Desktop/Project Athena"
+public_root = "/Users/[AUTHOR]/Desktop/Project Athena/Athena-Public"
 
 print("--- AUDIT RESULTS ---")
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "athena-sdk"
-version = "9.1.0"
+version = "9.2.0"
 description = "Athena Bionic OS SDK"
 readme = "README.md"
 requires-python = ">=3.10"

@@ -9,7 +9,7 @@ set -e
 
 # Resolve Repo Root (this script is in Athena-Public/scripts/)
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+REPO_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
 # Locate Daemon Script (within this repo's src/)
 DAEMON_SCRIPT="$REPO_ROOT/src/athena/core/athenad.py"

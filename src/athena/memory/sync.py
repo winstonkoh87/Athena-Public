@@ -6,21 +6,16 @@ Robustness: Handles absolute/relative path mismatches & Exponential Backoff.
 """
 
 import re
-import os
 import time
-import hashlib
-import json
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from athena.memory.vectors import get_client, get_embedding
 from athena.memory.delta_manifest import DeltaManifest
+from athena.memory.vectors import get_client, get_embedding
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
-def Extract_Metadata_Simplistic(content: str) -> Dict:
+def Extract_Metadata_Simplistic(content: str) -> dict:
     """Simple frontmatter extractor."""
     meta = {}
     if content.startswith("---"):
@@ -35,21 +30,49 @@ def Extract_Metadata_Simplistic(content: str) -> Dict:
                             meta[items[0].strip()] = (
                                 items[1].strip().strip('"').strip("'")
                             )
-        except:
+        except (ValueError, KeyError, IndexError):
             pass
     return meta
 
 
-def extract_metadata(content: str, filename: str) -> Dict:
+def extract_metadata(content: str, filename: str) -> dict:
     """Extract metadata wrapper."""
     return Extract_Metadata_Simplistic(content)
+
+
+def chunk_text(text: str, chunk_size: int = 4000, overlap: int = 200) -> list[str]:
+    """Split text into overlapping chunks."""
+    if not text:
+        return []
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = start + chunk_size
+        chunks.append(text[start:end])
+        start += chunk_size - overlap
+    return chunks
+
+
+def parse_session_filename(filename: str) -> tuple[str | None, int | None]:
+    """Extract date and session number from standard filename."""
+    pattern = re.compile(r"(\d{4}-\d{2}-\d{2})-session-(\d+)\.md")
+    match = pattern.match(filename)
+    if match:
+        return match.group(1), int(match.group(2))
+    return None, None
+
+
+def extract_title(content: str) -> str | None:
+    """Find the first H1 markdown header."""
+    match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
+    return match.group(1).strip() if match else None
 
 
 def sync_file_to_supabase(
     file_path: Path,
     table_name: str,
-    extra_metadata: Dict = None,
-    manifest: Optional[DeltaManifest] = None,
+    extra_metadata: dict | None = None,
+    manifest: DeltaManifest | None = None,
     max_retries: int = 3,
 ):
     """
@@ -99,7 +122,7 @@ def sync_file_to_supabase(
                     if manifest:
                         manifest.update_entry(abs_file)
                     return True
-                except:
+                except Exception:
                     pass
 
             if attempt < max_retries - 1:
@@ -112,7 +135,7 @@ def sync_file_to_supabase(
     return False
 
 
-def _enrich_data_by_table(data: Dict, file_path: Path, table_name: str, meta: Dict):
+def _enrich_data_by_table(data: dict, file_path: Path, table_name: str, meta: dict):
     if table_name == "sessions":
         date_match = re.search(r"(\d{4}-\d{2}-\d{2})", file_path.name)
         data["date"] = date_match.group(1) if date_match else "2026-01-01"

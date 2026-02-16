@@ -9,6 +9,7 @@ Update v2.1: Integrated Local Recall Memory (SQLite FTS5) sync on boot.
 
 import os
 import sys
+import subprocess
 from pathlib import Path
 
 # === STDLIB-ONLY SECTION ===
@@ -75,38 +76,53 @@ def main():
     Main entry point. Attempts SDK boot, falls back to recovery shell.
     """
     # Ensure SDK is on path
+    # This needs to be here because the orchestrator might be in the SDK path.
+    PROJECT_ROOT = Path(__file__).resolve().parents[2]
+    SDK_PATH = PROJECT_ROOT / "src"
     sys.path.insert(0, str(SDK_PATH))
 
     try:
-        from athena.boot.orchestrator import main as sdk_main
+        from athena.boot.orchestrator import main as orchestrator_main
+
+        return orchestrator_main()
     except ImportError as e:
-        print(f"\n❌ SDK IMPORT FAILED: {e}")
-        recovery_shell()
-        return 1
-    except Exception as e:
-        print(f"\n❌ UNEXPECTED ERROR DURING IMPORT: {e}")
-        recovery_shell()
-        return 1
-
-    # Sync Recall Memory (Local SQLite FTS5)
-    # This runs fast and ensures local context is fresh before the heavy SDK loads.
-    recall_script = PROJECT_ROOT / ".agent" / "scripts" / "recall.py"
-    if recall_script.exists():
-        print("🧠 Syncing Recall Memory (Background)...")
-        # Use subprocess.Popen for fire-and-forget non-blocking execution
-        import subprocess
-
-        subprocess.Popen(
-            [sys.executable, str(recall_script), "--sync"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
+        print(f"❌ Boot Error: Missing modular components: {e}")
+        # Fallback to a minimal recovery shell if the orchestrator itself can't be loaded
+        print("\n" + "=" * 60)
+        print("🚨 ATHENA RECOVERY SHELL (Minimal)")
+        print("=" * 60)
+        print(
+            "The core orchestrator failed to load. This usually means the SDK is not installed or corrupted."
         )
-    else:
-        print("⚠️ Recall script found.")
+        print("Please try to re-install dependencies or debug manually.\n")
+        print("  [1] Re-install dependencies (pip install -e .)")
+        print("  [2] Open Python REPL for manual debugging")
+        print("  [3] Exit")
+        print()
 
-    # SDK loaded successfully, delegate to orchestrator
-    return sdk_main()
+        try:
+            choice = input("Enter choice [1-3]: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nExiting.")
+            sys.exit(1)
+
+        if choice == "1":
+            print("\n🔧 Running: pip install -e .")
+            os.system(f"cd {PROJECT_ROOT} && pip install -e .")
+            print("\n✅ Done. Try running boot.py again.")
+        elif choice == "2":
+            print("\n🐍 Dropping into Python REPL. Use exit() to quit.")
+            import code
+
+            code.interact(local={"PROJECT_ROOT": PROJECT_ROOT, "Path": Path})
+        else:
+            print("Exiting.")
+            sys.exit(0)
+
+        sys.exit(0)
+    except Exception as e:
+        print(f"❌ An unexpected error occurred during boot: {e}")
+        return 1
 
 
 if __name__ == "__main__":

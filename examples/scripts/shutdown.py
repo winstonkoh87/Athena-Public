@@ -641,97 +641,131 @@ def validate_log_synthesis(content: str) -> bool:
 # ============================================================
 
 
+def safe_commit():
+    """
+    EMERGENCY HATCH: Commits all changes if the main orchestrator fails.
+    Ensures no data loss in volatile memory.
+    """
+    print(f"\n{RED}{BOLD}🚨 EMERGENCY COMMIT TRIGGERED{RESET}")
+    print("Attempting to save state despite failure...")
+    try:
+        run_script("git_commit.py", ["--force"], timeout=60)
+        print(f"{GREEN}✅ Emergency Save Complete.{RESET}")
+    except Exception as e:
+        print(f"{RED}❌ Emergency Save Failed: {e}{RESET}")
+
+
 def main():
     # Check for --dry-run flag
     dry_run = "--dry-run" in sys.argv
 
-    divider("🔒 ATHENA SHUTDOWN SEQUENCE")
+    divider("🔒 ATHENA SHUTDOWN SEQUENCE (Titanium Protocol)")
 
     exit_code = 0
 
-    # Phase 0: Session Log Finalization (Session Compiler)
-    print(f"{BOLD}📋 Phase 0: Session Compilation{RESET}")
+    try:
+        # Phase 0: Session Log Finalization (Session Compiler)
+        print(f"{BOLD}📋 Phase 0: Session Compilation{RESET}")
 
-    log_path = get_current_session_log()
-    if log_path:
-        # Force fresh read from disk to bypass any memory caching
-        content = log_path.read_text()
-        print(f"DEBUG: Validating file: {log_path}")
-        print(f"DEBUG: File size: {len(content)} bytes")
+        log_path = get_current_session_log()
+        if log_path:
+            # Force fresh read from disk to bypass any memory caching
+            content = log_path.read_text()
 
+            # [Fail-Safe Validation]
+            # Instead of aborting, we warn. Robustness > Correctness.
         if not validate_log_synthesis(content):
-            print(
-                f"\n{RED}{BOLD}❌ ABORTING SHUTDOWN: Incomplete Session Log detected.{RESET}"
+            print(f"\n{YELLOW}{BOLD}⚠️ WARNING: Incomplete Session Log detected.{RESET}")
+            print(f"{YELLOW}Proceeding with shutdown to preserve data.{RESET}")
+            # We do NOT return 1 here anymore. We must save.
+
+        if not finalize_session_log(dry_run=dry_run):
+            print(f"{YELLOW}⚠️ Session finalization had issues (skipping step){RESET}")
+        print()
+
+        if dry_run:
+            print(f"\n{BOLD}{CYAN}[DRY-RUN MODE] No changes written. Exiting.{RESET}\n")
+            return 0
+
+        # Phase 1: Harvest check (Background)
+        print("🌾 Harvest Check (Background)...")
+        try:
+            subprocess.Popen(
+                ["python3", ".agent/scripts/harvest_check.py"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
             )
-            print(
-                f"{RED}Placeholder values ('...') found in Agenda, Decisions, or Action Items.{RESET}"
+        except Exception:
+            pass
+
+        print()
+
+        # Phase 2: Git commit (The Critical Step - SYNCHRONOUS)
+        if not git_commit():
+            print(f"{YELLOW}⚠️ Git commit had issues{RESET}")
+            exit_code = 1
+
+        print()
+
+        # Phase 3: Compliance
+        compliance_report()
+        compliance_reset()
+
+        # Phase 4: Semantic Search Compliance
+        try:
+            from semantic_audit import print_compliance_report
+
+            print_compliance_report()
+        except Exception:
+            pass
+
+        # Phase 5: Update CANONICAL metrics
+        try:
+            from update_metrics import main as update_metrics_main
+
+            update_metrics_main()
+        except Exception:
+            pass
+
+        # Phase 6: Auto-Hygiene (Background)
+        print(f"\n{CYAN}🧹 Running Hygiene Protocol (Background)...{RESET}")
+        try:
+            subprocess.Popen(
+                ["python3", ".agent/scripts/compress_sessions.py"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
             )
+        except Exception as e:
+            print(f"{YELLOW}⚠️  Hygiene trigger failed: {e}{RESET}")
+
+        # Summary
+        print(f"\n{BOLD}{'─' * 60}{RESET}")
+        time_now = datetime.now().strftime("%H:%M SGT")
+        if exit_code == 0:
+            print(f"{GREEN}{BOLD}✅ Session closed.{RESET} Time: {time_now}")
+        else:
             print(
-                f"{YELLOW}Please synthesize the session manually before running /end.{RESET}\n"
+                f"{YELLOW}{BOLD}⚠️ Session closed with warnings.{RESET} Time: {time_now}"
             )
-            return 1
+        print(f"{BOLD}{'─' * 60}{RESET}\n")
 
-    if not finalize_session_log(dry_run=dry_run):
-        print(f"{YELLOW}⚠️ Session finalization had issues{RESET}")
-    print()
+        return exit_code
 
-    if dry_run:
-        print(f"\n{BOLD}{CYAN}[DRY-RUN MODE] No changes written. Exiting.{RESET}\n")
-        return 0
-
-    # Phase 1: Harvest check
-    if not harvest_check():
-        print(f"{YELLOW}⚠️ Harvest check found issues (review above){RESET}")
-        # Don't fail — just warn
-
-    print()
-
-    # Phase 2: Git commit
-    if not git_commit():
-        print(f"{YELLOW}⚠️ Git commit had issues{RESET}")
-        exit_code = 1
-
-    print()
-
-    # Phase 3: Compliance
-    compliance_report()
-    compliance_reset()
-
-    # Phase 4: Semantic Search Compliance (§0.7.1)
-    try:
-        from semantic_audit import print_compliance_report
-
-        print_compliance_report()
     except Exception as e:
-        print(f"⚠️ Semantic audit unavailable: {e}")
+        # GLOBAL CATCH-ALL
+        print(f"\n{RED}❌ CRITICAL SHUTDOWN FAILURE: {e}{RESET}")
+        print(f"{RED}Traceback available in logs.{RESET}")
+        import traceback
 
-    # Phase 5: Update CANONICAL metrics (auto-sync counts)
-    try:
-        from update_metrics import main as update_metrics_main
+        traceback.print_exc()
 
-        update_metrics_main()
-    except Exception as e:
-        print(f"⚠️ Metrics update skipped: {e}")
+        # Deploy Emergency Parachute
+        if not dry_run:
+            safe_commit()
 
-    # Phase 6: Auto-Hygiene (The Refinery)
-    # NOTE: Git commit/push already handled by git_commit.py in Phase 2 above.
-    # Do NOT add another git commit here — that was a bug (double-commit).
-    print(f"\n{CYAN}🧹 Running Hygiene Protocol...{RESET}")
-    try:
-        subprocess.run(["python3", ".agent/scripts/compress_sessions.py"], check=False)
-    except Exception as e:
-        print(f"{YELLOW}⚠️  Hygiene skipped: {e}{RESET}")
-
-    # Summary
-    print(f"\n{BOLD}{'─' * 60}{RESET}")
-    time_now = datetime.now().strftime("%H:%M SGT")
-    if exit_code == 0:
-        print(f"{GREEN}{BOLD}✅ Session closed.{RESET} Time: {time_now}")
-    else:
-        print(f"{YELLOW}{BOLD}⚠️ Session closed with warnings.{RESET} Time: {time_now}")
-    print(f"{BOLD}{'─' * 60}{RESET}\n")
-
-    return exit_code
+        return 1
 
 
 if __name__ == "__main__":

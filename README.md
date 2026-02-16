@@ -5,7 +5,7 @@
 ![GitHub Stars](https://img.shields.io/github/stars/winstonkoh87/Athena-Public?style=social)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
-![Version](https://img.shields.io/badge/Version-9.1.0-10b981)
+![Version](https://img.shields.io/badge/Version-9.2.0-10b981)
 ![Reddit Views](https://img.shields.io/badge/Reddit_Views-700k+-FF4500?logo=reddit&logoColor=white)
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/winstonkoh87/Athena-Public)
 
@@ -13,6 +13,7 @@
 
 > **Athena is not an AI Agent. It is the Linux OS they run on.**
 > Open Source · Sovereign · Model-Agnostic
+> **12x Velocity**: Built in 3 months (vs 3 years manual).
 
 ---
 
@@ -104,7 +105,7 @@ athena init --ide cursor      # Init with IDE-specific config
 athena check                  # System health check
 athena save "summary"         # Quicksave checkpoint
 athena --end                  # Close session and save
-athena --version              # Show version (v9.0.0)
+athena --version              # Show version (v9.2.0)
 ```
 
 </details>
@@ -252,7 +253,7 @@ Athena-Public/
 │   └── quickstart/          # Runnable demos
 ├── docs/                    # Architecture, benchmarks, security, guides
 ├── community/               # Contributing, roadmap
-├── pyproject.toml           # Modern packaging (v9.1.0)
+├── pyproject.toml           # Modern packaging (v9.2.0)
 └── .env.example             # Environment template
 ```
 
@@ -370,7 +371,7 @@ cp .env.example .env
 
 | Layer | Technology | Purpose |
 |:------|:----------|:--------|
-| **SDK** | `athena` Python package (v9.0.0) | Core search, reranking, memory |
+| **SDK** | `athena` Python package (v9.2.0) | Core search, reranking, memory |
 | **Reasoning** | Claude Opus (primary) | Main reasoning engine |
 | **Optimization** | DSPy | Prompt optimization & self-correction |
 | **Reranking** | FlashRank | Lightweight cross-encoder RRF |
@@ -387,6 +388,7 @@ cp .env.example .env
 
 ### February 2026
 
+- **v9.2.0** (Feb 17 2026): **Sovereignty Convergence** — Root↔Public unification via cherry-pick. CVE-2025-69872 security patch active, production-grade cache, agentic search, governance upgrade, 8 new modules. Fixed split-brain editable install. Titanium Airlock preserved.
 - **v9.1.0** (Feb 17 2026): **Deep Audit & Sync** — Fixed 15 issues (dead links, version drift, dependency sync, AGENTS.md path errors, workflow count corrections). Cleaned tracked artifacts.
 - **v9.0.0** (Feb 16 2026): **First-Principles Workspace Refactor** — Root directory cleaned (28→14 files), 114 stub session logs archived, build artifacts purged, dead `.framework/v7.0` archived, `.gitignore` hardened. Zero regressions (17/17 tests pass).
 - **v8.6.0** (Feb 15 2026): **Massive Content Expansion** — 200 protocols (was 75), 535 scripts (was 16), 48 workflows (was 14), 36 templates. 23 protocol categories. Repo audit for recruiter readiness. Content sanitization pass.

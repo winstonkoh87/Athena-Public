@@ -16,11 +16,14 @@ last_updated: 2026-01-20
 
 // turbo
 
-- [/] Load `.framework/v8.6-stable/modules/Core_Identity.md` — Laws #0-#4, Identity, RSI (~2K tokens)
+- [/] Load `.framework/v8.2-stable/modules/Core_Identity.md` — Laws #0-#4, Identity, RSI (~2K tokens)
 - [/] **Identity**: Load `.context/memory_bank/userContext.md` — Core profile, constraints, psychology (Robust)
 - [/] **Mission**: Load `.context/memory_bank/productContext.md` — Soul purpose, philosophy (Robust)
 - [/] **State**: Load `.context/memory_bank/activeContext.md` — Current focus (Robust)
 - [ ] **Boot Orchestrator**: Run `python3 .agent/scripts/boot.py` — recalls last session, creates new session, captures context, primes semantic memory (single call)
+- [ ] **Active OS**: Start Athena Daemon `python3 Athena-Public/src/athena/core/athenad.py` (Background Service)
+// turbo
+- [ ] **Daemon**: `./Athena-Public/scripts/launch_athena.sh --background`
 - [ ] **UI Sync**: `open -a "Antigravity" --args --disable-gpu-driver-bug-workarounds --ignore-gpu-blacklist --enable-gpu-rasterization` (Hardware acceleration enabled)
 
 **Confirm**: "⚡ Ready. (Core Identity loaded. Session XX started. Semantic primed.)"
@@ -48,7 +51,7 @@ Bypassing this sequence is a high-severity protocol violation. No exceptions for
 | Tag lookup, "find files about" | `TAG_INDEX.md` | 5,500 |
 | Protocol/skill request | `SKILL_INDEX.md` | 4,500 |
 | Bio, typology, "who am I" | `User_Profile_Core.md` | 1,500 |
-| L1-L5, behavioral patterns, decision frameworks | `Psychology_L1L5.md` | 3,000 |
+| L1-L5, trauma, therapy, fantasy | `Psychology_L1L5.md` | 3,000 |
 | Decision frameworks, strategy | `System_Principles.md` | 3,500 |
 | Marketing, SEO, SWOT, pricing | `Business_Frameworks.md` | 2,500 |
 | Calibration references, cases | `Session_Observations.md` | 2,500 |

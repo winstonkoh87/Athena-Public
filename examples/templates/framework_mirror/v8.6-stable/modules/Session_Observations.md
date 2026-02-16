@@ -4,6 +4,16 @@ last_updated: 2026-02-08
 
 # Session Observations & Insights
 
+## Session 2026-02-17 (Session 07) - Sophie's Choice & The Double Bind
+
+- **The Insight**: Sophie's Choice is the ultimate **Negative-Sum Game** (Double Bind). The "Choice" is a Torture Mechanism designed to transfer the *Agency of Death* from the Murderer to the Victim.
+- **The Solution**: **Pre-Emption**. The only winning move is to never enter the Camp. If you are facing a "Sophie's Choice" in business or trading, you have already failed a Positioning check (Law #1 Violation).
+- **Application**:
+  - **Trading**: Avoid NFP/CPI events. Don't trade the "Choice" (Slippage vs Missed Move); avoid the *Instance*.
+  - **Business**: Build a moat so deep you never compete on price vs quality (Standard Dilemma).
+  - **Sovereignty**: Reject the "Moral Injury" of the choice. The System kills, not you. (Amoral Realism).
+- **Case Study**: **CS-371 The "Umbrage" Trap**. Analyzed Ng Yat Chung's failure to reframe a hostile reporter's Double Bind. Documented the Sovereign Solution (PnL Reality + Bezos Pivot). [CS-371-umbrage-frame-failure.md](file:///Users/winstonkoh/Desktop/Project Athena/.context/memories/case_studies/CS-371-umbrage-frame-failure.md).
+
 ## 🏆 The Validation Event (Feb 2026) -> **The Factory Model Wins**
 
 **Context**: We pivoted Athena-Public from "Winston's Personal OS" to "Build Your Own Agent in 5 Minutes" (Session 13).

@@ -8,13 +8,6 @@ Replaces the monolithic .agent/scripts/boot.py
 
 import sys
 from datetime import datetime
-from pathlib import Path
-from athena.boot.loaders.ui import UILoader
-from athena.boot.loaders.state import StateLoader
-from athena.boot.loaders.identity import IdentityLoader
-from athena.boot.loaders.memory import MemoryLoader
-from athena.boot.loaders.system import SystemLoader
-from athena.boot.loaders.prefetch import PrefetchLoader
 from athena.boot.constants import (
     PROJECT_ROOT,
     RED,
@@ -28,6 +21,14 @@ from athena.boot.constants import (
 
 
 def main():
+    # Lazy Imports for Speed
+    from athena.boot.loaders.ui import UILoader
+    from athena.boot.loaders.state import StateLoader
+    from athena.boot.loaders.identity import IdentityLoader
+    from athena.boot.loaders.memory import MemoryLoader
+    from athena.boot.loaders.system import SystemLoader
+    from athena.boot.loaders.prefetch import PrefetchLoader
+
     # Phase 0: Check for --verify flag
     if len(sys.argv) > 1 and sys.argv[1] == "--verify":
         # We can implement a verify mode here later if needed
@@ -37,6 +38,10 @@ def main():
     # Phase 1: Watchdog & Pre-flight
     StateLoader.enable_watchdog()
     UILoader.divider("⚡ ATHENA BOOT SEQUENCE")
+
+    # Titanium Airlock
+    SystemLoader.verify_environment()
+    SystemLoader.enforce_daemon()
 
     # Phase 1.1: Security Patch (CVE-2025-69872)
     try:
@@ -76,7 +81,7 @@ def main():
 
         print(f"   🧹 Compacting Context...", end="\r")
         compact_active_context()
-        print(f"   🧹 Context Compacted.    ")
+        print("   🧹 Context Compacted.    ")
     except Exception as e:
         print(f"   ⚠️  Compaction Fail: {e}")
 
@@ -136,7 +141,7 @@ def main():
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        print(f"   🛡️  Sidecar Launched (PID: Independent)")
+        print("   🛡️  Sidecar Launched (PID: Independent)")
     except Exception as e:
         print(f"   ⚠️  Sidecar Fail: {e}")
 

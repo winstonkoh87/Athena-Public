@@ -13,7 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 
 from athena.core.config import (
     PROJECT_ROOT,
@@ -38,30 +38,32 @@ BOLD = "\033[1m"
 DIM = "\033[2m"
 RESET = "\033[0m"
 
+# God Mode: Aggressive latency optimization
+GOD_MODE = True
+
 # Config
 # NOTE: Vector subtypes (case_study, session, protocol, etc.) each get their own
-# weight so RRF applies them correctly. The generic "vector" key is the fallback
-# for any subtype not explicitly listed.
+# weight so RRF applies them correctly.
 WEIGHTS = {
-    "case_study": 3.0,  # User-specific knowledge (vector search)
-    "session": 3.0,  # User-specific sessions (vector search)
-    "protocol": 2.8,  # Protocol library (vector search)
-    "graphrag": 2.5,  # The Context (community/entity graph)
-    "user_profile": 2.5,  # User profile data (vector search)
-    "framework_docs": 2.5,  # Framework .md content search (NEW)
-    "framework": 2.3,  # Strategic frameworks (vector search)
-    "tags": 2.2,  # The Index (keyword grep on TAG_INDEX)
-    "canonical": 2.0,  # The Constitution (NERFED from 3.5 — was drowning results)
-    "filename": 2.0,  # The Map (BOOSTED from 1.0 — file paths are high-signal)
-    "vector": 1.8,  # Fallback for unlisted vector subtypes
-    "capability": 1.8,  # Capability docs (vector search)
-    "playbook": 1.8,  # Playbook docs (vector search)
-    "workflow": 1.8,  # Workflow docs (vector search)
-    "entity": 1.8,  # Entity docs (vector search)
-    "reference": 1.8,  # Reference docs (vector search)
-    "system_doc": 1.8,  # System docs (vector search)
-    "sqlite": 1.5,  # The Sovereign Fallback (Local DB)
-    "exocortex": 1.5,  # The Global Knowledge (Wikipedia Abstracts)
+    "case_study": 3.0,
+    "session": 3.0,
+    "protocol": 2.8,
+    "graphrag": 2.5,
+    "user_profile": 2.5,
+    "framework_docs": 2.5,
+    "framework": 2.3,
+    "tags": 2.2,
+    "canonical": 2.0,
+    "filename": 2.0,
+    "vector": 1.8,
+    "capability": 1.8,
+    "playbook": 1.8,
+    "workflow": 1.8,
+    "entity": 1.8,
+    "reference": 1.8,
+    "system_doc": 1.8,
+    "sqlite": 1.5,
+    "exocortex": 1.5,
 }
 RRF_K = 60
 CONFIDENCE_HIGH = 0.03
@@ -73,7 +75,7 @@ SKIP_PATHS = [
     "node_modules/",
     ".git/",
     "athena-public/docs/libraries/",
-    "README.md",  # General readmes (often too noisy)
+    "README.md",
 ]
 
 # GraphRAG paths
@@ -215,19 +217,24 @@ def collect_vectors(
 
         query_embedding = embedding if embedding else get_embedding(query)
 
+        # God Mode Limits
+        high_limit = 10
+        mid_limit = 5 if not GOD_MODE else 3
+        low_limit = 5 if not GOD_MODE else 3
+
         # Parallel search using ThreadPoolExecutor
         search_tasks = [
-            ("protocol", search_protocols, 10, 0.3),
-            ("case_study", search_case_studies, 10, 0.3),
-            ("session", search_sessions, 5, 0.35),
-            ("capability", search_capabilities, 5, 0.3),
-            ("playbook", search_playbooks, 5, 0.3),
-            ("workflow", search_workflows, 5, 0.3),
-            ("entity", search_entities, 5, 0.3),
-            ("reference", search_references, 5, 0.3),
-            ("framework", search_frameworks, 5, 0.3),
-            ("user_profile", search_user_profile, 5, 0.3),
-            ("system_doc", search_system_docs, 5, 0.3),
+            ("protocol", search_protocols, high_limit, 0.3),
+            ("case_study", search_case_studies, high_limit, 0.3),
+            ("session", search_sessions, mid_limit, 0.35),
+            ("capability", search_capabilities, low_limit, 0.3),
+            ("playbook", search_playbooks, low_limit, 0.3),
+            ("workflow", search_workflows, low_limit, 0.3),
+            ("entity", search_entities, low_limit, 0.3),
+            ("reference", search_references, low_limit, 0.3),
+            ("framework", search_frameworks, low_limit, 0.3),
+            ("user_profile", search_user_profile, low_limit, 0.3),
+            ("system_doc", search_system_docs, low_limit, 0.3),
         ]
 
         def run_task(task):
@@ -382,57 +389,72 @@ def collect_filenames(query: str) -> list[SearchResult]:
         return []
 
     seen_paths = set()
-    for keyword in keywords:
-        try:
-            process = subprocess.run(
-                [
-                    "find",
-                    ".",
-                    "-path",
-                    "./node_modules",
-                    "-prune",
-                    "-o",
-                    "-path",
-                    "./.git",
-                    "-prune",
-                    "-o",
-                    "-path",
-                    "./Athena-Public",
-                    "-prune",
-                    "-o",
-                    "-type",
-                    "f",
-                    "-iname",
-                    f"*{keyword}*",
-                    "-print",
-                ],
-                cwd=PROJECT_ROOT,
-                capture_output=True,
-                text=True,
-                timeout=2,
-            )
-            if process.stdout:
-                lines = process.stdout.strip().split("\n")[:10]
-                for line in lines:
-                    if line.strip() and line not in seen_paths:
-                        seen_paths.add(line)
-                        full_path = PROJECT_ROOT / line
-                        # Score by how many query keywords appear in the filename
-                        fname_lower = full_path.name.lower()
-                        keyword_hits = sum(
-                            1 for k in keywords if k.lower() in fname_lower
+    try:
+        # Optimization: Single find command with OR logic for all keywords
+        # find . -path X -prune -o -type f \( -iname *k1* -o -iname *k2* \) -print
+        cmd = [
+            "find",
+            ".",
+            "-path",
+            "./node_modules",
+            "-prune",
+            "-o",
+            "-path",
+            "./.git",
+            "-prune",
+            "-o",
+            "-path",
+            "./Athena-Public",
+            "-prune",
+            "-o",
+            "-path",
+            "./.context/knowledge",  # Skip large binary/db dumps if present
+            "-prune",
+            "-o",
+            "-type",
+            "f",
+            "(",
+        ]
+
+        # Add keywords with OR logic
+        for i, keyword in enumerate(keywords):
+            if i > 0:
+                cmd.append("-o")
+            cmd.extend(["-iname", f"*{keyword}*"])
+
+        cmd.extend([")", "-print"])
+
+        process = subprocess.run(
+            cmd,
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=3,  # Slightly increased for the heavier single query
+        )
+
+        if process.stdout:
+            lines = process.stdout.strip().split("\n")[
+                :20
+            ]  # Take a few more candidates, filter later
+            for line in lines:
+                if line.strip() and line not in seen_paths:
+                    seen_paths.add(line)
+                    full_path = PROJECT_ROOT / line
+                    # Score by how many query keywords appear in the filename
+                    fname_lower = full_path.name.lower()
+                    keyword_hits = sum(1 for k in keywords if k.lower() in fname_lower)
+                    results.append(
+                        SearchResult(
+                            id=f"File: {full_path.name}",
+                            content=f"Path: {line}",
+                            source="filename",
+                            score=keyword_hits / len(keywords),
+                            metadata={"path": str(full_path)},
                         )
-                        results.append(
-                            SearchResult(
-                                id=f"File: {full_path.name}",
-                                content=f"Path: {line}",
-                                source="filename",
-                                score=keyword_hits / len(keywords),
-                                metadata={"path": str(full_path)},
-                            )
-                        )
-        except Exception:
-            pass
+                    )
+    except Exception:
+        pass
+
     results.sort(key=lambda r: r.score, reverse=True)
     return results[:10]
 
@@ -606,12 +628,15 @@ def collect_exocortex(query: str, limit: int = 5) -> list[SearchResult]:
         cursor = conn.cursor()
 
         # Sanitize term for FTS5
-        clean_term = f"""{query.replace('"', '""')}"""
+        # Tokenize and wrap in quotes to prevent column syntax interpretation (e.g. 1:1)
+        # "trend" "continuation" "1:1"
+        tokens = [f'"{token.replace('"', '""')}"' for token in query.split()]
+        clean_query = " ".join(tokens)
 
         # FTS query syntax
         sql = "SELECT title, abstract, url FROM abstracts WHERE title MATCH ? OR abstract MATCH ? ORDER BY rank LIMIT ?"
 
-        cursor.execute(sql, (clean_term, clean_term, limit))
+        cursor.execute(sql, (clean_query, clean_query, limit))
 
         for row in cursor.fetchall():
             results.append(
@@ -695,8 +720,21 @@ def run_search(
             # We need the embedding for semantic check
             # This corresponds to "Step 2: Fetch embedding" in the plan
             from athena.memory.vectors import get_embedding
+            import signal
 
-            query_embedding = get_embedding(query)
+            # Timeout wrapper for get_embedding (Supabase cold start issues)
+            def handler(signum, frame):
+                raise TimeoutError("Embedding fetch timed out")
+
+            # Set the signal handler and a 3-second alarm
+            signal.signal(signal.SIGALRM, handler)
+            signal.alarm(3)
+
+            try:
+                query_embedding = get_embedding(query)
+            finally:
+                signal.alarm(0)  # Disable alarm
+
             semantic_hit = cache.get_semantic(query_embedding)
 
             if semantic_hit:
@@ -711,7 +749,7 @@ def run_search(
         except Exception as e:
             # Embedding failed or semantic miss - continue with hybrid search
             # Make embedding optional for non-vector search methods
-            if "404" in str(e) or "GOOGLE_API_KEY" in str(e):
+            if "404" in str(e) or "GOOGLE_API_KEY" in str(e) or "timed out" in str(e):
                 if not json_output:
                     print(
                         f"\n   {YELLOW}⚠️  FALLBACK: Vector search unavailable ({e}){RESET}",
@@ -731,7 +769,19 @@ def run_search(
                 print("=" * 60)
 
             # 1. Collect (Parallel execution)
+            # Wrapper for robust execution
+
+            # 1. Collect (Parallel execution)
             exclude_domains = [] if include_personal else ["personal"]
+
+            # Helper to create safe lambdas
+            def safe_exec(name, func):
+                try:
+                    return func()
+                except Exception as e:
+                    print(f"   ⚠️ {name} task failed: {e}", file=sys.stderr)
+                    return []
+
             collection_tasks = {
                 "canonical": lambda: collect_canonical(query),
                 "tags": lambda: collect_tags(query),
@@ -748,18 +798,56 @@ def run_search(
             lists = {}
             with ThreadPoolExecutor(max_workers=len(collection_tasks)) as executor:
                 future_to_source = {
-                    executor.submit(func): source
+                    executor.submit(safe_exec, source, func): source
                     for source, func in collection_tasks.items()
+                    if source != "vector"  # Defer vector launch
                 }
-                # Wait for results with a global timeout
-                for future in as_completed(future_to_source, timeout=8):
+
+                # Adaptive Latency: Entropy Check
+                # If query is short (< 5 words) and generic, skip vectors
+                word_count = len(query.split())
+                is_low_entropy = word_count < 5 and not any(
+                    x in query.lower()
+                    for x in ["protocol", "session", "case study", "cs-"]
+                )
+
+                if is_low_entropy and not include_personal:
+                    if not json_output:
+                        print(
+                            f"   ⚡ Low Entropy Query: Skipping deep retrieval (Vectors bypassed)"
+                        )
+                else:
+                    # Launch vector search
+                    future_to_source[
+                        executor.submit(safe_exec, "vector", collection_tasks["vector"])
+                    ] = "vector"
+
+                # God Mode Timeout
+                timeout = 8 if not GOD_MODE else 5
+
+                # Wait for ALL to finish (or timeout)
+                done, not_done = wait(
+                    future_to_source.keys(), timeout=timeout, return_when=ALL_COMPLETED
+                )
+
+                # Collect finished results
+                for future in done:
                     source = future_to_source[future]
                     try:
                         lists[source] = future.result()
-                    except Exception as e:
-                        if not json_output:
-                            print(f"   ⚠️ {source} failed: {e}", file=sys.stderr)
+                    except Exception:
                         lists[source] = []
+
+                # Report timeouts
+                for future in not_done:
+                    source = future_to_source[future]
+                    if not json_output:
+                        print(
+                            f"   ⚠️ {source} timed out (Tier 2 limit)", file=sys.stderr
+                        )
+                    # We simply don't add it to lists, effectively skipping it
+                    # Ensure we cancel if possible (though Python threads can't be killed)
+                    future.cancel()
 
             # 2. Fuse
             # Split vector results by their type-specific source for correct

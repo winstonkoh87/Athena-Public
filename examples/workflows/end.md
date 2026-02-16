@@ -75,6 +75,7 @@ last_updated: 2026-01-07
 
 ```bash
 python3 .agent/scripts/shutdown.py
+./Athena-Public/scripts/launch_athena.sh --stop
 ```
 
 **What it does**:

@@ -23,7 +23,16 @@ class GovernanceEngine:
     """
 
     def __init__(self, state_dir: Path = None):
-        self.state_dir = state_dir or Path.home() / ".athena" / "state"
+        if state_dir is None:
+            # Backward compat: try importing AGENT_DIR, fall back to ~/.athena
+            try:
+                from athena.core.config import AGENT_DIR
+
+                self.state_dir = AGENT_DIR / "state"
+            except ImportError:
+                self.state_dir = Path.home() / ".athena" / "state"
+        else:
+            self.state_dir = state_dir
         self.state_file = self.state_dir / "exchange_state.json"
         self._state: Dict[str, Any] = self._load_state()
 
@@ -85,7 +94,7 @@ class GovernanceEngine:
         return 1.0 if (semantic and web) else 0.0
 
 
-# Singleton instance
+# Singleton instance (lazy)
 _governance_engine = None
 
 

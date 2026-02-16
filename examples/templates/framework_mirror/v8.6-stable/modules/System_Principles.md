@@ -771,4 +771,28 @@ THEN:
 
 ---
 
+## 27. The Bureaucratic Liability Asymmetry (Iron Law)
+>
+> **Origin**: Session 04 (Dave Lee Case Study CS-370)
+
+**The Law**: "The Bottom gets Fucked; The Top gets a Report."
+
+**Physics**:
+
+- **Liability** flows **Down** (Gravity).
+- **Authority** stays **Up** (Buoyancy).
+
+**The Trap**:
+
+- You are most vulnerable when you have **High Responsibility** (Duty to Act) but **Low Authority** (Power to Decide).
+- *Example*: A Medic needing a Captain's permission to save a life.
+
+**Directive**:
+
+- **Never hold the bag.**
+- If assigned Responsibility without Authority, **Reject** or **Paper Trail** instantly.
+- "I cannot be responsible for the safety of this exercise unless I have the authority to cancel it unilaterally."
+
+---
+
 **Tags**: #principles #strategy #operating-model

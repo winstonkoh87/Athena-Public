@@ -217,7 +217,7 @@ def relay_error(
     if auto_save:
         filepath = save_diagnostic_draft(diagnostic)
         print(f"📋 Diagnostic saved: {filepath.name}")
-        print("   Review and submit to: https://github.com/winstonkoh87/Athena-Public/issues/new")
+        print("   Review and submit to: https://github.com/[AUTHOR]87/Athena-Public/issues/new")
         return filepath
 
     return None

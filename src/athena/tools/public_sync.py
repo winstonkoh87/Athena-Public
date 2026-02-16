@@ -38,7 +38,7 @@ PATH_MAP = {
 
 
 # Patterns
-LINK_PATTERN = re.compile(r'\[([^\]]+)\]\((file:///Users/winstonkoh/Desktop/Project%20Athena/([^\)]+))\)')
+LINK_PATTERN = re.compile(r'\[([^\]]+)\]\((file:///Users/[AUTHOR]/Desktop/Project%20Athena/([^\)]+))\)')
 
 class SyncOrchestrator:
     def __init__(self, dry_run=False):
@@ -96,7 +96,7 @@ class SyncOrchestrator:
         
         # 2. PII / Specifics (Placeholder for more robust rules)
         # Replaces common PII patterns if found
-        content = content.replace("Winston Koh", "[Creator]")
+        content = content.replace("[AUTHOR]", "[Creator]")
         
         return content
 
