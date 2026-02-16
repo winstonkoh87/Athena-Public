@@ -1,6 +1,6 @@
 # Glossary
 
-> **Last Updated**: 01 January 2026
+> **Last Updated**: 16 February 2026
 
 > **Purpose**: Quick reference for Athena-specific terminology. Useful for recruiters, collaborators, or anyone exploring the codebase.
 
