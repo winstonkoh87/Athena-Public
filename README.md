@@ -1,15 +1,16 @@
 ![Athena Banner](./docs/athena_banner.png)
 
-# 🏛️ Project Athena — The Operating System for AI Agents
+# 🏛️ Project Athena — The Linux OS for AI Agents
 
 ![GitHub Stars](https://img.shields.io/github/stars/winstonkoh87/Athena-Public?style=social)
+![Last Updated](https://img.shields.io/badge/Last%20Updated-Feb%202026-blue)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
 ![Version](https://img.shields.io/badge/Version-9.0.0-10b981)
 ![Reddit Views](https://img.shields.io/badge/Reddit_Views-700k+-FF4500?logo=reddit&logoColor=white)
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/winstonkoh87/Athena-Public)
 
-> **Athena is not an AI Agent. It is the Operating System they run on.**
+> **Athena is not an AI Agent. It is the Linux OS they run on.**
 > Open Source · Sovereign · Model-Agnostic
 
 ---
@@ -184,9 +185,9 @@ Your data lives in **Markdown files you own** — on your machine, git-versioned
 - **Hybrid search**: Canonical + GraphRAG + Tags + Vectors + Filenames, fused via RRF
 - **Auto-quicksave**: Every exchange is logged without manual action
 
-### 📚 200+ Starter Protocols
+### 📚 120+ Starter Protocols
 
-[Starter decision frameworks](examples/protocols/) across 17 categories — architecture, risk, strategy, communication, and more. These are **templates**, not prescriptions. The real value comes when you write your own protocols from your own friction and failures.
+[Starter decision frameworks](examples/protocols/) across 13 categories — architecture, engineering, decision-making, reasoning, and more. These are **templates**, not prescriptions. The real value comes when you write your own protocols from your own friction and failures.
 
 ### 🔌 MCP Server (9 Tools)
 
@@ -220,7 +221,7 @@ Expose Athena's capabilities to any [MCP-compatible](https://modelcontextprotoco
 | `/plan` | Structured planning with pre-mortem |
 | `/vibe` | Ship at 70%, iterate fast |
 
-> 👉 [Full Workflow Documentation](docs/WORKFLOWS.md) — all 48 workflows in [.agent/workflows/](.agent/workflows/)
+> 👉 [Full Workflow Documentation](docs/WORKFLOWS.md) — all 20 workflows in [.agent/workflows/](.agent/workflows/)
 
 ### 🛡️ Permissioning & Governance
 
@@ -243,9 +244,9 @@ Athena-Public/
 │   ├── cli/                 #   init, save commands
 │   └── mcp_server.py        #   MCP Tool Server (9 tools, 2 resources)
 ├── examples/
-│   ├── protocols/           # 200+ starter frameworks (17 categories)
-│   ├── scripts/             # 535 reference scripts
-│   ├── workflows/           # 48 slash commands
+│   ├── protocols/           # 120+ starter frameworks (13 categories)
+│   ├── scripts/             # 17 core OS scripts
+│   ├── workflows/           # 20 slash commands
 │   ├── templates/           # 36 starter templates
 │   └── quickstart/          # Runnable demos
 ├── docs/                    # Architecture, benchmarks, security, guides
