@@ -38,6 +38,17 @@ def main():
     StateLoader.enable_watchdog()
     UILoader.divider("⚡ ATHENA BOOT SEQUENCE")
 
+    # Phase 1.1: Security Patch (CVE-2025-69872)
+    try:
+        from athena.core.security import patch_dspy_cache_security
+
+        patch_dspy_cache_security()
+        print(f"   🛡️  Security: DiskCache mitigation active.")
+    except ImportError:
+        pass
+    except Exception as e:
+        print(f"   ⚠️  Security Patch Failed: {e}")
+
     StateLoader.check_prior_crashes()
     StateLoader.check_canary_overdue()
 
