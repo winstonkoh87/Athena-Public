@@ -32,8 +32,24 @@ if [[ "$1" == "--background" ]]; then
     echo "   PID: $PID"
     echo "   Log: $PROJECT_ROOT/athenad.log"
     
-    # Save PID (Optional)
     echo "$PID" > "$PROJECT_ROOT/.athenad.pid"
+elif [[ "$1" == "--stop" ]]; then
+    # Stop the daemon
+    PID_FILE="$PROJECT_ROOT/.athenad.pid"
+    if [[ -f "$PID_FILE" ]]; then
+        PID=$(cat "$PID_FILE")
+        if kill -0 "$PID" 2>/dev/null; then
+            echo "🛑 Stopping Athena Daemon (PID: $PID)..."
+            kill "$PID"
+            rm "$PID_FILE"
+            echo "✅ Daemon stopped."
+        else
+            echo "⚠️  Daemon process $PID not found. Cleaning up pidfile."
+            rm "$PID_FILE"
+        fi
+    else
+        echo "⚠️  No .athenad.pid found. Is the daemon running?"
+    fi
 else
     # Run in foreground
     python3 "$DAEMON_SCRIPT"
