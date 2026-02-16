@@ -4,6 +4,45 @@
 
 ---
 
+## v9.1.0 — Starter Kit Prune (Feb 2026)
+
+**Status**: ✅ Current Release
+
+Philosophy shift: "Give the skeleton, let users fill the soul." Stripped personal/niche content to make Athena a true generic OS foundation.
+
+- ✅ **Workflows**: Reduced from 48 → 20 (removed personal finance, specific trading workflows).
+- ✅ **Protocols**: 200+ → 120 (kept universal domains: Architecture, Decision, Strategy).
+- ✅ **Scripts**: Pruned to 17 core OS scripts.
+- ✅ **Templates**: Kept 36 generic templates.
+- ✅ **Branding**: "The Linux OS for AI Agents" fully adopted.
+
+---
+
+## v9.0.2 — Philosophy Fix (Feb 2026)
+
+- ✅ **Onboarding**: Added `docs/YOUR_FIRST_SESSION.md`.
+- ✅ **Framing**: Explicitly framed as a "Starter Kit" rather than a reference implementation.
+
+---
+
+## v9.0.1 — Documentation Overhaul (Feb 2026)
+
+- ✅ **README**: Complete rewrite (911 → 367 lines) for better progressive disclosure.
+- ✅ **Structure**: What? → How? → Features? flow.
+
+---
+
+## v9.0.0 — First-Principles Refactor (Feb 2026)
+
+**Major Milestone**: Clean slate architecture.
+
+- ✅ **Root Hygiene**: 28 → 14 files (moved loose scripts/drafts).
+- ✅ **Artifact Purge**: Deleted egg-info, temp dirs, stale runtimes.
+- ✅ **Archival**: Archived 114 stub session logs.
+- ✅ **Security**: Mitigated CVE-2025-69872 via diskcache runtime patch.
+
+---
+
 ## v8.5.0 — Phase 4: Bounded Intelligence (Feb 2026)
 
 **Status**: ✅ Stable
