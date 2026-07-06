@@ -59,7 +59,7 @@ full = [
     "athena-agent[search,cloud]",
     "google-genai>=1.0.0",
     "supabase>=2.0.0",
-    "anthropic>=0.40.0",
+    "anthropic>=0.116.0",
     "flashrank>=0.2.9",
     "sentence-transformers>=2.2.0",
     "torch>=2.0.0",
