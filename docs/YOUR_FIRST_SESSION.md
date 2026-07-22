@@ -40,7 +40,7 @@ On Day 1, Athena is a blank slate. It knows nothing about you. But after 10 sess
 
 ## Step 1: Boot Up
 
-Open your workspace in your agentic IDE ([Antigravity](https://antigravity.google/), [Cursor](https://cursor.sh/), [Kilo Code](https://kilocode.ai/), [Roo Code](https://roocode.com/), or [any supported IDE](docs/COMPATIBLE_IDES.md)) and type:
+Open your workspace in your agentic IDE ([Antigravity](https://antigravity.google/), [Cursor](https://cursor.sh/), [Kilo Code](https://kilocode.ai/), [Zoo Code](https://github.com/Zoo-Code-Org/Zoo-Code), or [any supported IDE](docs/COMPATIBLE_IDES.md)) and type:
 
 ```
 /start

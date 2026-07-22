@@ -11,7 +11,7 @@
 - **Python 3.10+** installed
 - **Terminal access** (macOS Terminal, Windows PowerShell, or Linux)
 - **Git** installed ([download here](https://git-scm.com/))
-- **An agentic AI IDE** — [Google Antigravity](https://antigravity.google/), [Cursor](https://cursor.sh/), [Kilo Code](https://kilocode.ai/), [Roo Code](https://roocode.com/), [OpenCode](https://opencode.ai/), or similar
+- **An agentic AI IDE** — [Google Antigravity](https://antigravity.google/), [Cursor](https://cursor.sh/), [Kilo Code](https://kilocode.ai/), [Zoo Code](https://github.com/Zoo-Code-Org/Zoo-Code), [OpenCode](https://opencode.ai/), or similar
 
 ---
 

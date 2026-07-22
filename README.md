@@ -159,7 +159,7 @@ Kind of. But first, it helps to understand what those names actually refer to �
 |:------|:-----------|:--------|
 | **Platform** | The company that hosts the model and holds your data | OpenAI, Google, Anthropic |
 | **Reasoning Engine** | The AI model that does the thinking | Claude Fable 5, GPT-5.6 Sol (Max), Gemini 3.5 Pro |
-| **IDE / Interface** | The app you type in — connects to models and reads your files | Cursor, Antigravity, VS Code, Claude Code |
+| **IDE / Interface** | The app you type in — connects to models and reads your files | Zoo Code, Cursor, Antigravity, VS Code, Claude Code |
 
 When people say "ChatGPT remembers me," they mean the **platform** stores some memory on their cloud. When they say "Claude is smart," they mean the **model** reasons well. When they say "Cursor writes code," they mean the **IDE** connects model + files.
 
@@ -254,7 +254,7 @@ pip install -e ".[full]"
 
 Open the `Athena-Public/` directory as your **workspace root** in one of these editors:
 
-- [Antigravity](https://antigravity.google/) · [Cursor](https://cursor.com) · [Claude Code](https://docs.anthropic.com/en/docs/claude-code) · [VS Code + Copilot](https://code.visualstudio.com/) · [Kilo Code](https://kilocode.ai/) · [Gemini CLI](https://github.com/google-gemini/gemini-cli)
+- [Zoo Code](https://github.com/Zoo-Code-Org/Zoo-Code) · [Antigravity](https://antigravity.google/) · [Cursor](https://cursor.com) · [Claude Code](https://docs.anthropic.com/en/docs/claude-code) · [VS Code + Copilot](https://code.visualstudio.com/) · [Kilo Code](https://kilocode.ai/) · [Gemini CLI](https://github.com/google-gemini/gemini-cli)
 
 > [!IMPORTANT]
 > **Athena does NOT work through ChatGPT.com, Claude.ai, or Gemini web.** You need an app that can **read files from your disk**. Think of Athena as a workspace for your editor, not a plugin for a chatbot.
@@ -429,7 +429,7 @@ Athena works through **AI-enabled code editors** — apps that connect to AI mod
 | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | ✅ | `athena init --ide gemini` |
 | [VS Code + Copilot](https://code.visualstudio.com/) | ✅ | `athena init --ide vscode` |
 | [Kilo Code](https://kilocode.ai/) | ✅ | `athena init --ide kilocode` |
-| [Roo Code](https://roocode.com/) | ✅ | `athena init --ide roocode` |
+| [Zoo Code](https://github.com/Zoo-Code-Org/Zoo-Code) | ✅ | `athena init --ide zoocode` |
 
 > More agents planned — [full compatibility list →](docs/COMPATIBLE_IDES.md)
 >

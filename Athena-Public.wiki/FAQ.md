@@ -83,7 +83,7 @@ Athena works with any agent that can read Markdown files. For first-class integr
 - **Gemini CLI** — `athena init --ide gemini`
 - **VS Code + Copilot** — `athena init --ide vscode`
 - **Kilo Code** — `athena init --ide kilocode`
-- **Roo Code** — `athena init --ide roocode`
+- **Zoo Code** — `athena init --ide zoocode`
 
 See the [full compatibility guide](../docs/COMPATIBLE_IDES.md).
 

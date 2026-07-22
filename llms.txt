@@ -22,7 +22,7 @@ Athena is a local-first cognitive augmentation framework that gives any AI model
 
 ## Guides
 
-- [Compatible IDEs](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/COMPATIBLE_IDES.md): 7 supported editors (VS Code, Cursor, Windsurf, Roo Code, Cline, Augment, Trae)
+- [Compatible IDEs](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/COMPATIBLE_IDES.md): 7 supported editors (VS Code, Cursor, Windsurf, Zoo Code, Cline, Augment, Trae)
 - [Workflows](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/WORKFLOWS.md): 68 slash commands (/start, /end, /plan, /research, /ultrathink, etc.)
 - [Best Practices](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/BEST_PRACTICES.md): How to get the most out of Athena
 - [Multi-Model Strategy](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/MULTI_MODEL_STRATEGY.md): Using Gemini, Claude, and GPT together

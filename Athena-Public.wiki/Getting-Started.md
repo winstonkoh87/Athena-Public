@@ -37,7 +37,7 @@ cd MyAgent
 | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `athena init --ide gemini` |
 | [VS Code + Copilot](https://code.visualstudio.com/) | `athena init --ide vscode` |
 | [Kilo Code](https://kilocode.ai/) | `athena init --ide kilocode` |
-| [Roo Code](https://roocode.com/) | `athena init --ide roocode` |
+| [Zoo Code](https://github.com/Zoo-Code-Org/Zoo-Code) | `athena init --ide zoocode` |
 
 Or just open the folder and type `/start` — no init required for basic use.
 

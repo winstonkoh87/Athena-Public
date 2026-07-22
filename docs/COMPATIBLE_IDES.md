@@ -13,7 +13,7 @@ Athena works with **any agent that reads Markdown**. For agents that support pro
 | [VS Code + Copilot](https://code.visualstudio.com/) | `.vscode/settings.json` | `athena init --ide vscode` |
 | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `.gemini/AGENTS.md` | `athena init --ide gemini` |
 | [Kilo Code](https://kilocode.ai/) | `.kilocode/rules/athena.md` | `athena init --ide kilocode` |
-| [Roo Code](https://roocode.com/) | `.roo/rules/athena.md` | `athena init --ide roocode` |
+| [Zoo Code](https://github.com/Zoo-Code-Org/Zoo-Code) | `.roo/rules/athena.md` | `athena init --ide zoocode` |
 
 ## Generic (No Init Required)
 

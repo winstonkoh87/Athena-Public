@@ -44,7 +44,7 @@ By loose analogy with an operating system — Linux provides the kernel, file sy
 
 | Step | Action |
 |:-----|:-------|
-| **1. Get an IDE** | [Antigravity](https://antigravity.google/) · [Cursor](https://cursor.com) · [Kilo Code](https://kilocode.ai/) · [Roo Code](https://roocode.com/) · [Claude Code](https://docs.anthropic.com/en/docs/claude-code) |
+| **1. Get an IDE** | [Antigravity](https://antigravity.google/) · [Cursor](https://cursor.com) · [Kilo Code](https://kilocode.ai/) · [Zoo Code](https://github.com/Zoo-Code-Org/Zoo-Code) · [Claude Code](https://docs.anthropic.com/en/docs/claude-code) |
 | **2. Clone** | `git clone https://github.com/winstonkoh87/Athena-Public.git && cd Athena-Public` |
 | **3. Open & Type `/start`** | The AI reads the repo structure and boots |
 | **4. Type `/tutorial`** | Athena gives you a guided walkthrough and builds your personal profile |
