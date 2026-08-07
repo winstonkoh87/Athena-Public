@@ -1,10 +1,19 @@
 # Athena Changelog
 
-> **Last Updated**: 7 August 2026
+> **Last Updated**: 8 August 2026
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
+
+---
+
+## Full Synchronized Digital Portfolio & Surface Refresh (8 August 2026)
+
+- **Synchronized Digital Portfolio Update**: Updated date references, canonical metrics (448 protocols, 43 active skills, 72 workflows, 260 scripts, 4,209 memory files), and status across all 4 public surfaces (`Athena-Public`, `winstonkoh87` GitHub profile, `winstonkoh87.com` personal site, `sgassignmenthelp.com` commercial site) and `Athena-Public.wiki`.
+- **FX Daytrading Operational Playbook Active Sync (v1.25.0)**: Recalibrated campaign EV (+10.91%, 95% CI [+7.17%, +14.47%]) and monthly return (+4.58%/mo), un-censored left-tail stress scenarios via Monte Carlo simulation, codified 3-Tier Desk Reference, spun up local trading journal Express server on port 3000, and updated operational status to ACTIVE.
+- **Case Study Expansion**: Integrated CS-612 (Takashi Kotegawa / BNF Capital Scaling Analysis) into case study taxonomy.
+- **Automated Verification & Build Checks**: Ran pre-deployment opsec security scans, Astro static site compilation (`npm run build`), and verified all GitHub Actions CI gates pass clean across public repos.
 
 ---
 
