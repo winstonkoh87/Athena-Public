@@ -20,7 +20,7 @@ Own the state. Rent the intelligence. Platforms forget. Athena doesn't.
 
 [Quickstart](#-quickstart) · [How It Works](#-how-it-works) · [Validation Status](#-validation-status--whats-proven-vs-whats-proposed) · [Docs](docs/GETTING_STARTED.md) · [FAQ](Athena-Public.wiki/FAQ.md) · [Safety](SAFETY.md) · [Contributing](CONTRIBUTING.md)
 
-*Last updated: 7 August 2026*
+*Last updated: 8 August 2026*
 
 </div>
 
