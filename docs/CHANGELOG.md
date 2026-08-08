@@ -1,10 +1,20 @@
 # Athena Changelog
 
-> **Last Updated**: 8 August 2026
+> **Last Updated**: 9 August 2026
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
+
+---
+
+## Full Synchronized Digital Portfolio & Surface Refresh (9 August 2026)
+
+- **Synchronized Digital Portfolio Update**: Updated date references, canonical metrics (448 protocols, 43 active skills, 72 workflows, 260 scripts, 4,213 memory files), and status across all 4 public surfaces (`Athena-Public`, `winstonkoh87` GitHub profile, `winstonkoh87.com` personal site, `sgassignmenthelp.com` commercial site) and `Athena-Public.wiki`.
+- **ZenithFX 3,574-Trade Forensics & Hold-Time Decay Law (Session S709)**: Audited 3,574 trade fills (+S$3,555.87 net PnL, +S$2,856.72 cash extracted); codified 60-minute hold-time decay law (100% of profit from trades held <60m; trades >4h lose -S$1,451.71 net PnL and absorb 93.2% swap fees) and reconciled 19 journal campaigns.
+- **Asian Travel Arbitrage & Rake Forensics (Session S710 / CS-591)**: Audited live poker rake structures and constructed 3-destination travel arbitrage TCO matrix (Phnom Penh S$390 TCO / 5.8h breakeven; Genting S$225 TCO / 3.6h breakeven; Taipei S$527 TCO).
+- **Automated Astro SEO/Geo Pipeline Integration (CS-613)**: Deployed automated SEO & Geo-Arbitrage Pipeline Astro components across personal web surfaces.
+- **AEO & Schema.org Expansion**: Upgraded `llms.txt` and machine-readable JSON-LD structured data (`Person`, `SoftwareSourceCode`, `Article`) across all web surfaces for 2026 AI agent optimization.
 
 ---
 

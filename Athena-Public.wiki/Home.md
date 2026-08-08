@@ -3,7 +3,7 @@
 > **AI-native personal knowledge management for your AI agents**
 > A local-first memory, reasoning, and governance layer · Open Source · Sovereign · Model-Agnostic
 
-*Last Updated: 2026-08-08 · v9.9.8*
+*Last Updated: 2026-08-09 · v9.9.8*
 
 Athena is not an AI Agent. It is the **persistent layer** they run on.
 
@@ -62,7 +62,7 @@ Or use [GitHub Codespaces](https://codespaces.new/winstonkoh87/Athena-Public) fo
 | **🚀 [Getting Started](Getting-Started)** | Installation, first boot, workspace modes, CLI commands |
 | **📖 [Your First Session](../docs/YOUR_FIRST_SESSION.md)** | The intent-first onboarding guide |
 | **🏗️ [Architecture](Architecture-Overview)** | OS layers, Hybrid RAG, MCP Server, Tech Stack |
-| **⚡ [Workflows](Workflow-Reference)** | `/start`, `/end`, `/think`, `/refactor` and 72 commands |
+| **⚡ [Workflows](Workflow-Reference)** | `/start`, `/end`, `/think`, `/refactor` and 89+ commands |
 | **🎯 [Use Cases](Use-Cases)** | Decision-making, research, planning, meta-thinking |
 | **📈 [The Compounding Effect](The-Compounding-Effect)** | Why Athena gets smarter over time |
 | **🧠 [Philosophy](Philosophy)** | Own the state. Rent the intelligence. |
@@ -73,5 +73,5 @@ Or use [GitHub Codespaces](https://codespaces.new/winstonkoh87/Athena-Public) fo
 ## 📊 Community
 
 - **1M+** Reddit Views · **#1 All-Time** on r/ChatGPT · **#2 All-Time** on r/GeminiAI
-- **448** Protocols (414 active + 34 archived) · **260** Scripts · **72** Slash Workflows
+- **187** Protocols · **175** Scripts · **89+** Slash Workflows
 - **MIT Licensed** · [Main Repository](https://github.com/winstonkoh87/Athena-Public)
