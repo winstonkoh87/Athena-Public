@@ -18,7 +18,12 @@ Own the state. Rent the intelligence. Platforms forget. Athena doesn't.
 [![Reddit Views](https://img.shields.io/badge/1M+_Views-FF4500?style=for-the-badge&logo=reddit&logoColor=white)](https://www.reddit.com/r/ChatGPT/comments/1r1b3gl/)
 [![Open in Codespaces](https://img.shields.io/badge/Open_in_Codespaces-24292e?style=for-the-badge&logo=github)](https://codespaces.new/winstonkoh87/Athena-Public)
 
-[Quickstart](#-quickstart) · [How It Works](#-how-it-works) · [Validation Status](#-validation-status--whats-proven-vs-whats-proposed) · [Docs](docs/GETTING_STARTED.md) · [FAQ](Athena-Public.wiki/FAQ.md) · [Safety](SAFETY.md) · [Contributing](CONTRIBUTING.md)
+[![Protocols](https://winstonkoh87.com/badges/protocols.svg)](https://github.com/winstonkoh87/Athena-Public)
+[![Hybrid RAG](https://winstonkoh87.com/badges/rag-benchmark.svg)](docs/BENCHMARKS.md)
+[![Logged Sessions](https://winstonkoh87.com/badges/sessions.svg)](https://github.com/winstonkoh87/Athena-Public)
+[![Build Status](https://winstonkoh87.com/badges/build-status.svg)](https://github.com/winstonkoh87/Athena-Public/actions)
+
+[Quickstart](#-quickstart) · [How It Works](#-how-it-works) · [llms.txt](https://winstonkoh87.com/llms.txt) · [llms-full.txt](https://winstonkoh87.com/llms-full.txt) · [Docs](docs/GETTING_STARTED.md) · [FAQ](Athena-Public.wiki/FAQ.md) · [Safety](SAFETY.md) · [Contributing](CONTRIBUTING.md)
 
 *Last updated: 11 August 2026*
 
