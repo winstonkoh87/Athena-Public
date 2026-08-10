@@ -1,10 +1,20 @@
 # Athena Changelog
 
-> **Last Updated**: 9 August 2026
+> **Last Updated**: 11 August 2026
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
+
+---
+
+## Full Synchronized Digital Portfolio & Surface Refresh (11 August 2026)
+
+- **Synchronized Digital Portfolio Update**: Complete synchronized refresh across all 4 public surfaces (`Athena-Public`, `winstonkoh87` GitHub profile, `winstonkoh87.com` personal site, `sgassignmenthelp.com` commercial site) and `Athena-Public.wiki` to 11 August 2026 state.
+- **Canonical Metrics Sync**: Updated `.agent/config/CAPS.json` and all public/internal documentation across the ecosystem (414 active protocols across 26 categories, 43 active skills, 72 workflows, 260 scripts, 4,234 memory files).
+- **Assignment 73 Full-Funnel Architecture & Master Deck**: Integrated 100-click conversion waterfall (100 clicks -> 6.4 leads -> 0.32 contracts), 3-scenario sensitivity model (Bear 10.7x, Base 26.7x, Bull 54.7x ROAS), Green Mark KPIs (Lead Share >= 20%, Revenue Share >= 25%-30%), WhatsApp 24/7 AI Concierge architecture, and recompiled 98-slide master capstone presentation deck (v1.1.0).
+- **Assignment 74 Intake & Dignity Premium Enforcement**: Deconstructed NYP BM4307 People and Team Management Brief & ADKAR/Coping Cycle framework. Executed Dignity Premium rejection of lowball offer (<S$100 vs S$120 floor), scaffolded ops structure, and archived lead in Revenue Ledger.
+- **ZenithFX 3,574-Trade Forensics & Hold-Time Decay Law (Session S709)**: Codified 60-minute hold-time decay law into `journal.db` and trading risk parameters.
 
 ---
 

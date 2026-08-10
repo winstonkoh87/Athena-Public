@@ -1,43 +1,81 @@
 {
-  "_comment": "Canonical inventory counts for Athena-Public. Single source of truth for README claims, docs, and audit asserts. If a number in any doc diverges from this file, CAPS wins. Regenerate via the recount_rules below — do not edit counts by hand. Headline claims in README use verifiable FLOORS (e.g. '200+ protocols'), not exact numbers that drift.",
-  "_generated": "2026-08-09",
+  "_comment": "Canonical inventory counts for Project Athena. Single source of truth for pre-commit caps, audit asserts, and AGENTS.md regeneration. Update via .agent/scripts/sync_agents_md.py (runs automatically: pre-commit Gate 4 + shutdown.py Phase 1.5), not by hand.",
+  "_generated": "2026-08-11",
+  "_generator": "S411 sync_agents_md.py automation (TD-028)",
   "version": {
-    "system": "9.9.8",
-    "public_release": "9.9.8"
+    "framework": "v8.2-stable",
+    "system": "v9.9.8"
   },
   "protocols": {
-    "examples_starter_kit": 187,
-    "docs_deep_dives": 22,
-    "framework_v82": 8,
-    "framework_template_mirror": 8,
-    "total": 225,
-    "headline_floor": "200+",
-    "recount_note": "Public corpus is a curated subset (~45%) of the private instance. Curation is intentional: top-value protocols ship, personal ones do not."
+    "total": 448,
+    "active": 414,
+    "archived": 34,
+    "categories": 26,
+    "cap": "uncapped",
+    "cap_policy": "Protocols are uncapped as of v9.8.0. The constraint is on BOOT LOAD (attention budget), not on total count. Protocol 530 (Conditional Skill Loading) + Progressive Disclosure ensure only relevant protocols enter context per session. Archived protocols don't affect boot. TD-019 is now structurally resolved."
   },
   "skills": {
-    "total": 38,
-    "conditional_count": 38,
-    "recount_note": "All public skills carry context_trigger frontmatter. auto-invoke:true is agent-discretion unless backed by a hook (see examples/hooks/README.md)."
+    "active": 43,
+    "archived": 17,
+    "conditional_count": 42,
+    "always_on_count": 10
   },
   "workflows": {
-    "active": 89,
-    "archived": 5
+    "root": 54,
+    "domain": 18,
+    "total": 72,
+    "cap": "uncapped",
+    "cap_policy": "Workflows are uncapped as of v9.8.0. Domain workflows are dormant by default (_domain/ tier) and only activate on query match. The constraint is attention budget, not inventory size. TD-017 is now structurally resolved."
   },
-  "scripts": {
-    "root_utilities": 22
+  "canonical": {
+    "total_entries": 199,
+    "cap": "uncapped",
+    "cap_policy": "Entry count is uncapped as of 2026-05-07 (GTO alignment with protocols/workflows). The constraint is boot-load attention budget (~35K token ceiling / ~140KB), not entry count. Staleness thresholds (3mo/6mo) + quarterly /audit-canonical are the quality gates. Tiered loading ensures only relevant entries enter context per session.",
+    "attention_budget_ceiling_tokens": 35000,
+    "attention_budget_ceiling_bytes": 140000,
+    "current_bytes": 57458,
+    "current_utilization_pct": 41,
+    "tier_1_always_boot": 40,
+    "tier_2_domain_triggered": 156,
+    "tier_3_on_demand": 3,
+    "boot_savings_pct": 69,
+    "tier_map_path": ".agent/telemetry/tier_map.json"
   },
-  "sessions": {
-    "headline_floor": "1,900+",
-    "recount_note": "Private-instance session count backing the public claims; verify against the portfolio site before bumping."
+  "context_files": {
+    "glossary": ".context/glossary.md",
+    "connectors": ".agent/CONNECTORS.md",
+    "_note": "glossary.md and CONNECTORS.md added 2026-05-24 (Anthropic steal)"
+  },
+  "telemetry": {
+    "retrieval_log": ".agent/telemetry/retrieval_log.jsonl",
+    "retrieval_audit_script": ".agent/scripts/retrieval_audit.py",
+    "canonical_tier_analysis": ".agent/scripts/canonical_tier_analysis.py"
+  },
+  "scripts": 260,
+  "memories": {
+    "total_files": 4234,
+    "path": ".context/memories/"
+  },
+  "paths": {
+    "active_protocols": ".agent/skills/protocols/",
+    "archived_protocols": ".agent/skills/protocols/archive/",
+    "active_skills": ".agent/skills/",
+    "archived_skills": ".agent/archive_skills/",
+    "root_workflows": ".agent/workflows/",
+    "domain_workflows": ".agent/workflows/_domain/",
+    "telemetry": ".agent/telemetry/"
   },
   "recount_rules": {
-    "protocols.examples_starter_kit": "find examples/protocols -name '*.md' ! -name 'README.md' | wc -l",
-    "protocols.docs_deep_dives": "find docs/protocols -name '*.md' ! -name 'README.md' | wc -l",
-    "protocols.framework_v82": "find .framework -path '*protocols*' -name '*.md' | wc -l",
-    "protocols.framework_template_mirror": "find examples/templates/framework_mirror -path '*protocols*' -name '*.md' | wc -l",
-    "skills.total": "find examples/skills -name 'SKILL.md' | wc -l",
-    "workflows.active": "find examples/workflows -name '*.md' -not -path '*_archived*' | wc -l",
-    "workflows.archived": "find examples/workflows/_archived -name '*.md' | wc -l",
-    "scripts.root_utilities": "ls scripts/*.py scripts/*.sh | wc -l"
+    "_note": "All rules exclude README.md so archive marker files don't inflate counts.",
+    "protocols_active": "find .agent/skills/protocols -type f -name '*.md' -not -path '*/archive/*' -not -name 'README.md' | wc -l",
+    "protocols_total": "find .agent/skills/protocols -type f -name '*.md' -not -name 'README.md' | wc -l",
+    "protocols_archived": "find .agent/skills/protocols/archive -type f -name '*.md' -not -name 'README.md' | wc -l",
+    "protocols_categories": "find .agent/skills/protocols -mindepth 1 -maxdepth 1 -type d -not -name archive | wc -l",
+    "skills_active": "ls -d .agent/skills/*/SKILL.md 2>/dev/null | wc -l",
+    "skills_archived": "ls -d .agent/archive_skills/*/ | wc -l",
+    "workflows_root": "find .agent/workflows -maxdepth 1 -type f -name '*.md' | wc -l",
+    "workflows_domain": "find .agent/workflows/_domain -type f -name '*.md' | wc -l",
+    "conditional_skills": "grep -l 'context_trigger' .agent/skills/*/SKILL.md | wc -l",
+    "scripts": "find .agent/scripts -type f | wc -l"
   }
 }

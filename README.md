@@ -20,7 +20,7 @@ Own the state. Rent the intelligence. Platforms forget. Athena doesn't.
 
 [Quickstart](#-quickstart) · [How It Works](#-how-it-works) · [Validation Status](#-validation-status--whats-proven-vs-whats-proposed) · [Docs](docs/GETTING_STARTED.md) · [FAQ](Athena-Public.wiki/FAQ.md) · [Safety](SAFETY.md) · [Contributing](CONTRIBUTING.md)
 
-*Last updated: 9 August 2026*
+*Last updated: 11 August 2026*
 
 </div>
 
@@ -565,8 +565,7 @@ Athena-Public/
 </details>
 
 <details>
-<summary><strong>📋 Recent Changelog</strong></summary>
-
+- **Full Synchronized Digital Portfolio Refresh** (Aug 11 2026): Synchronized complete portfolio update across all 4 public surfaces, releases, wiki, and internal docs. Updated canonical CAPS counts (414 active protocols across 26 categories, 43 active skills, 72 workflows, 260 scripts, 4,234 memory files). Codified Assignment 73 Full-Funnel Architecture & 98-slide deck, Assignment 74 Intake & Dignity Premium enforcement, and ZenithFX 3,574-Trade Hold-Time Decay Law.
 - **Full Synchronized Digital Portfolio Refresh** (Aug 8 2026): Updated date references, canonical metrics (448 protocols, 43 active skills, 72 workflows, 260 scripts, 4,209 memory files), FX Daytrading Operational Playbook active sync (v1.25.0), local trading journal Express server, and CS-612 case study integration across all 4 public surfaces, releases, wiki, and internal docs.
 - **Docs & Engine Transparency** (Jul 23 2026): `SEMANTIC_SEARCH.md` rewritten to the real pipeline (5 channels + opt-in web → RRF k=60 → CrossEncoder top-50; retired channels flagged; 2026-SOTA mapping with citations); new **`examples/engine/`** publishes the production search/vectors/reranker code with a reading guide; VECTORRAG diagram moved to the unified `search_all_vectors` RPC; SycEval upgraded to its formal AIES 2025 DOI; repo-wide OpSec sweep (blocklist scan over 895 files, 20 files genericized, privacy gate extended). All CI gates green.
 - **Docs: Positioning honesty pass v2 — the sycophancy tension** (Jul 21 2026): USP reframed as two legs — *it knows you* (owned, compounding context) + *it will disagree with you* (orthogonality), with the explicit statement that personalization alone is the dangerous half. New Validation Status row citing the strongest evidence **against** the design: user-memory profiles are the largest single sycophancy amplifier (+45% agreement sycophancy on Gemini 2.5 Pro — Jain et al. 2025; ~58% frontier baseline — SycEval, AIES 2025), with the advisory-frame mitigation (Kelley & Riedl 2026) and its honest limits (the gate is Claude-Code-only; now wired by default in Claude Code via a committed `.claude/settings.json`). Governance-portability scope caveat: memory travels everywhere; the code-enforced gate does not (yet). Kernel gains **step 8 (agency/anti-override)** — rank by the user's revealed preferences, surface the weights, hand the choice back; 46/46 gate tests pass. REFERENCES: new verified "Sycophancy & the Personalization Tension" section; Soelberg caption hedged (incident real, docket unconfirmed); **full re-verification sweep 20/20 DOIs (Crossref) + 28/28 arXiv IDs — 0 failures (21 Jul)**. The gate now ships wired by default via a committed `.claude/settings.json` (Claude Code approval-gated on first open); still Claude-Code-only.
