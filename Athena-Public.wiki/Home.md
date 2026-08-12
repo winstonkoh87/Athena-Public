@@ -3,7 +3,7 @@
 > **AI-native personal knowledge management for your AI agents**
 > A local-first memory, reasoning, and governance layer · Open Source · Sovereign · Model-Agnostic
 
-*Last Updated: 2026-08-12 · v9.9.8*
+*Last Updated: 2026-08-13 · v9.9.8*
 
 Athena is not an AI Agent. It is the **persistent layer** they run on.
 
