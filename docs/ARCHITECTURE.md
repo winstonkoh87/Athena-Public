@@ -1,6 +1,6 @@
 # Athena — Architecture Reference
 
-> **Last Updated**: 12 August 2026
+> **Last Updated**: 13 August 2026
 > **Version**: v9.9.8
 > **Canonical Counts**: See `.agent/config/CAPS.json` — if numbers in this file diverge, CAPS wins.
 > **Bionic Unit Spec**: `BIONIC_UNIT_SPEC.md` — the definitive human-AI augmentation mapping (private workspace)
