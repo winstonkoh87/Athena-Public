@@ -1,12 +1,19 @@
 # Athena Changelog
 
-> **Last Updated**: 14 August 2026
+> **Last Updated**: 15 August 2026
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
 
 ---
+
+## Full Synchronized Digital Portfolio & Surface Refresh (15 August 2026)
+
+- **Synchronized Digital Portfolio Update**: Complete synchronized refresh across all 4 public surfaces (`Athena-Public`, `winstonkoh87` GitHub profile, `winstonkoh87.com` personal site, `sgassignmenthelp.com` commercial site) and `Athena-Public.wiki` to 15 August 2026 state.
+- **Canonical Metrics Sync**: Updated `.agent/config/CAPS.json` and all public/internal documentation across the ecosystem (414 active protocols across 26 categories, 43 active skills, 72 workflows, 260 scripts, 4,259 memory files).
+- **FX Daytrading Empirical Recalibration & Milestone**: Reconciled 3,632 closed trade fills across 440 campaigns (Feb–Aug 2026) on IC Markets live account (#1700137097), crossing the **+S$3,001.51 SGD lifetime bank sweep milestone** (+S$3,700.97 SGD net realized P&L). Codified 95.15% filtered campaign win rate, Gold dominance (90.5% profit share / +S$3,348.93 SGD), and 20,000-iteration Monte Carlo quarterly stress models (+17.1%/yr net cash under 4 quarterly wipeouts).
+- **2026 Agentic Memory & Tiered RAG Research Alignment**: Benchmarked Athena's architecture against SOTA August 2026 industry frameworks (LangGraph, Letta, Mem0), validating Athena's 4-tier memory hierarchy (Working, Episodic, Semantic, Procedural), active forgetting decay cycles, and hybrid GraphRAG + VectorRAG retrieval design.
 
 ## Full Synchronized Digital Portfolio & Surface Refresh (14 August 2026)
 
