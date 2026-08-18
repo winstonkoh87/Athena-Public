@@ -1,6 +1,6 @@
 ---
 created: 2026-02-12
-last_updated: 2026-07-23
+last_updated: 2026-08-19
 tags: #references #apa #academic #citations
 ---
 
