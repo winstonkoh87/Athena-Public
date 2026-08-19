@@ -1,12 +1,19 @@
 # Athena Changelog
 
-> **Last Updated**: 19 August 2026
+> **Last Updated**: 20 August 2026
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
 
 ---
+
+## Full Synchronized Digital Portfolio & Surface Refresh (20 August 2026)
+
+- **Synchronized Digital Portfolio Update**: Complete synchronized refresh across all 4 public surfaces (`Athena-Public`, `winstonkoh87` GitHub profile, `winstonkoh87.com` personal site, `sgassignmenthelp.com` commercial site) and `Athena-Public.wiki` to 20 August 2026 state.
+- **Canonical Metrics Sync**: Updated `.agent/config/CAPS.json` and all public/internal documentation across the ecosystem (414 active protocols across 26 categories, 43 active skills, 72 workflows, 260 scripts, 4,297 memory files).
+- **Google Search Console & Sitemap Architecture Forensics**: Direct registration of `sitemap-0.xml` with immediate 44 discovered URLs, resolving crawling latency; sitewide internal anchor equity integration for `/framework/` in `Footer.astro`; verification of 100% open site-wide indexing policy across all project demos.
+- **Healthcare Spatial Economics & Regional Arbitrage MCDA**: Codified Multi-Criteria Decision Analysis and 10-way pairwise comparison tournament methodology for specialized healthcare providers, establishing clinical consumable invariance laws across Southeast Asian hubs.
 
 ## Full Synchronized Digital Portfolio & Surface Refresh (19 August 2026)
 
