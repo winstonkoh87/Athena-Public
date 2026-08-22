@@ -1,6 +1,6 @@
 # ⚡ Performance Benchmarks
 
-> **Last Updated**: 22 August 2026  
+> **Last Updated**: 23 August 2026  
 > **Environment**: MacBook Pro M3, Python 3.13, Supabase (Singapore region)
 
 ---
@@ -49,7 +49,7 @@ Query → Adaptive Router → 5 parallel channels → RRF Fusion (k=60) → Cros
 4. **Filename** — path and name matching (lexical)
 5. **Framework Docs** — docs + memory-bank grep (lexical)
 
-**Retrieval quality (65-query gold set, 22 Aug 2026)**: MRR@5 **0.769** · Hit@5 **0.892** · Coverage **0.639** — measured end-to-end on the reference deployment with reranking on.
+**Retrieval quality (65-query gold set, 23 Aug 2026)**: MRR@5 **0.769** · Hit@5 **0.892** · Coverage **0.639** — measured end-to-end on the reference deployment with reranking on.
 
 > **Note**: GraphRAG communities were removed as a search source in S435 (6 June 2026).
 
