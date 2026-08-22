@@ -19,14 +19,12 @@ class MemoryLoader:
     @staticmethod
     def recall_last_session() -> str:
         """Display summary of last session with context handoff."""
-        if not LOGS_DIR.exists():
+        from athena.core.config import get_current_session_log
+
+        latest_file = get_current_session_log()
+        if not latest_file or not latest_file.exists():
             return ""
 
-        files = sorted(LOGS_DIR.glob("*-session-*.md"))
-        if not files:
-            return ""
-
-        latest_file = files[-1]
         filename = latest_file.name
         print(f"⏮️  Last Session: {BOLD}{filename}{RESET}")
 
@@ -68,10 +66,9 @@ class MemoryLoader:
     def create_session() -> str:
         """Create a new session log."""
         try:
-            sys.path.insert(0, str(PROJECT_ROOT / ".agent" / "scripts"))
-            import create_session as cs
+            from athena.sessions import create_session as cs_create
 
-            session_path = cs.create_session_log()
+            session_path = cs_create()
             session_id = session_path.stem
             print(f"{GREEN}✅ Created: {session_id}{RESET}")
             return session_id

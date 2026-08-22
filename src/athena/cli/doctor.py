@@ -499,7 +499,7 @@ def check_10_daemon_status(root: Path, fix: bool = False) -> list[CheckResult]:
                 "Daemon",
                 WARN,
                 "athenad not running",
-                "python3 Athena-Public/src/athena/core/athenad.py &",
+                "python3 -m athena.core.athenad &",
             )
         ]
 

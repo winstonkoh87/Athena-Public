@@ -21,13 +21,17 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]  # src/athena/core -> ROOT
 DB_PATH = PROJECT_ROOT / ".agent" / "inputs" / "athena.db"
 SCHEMA_PATH = Path(__file__).resolve().parent / "schema.sql"
 
-# Watch Configuration
+# Watch Configuration (Filter only existing directories)
 WATCH_DIRS = [
-    PROJECT_ROOT,  # Broad watch for root-level drift
-    PROJECT_ROOT / ".context",
-    PROJECT_ROOT / ".agent" / "skills",
-    PROJECT_ROOT / "src",
-    PROJECT_ROOT / "Athena-Public",
+    p
+    for p in [
+        PROJECT_ROOT,  # Broad watch for root-level drift
+        PROJECT_ROOT / ".context",
+        PROJECT_ROOT / ".agent" / "skills",
+        PROJECT_ROOT / "src",
+        PROJECT_ROOT / "Athena-Public",
+    ]
+    if p.exists()
 ]
 
 EXCLUDED_PATTERNS = [

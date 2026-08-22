@@ -220,7 +220,7 @@ def delete_file_from_vector(file_path_str: str):
     table_name = "system_docs"
     if "session_logs" in file_path_str:
         table_name = "sessions"
-    elif "case_studies" in file_path_str or "proposals" in file_path_str or "essays" in file_path_str:
+    elif "case_studies" in file_path_str or "proposals" in file_path_str or "Reflection Essay" in file_path_str:
         table_name = "case_studies"
     elif "protocols" in file_path_str:
         table_name = "protocols"

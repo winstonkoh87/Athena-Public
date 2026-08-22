@@ -35,10 +35,7 @@ dependencies = [
     "requests>=2.31.0",
     "pydantic>=2.0.0",
     "anthropic>=0.40.0",
-
     "flashrank>=0.2.9",
-    "sentence-transformers>=2.2.0",
-    "torch>=2.0.0",
     "diskcache>=5.6.3",
     "fastmcp>=2.0.0"
 ]
@@ -61,8 +58,34 @@ dev = [
     "pipreqs",
     "pydeps"
 ]
+local = [
+    "flashrank>=0.2.9",
+    "diskcache>=5.6.3"
+]
+cloud = [
+    "supabase>=2.0.0",
+    "google-genai>=1.0.0",
+    "anthropic>=0.40.0"
+]
 mcp = [
     "fastmcp>=2.0.0"
+]
+rerank = [
+    "sentence-transformers>=2.2.0",
+    "torch>=2.0.0"
+]
+full = [
+    "flashrank>=0.2.9",
+    "sentence-transformers>=2.2.0",
+    "torch>=2.0.0",
+    "diskcache>=5.6.3",
+    "supabase>=2.0.0",
+    "google-genai>=1.0.0",
+    "anthropic>=0.40.0",
+    "fastmcp>=2.0.0",
+    "pytest",
+    "ruff",
+    "black"
 ]
 
 [tool.hatch.build.targets.wheel]

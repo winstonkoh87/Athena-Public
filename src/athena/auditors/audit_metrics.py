@@ -15,8 +15,11 @@ def count_files(base_path, pattern, ignore_dirs=None):
     return count
 
 
-private_root = "~/Project Athena"
-public_root = "~/Project Athena/Athena-Public"
+from pathlib import Path
+from athena.core.config import PROJECT_ROOT, PUBLIC_DIR
+
+private_root = str(PROJECT_ROOT)
+public_root = str(PUBLIC_DIR)
 
 print("--- AUDIT RESULTS ---")
 

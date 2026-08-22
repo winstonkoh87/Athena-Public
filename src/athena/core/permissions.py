@@ -102,8 +102,23 @@ TOOL_REGISTRY: dict[str, dict[str, Any]] = {
     },
     "meta_awareness_check": {
         "permission": Permission.READ,
-        "sensitivity": Sensitivity.INTERNAL,
+        "sensitivity": Sensitivity.PUBLIC,
         "description": "Classify prompt for meta-awareness / interpreter kernel injection",
+    },
+    "agentic_search": {
+        "permission": Permission.READ,
+        "sensitivity": Sensitivity.INTERNAL,
+        "description": "Multi-step agentic search",
+    },
+    "set_secret_mode": {
+        "permission": Permission.ADMIN,
+        "sensitivity": Sensitivity.PUBLIC,
+        "description": "Toggle secret/demo mode",
+    },
+    "permission_status": {
+        "permission": Permission.READ,
+        "sensitivity": Sensitivity.PUBLIC,
+        "description": "Show current permission state",
     },
     # Future tools (pre-registered for when they're added)
     "clear_cache": {

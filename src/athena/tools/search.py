@@ -715,10 +715,19 @@ def run_search(
 ):
     import time
     t0 = time.time()
+
+    # Define execution scope for strict cache isolation
+    search_scope = {
+        "limit": limit,
+        "strict": strict,
+        "rerank": rerank,
+        "personal": include_personal,
+        "web": web,
+    }
+
     # 0. Check cache first
     cache = get_search_cache()
-    cache_key = f"{query}|{limit}|{strict}|{rerank}"
-    cached_results = cache.get(cache_key)
+    cached_results = cache.get(query, scope=search_scope)
 
     if cached_results is not None:
         if not json_output:
@@ -751,7 +760,7 @@ def run_search(
             finally:
                 signal.alarm(0)  # Disable alarm
 
-            semantic_hit = cache.get_semantic(query_embedding)
+            semantic_hit = cache.get_semantic(query_embedding, scope=search_scope)
 
             if semantic_hit:
                 if not json_output:
@@ -900,12 +909,17 @@ def run_search(
 
             fused_results = rerank_results(query, candidates, top_k=limit)
 
-        # Cache the result (Exact + Semantic)
-        if fused_results and query_embedding:
-            cache.set(query, fused_results, embedding=query_embedding)
-
-        # Store in cache for next time
-        cache.set(cache_key, fused_results)
+        # Cache the result (Exact + Semantic) with explicit scope isolation
+        if fused_results:
+            if query_embedding:
+                cache.set(
+                    query,
+                    fused_results,
+                    embedding=query_embedding,
+                    scope=search_scope,
+                )
+            else:
+                cache.set(query, fused_results, scope=search_scope)
 
     # 4. Filter
     if strict:

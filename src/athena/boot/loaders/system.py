@@ -8,26 +8,20 @@ class SystemLoader:
     @staticmethod
     def verify_environment():
         """Titanium Airlock: Verifies dependencies and env vars."""
-        from athena.boot.constants import BOLD, DIM, PROJECT_ROOT, RED, RESET
+        from athena.boot.constants import BOLD, DIM, GREEN, PROJECT_ROOT, RED, RESET
 
-        ensure_env = (
-            PROJECT_ROOT / "Athena-Public" / "examples" / "scripts" / "ensure_env.sh"
-        )
-
-        if not ensure_env.exists():
-            print(f"   ⚠️  Airlock: ensure_env.sh missing at {ensure_env}")
+        env_file = PROJECT_ROOT / ".env"
+        if not env_file.exists():
+            print("   ⚠️  Airlock: .env file missing in workspace root")
             return
 
         print("🛡️  Verifying Environment (Airlock)...")
-        result = subprocess.run(
-            ["bash", str(ensure_env)], capture_output=True, text=True
-        )
-        if result.returncode != 0:
-            print(f"\n{RED}{BOLD}❌ Environment Check Failed{RESET}")
-            print(f"{DIM}{result.stdout}{RESET}")
-            # Optional: Add auto-fix call here if desired
-        else:
+        try:
+            import dotenv
+            import pydantic
             print(f"   {GREEN}✅ Environment Healthy{RESET}")
+        except ImportError as e:
+            print(f"\n{RED}{BOLD}❌ Environment Check Failed: Missing dependency {e}{RESET}")
 
     @staticmethod
     def enforce_daemon():

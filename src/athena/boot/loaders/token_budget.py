@@ -151,7 +151,7 @@ def auto_compact_if_needed(token_counts: dict = None) -> dict:
 
     # Import compact_context
     try:
-        PROJECT_ROOT = Path(__file__).resolve().parents[4]
+        from athena.core.config import PROJECT_ROOT
         sys.path.insert(0, str(PROJECT_ROOT / ".agent" / "scripts"))
         from compact_context import compact_active_context
     except ImportError as e:

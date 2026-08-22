@@ -10,14 +10,14 @@ PROTOCOLS_DIR = ".agent/skills/protocols"
 KEYWORDS = {
     "red curve": "Protocol 42",
     "blue curve": "Protocol 42",
-    "attachment pattern": "Protocol 113",
-    "realism": "Protocol 121",
+    "limerence": "Protocol 113",
+    "amoral realism": "Protocol 121",
     "principal agent": "Protocol 33",
     "sovereign": "Protocol 161",
     "attack surface": "Protocol 161",
     "survivor": "Protocol 34",
     "tuition": "CS044",
-    "case study": "SGP-SOC-001"
+    "polo": "SGP-SOC-001"
 }
 
 def scan_file(filepath):

@@ -42,187 +42,48 @@ def parse_yaml_frontmatter(content: str) -> tuple[dict[str, Any], int]:
 
 def recall_last_session() -> Path | None:
     """
-    Find and return the most recent session log file.
+    Find and return the most recent session log file. Delegates to canonical SessionService.
     """
-    return get_current_session_log()
+    from athena.lifecycle.session_service import get_session_service
+
+    return get_session_service().get_current_session()
 
 
-def get_next_session_number() -> int:
-    """Find the highest session number for today and return the next one."""
-    today = datetime.now().strftime("%Y-%m-%d")
+def get_next_session_number(date_str: str | None = None) -> int:
+    """Find the highest session number for today and return the next one. Delegates to canonical SessionService."""
+    from athena.lifecycle.session_service import get_session_service
 
-    if not SESSIONS_DIR.exists():
-        return 1
-
-    pattern = re.compile(rf"^{today}-session-(\d{{2,3}})\.md$")
-    max_session = 0
-    for file in SESSIONS_DIR.iterdir():
-        match = pattern.match(file.name)
-        if match:
-            max_session = max(max_session, int(match.group(1)))
-
-    return max_session + 1
+    return get_session_service().get_next_session_number(date_str=date_str)
 
 
 def update_forward_lineage(prev_session_id: str, current_session_id: str):
-    """Update the previous session's YAML to point to the current session."""
-    if not prev_session_id:
-        return
+    """Update the previous session's YAML to point to the current session. Delegates to canonical SessionService."""
+    from athena.lifecycle.session_service import get_session_service
 
-    filename = f"{prev_session_id}.md"
-    filepath = SESSIONS_DIR / filename
-
-    if not filepath.exists():
-        # Check archive (if it exists)
-        archive_path = SESSIONS_DIR / "archive" / filename
-        if archive_path.exists():
-            filepath = archive_path
-
-    if not filepath.exists():
-        return
-
-    try:
-        content = filepath.read_text(encoding="utf-8")
-        pattern = r"^(next_session:\s*)(null|~)?\s*$"
-        replacement = f"\\1{current_session_id}"
-        new_content, count = re.subn(
-            pattern, replacement, content, count=1, flags=re.MULTILINE
-        )
-
-        if count > 0:
-            filepath.write_text(new_content, encoding="utf-8")
-    except Exception:
-        pass
+    return get_session_service().update_forward_lineage(prev_session_id, current_session_id)
 
 
-def create_session() -> Path:
-    """Create a new session log with template. Returns the Path to the new session."""
-    today = datetime.now().strftime("%Y-%m-%d")
-    time_iso = datetime.now().astimezone().isoformat()
-    time_display = datetime.now().strftime("%H:%M")
-    session_num = get_next_session_number()
+def create_session(
+    focus: str | None = None,
+    tags: list[str] | None = None,
+) -> Path:
+    """Create a new session log with template. Delegates to canonical SessionService."""
+    from athena.lifecycle.session_service import get_session_service
 
-    session_id = f"{today}-session-{session_num:02d}"
-    filename = f"{session_id}.md"
-    filepath = SESSIONS_DIR / filename
+    return get_session_service().create_session(focus=focus, tags=tags)
 
-    prev_session_log = get_current_session_log()
-    prev_session_id = prev_session_log.stem if prev_session_log else None
-    prev_link = f"← {prev_session_id}" if prev_session_id else "None"
 
-    template = f"""---
-session_id: {session_id}
-date: {today}
-start: {time_iso}
-end:
-duration_min:
-status: in_progress
-verdict:
-prev_session: {prev_session_id if prev_session_id else "null"}
-next_session:
-focus:
-threads: []
-tags: []
-lambda_peak:
-lambda_total:
-lambda_coverage:
-lambda_coverage_n:
-lambda_coverage_d:
----
+def close_session(
+    session_path: Path | None = None,
+    verdict: str = "🚀 SQUAD",
+    learnings: dict[str, list[str]] | None = None,
+) -> dict[str, Any]:
+    """Close a session log and return a receipt. Delegates to canonical SessionService."""
+    from athena.lifecycle.session_service import get_session_service
 
-# Session Log: {today} (Session {session_num:02d})
-
-**Date**: {today}
-**Time**: {time_display} - ...
-**Focus**: ...
-**Related Sessions**: {prev_link}
-
----
-
-## 0. R__ Compressed Context
-
-> Auto-generated on close by `shutdown.py`. Do not manually edit.
-
-```text
-[[ R__ |
-@focus:
-@status:
-@decided:
-@pending:
-@artifacts:
-@lambda_peak:
-@tags:
-]]
-```
-
----
-
-## 1. Checkpoints
-
-> Automatically appended by `quicksave.py`. Do not manually write.
-
----
-
-## 2. Key Decisions & Insights
-
-- **Decision**: ...
-- **Insight**: ...
-
----
-
-## 2.5 Learnings (Compiler Inputs)
-
-> Write explicitly. `shutdown.py` will ingest and propagate these.
-
-### Learned (System / Workflow)
-
-- [S] ...
-
-### Learned (About User)
-
-- [U] ...
-
-### Integration Requested
-
-- [X] ...
-
----
-
-## 3. Action Items & Deferred
-
-| ID | Action | Owner | Status | Thread |
-|----|--------|-------|--------|--------|
-| {session_id}-A1 | ... | AI / User | Pending | — |
-
----
-
-## 4. Artifacts & Outputs
-
-- **Created**: ...
-- **Modified**: ...
-
----
-
-## Session Closed
-
-**Status**: ⏳ In Progress
-**Time**: ...
-**Verdict**: ... (🚀 SQUAD / ⚠️ Partial / 🔴 Blocked)
-
----
-
-## Tagging
-
-#session #...
-"""
-
-    SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
-    filepath.write_text(template, encoding="utf-8")
-
-    if prev_session_id:
-        update_forward_lineage(prev_session_id, session_id)
-
-    return filepath
+    return get_session_service().close_session(
+        session_path=session_path, verdict=verdict, learnings=learnings
+    )
 
 
 # Common Pattern constants for extraction
@@ -301,28 +162,15 @@ def extract_learnings(content: str) -> tuple[list[str], list[str], list[str], li
 
 def append_checkpoint(
     summary: str, bullets: list[str] | None = None, log_path: Path | None = None
-):
+) -> Path:
     """
-    Append a checkpoint block to the session log.
+    Append a checkpoint block to the session log. Delegates to canonical SessionService.
     """
-    if log_path is None:
-        log_path = get_current_session_log()
+    from athena.lifecycle.session_service import get_session_service
 
-    if not log_path or not log_path.exists():
-        raise FileNotFoundError(f"Active session log not found at {log_path}")
-
-    timestamp = datetime.now().strftime("%H:%M")
-    checkpoint_block = f"\n### [{timestamp} SGT] Checkpoint\n\n**Summary**: {summary}\n"
-
-    if bullets:
-        checkpoint_block += "\n" + "\n".join([f"- {b}" for b in bullets]) + "\n"
-
-    checkpoint_block += "\n---\n"
-
-    with open(log_path, "a", encoding="utf-8") as f:
-        f.write(checkpoint_block)
-
-    return log_path
+    return get_session_service().append_checkpoint(
+        summary=summary, bullets=bullets, log_path=log_path
+    )
 
 
 def log_to_decision_ledger(summary: str, rationale: str | None = None):

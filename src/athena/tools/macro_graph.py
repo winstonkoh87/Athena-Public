@@ -38,7 +38,7 @@ def generate_mermaid() -> str:
     }
 
     # Filter only existing ones
-    {k: v.exists() for k, v in nodes.items()}
+    active_nodes = {k: v.exists() for k, v in nodes.items()}
 
     mermaid = """graph TB
     subgraph CORE["🧠 CORE (Identity & SDK)"]

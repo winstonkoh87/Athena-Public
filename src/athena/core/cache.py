@@ -40,16 +40,53 @@ from athena.core.config import AGENT_DIR
 
 @dataclass
 class CacheEntry:
-    """A cached query result with optional embedding for semantic matching."""
+    """A cached query result with optional embedding and scope for semantic matching."""
 
     value: Any
     timestamp: float
     hits: int = 0
     embedding: list[float] | None = field(default=None)
+    scope: dict[str, Any] | None = field(default=None)
+
+
+def _normalize_scope(scope: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Normalize scope: empty dict or None -> None; otherwise sorted key-value dict."""
+    if not scope:
+        return None
+    return {k: scope[k] for k in sorted(scope.keys())}
+
+
+def _serialize_value(val: Any) -> Any:
+    """Serialize values including SearchResult dataclasses into JSON-compatible objects."""
+    if isinstance(val, list):
+        return [_serialize_value(item) for item in val]
+    if isinstance(val, dict):
+        return {k: _serialize_value(v) for k, v in val.items()}
+    if hasattr(val, "__dataclass_fields__"):
+        import dataclasses
+
+        d = dataclasses.asdict(val)
+        d["__dataclass_type__"] = val.__class__.__name__
+        return d
+    return val
+
+
+def _deserialize_value(val: Any) -> Any:
+    """Deserialize values back into SearchResult objects if tagged."""
+    if isinstance(val, list):
+        return [_deserialize_value(item) for item in val]
+    if isinstance(val, dict):
+        if val.get("__dataclass_type__") == "SearchResult":
+            from athena.core.models import SearchResult
+
+            data = {k: v for k, v in val.items() if k != "__dataclass_type__"}
+            return SearchResult(**data)
+        return {k: _deserialize_value(v) for k, v in val.items()}
+    return val
 
 
 class QueryCache:
-    """TTL-based LRU cache with semantic similarity matching."""
+    """TTL-based LRU cache with semantic similarity matching, serialization, and scope isolation."""
 
     def __init__(
         self,
@@ -63,10 +100,17 @@ class QueryCache:
         self._cache: OrderedDict[str, CacheEntry] = OrderedDict()
         self._load_from_disk()
 
-    def _hash_key(self, query: str) -> str:
-        """Create deterministic hash for query (case-insensitive)."""
+    def _hash_key(self, query: str, scope: dict[str, Any] | None = None) -> str:
+        """Create deterministic hash for query and scope (case-insensitive)."""
         normalized = query.lower().strip()
-        return hashlib.md5(normalized.encode()).hexdigest()[:16]
+        norm_scope = _normalize_scope(scope)
+        scope_str = ""
+        if norm_scope:
+            # Sort keys for deterministic representation
+            scope_items = sorted((k, str(v)) for k, v in norm_scope.items())
+            scope_str = "|" + "|".join(f"{k}={v}" for k, v in scope_items)
+        combined = f"{normalized}{scope_str}"
+        return hashlib.md5(combined.encode()).hexdigest()[:16]
 
     def _load_from_disk(self):
         """Load cache from disk on initialization."""
@@ -79,6 +123,11 @@ class QueryCache:
                 if now - entry_data["timestamp"] < self.ttl_seconds:
                     if "embedding" not in entry_data:
                         entry_data["embedding"] = None
+                    if "scope" not in entry_data:
+                        entry_data["scope"] = None
+                    else:
+                        entry_data["scope"] = _normalize_scope(entry_data["scope"])
+                    entry_data["value"] = _deserialize_value(entry_data["value"])
                     self._cache[key] = CacheEntry(**entry_data)
         except Exception:
             pass
@@ -92,10 +141,11 @@ class QueryCache:
             self._cache_file.parent.mkdir(parents=True, exist_ok=True)
             data = {
                 k: {
-                    "value": e.value,
+                    "value": _serialize_value(e.value),
                     "timestamp": e.timestamp,
                     "hits": e.hits,
                     "embedding": e.embedding,
+                    "scope": _normalize_scope(e.scope),
                 }
                 for k, e in self._cache.items()
             }
@@ -119,9 +169,9 @@ class QueryCache:
     # Exact Matching
     # -------------------------------------------------------------------------
 
-    def get(self, query: str) -> Any | None:
-        """Get cached result if exists and not expired (exact match)."""
-        key = self._hash_key(query)
+    def get(self, query: str, scope: dict[str, Any] | None = None) -> Any | None:
+        """Get cached result if exists, not expired, and scope matches (exact match)."""
+        key = self._hash_key(query, scope)
 
         if key not in self._cache:
             return None
@@ -158,25 +208,33 @@ class QueryCache:
 
         return dot_product / (norm_a * norm_b)
 
-    def get_semantic(self, target_embedding: list[float], threshold: float = 0.90) -> Any | None:
+    def get_semantic(
+        self,
+        target_embedding: list[float],
+        scope: dict[str, Any] | None = None,
+        threshold: float = 0.90,
+    ) -> Any | None:
         """
-        Get cached result if a semantically similar query exists.
-
-        This enables cache hits for queries like:
-            - "what is caching" → "explain caching" (same intent, different words)
+        Get cached result if a semantically similar query exists with identical scope.
 
         Args:
             target_embedding: Vector embedding of the query
+            scope: Security and retrieval scope dictionary (e.g. personal, web)
             threshold: Minimum cosine similarity (0.90 = very similar)
 
         Returns:
-            Cached result if similar query found, else None
+            Cached result if similar query found in identical scope, else None
         """
         best_sim = -1.0
         best_entry = None
         best_key = None
 
+        norm_scope = _normalize_scope(scope)
         for key, entry in self._cache.items():
+            # Scope matching: Do not match across differing sensitivity/domain scopes
+            if norm_scope != _normalize_scope(entry.scope):
+                continue
+
             if entry.embedding:
                 sim = self._cosine_similarity(target_embedding, entry.embedding)
                 if sim > best_sim:
@@ -196,9 +254,16 @@ class QueryCache:
     # Cache Management
     # -------------------------------------------------------------------------
 
-    def set(self, query: str, value: Any, embedding: list[float] | None = None) -> None:
-        """Cache a result with optional embedding for semantic retrieval."""
-        key = self._hash_key(query)
+    def set(
+        self,
+        query: str,
+        value: Any,
+        embedding: list[float] | None = None,
+        scope: dict[str, Any] | None = None,
+    ) -> None:
+        """Cache a result with optional embedding and scope for retrieval."""
+        norm_scope = _normalize_scope(scope)
+        key = self._hash_key(query, norm_scope)
 
         # Evict oldest if at capacity (LRU)
         while len(self._cache) >= self.max_size:
@@ -209,6 +274,7 @@ class QueryCache:
             timestamp=time.time(),
             hits=0,
             embedding=embedding,
+            scope=norm_scope,
         )
         self._save_to_disk()
 
@@ -240,3 +306,9 @@ def get_search_cache() -> QueryCache:
     if _search_cache is None:
         _search_cache = QueryCache(cache_dir=AGENT_DIR / "state")
     return _search_cache
+
+
+def invalidate_search_cache() -> None:
+    """Invalidate search cache across the workspace."""
+    cache = get_search_cache()
+    cache.invalidate()

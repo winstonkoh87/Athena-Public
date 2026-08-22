@@ -419,10 +419,17 @@ def current_session_resource() -> str:
     """Return the full current session log as a resource."""
     from athena.sessions import recall_last_session
 
+    perms = get_permissions()
+    perms.gate("recall_session")
+
     log_path = recall_last_session()
     if not log_path or not log_path.exists():
         return "No active session."
-    return log_path.read_text(encoding="utf-8")
+
+    content = log_path.read_text(encoding="utf-8")
+    if perms.secret_mode:
+        content = perms.redact(content)
+    return content
 
 
 # ---------------------------------------------------------------------------
@@ -439,13 +446,15 @@ def canonical_memory_resource() -> str:
     """Return the Canonical Memory content."""
     from athena.core.config import CANONICAL_PATH
 
+    perms = get_permissions()
+    perms.gate("smart_search")
+
     if not CANONICAL_PATH.exists():
         return "CANONICAL.md not found."
 
     content = CANONICAL_PATH.read_text(encoding="utf-8")
 
     # Redact in secret mode
-    perms = get_permissions()
     if perms.secret_mode:
         content = perms.redact(content)
 
@@ -472,6 +481,7 @@ def set_secret_mode(enabled: bool) -> dict:
         dict with mode state and list of blocked tools.
     """
     perms = get_permissions()
+    perms.gate("set_secret_mode")
     return perms.set_secret_mode(enabled)
 
 
@@ -530,6 +540,7 @@ def permission_status() -> dict:
         dict with full permission state and tool manifest.
     """
     perms = get_permissions()
+    perms.gate("permission_status")
     status = perms.get_status()
     status["manifest"] = perms.get_tool_manifest()
     return status

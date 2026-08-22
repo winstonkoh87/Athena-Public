@@ -1,19 +1,23 @@
 from pathlib import Path
 
-# Paths
-# Assuming src/athena/boot/constants.py -> ../../../.. = PROJECT_ROOT
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
+from athena.core.config import (
+    AGENT_DIR,
+    CONTEXT_DIR,
+    FRAMEWORK_DIR,
+    PROJECT_ROOT,
+    SESSIONS_DIR,
+)
 
-LOGS_DIR = PROJECT_ROOT.parent / ".context" / "memories" / "session_logs"
-SUPABASE_SEARCH_SCRIPT = PROJECT_ROOT / ".agent" / "scripts" / "smart_search.py"
-PROTOCOLS_JSON = PROJECT_ROOT / ".agent" / "protocols.json"
+LOGS_DIR = SESSIONS_DIR
+SUPABASE_SEARCH_SCRIPT = AGENT_DIR / "scripts" / "smart_search.py"
+PROTOCOLS_JSON = AGENT_DIR / "protocols.json"
 CORE_IDENTITY = (
-    PROJECT_ROOT / ".framework" / "v8.2-stable" / "modules" / "Core_Identity.md"
+    FRAMEWORK_DIR / "v8.2-stable" / "modules" / "Core_Identity.md"
 )
 SAFE_BOOT_SCRIPT = PROJECT_ROOT / "safe_boot.sh"
 
 # Memory Bank (Token Budget)
-MEMORY_BANK_DIR = PROJECT_ROOT.parent / ".context" / "memory_bank"
+MEMORY_BANK_DIR = CONTEXT_DIR / "memory_bank"
 BOOT_FILES = {
     "userContext.md": MEMORY_BANK_DIR / "userContext.md",
     "productContext.md": MEMORY_BANK_DIR / "productContext.md",

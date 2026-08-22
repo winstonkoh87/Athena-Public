@@ -35,7 +35,9 @@ PATH_MAP = {
 
 
 # Patterns
-LINK_PATTERN = re.compile(r'\[([^\]]+)\]\((file://~/Project%20Athena/([^\)]+))\)')
+LINK_PATTERN = re.compile(
+    r'\[([^\]]+)\]\(file://(?:.*?/Project%20Athena/|.*?/Project Athena/|/)((\.agent|\.context|\.framework|src)[^\)]+)\)'
+)
 
 class SyncOrchestrator:
     def __init__(self, dry_run=False):
@@ -54,7 +56,7 @@ class SyncOrchestrator:
         content = file_path.read_text(encoding="utf-8")
         matches = LINK_PATTERN.findall(content)
 
-        for _label, _full_url, rel_path in matches:
+        for _label, rel_path, _prefix in matches:
             # rel_path is like '.agent/skills/protocols/272-fear-based-advertising.md'
             decoded_rel = rel_path.replace('%20', ' ')
             dep_path = (PROJECT_ROOT / decoded_rel).resolve()
@@ -67,7 +69,7 @@ class SyncOrchestrator:
 
         def replace_link(match):
             label = match.group(1)
-            rel_path = match.group(3).replace('%20', ' ')
+            rel_path = match.group(2).replace('%20', ' ')
 
             # Determine public destination based on MAP
             dest_dir = None

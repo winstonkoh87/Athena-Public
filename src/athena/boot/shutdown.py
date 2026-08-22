@@ -25,46 +25,28 @@ def find_current_session(logs_dir: Path) -> Path | None:
     return sessions[0] if sessions else None
 
 
-def close_session(session_file: Path) -> bool:
+def close_session(session_file: Path, verdict: str = "🚀 SQUAD") -> bool:
     """
-    Close a session log by updating its status and adding end timestamp.
+    Close a session log by delegating to canonical SessionService.
 
     Returns True if successful.
     """
+    from athena.lifecycle.session_service import get_session_service
+
     if not session_file.exists():
         print(f"❌ Session file not found: {session_file}")
         return False
 
-    content = session_file.read_text()
-    now = datetime.now()
-
-    # Update status
-    if "> **Status**: Active" in content:
-        content = content.replace(
-            "> **Status**: Active", f"> **Status**: Closed ({now.strftime('%H:%M')})"
+    try:
+        receipt = get_session_service().close_session(
+            session_path=session_file,
+            verdict=verdict,
         )
-
-    # Add closing section if not present
-    if "## Session Closed" not in content:
-        content += f"""
-
----
-
-## Session Closed
-
-**End Time**: {now.strftime("%Y-%m-%d %H:%M")}
-**Duration**: (calculated by user)
-
-### Key Takeaways
--
-
-### Deferred to Next Session
--
-"""
-
-    session_file.write_text(content)
-    print(f"✅ Session closed: {session_file.name}")
-    return True
+        print(f"✅ Session closed: {session_file.name} (Receipt: {receipt.get('receipt_id')})")
+        return True
+    except Exception as e:
+        print(f"❌ Failed to close session: {e}")
+        return False
 
 
 def run_shutdown(project_root: Path | None = None) -> bool:
