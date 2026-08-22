@@ -1,7 +1,7 @@
 ---
 description: Deep close for cognitive/computationally intensive sessions. System-2 counterpart to /end.
 created: 2026-03-10
-last_updated: 2026-07-22
+last_updated: 2026-06-06
 model: default
 temperature: 0.5
 tools:
@@ -88,37 +88,37 @@ Ask yourself these 4 questions:
 3. **Decision Reversals**: Did any `@decided` item in this session contradict a previous `@decided`? (Signal: learning or drift)
 4. **Velocity Trend**: Are sessions getting more productive (higher Λ/session) or less? (Signal: system health)
 
-### Step 2.5: Decision Outcome Tracking (GTO v3.1)
+### Step 2.5: Decision Outcome & Calibration Ledger Tracking (GTO v3.2)
 
-> **This is the Brier Score of your session close** — the highest-value activity in the entire ultraend.
-> It calibrates future decision-making by measuring prediction accuracy.
+> **Calibration Review**: Connect historical decisions and forecasts to observable outcomes and the calibration ledger (`CAL-###`).
+> To maintain true Brier score integrity, verify against pre-registered probabilities `(p, observable_event, resolution_date)` from `Session_Observations.md`.
 
-For each `@decided` item from sessions **N-1 through N-3**:
+For each `@decided` or forecasted item from sessions **N-1 through N-3**:
 
-1. **State the original decision** and the **expected outcome** at the time
-2. **Ask**: _"Did this decision produce the expected outcome?"_
-3. **Classify the result**:
+1. **State the original decision / forecast** and the registered probability / expected outcome
+2. **Ask**: _"Did this decision / forecast produce the expected observable outcome?"_
+3. **Classify and ledger the result**:
 
 | Result | Action |
 |:-------|:-------|
-| ✅ Outcome matched expectation | Log as calibrated. No action needed. |
-| ⚠️ Outcome partially matched | Log the delta. Ask: _"What did we miss?"_ |
-| ❌ Outcome missed entirely | Log as miscalibrated. Ask: _"Was the decision wrong, or was the environment unpredictable?"_ |
-| 🔄 Outcome still pending | Carry forward. Check again next `/ultraend`. |
+| ✅ Outcome matched expectation | Record in calibration ledger (`CAL-###`). No model update needed. |
+| ⚠️ Outcome partially matched | Record delta. Perform root-cause analysis on assumptions. |
+| ❌ Outcome missed entirely | Log miscalibration. Update base-rate priors in `CANONICAL.md` or domain protocols. |
+| 🔄 Outcome still pending | Carry forward to next review cycle. |
 
-4. **Track `@seeded` accuracy**: Did the seeded next-session suggestion from N-1 match what actually happened in session N? This measures strategic prediction quality.
+4. **Track `@seeded` transition**: Check whether the seeded priority from S[N-1] transitioned into execution in session S[N].
 
 Append to session log:
 
 ```markdown
-## Decision Outcome Tracking
+## Decision Outcome & Calibration Tracking
 
-| Session | Decision | Expected Outcome | Actual Outcome | Calibration |
-|:--------|:---------|:-----------------|:---------------|:------------|
-| S[N-1] | [decision] | [what we expected] | [what happened] | ✅/⚠️/❌/🔄 |
-| S[N-2] | [decision] | [what we expected] | [what happened] | ✅/⚠️/❌/🔄 |
+| Ref ID / Session | Decision / Forecast | Registered (p / Expectation) | Actual Observable Outcome | Resolution |
+|:-----------------|:--------------------|:-----------------------------|:--------------------------|:-----------|
+| CAL-XXX / S[N-1] | [decision/forecast] | [p% / expected state]        | [what actually happened]  | ✅/⚠️/❌/🔄 |
+| CAL-YYY / S[N-2] | [decision/forecast] | [p% / expected state]        | [what actually happened]  | ✅/⚠️/❌/🔄 |
 
-**Seed Accuracy**: S[N-1] seeded "[X]" → Session N actually did "[Y]" → [Match/Partial/Miss]
+**Seed Transition**: S[N-1] seeded "[X]" → Session N executed "[Y]" → [Followed / Pivoted / Blocked]
 ```
 
 ---
@@ -266,6 +266,51 @@ Add to the checkpoint `@pending`:
 ```
 
 This gives `/start` or `/ultrastart` a head start on context loading.
+
+---
+
+## Phase 4.5: Behavioral Accountability Deep Close (Grace Harper Model)
+
+> **Purpose**: Deep counterpart to `/end`'s lightweight BEH check. Full execution audit and trigger synthesis.
+
+### Step 1: BEH-602 Trigger Log Synthesis
+
+1. Load the full BEH-602 trigger log for the current week
+2. Classify triggers by pattern:
+   - Schema #1 (Effort = Worth): effort-without-reciprocity frustration
+   - Schema #2 (Not Prioritized = Not Enough): validation-seeking, cruising impulse
+   - Schema #3 (100% In = 100% Back): over-investment, boundary erosion
+   - Base Rate Distortion (MP-16): inflating/deflating probability
+3. Surface: `📝 BEH-602 Weekly: [N] triggers. Top pattern: [Schema #X] ([N] instances).`
+4. If pattern is escalating (week-over-week increase): `🚩 Escalating: [Schema #X] triggers trending up. Consider IFS session.`
+
+### Step 2: Weekly Execution Audit (Deep)
+
+1. Load all `@pending` and `@decided` from the past 7 days' checkpoints
+2. Build the **Committed vs Actual** table:
+
+```markdown
+## Weekly Execution Audit
+
+| Committed (from @pending/@decided) | Executed? | Gap Diagnosis |
+|:-----------------------------------|:----------|:--------------|
+| [Item 1] | ✅/❌ | [If ❌: Why not? INTJ-T pattern?] |
+| [Item 2] | ✅/❌ | |
+
+**Execution Rate**: [N]/[M] = [X]%
+**Gap Pattern**: [Internal accountability failure / External blocker / Scope changed]
+```
+
+3. If execution rate < 60%: `⚠️ Execution rate below 60%. DIAG-001 Knowledge-Action Gap likely active.`
+4. Append to session log.
+
+### Step 3: BEH Commitment Review
+
+- Are current BEH- protocols still calibrated? (e.g., Is BEH-601 Saturday AM still the right target?)
+- Should any new BEH- protocol be created based on session patterns?
+- Log any adjustments to the session log.
+
+> **Rationale**: The deep close is the right time for accountability synthesis because the full session context is available. See TD-041.
 
 ---
 

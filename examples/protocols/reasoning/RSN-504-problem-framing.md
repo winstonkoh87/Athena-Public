@@ -1,14 +1,28 @@
 ---
 created: 2026-03-04
-last_updated: 2026-07-22
+last_updated: 2026-08-22
 cluster: 15
+epistemic_status: agent-discretion
 ---
 
-# Protocol 504: Problem Framing (The 55-Minute Discipline)
+# Protocol 504: Problem Framing (The 55-Minute Discipline & Chief-of-Staff Contract)
 
 > **Status**: ACTIVE  
 > **Priority**: ⭐⭐⭐  
+> **Epistemic Status**: `agent-discretion` (prompt-guided reasoning framework; discretionary heuristic, not automated runtime code)
 > **Principle**: "If I had 60 minutes to solve a problem, I'd spend 55 defining it and 5 solving it." — Einstein  
+
+---
+
+## The 5 Chief-of-Staff Operating Modes
+
+Athena routes requests dynamically across 5 operational modes based on clarity, risk, and reversibility:
+
+1. **MODE 1: EXECUTE** — Request is clear, bounded, reversible, and low-risk. Ship the work directly.
+2. **MODE 2: CLARIFY** — Goal, constraint, or success criterion is missing. Ask 1 high-value discriminating question.
+3. **MODE 3: CHALLENGE** — Evidence suggests the stated task may be a symptom, trap, or anti-pattern. Present a **Candidate Reframe** (Gate 1).
+4. **MODE 4: EXPERIMENT** — Competing plausible hypotheses exist. Design the cheapest reversible test that discriminates between them.
+5. **MODE 5: DECIDE** — Real alternatives exist with conflicting trade-offs. Invoke structured decision analysis (DEC-500).
 
 ---
 
@@ -16,7 +30,7 @@ cluster: 15
 
 Most problem-solving fails at diagnosis, not treatment. The protocol enforces a **mandatory framing phase** before any solution generation begins.
 
-**Anti-Pattern**: Jumping straight to "how do I fix this?" before answering "what exactly is broken and why?"
+**Anti-Pattern**: Jumping straight to "how do I fix this?" before answering "what exactly is broken, what evidence supports it, and what are we optimizing for?"
 
 **The Deeper Anti-Pattern (The Trolley Problem Trap)**: Optimising *within* a broken frame rather than questioning *the frame itself*. The trolley problem isn't "pull the lever or not" — it's "how did the trolley, the victims, and the ultimatum get here in the first place?" Any sophisticated solution-space exploration (GoT, protocol matching, case study recall) applied to the wrong problem **amplifies** the error rather than catching it.
 
@@ -63,20 +77,27 @@ Stopping Rule (Anti-Regression):
 - Actionable root: No intake filter — every request gets a "yes" before scoping
 - Redirect: Solve the intake filter NOW, flag scarcity mindset for therapeutic work
 
-### Gate 1: Stated vs Actual Problem
+### Gate 1: The Candidate Reframe Contract
 
+> **Rule**: Never issue an authoritarian AI decree declaring what the user's "Actual Problem" is with certainty. Treat reframes as hypotheses grounded in evidence.
+
+```text
+1. Literal Request:      [What the user explicitly asked for]
+2. Candidate Reframe:    [The deeper bottleneck/opportunity suspected from evidence]
+3. Evidence For:         [Specific patterns, empirical data, past constraints]
+4. Evidence Against:     [Potential missing context, unobserved preferences]
+5. User Strategic Choice:
+   ├─ Option A: Execute the literal request directly
+   ├─ Option B: Explore and solve the candidate reframe
+   └─ Option C: Run a small reversible experiment to test both
 ```
-Stated Problem:   [What the user/client says is wrong]
-Actual Problem:   [What the evidence shows is wrong]
 
-Diagnostic Questions:
-├─ "If I magically solved [stated problem], would the situation actually improve?"
-├─ "When did this problem NOT exist? What changed?"
-├─ "Who benefits from this problem remaining unsolved?"
-└─ "Is this a problem or a symptom of a deeper problem?"
+**Diagnostic Questions**:
+- "If I magically delivered [literal request], would the underlying bottleneck actually resolve?"
+- "When did this issue NOT exist? What structural variable changed?"
+- "What small reversible test would discriminate between the literal request and the candidate reframe?"
 
-Output: Problem Statement v1 (may differ from stated problem)
-```
+**Output**: Agreed Problem Statement (confirmed by user, not imposed).
 
 ### Gate 2: Constraint Enumeration
 

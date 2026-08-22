@@ -1,8 +1,15 @@
+---
+created: 2026-02-28
+last_updated: 2026-08-22
+cluster: 9
+epistemic_status: agent-discretion
+---
+
 # Protocol 500: GTO Problem Solver (The Unified Solver)
 
-> **Created**: 2026-02-28
-> **Domain**: Decision / Strategy / Risk / Multi-Agent
-> **Priority**: ⭐⭐⭐ Critical (Capstone Protocol)
+> **Status**: ACTIVE  
+> **Priority**: ⭐⭐⭐ Critical (Capstone Protocol)  
+> **Epistemic Status**: `agent-discretion` (prompt-guided mathematical reasoning framework; discretionary heuristic, not automated runtime code)
 > **Trigger**: Complex problem with multi-agent, multi-variable, mixed-environment dynamics; "What is the optimal move?"; "Solve this"
 
 ---
@@ -180,50 +187,84 @@ A **GoT Graph** (minimum 3 paths, with state probabilities and agent counter-mov
 
 ---
 
-## Phase 3: Multi-Criteria Ranking
+## Phase 3: Multi-Criteria Ranking & Robustness Gate
 
 > **Invoke**: [Protocol 121: MCDA / EEV / Pairwise](DEC-121-mcda-eev-framework.md)
 
-### 3A: Define Criteria and Weights
+### 3A: Mandatory Hard Constraint Pre-Screening (VETO Gate)
 
-Criteria must be drawn from YOUR utility function (Phase 1):
+> **Rule**: Hard constraints (Law #1 Ruin, legal compliance, budget ceiling) are **vetoes**, not compensable scores.
+> A path with a catastrophic downside must NEVER be selected because it scored 10/10 on upside.
+
+Evaluate every candidate path against hard constraints:
+- Does Path X carry a non-zero probability of irreversible ruin, legal breach, or budget exhaustion?
+  - If **YES** → Mark **INFEASIBLE (VETO)**. Drop from matrix immediately.
+  - If **NO** → Path proceeds to weighted MCDA scoring.
+
+### 3B: Mandatory Option Set Expansion
+
+Ensure the evaluated options include expanded strategic alternatives:
+- `Path A`: Primary Action
+- `Path B`: Alternative Defensive Action
+- `Path C`: Lateral / Frame-Breaking Path
+- `Path D`: **Reversible Experiment / Buy Information** (Cheapest test to resolve uncertainty)
+- `Path E`: **Wait / Status Quo** (Cost of delay / option value of waiting)
+
+### 3C: Define Criteria and Weights
+
+Criteria must be drawn from YOUR utility function (Phase 1) and user-confirmed:
 
 | Criterion | Weight | Rationale |
 |:---|:---|:---|
-| Survival (Law #1) | [W₁] | Non-negotiable floor |
-| Expected Payoff (MEV) | [W₂] | Mathematical return |
-| Utility Payoff (E(U)) | [W₃] | Non-monetary value (dignity, optionality, time) |
-| Robustness to Error | [W₄] | "How badly does this fail if I'm wrong?" |
-| Reversibility | [W₅] | "Can I undo this if it goes badly?" |
+| Expected Payoff (MEV) | [W₁] | Mathematical return |
+| Utility Payoff (E(U)) | [W₂] | Non-monetary value (dignity, optionality, time) |
+| Robustness to Error | [W₃] | "How badly does this fail if our model is wrong?" |
+| Reversibility | [W₄] | "Can we unwind this without permanent loss?" |
 
-### 3B: Score Each Path
+### 3D: Score Feasible Paths
 
-| Path | Survival | MEV | E(U) | Robustness | Reversibility | **Weighted Score** |
+| Path | Feasibility | MEV | E(U) | Robustness | Reversibility | **Weighted Score** |
 |:---|:---|:---|:---|:---|:---|:---|
-| Path A (Aggressive) | N/10 | N/10 | N/10 | N/10 | N/10 | **X.XX** |
-| Path B (Defensive) | N/10 | N/10 | N/10 | N/10 | N/10 | **X.XX** |
-| Path C (Lateral) | N/10 | N/10 | N/10 | N/10 | N/10 | **X.XX** |
+| Path A (Primary) | Feasible | N/10 | N/10 | N/10 | N/10 | **X.XX** |
+| Path B (Defensive) | Feasible | N/10 | N/10 | N/10 | N/10 | **X.XX** |
+| Path C (Lateral) | Feasible | N/10 | N/10 | N/10 | N/10 | **X.XX** |
+| Path D (Experiment) | Feasible | N/10 | N/10 | N/10 | N/10 | **X.XX** |
+| Path E (Status Quo) | Feasible | N/10 | N/10 | N/10 | N/10 | **X.XX** |
 
-### 3C: Pairwise Gut-Check
+### 3E: Sensitivity & Robustness Analysis
 
+Run a +/-10% perturbation across criteria weights:
+1. **Stable Ranking**: The top-ranked path remains #1 across reasonable weight shifts.
+   → Proceed to Phase 4 (EEV Optimization).
+2. **Unstable Ranking**: A minor shift in weights (+/-10%) flips the winner.
+   → **Do NOT force a fragile recommendation.**
+   → Action: Select **Path D (Reversible Experiment)** or choose the most reversible path to gather discriminating evidence before committing.
+
+### 3F: Pairwise Gut-Check & Calibration
+
+Conduct a head-to-head pairwise comparison between top-scoring candidate paths:
+
+```text
+Path A vs Path B -> Winner: [?]
+Path B vs Path C -> Winner: [?]
+Path A vs Path C -> Winner: [?]
+
+Pairwise Leader: [Path with most direct wins]
 ```
-Path A vs Path B → Winner: [?]
-Path B vs Path C → Winner: [?]
-Path A vs Path C → Winner: [?]
 
-Pairwise Leader: [Path with most wins]
-```
-
-> **Inconsistency Check**: If MCDA Leader ≠ Pairwise Leader → Your criteria weights are wrong. Re-examine.
+> **Inconsistency Check**: If MCDA Leader ≠ Pairwise Leader:
+> - Your criteria weights do not reflect your true revealed preferences.
+> - Diagnostic: *"Why did Path B win head-to-head despite a lower weighted score?"* (Identify the missing implicit criterion, add it to the matrix, and re-weight).
 
 ### Phase 3 Output
 
-```
-MCDA RANKING:
+```text
+MCDA RANKING & ROBUSTNESS:
   #1: Path [X] (Score: X.XX)
   #2: Path [Y] (Score: Y.YY)
-  #3: Path [Z] (Score: Z.ZZ)
   
+  Hard Constraint Vetoes: [Paths dropped as Infeasible]
+  Robustness Status: [STABLE (Proceed) / UNSTABLE (Route to Experiment)]
   Pairwise Alignment: [Consistent / Inconsistent — re-examine if inconsistent]
 ```
 

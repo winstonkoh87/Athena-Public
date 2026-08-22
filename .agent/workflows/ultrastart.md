@@ -1,7 +1,7 @@
 ---
 description: Deep boot for cognitive/computationally intensive work. System-2 counterpart to /start.
 created: 2026-03-10
-last_updated: 2026-07-22
+last_updated: 2026-06-06
 model: default
 temperature: 0.7
 tools:
@@ -11,36 +11,26 @@ tools:
   search: true
 ---
 
-# /ultrastart — Deep Context Boot (System-2) v3.1
+# /ultrastart — High-Assurance Context Boot (System-2) v3.2
 
-> **Latency Profile**: HIGH (~20-30s boot)
-> **Philosophy**: Maximum Compute. Depth is the priority. Load everything. Reason deeply.
-> **Token Protocol**: **MaxMax** — Maximum quality × maximum depth. No token economy constraints. Full module preload. Multi-track reasoning on every response. This is the premium session mode.
-> **Contrast**: For MinMax (max quality, min tokens), use `/start`.
-> **Use When**: `/ultrathink`, complex multi-domain analysis, architectural decisions, deep research, therapeutic/IFS work.
-> **AGoT Activation**: Queries with Λ > 40 automatically use AGoT-enhanced reasoning (Protocol 75 v5.0).
+> **Latency Profile**: MEDIUM-HIGH (~15-20s boot)
+> **Philosophy**: Maximum Justified Assurance. Curated evidence over raw token dumps.
+> **Protocol**: **High Assurance** — Build a task-specific evidence pack (relevant context + counter-evidence + explicit verifier). Escalate compute and depth only where stakes and ambiguity warrant it.
+> **Contrast**: For standard work (lean, adaptive JIT), use `/start`.
+> **Use When**: Architectural decisions, high-stakes trade/capital allocation, deep research with strict verification, irreversible commitments.
+> **Verification**: Requires an explicit verification plan (unit tests, static analysis, citation checking, or external validation gate).
 
 > [!IMPORTANT]
 > This is NOT the default boot. Use `/start` for general work.
-> `/ultrastart` trades speed for epistemic depth. Only invoke when the session
-> demands maximum context alignment before reasoning begins.
+> `/ultrastart` trades latency for epistemic rigor. It builds a curated, task-specific
+> context pack rather than indiscriminately pre-loading unrelated modules.
 >
-> **v3.1 Subscription-Aware Maximum Compute Doctrine** (2026-05-11):
+> **Adaptive Compute Allocation**:
 >
-> The MaxMax doctrine adapts to subscription economics:
->
-> | Subscription Type | Mode | Behavior |
-> |:------------------|:-----|:---------|
-> | **Flat-rate unlimited** (e.g., Google AI Ultra $250/mo) | **MaxMax** | Load everything. Tokens are free. No budget caps. |
-> | **Quota-limited** (e.g., Gemini Pro, Claude Opus via Antigravity) | **MaxMax-Lite** | Load Tiers 1–2 + 1 semantic bridge search (--limit 8). Skip Tier 3 + cross-domain sweep. ~35K boot. |
->
-> The optimization function remains `maximize(output quality)` in both modes.
-> The difference: MaxMax-Lite preserves quota headroom for deep-work turns
-> instead of spending it on speculative boot loads.
->
-> **Detection**: Infer subscription type from the model/platform in use.
-> If uncertain, default to **MaxMax-Lite** (conservative). The user can
-> override with `--full` to force MaxMax.
+> | Task Complexity | Mode | Behavior |
+> |:----------------|:-----|:---------|
+> | **Standard Deep Task** | **Focused Deep** | Curated Tier 1 + surgical search (--limit 5) + task plan + verifier. |
+> | **Irreversible / High Stakes** | **High Assurance** | Curated Tiers 1–2 + counter-evidence search + adversarial verification gate. |
 >
 > **AGoT Routing** (v9.5.0):
 >
@@ -206,19 +196,26 @@ Also load `threatPlaybooks.md` (~2K tokens) for instant crisis-to-protocol mappi
 
 ## Phase 3.5: Behavioral Accountability Surface (Grace Harper Model)
 
-> **Purpose**: Deep accountability scan. `/start` surfaces one-liners; `/ultrastart` loads full behavioral context.
+> **Purpose**: Deep accountability scan. `/start` surfaces one-liners; `/ultrastart` loads full BEH context.
 > **Data source**: `.agent/state/accountability_status.json` — mechanical state file.
 
 After loading full state:
 
 1. **Read** `.agent/state/accountability_status.json` for current status
-2. **Load active behavioral protocols**: Read header + status of all active files in `.agent/skills/protocols/behavioral/`
-3. **Surface with detail**: one line per tracked commitment (status, last activity, streak, notes)
-4. **Day-aware prompts**: target-day reminders; weekly audit due notices
-5. **Pattern pre-load**: If the trigger log shows 3+ recent entries with the same pattern, surface it: `🚩 Recurring trigger: [pattern] (N occurrences this week).`
+2. **Load active BEH protocols**: Read header + status of all active BEH- files in `.agent/skills/protocols/behavioral/`
+3. **Surface with detail**:
+   - `🏋️ BEH-601 (Solo Session): Sessions: {beh_601.total_sessions} | Last: {beh_601.last_completed || "Never"} | Streak: {beh_601.streak_weeks}w`
+   - `📝 BEH-602 (Trigger Log): This week: {beh_602.entries_this_week} | Total: {beh_602.total_entries} | Last: {beh_602.last_entry_date || "Never"}`
+   - `🏋️ BEH-Core (Solo Session): Sessions: {beh_core.total_sessions} | Last: {beh_core.last_completed || "Never"} | Streak: {beh_core.streak_weeks}w`
+   - `📝 BEH-Trigger (Trigger Log): This week: {beh_trigger.entries_this_week} | Total: {beh_trigger.total_entries} | Last: {beh_trigger.last_entry_date || "Never"}`
+4. **Day-aware prompts**:
+   - Saturday → `⚠️ Saturday — BEH-Core Solo Session target active.`
+   - Sunday → `📊 Weekly execution audit due. Run on /ultraend.`
+5. **Schema trigger pre-load**: If BEH-Trigger has 3+ recent entries with the same trigger pattern, surface the pattern: `🚩 Recurring trigger: [pattern] (N occurrences this week).`
 
-> **Rationale**: External forcing functions produce near-perfect execution; internal accountability fails. The deeper surface in ultrastart provides richer context for sessions touching behavioral domains.
+> **Rationale**: External forcing functions produce near-perfect execution; internal accountability fails. The deeper surface in ultrastart provides richer context for sessions touching psychological/behavioral domains.
 
+---
 
 ## Phase 4: Deep Semantic Bridge (~15-20K tokens)
 
@@ -232,7 +229,7 @@ skipping the semantic bridge wastes ~15-20K of potential signal.
 1. **Explicit**: User provided it inline → `/ultrastart "fixing the trading risk constraints"`
 2. **Seeded**: Scan the most recent `[[ S__ ]]` checkpoint for the `@seeded` field.
    This is the previous session's "best guess" at what should happen next.
-   Example: `@seeded: [Project X] execution. Non-negotiable.` → objective = "[Project X]"
+   Example: `@seeded: Project sprint execution. Non-negotiable.` → objective = "Core Deliverable Sprint"
 3. **Highest-Urgency Project**: From `PROJECTS.md`, find the highest-urgency (🔴 > 🟠 > 🟡)
    unblocked project. Use its "Next Action" field as the objective.
 4. **Current Focus**: Parse `activeContext.md` header → "Current Focus" field
@@ -332,13 +329,13 @@ User query → Extract keywords/entities
 > - **Command Execution**: Scripts, builds, data processing, system operations
 >
 > **Mandatory Exocortex Search Triggers** — if ANY of these appear, search BEFORE responding:
-> - **Names/People**: ANY person mentioned (any client, collaborator, friend, or contact) → search their name for relationship history, case studies, past interactions
+> - **Entities/People**: Any client or stakeholder mentioned → search for relationship history, case studies, past interactions
 > - **Past Decisions**: "Last time...", "What did I decide...", "Didn't we already..." → search the topic for empirical precedent
-> - **Empirical Data**: Pricing, trade history, assignment outcomes, session patterns → search for historical records and calibration data
-> - **Projects/Assignments**: Any project code or assignment identifier → search for full project context
+> - **Empirical Data**: Pricing, trade history, project outcomes, session patterns → search for historical records and calibration data
+> - **Projects/Initiatives**: Any active project code → search for full project context
 > - **Protocols/Case Studies**: Any reference to system patterns → search by keyword
 >
-> **MaxMax principle**: The cost of a redundant search is ~$0. The cost of a hallucinated fact is trust erosion. The cost of ignoring 1,900+ sessions of empirical data is **criminal negligence**. **Always verify. Never guess. Always recall.**
+> **High-Assurance principle**: The cost of a redundant search is minimal. The cost of a hallucinated fact is trust erosion. The cost of ignoring empirical data is critical. **Always verify. Never guess. Always recall.**
 
 ---
 
@@ -566,9 +563,9 @@ If a user query diverges **>2 clusters** from the boot objective (as resolved in
 
 ## References
 
-- [/ultraend](../../examples/workflows/ultraend.md) — Symmetric deep close counterpart
-- [/start](../../examples/workflows/start.md) — Lightweight boot
-- [/end](../../examples/workflows/end.md) — Lightweight close
+- [/ultraend](ultraend.md) — Symmetric deep close counterpart
+- [/start](start.md) — Lightweight boot
+- [/end](end.md) — Lightweight close
 
 ---
 

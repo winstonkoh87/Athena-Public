@@ -59,13 +59,16 @@ Step 3: "Given X and Y, Z?"    → Uses Steps 1+2 outputs
 
 ---
 
-### 3. Exhaustiveness Check (Steelman)
+### 3. Adversarial Falsification Pass & Exhaustiveness (Steelman)
 
-After generating options, ask:
+Before synthesis, execute a mandatory counter-evidence query:
+- Query: `"<topic> failure modes"`, `"<topic> criticisms"`, `"<topic> edge cases"`
 
-> "What option would someone who DISAGREES with me add?"
+Then ask:
 
-This catches blind spots from confirmation bias. Add the steelman option to the analysis even if you don't recommend it.
+> "What evidence or option would someone who DISAGREES with me add?"
+
+This catches blind spots from confirmation bias. Add the steelman counter-option to the analysis even if you do not recommend it.
 
 ---
 

@@ -149,3 +149,65 @@ def test_rerank_respects_top_k(monkeypatch):
     monkeypatch.setattr(reranker_module, "_predict_onnx", lambda pairs: list(range(len(pairs))))
     res, _ = SafeCrossEncoder().rerank("q", _docs(6), top_k=2)
     assert len(res) == 2
+
+
+# ── temporal decay in weighted_rrf ──────────────────────────────────────────
+
+def test_temporal_decay_boosts_recent_sessions():
+    """Sessions from 2026 must outrank equivalent 2024 sessions in weighted_rrf."""
+    from athena.tools.search import weighted_rrf
+
+    doc_2024 = SearchResult(
+        id="Session:2024-05-10-session-S100.md",
+        content="2024 trading discussion",
+        source="session",
+        score=0.8,
+        metadata={"path": ".context/memories/session_logs/2024-05-10-session-S100.md"},
+    )
+    doc_2026 = SearchResult(
+        id="Session:2026-08-20-session-S780.md",
+        content="2026 trading discussion",
+        source="session",
+        score=0.8,
+        metadata={"path": ".context/memories/session_logs/2026-08-20-session-S780.md"},
+    )
+
+    ranked_lists = {
+        "session": [doc_2024, doc_2026],  # 2024 passed first in rank order
+    }
+
+    fused = weighted_rrf(ranked_lists, k=60)
+    assert len(fused) == 2
+    # 2026 has temporal_mod=1.15 vs 2024's 0.75, which overcomes rank 2 vs rank 1
+    assert fused[0].id == "Session:2026-08-20-session-S780.md"
+    assert fused[1].id == "Session:2024-05-10-session-S100.md"
+
+
+def test_temporal_decay_preserves_timeless_protocols():
+    """Protocols with year mentions in name or path must NOT be decayed."""
+    from athena.tools.search import weighted_rrf
+
+    protocol_with_year = SearchResult(
+        id="Protocol:2024-governance-audit.md",
+        content="Governance rules",
+        source="protocol",
+        score=0.9,
+        metadata={"path": ".agent/skills/protocols/archive/2024-governance-audit.md"},
+    )
+    protocol_standard = SearchResult(
+        id="Protocol:001-law-of-ruin.md",
+        content="Law of ruin rules",
+        source="protocol",
+        score=0.9,
+        metadata={"path": ".agent/skills/protocols/safety/SAF-001-law-of-ruin.md"},
+    )
+
+    ranked_lists = {
+        "protocol": [protocol_with_year, protocol_standard],
+    }
+
+    fused = weighted_rrf(ranked_lists, k=60)
+    # Neither protocol has temporal decay applied; rank order 1 then 2 is preserved purely by rank position
+    assert fused[0].id == "Protocol:2024-governance-audit.md"
+    assert fused[1].id == "Protocol:001-law-of-ruin.md"
+

@@ -172,9 +172,11 @@ def collect_tags(query: str) -> list[SearchResult]:
             continue
 
         try:
-            # Use grep for speed — argument list prevents shell injection
+            # Use grep for speed — argument list prevents shell injection.
+            # `--` stops flag parsing so a query beginning with `-` (e.g. "-v")
+            # is treated as a pattern, not a grep option.
             process = subprocess.run(
-                ["grep", "-i", "-m", "10", query, str(path)],
+                ["grep", "-i", "-m", "10", "--", query, str(path)],
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -665,7 +667,22 @@ def weighted_rrf(
         weight = WEIGHTS.get(source, 1.0)
         for rank, doc in enumerate(docs, start=1):
             score_mod = 0.5 + doc.score  # Dynamic: range 0.5 to 1.5
-            contrib = weight * score_mod * (1.0 / (k + rank))
+
+            # GTO Temporal Decay Modifier (Recency Weighting):
+            # Apply ONLY to time-series sources (session, case_study) with bounded path/id match.
+            # Reference sources (protocol, capability, canonical, framework_docs, workflow) remain timeless (1.0x).
+            temporal_mod = 1.0
+            if source in {"session", "case_study"}:
+                doc_path = doc.metadata.get("path", "") if doc.metadata else ""
+                target_str = f"{doc_path} {doc.id}"
+                if re.search(r"(?:^|[/_\-\s])2026(?:[/_\-.\s]|$)", target_str):
+                    temporal_mod = 1.15
+                elif re.search(r"(?:^|[/_\-\s])2025(?:[/_\-.\s]|$)", target_str):
+                    temporal_mod = 0.90
+                elif re.search(r"(?:^|[/_\-\s])2024(?:[/_\-.\s]|$)", target_str):
+                    temporal_mod = 0.75
+
+            contrib = weight * score_mod * temporal_mod * (1.0 / (k + rank))
             fused_scores[doc.id] += contrib
 
             if doc.id not in doc_map:
