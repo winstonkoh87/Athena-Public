@@ -6,7 +6,6 @@ from athena.boot.constants import (
     BOLD,
     DIM,
     GREEN,
-    LOGS_DIR,
     PROJECT_ROOT,
     RED,
     RESET,

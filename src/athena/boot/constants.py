@@ -1,4 +1,3 @@
-from pathlib import Path
 
 from athena.core.config import (
     AGENT_DIR,

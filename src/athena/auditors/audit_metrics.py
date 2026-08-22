@@ -15,7 +15,6 @@ def count_files(base_path, pattern, ignore_dirs=None):
     return count
 
 
-from pathlib import Path
 from athena.core.config import PROJECT_ROOT, PUBLIC_DIR
 
 private_root = str(PROJECT_ROOT)

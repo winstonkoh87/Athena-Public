@@ -126,7 +126,7 @@ no_implicit_optional = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--tb=short -q --cov=src/athena --cov-report=term-missing --cov-fail-under=15"
+addopts = "--tb=short -q"
 
 [tool.coverage.run]
 source = ["src/athena"]

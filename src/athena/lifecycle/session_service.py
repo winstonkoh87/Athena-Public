@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from athena.core.cache import invalidate_search_cache
-from athena.core.config import SESSIONS_DIR, get_current_session_log
+from athena.core.config import SESSIONS_DIR
 from athena.core.permissions import get_permissions
 
 

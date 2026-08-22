@@ -7,17 +7,19 @@ Unit tests verifying MCP resource and tool permission gates and Secret Mode reda
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from athena.core.permissions import (
     Permission,
     PermissionDenied,
-    PermissionEngine,
     SecretModeViolation,
-    Sensitivity,
     get_permissions,
 )
-from athena.mcp_server import current_session_resource, permission_status, set_secret_mode
+from athena.mcp_server import (
+    current_session_resource,
+    permission_status,
+    set_secret_mode,
+)
 
 
 class TestMCPSecurity(unittest.TestCase):

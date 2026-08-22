@@ -12,7 +12,6 @@ Operating Band:
 """
 
 import sys
-from pathlib import Path
 
 from athena.boot.constants import (
     BOLD,

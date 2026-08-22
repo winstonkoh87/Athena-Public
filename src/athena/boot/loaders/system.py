@@ -8,7 +8,7 @@ class SystemLoader:
     @staticmethod
     def verify_environment():
         """Titanium Airlock: Verifies dependencies and env vars."""
-        from athena.boot.constants import BOLD, DIM, GREEN, PROJECT_ROOT, RED, RESET
+        from athena.boot.constants import BOLD, GREEN, PROJECT_ROOT, RED, RESET
 
         env_file = PROJECT_ROOT / ".env"
         if not env_file.exists():
@@ -17,8 +17,9 @@ class SystemLoader:
 
         print("🛡️  Verifying Environment (Airlock)...")
         try:
-            import dotenv
-            import pydantic
+            import importlib.util
+            if not importlib.util.find_spec("dotenv") or not importlib.util.find_spec("pydantic"):
+                raise ImportError("dotenv or pydantic")
             print(f"   {GREEN}✅ Environment Healthy{RESET}")
         except ImportError as e:
             print(f"\n{RED}{BOLD}❌ Environment Check Failed: Missing dependency {e}{RESET}")

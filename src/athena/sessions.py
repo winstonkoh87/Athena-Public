@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from athena.core.config import CONTEXT_DIR, SESSIONS_DIR, get_current_session_log
+from athena.core.config import CONTEXT_DIR, get_current_session_log
 
 
 def parse_yaml_frontmatter(content: str) -> tuple[dict[str, Any], int]:

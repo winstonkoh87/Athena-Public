@@ -31,10 +31,10 @@ v2.0 — GTO Rewrite (2026-03-09)
 from __future__ import annotations
 
 import re
-import sys
 import subprocess
-from datetime import datetime
+import sys
 from collections import Counter
+from datetime import datetime
 from pathlib import Path
 
 # --- YAML (optional) ---
@@ -55,13 +55,13 @@ from athena.core.config import (
     SYSTEM_LEARNINGS_FILE,
     USER_PROFILE_FILE,
 )
+from athena.intelligence.sentinel import check_shutdown_sentinel
 from athena.sessions import (
-    get_current_session_log,
-    extract_learnings,
     extract_lambda_stats,
+    extract_learnings,
+    get_current_session_log,
     parse_yaml_frontmatter,
 )
-from athena.intelligence.sentinel import check_shutdown_sentinel
 
 # --- Compliance imports (top-level, not runtime) ---
 SCRIPTS_DIR = PROJECT_ROOT / ".agent" / "scripts"
@@ -69,8 +69,8 @@ SYNC_SCRIPT = SCRIPTS_DIR / "sync_agents_md.py"
 sys.path.insert(0, str(SCRIPTS_DIR))
 try:
     from protocol_compliance import generate_report as compliance_generate_report
-    from protocol_compliance import update_markdown_log as compliance_update_log
     from protocol_compliance import reset_violations as compliance_reset
+    from protocol_compliance import update_markdown_log as compliance_update_log
 
     HAS_COMPLIANCE = True
 except ImportError:
@@ -317,26 +317,26 @@ def check_ci_status() -> None:
         )
         if proc.returncode != 0:
             return
-        
+
         runs = json.loads(proc.stdout)
         if not runs:
             return
-        
+
         print(f"\n{BOLD}{CYAN}🔔 CI Status Integration (TD-053):{RESET}")
-        
+
         # 1. Search for current commit's run
         current_run = None
         for run in runs:
             if run.get("headSha") == current_sha:
                 current_run = run
                 break
-        
+
         if current_run:
             status = current_run.get("status", "unknown")
             url = current_run.get("url", "")
             conclusion = current_run.get("conclusion")
             name = current_run.get("name", "CI")
-            
+
             if status == "completed":
                 if conclusion == "success":
                     print(f"   ✅ Current Commit CI: {GREEN}success{RESET} ({name})")
@@ -346,24 +346,24 @@ def check_ci_status() -> None:
                 print(f"   ⚙️  Current Commit CI: {YELLOW}{status}{RESET} ({name}) -> {url}")
         else:
             print("   ⚙️  Current Commit CI: Queued / Starting on GitHub...")
-            
+
         # 2. Search for the last completed CI run
         last_completed = None
         for run in runs:
             if run.get("status") == "completed" and run != current_run:
                 last_completed = run
                 break
-                
+
         if last_completed:
             conclusion = last_completed.get("conclusion")
             url = last_completed.get("url")
             name = last_completed.get("name", "CI")
-            
+
             if conclusion == "success":
                 print(f"   ✅ Previous CI Run: {GREEN}success{RESET} ({name})")
             else:
                 print(f"   ⚠️  Previous CI Run: {RED}{conclusion}{RESET} ({name}) -> {url}")
-                    
+
     except Exception as e:
         print(f"{DIM}   ⚠️ CI status check skipped: {e}{RESET}")
 
@@ -459,7 +459,7 @@ def extract_tags(content: str) -> list[str]:
     tags = set(re.findall(r"#([\w-]+)", content))
     tags.discard("session")
     tags.discard("...")
-    return sorted(list(tags))
+    return sorted(tags)
 
 
 def extract_threads(focus: str, tags: list[str], content: str) -> list[str]:
@@ -536,7 +536,7 @@ def propagate_system_learnings(learnings, session_id, dry_run=False) -> int:
         return 0
 
     today = datetime.now().strftime("%Y-%m-%d")
-    new_rows = [f"| {today} | {session_id} | {l} | ⏳ Pending |" for l in learnings]
+    new_rows = [f"| {today} | {session_id} | {item} | ⏳ Pending |" for item in learnings]
 
     if dry_run:
         print(f"{DIM}[DRY-RUN] Would append {len(new_rows)} system learnings{RESET}")
@@ -606,7 +606,7 @@ def propagate_local_learnings(learnings, session_id, dry_run=False) -> int:
         return 0
 
     today = datetime.now().strftime("%Y-%m-%d")
-    new_rows = [f"- **{today} ({session_id})**: {l}" for l in learnings]
+    new_rows = [f"- **{today} ({session_id})**: {item}" for item in learnings]
 
     if dry_run:
         print(f"{DIM}[DRY-RUN] Would append {len(new_rows)} local codebase learnings to LESSONS.md{RESET}")
@@ -635,10 +635,7 @@ def validate_log_synthesis(content: str) -> bool:
         r"\*\*Insight\*\*:\s*\.\.\.",
         r"\| \.\.\. \| AI / User \| Pending \|",
     ]
-    for pattern in critical_patterns:
-        if re.search(pattern, content):
-            return False
-    return True
+    return all(not re.search(pattern, content) for pattern in critical_patterns)
 
 
 def finalize_session_log(dry_run: bool = False) -> bool:

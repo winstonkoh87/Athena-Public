@@ -21,25 +21,6 @@ GRAPH_FILE = PROJECT_ROOT / ".context" / "KNOWLEDGE_GRAPH.md"
 
 def generate_mermaid() -> str:
     """Generate Mermaid graph code based on actual existence of directories."""
-
-    # Check for actual presence to avoid ghost nodes
-    nodes = {
-        "CI": PROJECT_ROOT
-        / ".framework"
-        / "v8.2-stable"
-        / "modules"
-        / "Core_Identity.md",
-        "PR": PROJECT_ROOT / ".agent" / "skills" / "protocols",
-        "CS": PROJECT_ROOT / ".context" / "memories" / "case_studies",
-        "SL": PROJECT_ROOT / ".context" / "memories" / "session_logs",
-        "SDK": PROJECT_ROOT / "src" / "athena",
-        "PUB": PROJECT_ROOT / "Athena-Public",
-        "MKT": PROJECT_ROOT / ".context" / "marketing",
-    }
-
-    # Filter only existing ones
-    active_nodes = {k: v.exists() for k, v in nodes.items()}
-
     mermaid = """graph TB
     subgraph CORE["🧠 CORE (Identity & SDK)"]
         CI[Core_Identity.md]

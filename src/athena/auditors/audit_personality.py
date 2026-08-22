@@ -10,7 +10,7 @@ Purpose: Enforces Section 4.6 of /end workflow by:
 
 Living Docs (The Metabolic Layer):
 - User_Profile_Core.md (Bio/Traits/PERSONALITY SCORES)
-- Psychology_L1L5.md (Current State)
+- Inner_State.md (Current State)
 - Session_Observations.md (Calibration)
 - Operating_Principles.md (New Rules)
 """
@@ -28,14 +28,14 @@ SESSION_LOGS_DIR = CONTEXT_DIR / "memories" / "session_logs"
 # Living Docs
 LIVING_DOCS = {
     "User_Profile_Core.md": "Bio, traits, typology, PERSONALITY SCORES",
-    "Psychology_L1L5.md": "Emotional shifts, schema updates, therapeutic insights",
+    "Inner_State.md": "Emotional shifts, schema updates, therapeutic insights",
     "Session_Observations.md": "Calibration references, new vocabulary, case patterns",
     "Operating_Principles.md": "New decision rules, frameworks, constraints",
 }
 
 # Signal patterns to detect (regex)
 SIGNAL_PATTERNS = {
-    "Psychology_L1L5.md": [
+    "Inner_State.md": [
         r"(schema|L[1-5]|trauma|trigger|emotional|pattern|insight|mechanism)",
         r"(self-gaslighting|abandonment|invalidation|escalation|dysregulation)",
         r"(therapy|therapeutic|processing|grief|closure)",
@@ -332,7 +332,7 @@ def main():
     if updates_needed or drift["recommendations"]:
         print("⚠️  UPDATES MAY BE NEEDED. AI must review session for:")
         print("   • Personality score changes → User_Profile_Core.md")
-        print("   • New psychological insights → Psychology_L1L5.md")
+        print("   • New psychological insights → Inner_State.md")
         print("   • New calibration references → Session_Observations.md")
         print("   • New decision rules → Operating_Principles.md")
     else:
