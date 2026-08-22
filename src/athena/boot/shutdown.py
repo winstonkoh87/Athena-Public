@@ -117,5 +117,29 @@ def run_shutdown(project_root: Path | None = None) -> bool:
     return success
 
 
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Athena Boot Shutdown Sequence",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=None,
+        help="Optional project root path.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="Athena Boot Shutdown v1.0",
+    )
+
+    args = parser.parse_args()
+    return 0 if run_shutdown(project_root=args.root) else 1
+
+
 if __name__ == "__main__":
-    run_shutdown()
+    import sys
+    sys.exit(main())
