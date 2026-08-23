@@ -1,8 +1,8 @@
 # ⚡ Workflow Reference
 
-Athena uses a "Slash Command" interface to trigger complex agentic behaviors. These commands are defined in `.agent/workflows/`. There are **72 workflows** (54 root + 18 domain) available.
+Athena uses a "Slash Command" interface to trigger complex agentic behaviors. These commands are defined in `.agent/workflows/`. There are **73 workflows** (55 root + 18 domain) available.
 
-*Last Updated: 2026-08-23 · v9.9.8*
+*Last Updated: 2026-08-24 · v9.9.8*
 
 ---
 

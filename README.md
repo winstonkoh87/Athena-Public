@@ -25,7 +25,7 @@ Own the state. Rent the intelligence. Platforms forget. Athena doesn't.
 
 [Quickstart](#-quickstart) · [How It Works](#-how-it-works) · [llms.txt](https://winstonkoh87.com/llms.txt) · [llms-full.txt](https://winstonkoh87.com/llms-full.txt) · [Docs](docs/GETTING_STARTED.md) · [FAQ](Athena-Public.wiki/FAQ.md) · [Safety](SAFETY.md) · [Contributing](CONTRIBUTING.md)
 
-*Last updated: 23 August 2026*
+*Last updated: 24 August 2026*
 
 </div>
 
@@ -570,6 +570,7 @@ Athena-Public/
 </details>
 
 <details>
+- **Full Synchronized Digital Portfolio Refresh** (Aug 24 2026): Synchronized complete portfolio update across all 4 public surfaces, releases, wiki, and internal docs. Updated canonical CAPS counts (414 active protocols across 26 categories, 43 active skills, 73 workflows, 261 scripts, 4,331 memory files). Codified GTO Daily Self-RSI Architecture & Backpressure Circuit Breaker with ACE failure trace reflection and macOS launchd daemon automation, and TikTok wealth signaling forensics & luxury allocation profile mechanics.
 - **Full Synchronized Digital Portfolio Refresh** (Aug 22 2026): Synchronized complete portfolio update across all 4 public surfaces, releases, wiki, and internal docs. Updated canonical CAPS counts (414 active protocols across 26 categories, 43 active skills, 72 workflows, 260 scripts, 4,307 memory files). Codified Natural8 Dual-Layer Poker & Variance Tracker suite with automated cross-repo synchronization to Personal Finance (v3.42.0), standardized 1 USD = 1.30 SGD accounting peg, Process-Driven vs. Outcome-Driven systematic trading axiom, and Craps short-gamma neurological deconstruction.
 - **Full Synchronized Digital Portfolio Refresh** (Aug 21 2026): Synchronized complete portfolio update across all 4 public surfaces, releases, wiki, and internal docs. Updated canonical CAPS counts (414 active protocols across 26 categories, 43 active skills, 72 workflows, 260 scripts, 4,301 memory files). Codified CS-616 200-Lot Liquidation Trap & Bankroll Sizing Math, FX Daytrading 4-Part Friction Decomposition & IC Markets Dynamic Tiered Margin (v1.32.0).
 - **Full Synchronized Digital Portfolio Refresh** (Aug 11 2026): Synchronized complete portfolio update across all 4 public surfaces, releases, wiki, and internal docs. Updated canonical CAPS counts (414 active protocols across 26 categories, 43 active skills, 72 workflows, 260 scripts, 4,234 memory files). Codified Assignment 73 Full-Funnel Architecture & 98-slide deck, Assignment 74 Intake & Dignity Premium enforcement, and ZenithFX 3,574-Trade Hold-Time Decay Law.
