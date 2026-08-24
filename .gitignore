@@ -123,3 +123,4 @@ search_results.txt
 
 # Daemon-written telemetry (S501 fix class — tracked+live-written files jam every pull)
 .agent/telemetry/vector_sync.log
+.context/telemetry/

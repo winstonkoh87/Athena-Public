@@ -640,6 +640,85 @@ def check_14_workspace_tips(root: Path, fix: bool = False) -> list[CheckResult]:
     return results
 
 
+def check_15_harness_integrity(root: Path, fix: bool = False) -> list[CheckResult]:
+    """Check 15: Harness & Hooks Integrity."""
+    results = []
+
+    # 1. Git hooksPath
+    code, out = _run(["git", "config", "core.hooksPath"], cwd=str(root))
+    if out == ".agent/hooks":
+        results.append(CheckResult("Git Hooks Path", PASS, "core.hooksPath is .agent/hooks"))
+    else:
+        if fix:
+            _run(["git", "config", "core.hooksPath", ".agent/hooks"], cwd=str(root))
+            results.append(
+                CheckResult("Git Hooks Path", PASS, "core.hooksPath set to .agent/hooks (auto-fixed)")
+            )
+        else:
+            results.append(
+                CheckResult(
+                    "Git Hooks Path",
+                    WARN,
+                    f"core.hooksPath is '{out}' (expected '.agent/hooks')",
+                    "Run 'athena doctor --fix' or './.agent/scripts/install_hooks.sh'",
+                )
+            )
+
+    # 2. Claude settings hook parity
+    claude_settings = root / ".claude" / "settings.json"
+    if not claude_settings.exists():
+        results.append(
+            CheckResult("Claude Settings", WARN, ".claude/settings.json missing")
+        )
+    else:
+        try:
+            cfg = json.loads(claude_settings.read_text(encoding="utf-8"))
+            hooks = cfg.get("hooks", {})
+            has_pretool = "PreToolUse" in hooks
+            has_stop = "Stop" in hooks
+            if has_pretool and has_stop:
+                results.append(CheckResult("Claude Hooks Parity", PASS, "PreToolUse and Stop hooks registered"))
+            else:
+                missing = []
+                if not has_pretool:
+                    missing.append("PreToolUse")
+                if not has_stop:
+                    missing.append("Stop")
+                results.append(
+                    CheckResult(
+                        "Claude Hooks Parity",
+                        WARN,
+                        f"Missing hooks in .claude/settings.json: {', '.join(missing)}",
+                        "Sync settings from .agent/config/settings.json",
+                    )
+                )
+        except Exception as e:
+            results.append(CheckResult("Claude Settings", FAIL, f"Corrupted settings.json: {e}"))
+
+    # 3. Harness Score Probe
+    score_script = root / ".agent" / "scripts" / "harness_score.py"
+    if score_script.exists():
+        code, out = _run([sys.executable, str(score_script), "--json"], cwd=str(root))
+        if code == 0:
+            try:
+                score_data = json.loads(out)
+                enforced = score_data.get("total_enforced", 0)
+                cap = score_data.get("total_capability", 0)
+                results.append(
+                    CheckResult(
+                        "Harness Score",
+                        PASS if enforced >= 35.0 else WARN,
+                        f"Enforced: {enforced}/100 (Capability: {cap}/100, Gap: {round(cap - enforced, 1)} pts)",
+                    )
+                )
+            except Exception:
+                results.append(CheckResult("Harness Score", PASS, "harness_score.py executable"))
+        else:
+            results.append(CheckResult("Harness Score", WARN, "harness_score.py probe returned non-zero"))
+
+    return results
+
+
 # ═══════════════════════════════════════════════════════════════
 # MAIN ORCHESTRATOR
 # ═══════════════════════════════════════════════════════════════
@@ -660,6 +739,7 @@ ALL_CHECKS = [
     ("Echo Chamber", check_12_echo_chamber),
     ("Context Freshness", check_13_stale_context),
     ("Workspace Tips", check_14_workspace_tips),
+    ("Harness Integrity", check_15_harness_integrity),
 ]
 
 

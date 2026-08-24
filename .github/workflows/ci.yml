@@ -10,6 +10,7 @@ on:
     paths:
       - 'src/**'
       - 'scripts/**'
+      - '.agent/**'
       - 'tests/**'
       - 'examples/**'
       - '.github/workflows/**'
@@ -71,6 +72,12 @@ jobs:
           if grep -rn "except:$" src/ scripts/ --include="*.py"; then
             echo "::warning::Found bare except clauses — these silently swallow errors"
           fi
+
+      - name: Check LaTeX / KaTeX leaks
+        run: python .agent/scripts/check_latex_leak.py --all
+
+      - name: Check Harness Score & Parity
+        run: python .agent/scripts/harness_score.py --check --min=35.0
 
       - name: Run tests
         run: pytest tests/ -v --tb=short --cov=src/athena --cov-report=term-missing --cov-fail-under=15

@@ -5,12 +5,40 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/examples/hooks/meta_awareness_gate.py\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.agent/scripts/hook_meta_awareness_gate.py\"",
             "timeout": 5,
             "statusMessage": "Meta-awareness gate"
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.agent/scripts/security/block_secrets.py\"",
+            "timeout": 5,
+            "statusMessage": "Secret protection gate"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.agent/scripts/hook_stop_verify.py\"",
+            "timeout": 8,
+            "statusMessage": "Output verifier (LaTeX/ASCII/secrets)"
+          }
+        ]
+      }
     ]
+  },
+  "mcp": {
+    "tool_search": "auto:15"
   }
 }

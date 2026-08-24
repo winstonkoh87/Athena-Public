@@ -1,0 +1,210 @@
+# .agent/config/harness_scorecard.yaml
+# Single source of truth for Athena Harness Capability & Enforcement scoring.
+version: 1
+updated: "2026-08-24"
+
+pillars:
+  P1:
+    name: "Harness Engineering & Deterministic Verification"
+    weight: 22
+    sub_variables:
+      1.1:
+        name: "Session lifecycle hooks"
+        w: 0.12
+        C: 0.90
+        probe: "session_lifecycle"
+      1.2:
+        name: "Input-side gates"
+        w: 0.12
+        C: 0.95
+        probe: "input_gates"
+      1.3:
+        name: "Output-side gate before user delivery"
+        w: 0.20
+        C: 0.85
+        probe: "output_stop_gate"
+      1.4:
+        name: "Repo gates at commit"
+        w: 0.12
+        C: 0.95
+        probe: "git_hooks_path"
+      1.5:
+        name: "CI gates"
+        w: 0.12
+        C: 0.85
+        probe: "ci_hard_fail"
+      1.6:
+        name: "PreToolUse secret/ruin interception"
+        w: 0.10
+        C: 0.85
+        probe: "pre_tool_secrets"
+      1.7:
+        name: "Loop / budget / no-progress middleware"
+        w: 0.10
+        C: 0.40
+        probe: "loop_middleware"
+      1.8:
+        name: "Sandboxed execution & worktree isolation"
+        w: 0.07
+        C: 0.60
+        probe: "worktree_isolation"
+      1.9:
+        name: "Oracle-tamper protection"
+        w: 0.05
+        C: 0.60
+        probe: "oracle_protection"
+
+  P2:
+    name: "Context Engineering & Memory"
+    weight: 18
+    sub_variables:
+      2.1:
+        name: "Tiered canonical loading"
+        w: 0.18
+        C: 0.90
+        probe: "tiered_loading"
+      2.2:
+        name: "Progressive skill disclosure"
+        w: 0.15
+        C: 0.85
+        probe: "skill_triggers"
+      2.3:
+        name: "Durable session state"
+        w: 0.15
+        C: 0.85
+        probe: "durable_session"
+      2.4:
+        name: "Retrieval quality runtime"
+        w: 0.20
+        C: 0.85
+        probe: "reranker_runtime"
+      2.5:
+        name: "Structured cross-window handoff"
+        w: 0.12
+        C: 0.60
+        probe: "structured_handoff"
+      2.6:
+        name: "Compaction & clearing discipline"
+        w: 0.10
+        C: 0.80
+        probe: "compaction_tools"
+      2.7:
+        name: "Retrieval regression acted on"
+        w: 0.10
+        C: 0.90
+        probe: "eval_regression_actuator"
+
+  P3:
+    name: "Spec-Driven Development"
+    weight: 15
+    sub_variables:
+      3.1:
+        name: "Plan/execute separation"
+        w: 0.30
+        C: 0.90
+        probe: "plan_execute_separation"
+      3.2:
+        name: "Machine-checkable definition of done"
+        w: 0.30
+        C: 0.60
+        probe: "machine_dod"
+      3.3:
+        name: "Interrogation ritual"
+        w: 0.20
+        C: 0.85
+        probe: "interrogation_ritual"
+      3.4:
+        name: "Spec-artifact drift check"
+        w: 0.20
+        C: 0.40
+        probe: "spec_drift"
+
+  P4:
+    name: "Automated Evaluation, Oracles & Critique"
+    weight: 20
+    sub_variables:
+      4.1:
+        name: "Deterministic test suite for own code"
+        w: 0.18
+        C: 0.85
+        probe: "test_suite"
+      4.2:
+        name: "Golden retrieval eval + baseline compare"
+        w: 0.18
+        C: 0.90
+        probe: "golden_eval_recent"
+      4.3:
+        name: "Output-quality oracle on deliverable"
+        w: 0.22
+        C: 0.70
+        probe: "output_quality_oracle"
+      4.4:
+        name: "Independent critic in fresh context"
+        w: 0.15
+        C: 0.50
+        probe: "independent_critic"
+      4.5:
+        name: "Behavioural golden set"
+        w: 0.12
+        C: 0.60
+        probe: "behavioral_golden"
+      4.6:
+        name: "Scheduled runs & regression alerting"
+        w: 0.15
+        C: 0.40
+        probe: "scheduled_eval"
+
+  P5:
+    name: "Tool & API Ergonomics"
+    weight: 12
+    sub_variables:
+      5.1:
+        name: "Right-sized, searchable tool surface"
+        w: 0.25
+        C: 0.80
+        probe: "tool_search"
+      5.2:
+        name: "Actionable error payloads"
+        w: 0.25
+        C: 0.50
+        probe: "error_payloads"
+      5.3:
+        name: "Token-bounded responses"
+        w: 0.20
+        C: 0.60
+        probe: "token_bounds"
+      5.4:
+        name: "Fail-loud contract"
+        w: 0.30
+        C: 0.50
+        probe: "fail_loud"
+
+  P6:
+    name: "Skill Compilation & Compounded Learning"
+    weight: 13
+    sub_variables:
+      6.1:
+        name: "Curated, indexed, archived skill library"
+        w: 0.20
+        C: 0.90
+        probe: "skill_library"
+      6.2:
+        name: "Automatic solved-to-skill compilation"
+        w: 0.25
+        C: 0.50
+        probe: "skill_compiler_trigger"
+      6.3:
+        name: "Failure-to-lesson mining from traces"
+        w: 0.25
+        C: 0.85
+        probe: "reflexion_harvester"
+      6.4:
+        name: "Delta-merge discipline"
+        w: 0.15
+        C: 0.30
+        probe: "delta_merge"
+      6.5:
+        name: "Anti-bloat hygiene"
+        w: 0.15
+        C: 0.80
+        probe: "anti_bloat_hygiene"

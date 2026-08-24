@@ -1,12 +1,20 @@
 # Athena Changelog
 
-> **Last Updated**: 20 August 2026
+> **Last Updated**: 24 August 2026
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
 
 ---
+
+## Zero-Iteration Agent Harness, Deterministic Verification & Stop Hook Architecture (24 August 2026)
+
+- **Zero-Iteration Agent Harness Framework**: Formally codified the 6-pillar framework for agentic systems operating with zero human iteration (Harness Engineering, Context Engineering, Spec-Driven Development, Automated Evaluation & Oracles, Tool & API Ergonomics, Skill Compilation).
+- **Deterministic Output-Side Stop Hook (`hook_stop_verify.py`)**: Implemented low-latency (<300ms) output-side verification hook executing on the `Stop` lifecycle event before turn delivery. Enforces LaTeX delimiter leak detection, API credential redaction, and Python syntax validation with Claude Code blocking contract (exit code 2 + stderr feedback).
+- **Live Capability vs Enforcement Scorer (`harness_score.py`)**: Codified the canonical $C \times E$ scoring model and probe architecture (`harness_scorecard.yaml`), evaluating real runtime enforcement rates across all 6 pillars and logging to `.context/telemetry/harness_score.jsonl`.
+- **System Diagnostics Check 15 (Harness Integrity)**: Added Check 15 to `athena doctor` CLI, verifying git hooks path configuration (`core.hooksPath`), Claude Code hook parity (PreToolUse + Stop), and live harness scores.
+- **Portability & CI Hardening**: Automated `core.hooksPath` setup in `install_hooks.sh` and added deterministic LaTeX leak + Harness parity validation steps to GitHub Actions CI workflows.
 
 ## Full Synchronized Digital Portfolio & Surface Refresh (20 August 2026)
 

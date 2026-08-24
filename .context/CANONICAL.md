@@ -164,7 +164,7 @@ last_updated: 2026-07-22
 | **Drift Hazard** | CS-178 | "The Map is Not the Territory." Code evolves faster than Docs. Verify against Runtime (app.py), not Memory. |
 | **Idea Meritocracy** | Protocol 140 | Believability Weighting (Ray Dalio). 3-Sigma Rule for Information Filtering. |
 | **The Optionality Premium** | Session 08 | Rent Safety > Buy Leverage. Pay higher variable costs to avoid fixed-cost ruin until base volume is guaranteed. |
-| **Capital Physics** | Session 01 (Jan 29) | Drawdown Budget ($ Loss) + Margin Locked ($ Locked) = Total Account Cash ($ Actual). Terminology standardized for risk. |
+| **Capital Physics** | Session 01 (Jan 29) | Drawdown Budget (Cash Loss) + Margin Locked (Locked Cash) = Total Account Cash (Actual Cash). Terminology standardized for risk. |
 | **The Generosity Trap** | Session 04 (Feb 09) | Low Fee + High Variance (Online) < High Fee + Low Variance (Live). Don't confuse "Cheap" with "Profitable". |
 | **Depreciation Inversion** | CS-2026 | In distorted markets, "New" assets may have lower OpEx than "Used". (Car Buying Anomaly). |
 | **Lateral Thinking** | Protocol 138 | **Kobayashi Maru**: If SDR > 5:1 (Rigged Game), question premises and break rules (if Law #1 safe). |
@@ -190,7 +190,7 @@ last_updated: 2026-07-22
 | **Marketing Swarm** | Session 08 | 16-skill modular architecture for ad extraction -> strategy -> production -> deployment. |
 | **Distribution First Law** | Session 10 | Validating audience language/needs > engineering sophistication. (Moat building). |
 | **The Dignity Premium** | Session 10 | The status/assurance surplus paid for human labor in B2C vs commodity AI. |
-| **Half-Kelly Criterion** | Session 10 | Optimal compounding ($75\%$ growth, $50\%$ variance reduction) for verified systems. |
+| **Half-Kelly Criterion** | Session 10 | Optimal compounding (75% growth, 50% variance reduction) for verified systems. |
 | **Boring Task Alpha** | Session 10 | Automation of 2-3 repetitive tasks >> "AI Strategy" slide decks. |
 | **Structural Null Zone** | Session 03 (Feb 26) | In semi-stochastic domains, provide a "valid structural zone" rather than a precise number, and emphasize position sizing. |
 | **Bionic Synergy Guard** | Session 03 (Feb 26) | Do not yield to user pushback if the mathematical/structural reasoning is sound. Sycophancy breaks the Bionic Unit synergy. |

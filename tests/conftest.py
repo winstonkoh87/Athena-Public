@@ -6,8 +6,17 @@ in the public distribution (private-only modules are synced separately).
 """
 
 import importlib
+import os
+import sys
+from pathlib import Path
 
 import pytest
+
+# Add project root and .agent/scripts to Python path
+root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, root)
+sys.path.insert(0, os.path.join(root, "src"))
+sys.path.insert(0, os.path.join(root, ".agent", "scripts"))
 
 
 def _can_import(module_name: str) -> bool:

@@ -10,7 +10,6 @@ Usage:
 import sys
 import os
 import re
-import glob
 
 # Always-flag patterns
 EXPLICIT_LATEX_PATTERNS = [
@@ -109,13 +108,57 @@ def get_include_files():
                             files.append(full_path)
     return sorted(list(set(files)))
 
+def get_changed_files():
+    """Get list of modified/staged/untracked markdown and text files from git."""
+    import subprocess
+    changed = set()
+    exts = (".md", ".txt", ".json", ".yaml", ".yml")
+    try:
+        # Check unstaged modifications against HEAD
+        r1 = subprocess.run(
+            ["git", "diff", "--name-only", "HEAD"],
+            capture_output=True, text=True, timeout=5
+        )
+        if r1.returncode == 0:
+            for line in r1.stdout.splitlines():
+                if line.strip().endswith(exts):
+                    changed.add(line.strip())
+
+        # Check staged files (git diff --cached)
+        r_staged = subprocess.run(
+            ["git", "diff", "--cached", "--name-only"],
+            capture_output=True, text=True, timeout=5
+        )
+        if r_staged.returncode == 0:
+            for line in r_staged.stdout.splitlines():
+                if line.strip().endswith(exts):
+                    changed.add(line.strip())
+        
+        # Check untracked files
+        r2 = subprocess.run(
+            ["git", "ls-files", "--others", "--exclude-standard"],
+            capture_output=True, text=True, timeout=5
+        )
+        if r2.returncode == 0:
+            for line in r2.stdout.splitlines():
+                if line.strip().endswith(exts):
+                    changed.add(line.strip())
+    except Exception:
+        pass
+    return sorted(list(changed))
+
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 .agent/scripts/check_latex_leak.py [--all | <file_path>...]")
+        print("Usage: python3 .agent/scripts/check_latex_leak.py [--all | --changed | <file_path>...]")
         sys.exit(1)
         
     if sys.argv[1] == "--all":
         target_files = get_include_files()
+    elif sys.argv[1] == "--changed":
+        target_files = get_changed_files()
+        if not target_files:
+            print("✅ Clean: No changed markdown/text files to scan.")
+            sys.exit(0)
     else:
         target_files = sys.argv[1:]
         

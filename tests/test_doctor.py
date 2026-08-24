@@ -25,7 +25,7 @@ class TestDoctorModule:
         from athena.cli.doctor import ALL_CHECKS, run_doctor
 
         assert run_doctor is not None
-        assert len(ALL_CHECKS) == 15
+        assert len(ALL_CHECKS) == 16
 
     def test_check_result_str(self):
         """Verify CheckResult renders correctly."""
