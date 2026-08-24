@@ -23,7 +23,7 @@ Own the state. Rent the intelligence. Platforms forget. Athena doesn't.
 [![Logged Sessions](https://winstonkoh87.com/badges/sessions.svg)](https://github.com/winstonkoh87/Athena-Public)
 [![Build Status](https://winstonkoh87.com/badges/build-status.svg)](https://github.com/winstonkoh87/Athena-Public/actions)
 
-[Quickstart](#-quickstart) · [How It Works](#-how-it-works) · [llms.txt](https://winstonkoh87.com/llms.txt) · [llms-full.txt](https://winstonkoh87.com/llms-full.txt) · [Docs](docs/GETTING_STARTED.md) · [FAQ](Athena-Public.wiki/FAQ.md) · [Safety](SAFETY.md) · [Contributing](CONTRIBUTING.md)
+[Quickstart](#-quickstart) · [How It Works](#-how-it-works) · [Scheduled Tasks & Self-RSI](docs/SCHEDULED_TASKS.md) · [llms.txt](https://winstonkoh87.com/llms.txt) · [Docs](docs/GETTING_STARTED.md) · [FAQ](Athena-Public.wiki/FAQ.md) · [Safety](SAFETY.md) · [Contributing](CONTRIBUTING.md)
 
 *Last updated: 24 August 2026*
 
@@ -525,7 +525,7 @@ Most AI-agent READMEs state every claim in the same confident voice. This one do
 | 🧠 [Manifesto](.framework/v8.2-stable/MANIFESTO.md) | 📈 [Changelog](docs/CHANGELOG.md) | 🔀 [Multi-Model Strategy](docs/MULTI_MODEL_STRATEGY.md) |
 | ✅ [Best Practices](docs/BEST_PRACTICES.md) | 🤖 [Your First Agent](docs/YOUR_FIRST_AGENT.md) | 🧩 [What Is an AI Agent?](docs/WHAT_IS_AN_AI_AGENT.md) |
 | 🎯 [Use Cases Deep Dive](docs/USE_CASES.md) | 📋 [Case Studies](docs/CASE_STUDIES.md) | 🛡️ [Safety](SAFETY.md) |
-| 📈 [The Compounding Effect](Athena-Public.wiki/The-Compounding-Effect.md) | 🎓 [Academic References (APA)](docs/REFERENCES.md) | |
+| 📈 [The Compounding Effect](Athena-Public.wiki/The-Compounding-Effect.md) | 🎓 [Academic References (APA)](docs/REFERENCES.md) | ⏱️ [Scheduled Tasks & Self-RSI](docs/SCHEDULED_TASKS.md) |
 
 ---
 
