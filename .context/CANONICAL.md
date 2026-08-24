@@ -26,7 +26,7 @@ last_updated: 2026-07-22
 | **Estimated Sync Rate** | **~85%** | User<>AI alignment | Case Study |
 | **Consulting Rate** | **[PERSONAL]** | Market validation | Session 2026-01-28 |
 | **PLC Cost Basis** | **[PERSONAL]** | DIWY Model (50% of Market) | Session 2026-01-27 |
-| **APT Taipei 2026** | **[PERSONAL]** | Est. Trip Cost | Session 04 (Feb 09) |
+| **Geo-Arbitrage TCO** | **[REDACTED]** | Multi-destination cost optimization | Session 04 (Feb 09) |
 | **Portfolio Traffic** | **~3% Conversion** | 3 CTA clicks / 97 sessions | Session 2026-02-11 |
 | **FX Strategy (RETO)** | **Trimodal** | Engineered Outcomes (Loss/Income/Jackpot) | Session 01 (Feb 15) |
 | **Sovereign Stack** | **Hetzner + Cloudflare + Scrapling** | Protocol 106 + 052 (Full Stealth) | Session 04 (Feb 14) |
@@ -181,8 +181,8 @@ last_updated: 2026-07-22
 | **Variance Preference** | Session 06 (Feb 18) | Low Variance (Compounding) vs High Variance (Desperation/Free Roll). Match variance to survival constraint. |
 | **Investor Barbell** | Session 03 (Feb 19) | Structure: 20% Active + 80% Safe Haven. Barbell allocation for structural ruin protection. |
 | **GEO Alpha** | 317 | YouTube/Reddit organic threads > Website Blogs for LLM citation/visibility. (Session 12) |
-| **Dual-Setup Sizing** | Session 02 (Feb 22) | 90% Robust (Wide SL, 2 Bullet) / 10% Efficient (Tight SL, 1 Bullet) |
-| **AP Sizing Logic** | Session 02 (Feb 22) | Max allocation (5-10%) requires structural 'Gravity Well' / 'True Count' tell |
+| **Dual-Setup Sizing** | Session 02 (Feb 22) | Majority allocation to robust setups (wide invalidation) / minority to efficient setups (tight invalidation) |
+| **AP Sizing Logic** | Session 02 (Feb 22) | Max allocation requires structural confluence signal (high-conviction tell) |
 | **Kelly Constraints** | Session 02 (Feb 22) | Efficient setups (50% ATR) cap Kelly Fraction due to variance-induced lower Win Rate. |
 | **Context Density** | 321 | Dense Signal (7K) > Padded Context (15K). Prioritize attention weight over raw volume. |
 | **Bionic Swarm Blueprint** | Session 08 | **Backwards Induction**: Define Goal -> Map Prerequisites -> Node-Agent Assignment. |
@@ -196,10 +196,10 @@ last_updated: 2026-07-22
 | **Bionic Synergy Guard** | Session 03 (Feb 26) | Do not yield to user pushback if the mathematical/structural reasoning is sound. Sycophancy breaks the Bionic Unit synergy. |
 | **Friction Multiplier** | Session 07 (Feb 26) | Selling the procedure (rapid scoping) > Selling the result. Decreases pushback, warrants higher anchoring. |
 | **The Pryce Effect** | Session 19 (Feb 27) | In semi-stochastic domains, P(S) is an unknown distribution. Assigning MEV/EEV weights without base rates is false precision. Defer P(S) to user intuition. |
-| **Operator's Trade Blueprint** | 369 | 5 Levers configured for psychological robustness (Wide SL, 2-Bullet, Scale+Trail). Maps EEV > MEV and 80/16/4 BCG Classification. (Session 19) |
-| **BCG Capital Matrix** | Session 10 | The Core Portfolio (80% Cash Cow) pays a Capital Premium (Wide SL, Low RR) for WR survivability. The 4% Star (Barbell) demands total convexity (Tight SL, exact entry) and maximum density. |
-| **The Full Port Barbell** | Session 10 | The 4% Star tier structurally relies on maximum leverage at the micro-level (e.g., 309 layers / 31 pips) to create asymmetric payoff sets, accepting total 4% loss as an entry fee. |
-| **EEV Reality Testing** | Session 05 (Feb 28) | Applied Economic Expected Value and Law of Ruin cross-domain to interpersonal relationships to bypass covert/emotional contracts. |
+| **Operator's Trade Blueprint** | 369 | Multi-lever configuration optimized for psychological robustness. Maps EEV > MEV with tiered capital classification. (Session 19) |
+| **BCG Capital Matrix** | Session 10 | Core Portfolio (majority Cash Cow) pays a Capital Premium (wide invalidation, low RR) for win-rate survivability. The high-convexity tier demands total precision and maximum density. |
+| **The Full Port Barbell** | Session 10 | The high-convexity tier relies on maximum leverage at the micro-level to create asymmetric payoff sets, accepting a bounded total loss as an entry fee. |
+| **EEV Reality Testing** | Session 05 (Feb 28) | Applied Economic Expected Value and Law of Ruin cross-domain beyond financial markets to evaluate non-financial commitments. |
 | **Input-Conviction Principle** | Case Study (Mar 04) | Athena's conviction is directly proportional to context completeness. Incomplete context → hedged framework (Law #1). Complete context → direct operational verdict. |
 | **Zero-Iteration Harness Framework** | Session S808 (Aug 24) | Human iteration is a symptom of missing mechanical verifiers. 6-pillar architecture (Harness Engineering, Context Engineering, Spec-Driven Dev, Automated Evaluation & Oracles, Tool Ergonomics, Skill Compilation). Live evaluation of system via Capability x Enforcement (C x E) probe rather than declared claims. |
 | **Deterministic Output-Side Gate** | Session S808 (Aug 24) | Low-latency (<300ms) output-side verification hook executing on the Stop lifecycle event before turn delivery. Enforces LaTeX/ASCII leak detection, API credential redaction, and Python syntax validation with Claude Code blocking contract (exit code 2 + stderr feedback). |
