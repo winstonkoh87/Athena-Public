@@ -1,6 +1,6 @@
 # Athena Changelog
 
-> **Last Updated**: 24 August 2026
+> **Last Updated**: 25 August 2026
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
@@ -8,11 +8,18 @@ This document provides detailed release notes. For the brief summary, see the RE
 
 ---
 
+## Full Synchronized Digital Portfolio & Surface Refresh (25 August 2026)
+
+- **Synchronized Digital Portfolio Update**: Complete synchronized refresh across all 4 public surfaces (`Athena-Public`, `winstonkoh87` GitHub profile, `winstonkoh87.com` personal site, `sgassignmenthelp.com` commercial site) and `Athena-Public.wiki` to 25 August 2026 state.
+- **Canonical Metrics Sync**: Updated `.agent/config/CAPS.json` and all public/internal documentation across the ecosystem (414 active protocols across 26 categories, 43 active skills, 73 workflows, 264 scripts, 4,340 memory files, 2,100+ sessions logged).
+- **Geometric Layering Optimization (MF = 1.0718) & Center-of-Mass Law**: Codified diminishing returns proof for geometric scaling ($200 / 1,000p BTC optimal knee point), proving that sizing past the knee incurs 6x short-gamma leverage escalation for only ~6% marginal recovery bounce gain; filed high-resolution curve engine and visual chart.
+- **Academic Scaffolding & Component-Sum Pricing Bias Forensics**: Codified Section 22 in pricing intelligence, proving ~34% upward inflation bias in isolated component pricing vs single-operator unified delivery on multi-module microservice architectures.
+
 ## Zero-Iteration Agent Harness, Deterministic Verification & Stop Hook Architecture (24 August 2026)
 
 - **Zero-Iteration Agent Harness Framework**: Formally codified the 6-pillar framework for agentic systems operating with zero human iteration (Harness Engineering, Context Engineering, Spec-Driven Development, Automated Evaluation & Oracles, Tool & API Ergonomics, Skill Compilation).
 - **Deterministic Output-Side Stop Hook (`hook_stop_verify.py`)**: Implemented low-latency (<300ms) output-side verification hook executing on the `Stop` lifecycle event before turn delivery. Enforces LaTeX delimiter leak detection, API credential redaction, and Python syntax validation with Claude Code blocking contract (exit code 2 + stderr feedback).
-- **Live Capability vs Enforcement Scorer (`harness_score.py`)**: Codified the canonical $C \times E$ scoring model and probe architecture (`harness_scorecard.yaml`), evaluating real runtime enforcement rates across all 6 pillars and logging to `.context/telemetry/harness_score.jsonl`.
+- **Live Capability vs Enforcement Scorer (`harness_score.py`)**: Codified the canonical C × E scoring model and probe architecture (`harness_scorecard.yaml`), evaluating real runtime enforcement rates across all 6 pillars and logging to `.context/telemetry/harness_score.jsonl`.
 - **System Diagnostics Check 15 (Harness Integrity)**: Added Check 15 to `athena doctor` CLI, verifying git hooks path configuration (`core.hooksPath`), Claude Code hook parity (PreToolUse + Stop), and live harness scores.
 - **Portability & CI Hardening**: Automated `core.hooksPath` setup in `install_hooks.sh` and added deterministic LaTeX leak + Harness parity validation steps to GitHub Actions CI workflows.
 
