@@ -9,7 +9,7 @@ assignees: ''
 ## 🤖 Agent-Assisted Contribution
 
 > This contribution was drafted with assistance from an Athena agent instance.
-> See [Protocol 408](../../examples/protocols/workflow/408-autonomous-contribution-engine.md) for details.
+> See [Protocol 408](../../examples/protocols/workflow/WFL-408-autonomous-contribution-engine.md) for details.
 
 ### Summary
 

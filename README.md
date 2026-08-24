@@ -519,13 +519,48 @@ Most AI-agent READMEs state every claim in the same confident voice. This one do
 |:--|:--|:--|
 | 📖 [Getting Started](docs/GETTING_STARTED.md) | 🏗️ [Architecture](docs/ARCHITECTURE.md) | 🔒 [Security](docs/SECURITY.md) |
 | 🎯 [Your First Session](docs/YOUR_FIRST_SESSION.md) | 🔍 [Semantic Search](docs/SEMANTIC_SEARCH.md) | 📊 [Benchmarks](docs/BENCHMARKS.md) |
-| 💡 [Tips](docs/TIPS.md) | 🔌 [MCP Server](docs/MCP_SERVER.md) | ❓ [FAQ](Athena-Public.wiki/FAQ.md) |
+| 💡 [Tips](docs/TIPS.md) | 🔌 [MCP Server](docs/MCP_SERVER.md) | ❓ [FAQ](docs/FAQ.md) |
 | 🔄 [Updating Athena](docs/UPDATING.md) | 📥 [Importing Data](docs/IMPORTING.md) | ⌨️ [CLI Reference](docs/CLI.md) |
 | 📋 [All Workflows](docs/WORKFLOWS.md) | 📐 [Spec Sheet](docs/SPEC_SHEET.md) | 📓 [Glossary](docs/GLOSSARY.md) |
-| 🧠 [Manifesto](.framework/v8.2-stable/MANIFESTO.md) | 📈 [Changelog](docs/CHANGELOG.md) | 🔀 [Multi-Model Strategy](docs/MULTI_MODEL_STRATEGY.md) |
+| 🧠 [Manifesto](docs/MANIFESTO.md) | 📈 [Changelog](docs/CHANGELOG.md) | 🔀 [Multi-Model Strategy](docs/MULTI_MODEL_STRATEGY.md) |
 | ✅ [Best Practices](docs/BEST_PRACTICES.md) | 🤖 [Your First Agent](docs/YOUR_FIRST_AGENT.md) | 🧩 [What Is an AI Agent?](docs/WHAT_IS_AN_AI_AGENT.md) |
 | 🎯 [Use Cases Deep Dive](docs/USE_CASES.md) | 📋 [Case Studies](docs/CASE_STUDIES.md) | 🛡️ [Safety](SAFETY.md) |
 | 📈 [The Compounding Effect](Athena-Public.wiki/The-Compounding-Effect.md) | 🎓 [Academic References (APA)](docs/REFERENCES.md) | ⏱️ [Scheduled Tasks & Self-RSI](docs/SCHEDULED_TASKS.md) |
+| 🧬 [Zero-Iteration Harness](docs/ZERO_ITERATION_AGENT_HARNESS.md) | 🔄 [User-Driven RSI](docs/USER_DRIVEN_RSI.md) | 🔗 [Trilateral Feedback](docs/TRILATERAL_FEEDBACK.md) |
+| 🧠 [Exocortex](docs/EXOCORTEX.md) | 🗃️ [Memory Bank](docs/MEMORY_BANK.md) | 🌐 [Knowledge Graph](docs/KNOWLEDGE_GRAPH.md) |
+| 📦 [VectorRAG](docs/VECTORRAG.md) | 📊 [GraphRAG](docs/GRAPHRAG.md) | 🔁 [Reranker](docs/RERANKER.md) |
+| 🏠 [Local Mode](docs/LOCAL_MODE.md) | 📋 [Requirements](docs/REQUIREMENTS.md) | 🖥️ [Compatible IDEs](docs/COMPATIBLE_IDES.md) |
+| ⚡ [Features](docs/FEATURES.md) | 🎪 [Demo](docs/DEMO.md) | 💡 [Project Ideas](docs/PROJECT_IDEAS.md) |
+| 🏷️ [Tag Index](docs/TAG_INDEX.md) | 🔟 [Top 10 Protocols](docs/TOP_10_PROTOCOLS.md) | 🔧 [Tech Debt](docs/TECH_DEBT.md) |
+| 🎯 [Capabilities](docs/CAPABILITIES.md) | ⚖️ [Discipline](docs/DISCIPLINE.md) | 🔬 [Engineering Depth](docs/ENGINEERING_DEPTH.md) |
+
+<details>
+<summary>📂 Concepts & Deep Dives</summary>
+
+| | |
+|:--|:--|
+| 🧠 [Cognitive Architecture](docs/concepts/Cognitive_Architecture.md) | ✂️ [Half-Half-Half Rule](docs/concepts/Half_Half_Half_Rule.md) |
+| ⚡ [Iteration Arbitrage](docs/concepts/Iteration_Arbitrage.md) | 🎯 [Outcome Economy](docs/concepts/Outcome_Economy.md) |
+| 🧭 [Quadrant IV](docs/concepts/Quadrant_IV.md) | 🔄 [Systems Thinking](docs/concepts/Systems_Thinking.md) |
+| ⏰ [Time Compression Thesis](docs/concepts/Time_Compression_Thesis.md) | 🤝 [Grace Protocol](docs/concepts/Grace_Protocol.md) |
+| 🎲 [Meta-Game Thesis](docs/concepts/Meta_Game_Thesis.md) | |
+
+</details>
+
+<details>
+<summary>📜 Protocols Reference</summary>
+
+| | |
+|:--|:--|
+| 🔀 [409: Parallel Worktree Orchestration](docs/protocols/409-parallel-worktree-orchestration.md) | 📡 [410: Agent Status Broadcasting](docs/protocols/410-agent-status-broadcasting.md) |
+| 💉 [411: Dynamic Skill Injection](docs/protocols/411-dynamic-skill-injection.md) | 🔐 [412: DM Pairing Gate](docs/protocols/412-dm-pairing-gate.md) |
+| 🤝 [413: Multi-Agent Coordination](docs/protocols/413-multi-agent-coordination.md) | 🌉 [414: IDE Bridge / ACP Adapter](docs/protocols/414-ide-bridge-acp-adapter.md) |
+| 🏗️ [415: Exoskeleton Architecture](docs/protocols/415-exoskeleton-architecture.md) | 📝 [416: XML Prompting](docs/protocols/416-xml-prompting.md) |
+| ⏱️ [417: Adaptive Latency Principle](docs/protocols/417-adaptive-latency-principle.md) | 🏛️ [418: Rev9 Architecture](docs/protocols/418-rev9-architecture.md) |
+| 🔒 [419: Sandboxed Execution Modes](docs/protocols/419-sandboxed-execution-modes.md) | 🩺 [500: Diagnostic Relay](docs/protocols/500-diagnostic-relay.md) |
+| 📊 [131: Bimodal Arena Analysis](docs/protocols/131-bimodal-arena-analysis.md) | |
+
+</details>
 
 ---
 
