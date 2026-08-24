@@ -201,6 +201,9 @@ last_updated: 2026-07-22
 | **The Full Port Barbell** | Session 10 | The 4% Star tier structurally relies on maximum leverage at the micro-level (e.g., 309 layers / 31 pips) to create asymmetric payoff sets, accepting total 4% loss as an entry fee. |
 | **EEV Reality Testing** | Session 05 (Feb 28) | Applied Economic Expected Value and Law of Ruin cross-domain to interpersonal relationships to bypass covert/emotional contracts. |
 | **Input-Conviction Principle** | Case Study (Mar 04) | Athena's conviction is directly proportional to context completeness. Incomplete context → hedged framework (Law #1). Complete context → direct operational verdict. |
+| **Zero-Iteration Harness Framework** | Session S808 (Aug 24) | Human iteration is a symptom of missing mechanical verifiers. 6-pillar architecture (Harness Engineering, Context Engineering, Spec-Driven Dev, Automated Evaluation & Oracles, Tool Ergonomics, Skill Compilation). Live evaluation of system via Capability x Enforcement (C x E) probe rather than declared claims. |
+| **Deterministic Output-Side Gate** | Session S808 (Aug 24) | Low-latency (<300ms) output-side verification hook executing on the Stop lifecycle event before turn delivery. Enforces LaTeX/ASCII leak detection, API credential redaction, and Python syntax validation with Claude Code blocking contract (exit code 2 + stderr feedback). |
+| **Bilateral Autonomous Self-RSI** | Session S808 (Aug 24) | Overnight autonomous diagnostics paired with daytime human gradient review (DEC-13). Guarded by Backpressure Saturation Gates (>= 3 unreviewed tickets -> hibernate), Maintenance Freeze Gates (>70% maintenance -> force revenue/delivery focus), and GTO EV scoring (EV >= 1.50). Proposes machine-checkable delta tickets with zero autonomous code mutations. |
 
 ---
 
