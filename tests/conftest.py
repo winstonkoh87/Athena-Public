@@ -30,7 +30,6 @@ def _can_import(module_name: str) -> bool:
 
 @pytest.fixture
 def project_root():
-    from pathlib import Path
     return Path(__file__).resolve().parent.parent
 
 
