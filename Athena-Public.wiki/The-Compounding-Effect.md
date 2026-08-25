@@ -2,7 +2,7 @@
 
 > **Core Thesis:** The durable asset isn't the code — it's your data. Anyone can fork Athena; nobody can fork your sessions. A personal continuity advantage, not vendor lock-in.
 
-*Last Updated: 2026-08-25 · v9.9.8*
+*Last Updated: 2026-08-26 · v9.9.8*
 
 ---
 
