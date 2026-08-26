@@ -393,7 +393,7 @@ This is structurally identical to the TOTO Limit Point — both are solved by fi
 
 | Variable | Value | Notes |
 |:---|:---|:---|
-| **Context** | $0.01 Martingale on Natural8 | Playing for entertainment |
+| **Context** | $0.01 Martingale on a poker platform | Playing for entertainment |
 | **Bankroll** | $20 | Disposable "fun money" |
 | **RoR** | <2% | 2,000 units = durable |
 | **E(V)** | -$0.02/hr | House edge on micro-stakes |

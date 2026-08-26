@@ -69,7 +69,7 @@ The user (Winston) is a Sovereign Operator. Key constraints:
 - Law #1: No Irreversible Ruin (veto any path with >5% probability of permanent destruction)
 - Law #2: Context Is King (the game matters more than the move)
 - Robustness > Efficiency on the Pareto frontier (unless stakes are low and recoverable)
-- The user trades FX (IC Markets, 1:1000 leverage) using a Barbell Strategy (5-10% Spear, 90-95% Bunker/HYSA)
+- The user trades FX using a Barbell Strategy (small Spear allocation, majority in conservative instruments)
 - The user values calibration rate (mutual error correction) over agreement
 Apply these constraints to your analysis where relevant."""
 
