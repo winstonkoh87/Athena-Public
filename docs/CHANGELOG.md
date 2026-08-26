@@ -8,8 +8,20 @@ This document provides detailed release notes. For the brief summary, see the RE
 
 ---
 
-## Full Synchronized Digital Portfolio & Surface Refresh (27 August 2026)
+## Full Synchronized Digital Portfolio & Feature Port Refresh (27 August 2026)
 
+- **Differential Feature Port**: Ported 12 core tooling, intelligence, and workflow modules from private R&D to public repository:
+  - `src/athena/intelligence/gto_engine.py`: Pure Python standard library GTO numerical calculation engine (EEV, Half-Kelly, Gambler's Ruin, Monte Carlo trajectory simulation). Strictly ASCII-only math.
+  - `src/athena/tools/personalisation.py`: Active personalization and context synthesis layer grounding decisions in operator state constraints.
+  - `examples/scripts/_venv_bootstrap.py` & `bootstrap_env.py`: Self-healing Python interpreter venv re-exec and locked runtime installer (solves TD-064 silent import degradation).
+  - `examples/scripts/claim_id.py`: Multi-agent atomic ID allocator using SQLite WAL exclusive transactions (solves TD-063 namespace collisions across parallel worktrees).
+  - `examples/scripts/daily_self_rsi.py`: Autonomous Daily Self-RSI runner with Backpressure Circuit Breaker (halts when >=3 unreviewed tickets accumulate).
+  - `examples/scripts/decision_ledger.py`: Closed-loop decision logging, outcome auditing, and Brier calibration score calculation CLI.
+  - `examples/scripts/harness_score.py`: 6-pillar zero-iteration agent harness live capability (C) and enforcement (E) scoring probe.
+  - `examples/scripts/hook_stop_verify.py`: Low-latency (<3s) output-side Stop hook verifying LaTeX math leaks, secret tokens, and Python syntax.
+  - `examples/scripts/sync_positioning.py`: Multi-surface positioning drift detection gate across local, sibling, and remote repositories.
+  - `examples/workflows/daily.md`: Low-latency (<1.5K tokens) daily curation standup workflow with prediction resolution and freeze gate.
+  - `examples/workflows/_domain/portfolio-refresh.md`: Multi-surface portfolio synchronization and privacy verification workflow.
 - **Synchronized Digital Portfolio Update**: Complete synchronized refresh across all 4 public surfaces (`Athena-Public`, `winstonkoh87` GitHub profile, `winstonkoh87.com` personal site, `sgassignmenthelp.com` commercial site) and `Athena-Public.wiki` to 27 August 2026 state.
 - **Canonical Metrics Sync**: Updated `.agent/config/CAPS.json` and all public/internal documentation across the ecosystem (414 active protocols across 26 categories, 43 active skills, 74 workflows, 268 scripts, 4,357 memory files, 2,100+ sessions logged).
 - **Domain Case Studies & Operational Codifications**: Filed new domain-specific case studies and operational codifications across decision analysis, ontological arena modeling, and institutional deterrence dynamics.
