@@ -112,7 +112,7 @@ In `~/winstonkoh87.github.io`:
 - `src/layouts/Layout.astro` & `src/pages/index.astro`: Meta tags, Schema.org `dateModified`, footer.
 - `public/sitemap.xml`: All `<lastmod>` to today (`YYYY-MM-DD`).
 - `README.md` & `package.json`: Bump timestamps.
-- **IndexNow Ping**: `curl -sS -X POST https://api.indexnow.org/indexnow -H 'Content-Type: application/json' -d '{"host":"winstonkoh87.com","key":"f0fa32e690d320323a5d26894877f778","keyLocation":"https://winstonkoh87.com/f0fa32e690d320323a5d26894877f778.txt","urlList":["https://winstonkoh87.com/"]}'`
+- **IndexNow Ping**: `curl -sS -X POST https://api.indexnow.org/indexnow -H 'Content-Type: application/json' -d '{"host":"winstonkoh87.com","key":"${INDEXNOW_KEY}","keyLocation":"https://winstonkoh87.com/${INDEXNOW_KEY}.txt","urlList":["https://winstonkoh87.com/"]}'`
 
 ---
 
@@ -123,7 +123,7 @@ In `~/sg-assignment-helper`:
 - `index.html`: Schema.org JSON-LD `dateModified`, footer date.
 - `sitemap.xml`: All `<lastmod>` to today.
 - `README.md`: Bump timestamp.
-- **IndexNow Ping**: `curl -sS -X POST https://api.indexnow.org/indexnow -H 'Content-Type: application/json' -d '{"host":"sgassignmenthelp.com","key":"3b99c4b1d07ef178f4b292dfb87f22ef","keyLocation":"https://sgassignmenthelp.com/3b99c4b1d07ef178f4b292dfb87f22ef.txt","urlList":["https://sgassignmenthelp.com/"]}'`
+- **IndexNow Ping**: `curl -sS -X POST https://api.indexnow.org/indexnow -H 'Content-Type: application/json' -d '{"host":"sgassignmenthelp.com","key":"${INDEXNOW_KEY}","keyLocation":"https://sgassignmenthelp.com/${INDEXNOW_KEY}.txt","urlList":["https://sgassignmenthelp.com/"]}'`
 
 ---
 

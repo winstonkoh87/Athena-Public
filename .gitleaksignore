@@ -1,0 +1,3 @@
+# Gitleaks ignore list
+62ea6be06f9ca37d915b3d0c9e8287c59a31c3eb:examples/workflows/_domain/portfolio-refresh.md:generic-api-key:115
+62ea6be06f9ca37d915b3d0c9e8287c59a31c3eb:examples/workflows/_domain/portfolio-refresh.md:generic-api-key:126
