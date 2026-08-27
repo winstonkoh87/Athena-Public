@@ -49,7 +49,7 @@ Query → Adaptive Router → 5 parallel channels → RRF Fusion (k=60) → Cros
 4. **Filename** — path and name matching (lexical)
 5. **Framework Docs** — docs + memory-bank grep (lexical)
 
-**Retrieval quality (65-query gold set, 27 Aug 2026)**: MRR@5 **0.769** · Hit@5 **0.892** · Coverage **0.639** — measured end-to-end on the reference deployment with reranking on.
+**Retrieval quality (65-query gold set, 28 Aug 2026)**: MRR@5 **0.769** · Hit@5 **0.892** · Coverage **0.639** — measured end-to-end on the reference deployment with reranking on.
 
 > **Note**: GraphRAG communities were removed as a search source in S435 (6 June 2026).
 
@@ -95,7 +95,7 @@ The core boot payload is **~10K tokens** — always loaded on `/start`. The full
 | Protocols & Workflows | 452 protocols (418 active + 34 archived), 74 workflows | ~2.5 MB |
 | Case Studies | 492 (15 domains) | ~4.8 MB |
 | Session Logs | 2,100+ | ~8.5 MB |
-| Memory Files | 4,346 | — |
+| Memory Files | 4,361 | — |
 | Vector Embeddings | 12,800+ | ~78 MB |
 
 ---

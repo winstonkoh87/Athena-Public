@@ -169,9 +169,9 @@ Full cluster details: `CLUSTER_INDEX.md` (private workspace — see table above 
 |:------|------:|:------------|
 | Cognitive Domains | 8 | Memory activation targets (priority-ordered for tie-breaking) |
 | Cognitive Clusters | 15 | Co-activating procedural memory bundles |
-| Skills | 40 active (17 archived) |
-| Protocols | 399 active (32 archived; 431 total) |
-| Workflows | 69 (51 root + 18 _domain/) |
+| Skills | 43 active (17 archived) |
+| Protocols | 418 active (34 archived; 452 total) |
+| Workflows | 74 (55 root + 19 _domain/) |
 
 ---
 
@@ -300,7 +300,7 @@ src/athena/tools/search.py (12s God Mode timeout + grep fallback)
 
 ---
 
-## Protocol Taxonomy (34 active categories)
+## Protocol Taxonomy (26 active categories)
 
 | Category | Count | Category | Count |
 |:---------|------:|:---------|------:|
@@ -313,7 +313,7 @@ src/athena/tools/search.py (12s God Mode timeout + grep fallback)
 | marketing | 8 | reasoning | 8 |
 | research | 7 | coding | 6 |
 | trading | 6 | singapore | 5 |
-| diagnostics | 5 | archive | 32 |
+| diagnostics | 5 | archive | 34 |
 
 ---
 
@@ -368,23 +368,6 @@ src/athena/mcp_server.py (FastMCP v3.x, stdio transport)
 
 ---
 
-## Metrics (6 Jun 2026)
+## Metrics
 
-| Metric | Count |
-|:-------|------:|
-| Protocols (active) | 399 |
-| Protocols (archived) | 32 |
-| Skills (active) | 40 (40 conditional) |
-| Cognitive Clusters | 15 |
-| Cognitive Systems | 8 |
-| Workflows | 69 (51 root + 18 _domain/) |
-| Automation Scripts | 247 |
-| Case Studies | 492 (15 domains, 7 archived) |
-| Session Logs | 1,888 |
-| Total Memory Files | 3,658 |
-| Source Files (SDK) | 72 |
-| Test Files | 13 |
-| Documentation Files | 76 |
-| Active Indexes | 4 (63KB) |
-| CANONICAL Entries | ~400 (29 Tier 1, 140 Tier 2, 3 Tier 3) |
-| Cap Policy | Uncapped (attention budget constraint via Protocol 530) |
+Live inventory counts are **not duplicated here** — a hand-maintained table only drifts. The single source of truth is **[`.agent/config/CAPS.json`](.agent/config/CAPS.json)**, kept current by the Gate-4 pre-commit hook (`core.hooksPath=.agent/hooks`), which also auto-syncs the Workspace Structure tree at the top of this file. Read counts from there.
