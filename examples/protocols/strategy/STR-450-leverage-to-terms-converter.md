@@ -15,7 +15,7 @@ dependencies: ["STR-121 (Amoral Realism)", "SGP-sg-006 (HDB Matrimonial Flat Unw
 > **Domain**: Strategic Negotiation / Power Asymmetry Conversion  
 > **Prime Directive**: Reputational and situational leverage is a rapidly evaporating asset with a 14–30 day half-life. It must be converted into legally binding, executed contractual terms before normalization destroys the power differential.  
 > **Core Law**: Moral outrage has zero legal tender. Unconverted leverage decays to zero. Going public before signing is capital destruction.  
-> **Related Protocols**: [STR-121: Amoral Realism](../strategy/STR-121-amoral-realism.md), [SGP-sg-006: HDB Matrimonial Flat Unwind Firewall](../singapore/SGP-sg-006-hdb-matrimonial-unwind.md)
+> **Related Protocols**: STR-121 (Amoral Realism), [SGP-sg-006: HDB Matrimonial Flat Unwind Firewall](../singapore/SGP-sg-006-hdb-matrimonial-unwind.md)
 
 ---
 

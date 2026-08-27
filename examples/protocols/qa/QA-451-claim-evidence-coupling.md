@@ -15,7 +15,7 @@ dependencies: ["ARC-159 (Verification Before Claim)", "DEC-185 (Premise Validati
 > **Domain**: Quality Assurance / Epistemic Auditing / Verification  
 > **Prime Directive**: Any assertion of protocol firing, engine calculation, mathematical modeling, or historical precedent MUST be coupled directly with verifiable evidence artifacts. Assertions without proof are unverified narration.  
 > **Anti-Theater Rule**: Listing protocol IDs, cluster sequences, or theoretical formulas to create the cosmetic illusion of rigor without executing the underlying mechanics is strictly prohibited.  
-> **Related Protocols**: [ARC-159: Verification Before Claim](../architecture/ARC-159-verification-before-claim.md), [DEC-185: Premise Validation Gate](../decision/DEC-185-premise-validation-gate.md)
+> **Related Protocols**: ARC-159 (Verification Before Claim), DEC-185 (Premise Validation Gate)
 
 ---
 
