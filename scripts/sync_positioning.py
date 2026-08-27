@@ -58,10 +58,10 @@ def load_config() -> dict:
         return json.loads(CONFIG.read_text(encoding="utf-8"))
     except FileNotFoundError:
         print(f"{RED}✗ missing {CONFIG.relative_to(PROJECT_ROOT)}{RESET}", file=sys.stderr)
-        raise SystemExit(2)
+        raise SystemExit(2) from None
     except json.JSONDecodeError as e:
         print(f"{RED}✗ {CONFIG.name} is not valid JSON: {e}{RESET}", file=sys.stderr)
-        raise SystemExit(2)
+        raise SystemExit(2) from e
 
 
 def expected_text(cfg: dict, key: str) -> str:

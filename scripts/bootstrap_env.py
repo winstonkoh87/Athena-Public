@@ -83,15 +83,11 @@ def main() -> int:
     if args.check:
         return check()
 
-    if not VENV_PYTHON.exists():
-        # --system-site-packages: some deps (e.g. the supabase client on this
-        # host) are only present system-wide, and inheriting them avoids
-        # reinstalling a working copy.
-        if not _run(
-            [sys.executable, "-m", "venv", "--system-site-packages", str(VENV_DIR)],
-            f"creating venv at {VENV_DIR}",
-        ):
-            return 1
+    if not VENV_PYTHON.exists() and not _run(
+        [sys.executable, "-m", "venv", "--system-site-packages", str(VENV_DIR)],
+        f"creating venv at {VENV_DIR}",
+    ):
+        return 1
 
     if not LOCKFILE.exists():
         print(f"✗ Lockfile missing: {LOCKFILE}", file=sys.stderr)

@@ -15,7 +15,6 @@ Contract:
 """
 
 import json
-import os
 import re
 import subprocess
 import sys
@@ -68,7 +67,7 @@ def get_changed_files() -> list[str]:
                     changed.add(line.strip())
     except Exception:
         pass
-    return sorted(list(changed))
+    return sorted(changed)
 
 
 def check_latex_leaks(changed_files: list[str]) -> list[str]:
