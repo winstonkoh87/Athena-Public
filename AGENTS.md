@@ -21,8 +21,8 @@ This file provides persistent context to any AI coding agent working in this wor
 |.framework/v8.2-stable/modules:{Core_Identity.md,Output_Standards.md,System_Principles.md,Operating_Principles.md,Design_DNA.md,Athena_Profile.md,DEAD_MAN_SWITCH.md,Session_Observations.md}
 |.framework/v8.2-stable/protocols:{409_Parallel_Worktree_Orchestration.md,410_Agent_Status_Broadcasting.md,411_Dynamic_Skill_Injection.md,412_DM_Pairing_Gate.md,413_Multi_Agent_Coordination.md,414_IDE_Bridge_ACP_Adapter.md,415_Sandboxed_Execution_Modes.md,416_XML_Prompting.md}
 |.agent:{CONNECTORS.md}
-|.agent/workflows (54 root + 18 _domain = 72 total):{_shared.md,do.md,start.md,end.md,plan.md,audit.md,research.md,refactor.md,brief.md,ultrathink.md,steal.md,diagnose.md,416-agent-swarm.md,release-public.md,preset.md,...}
-|.agent/skills/protocols (414 active + 34 archived = 448 total, across 26 categories):{000-ultimate-auditor.md,137-graph-of-thoughts.md,139-decentralized-command.md,...,archive/README.md}
+|.agent/workflows (55 root + 19 _domain = 74 total):{_shared.md,do.md,start.md,end.md,plan.md,audit.md,research.md,refactor.md,brief.md,ultrathink.md,steal.md,diagnose.md,416-agent-swarm.md,release-public.md,preset.md,...}
+|.agent/skills/protocols (418 active + 34 archived = 452 total, across 26 categories):{000-ultimate-auditor.md,137-graph-of-thoughts.md,139-decentralized-command.md,...,archive/README.md}
 |.agent/skills (43 active, 17 archived):{SKILL_INDEX.md, <40 with context_trigger>, red-team-review, semantic-search, data-analysis, skill-compiler, dashboard-builder, financial-ops, fitness-tracker, geo-arbitrage-ops, ...}
 |.agent/scripts:{scan_skill.py,...}
 |.agent/config:{CAPS.json,athena.agent.manifest.json,briefing_config.yaml,lint_rules.toml,orphan_exclusions.yaml,settings.json}
@@ -224,7 +224,7 @@ To ensure Game-Theory Optimal (GTO) operations, apply these core engineering dir
 ## Version
 
 - **Framework**: v8.2-stable (frozen as of 2026-02-01 — reference-only, not runtime-loaded)
-- **System**: v9.9.8
+- **System**: v9.9.9
 - **Last Updated**: 2026-07-22
 - **Canonical Counts**: `.agent/config/CAPS.json` (single source of truth; regenerate via commands in CAPS.json `recount_rules`)
 - **Pattern Source**: Vercel "AGENTS.md vs Skills" Research + OpenClaw Multi-Agent Safety Rules + Claude Code Source Steal (instructkr/claude-code, 2026-03-31) + santifer/career-ops Steal (DATA_CONTRACT, _shared.md, /do router, 2026-04-12) + GTO consolidation pass (2026-04-18: index drift fix, broken-ref repair, _domain + conditional-skills surfacing) + Hermes Agent Steal (NousResearch/hermes-agent, 2026-05-11: skill-compiler, curator lifecycle model) + Anthropic Steal (anthropics/knowledge-work-plugins, 2026-05-24: CONNECTORS.md, glossary.md, dashboard-builder, scan_skill.py, interview-mode, checkpoint-pause, argument-hint) + Athena-Public Privacy Remediation + Architecture Model Sync (2026-05-30) + Karpathy CLAUDE.md Steal (r/ClaudeCode, 2026-06-01: Ask-Don't-Assume, Flag-Uncertainty, Codebase-Documentation-Sync)

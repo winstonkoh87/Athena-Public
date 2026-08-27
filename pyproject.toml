@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "athena-agent"
-version = "9.9.8"
+version = "9.9.9"
 description = "Athena — a local-first agentic PKM that helps you make better decisions with your own context. Persistent memory, structured reasoning, and governed AI agents that work across any LLM."
 readme = "README.md"
 requires-python = ">=3.10"

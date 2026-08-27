@@ -1,10 +1,35 @@
 # Athena Changelog
 
-> **Last Updated**: 27 August 2026
+> **Last Updated**: 28 August 2026
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
+
+---
+
+## [9.9.9] — Feature Port & Synchronized Digital Portfolio Refresh (28 August 2026)
+
+- **Differential Feature Port**: Ported 17 core protocols, intelligence engines, lifecycle services, and tooling modules from private R&D to public repository:
+  - `examples/protocols/qa/QA-451-claim-evidence-coupling.md`: Universal epistemic verification gate coupling claims to attached evidence artifacts.
+  - `examples/protocols/decision/DEC-449-matrimonial-asset-netting.md`: Statutory CPF accrued interest compounding and net equity division mathematical calculator.
+  - `examples/protocols/singapore/SGP-sg-006-hdb-matrimonial-unwind.md`: Regulatory framework for public housing scheme retention, SSCS criteria, and MOP disposal.
+  - `examples/protocols/strategy/STR-450-leverage-to-terms-converter.md`: Game-theory negotiation framework on transient leverage decay half-life and contract conversion.
+  - `src/athena/intelligence/gto_engine.py`: Pure Python standard library GTO numerical calculation engine (EEV, Half-Kelly, Gambler's Ruin, Monte Carlo trajectory simulation). Strictly ASCII-only math.
+  - `src/athena/lifecycle/session_service.py`: Canonical session lifecycle service with validated frontmatter, checkpointing, and verifiable closing receipts.
+  - `src/athena/tools/personalisation.py`: Active personalization and context synthesis layer grounding decisions in operator state constraints.
+  - `scripts/claim_id.py`: Multi-agent atomic ID allocator using SQLite WAL exclusive transactions (solves TD-063 namespace collisions).
+  - `scripts/hook_stop_verify.py`: Low-latency (<3s) output-side Stop hook verifying LaTeX math leaks, secret tokens, and Python syntax.
+  - `scripts/decision_ledger.py`: Closed-loop decision logging, outcome auditing, and Brier calibration score calculation CLI.
+  - `scripts/harness_score.py`: 6-pillar zero-iteration agent harness live capability (C) and enforcement (E) scoring probe.
+  - `scripts/daily_self_rsi.py`: Autonomous Daily Self-RSI runner with Backpressure Circuit Breaker.
+  - `scripts/_venv_bootstrap.py` & `bootstrap_env.py`: Self-healing Python interpreter venv re-exec and locked runtime installer.
+  - `scripts/sync_positioning.py`: Multi-surface positioning drift detection gate across local, sibling, and remote repositories.
+  - `examples/workflows/daily.md`: Low-latency (<1.5K tokens) daily curation standup workflow with prediction resolution and freeze gate.
+  - `examples/workflows/_domain/portfolio-refresh.md`: Multi-surface portfolio synchronization and privacy verification workflow.
+- **Synchronized Digital Portfolio Update**: Complete synchronized refresh across all 4 public surfaces (`Athena-Public`, `winstonkoh87` GitHub profile, `winstonkoh87.com` personal site, `sgassignmenthelp.com` commercial site) and `Athena-Public.wiki` to 28 August 2026 state.
+- **Canonical Metrics Sync**: Updated `.agent/config/CAPS.json` and all public/internal documentation across the ecosystem (418 active protocols across 26 categories, 43 active skills, 74 workflows, 268 scripts, 4,361 memory files).
+- **Supply-Chain & Decision Dynamics**: Codified C2M direct-factory supply-chain forensic auditing (75%–83% disintermediation margin recovery) and two-tier decision funnel integration (Protocol 121: Wide-to-narrow MCDA `O(M*N)` followed by pairwise 1v1 calibration tournament `O(N^2)`).
 
 ---
 

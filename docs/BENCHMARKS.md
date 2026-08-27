@@ -1,6 +1,6 @@
 # ⚡ Performance Benchmarks
 
-> **Last Updated**: 27 August 2026  
+> **Last Updated**: 28 August 2026  
 > **Environment**: MacBook Pro M3, Python 3.13, Supabase (Singapore region)
 
 ---
@@ -92,7 +92,7 @@ The core boot payload is **~10K tokens** — always loaded on `/start`. The full
 
 | Asset | Count | Size |
 |-------|-------|------|
-| Protocols & Workflows | 448 protocols (414 active + 34 archived), 74 workflows | ~2.5 MB |
+| Protocols & Workflows | 452 protocols (418 active + 34 archived), 74 workflows | ~2.5 MB |
 | Case Studies | 492 (15 domains) | ~4.8 MB |
 | Session Logs | 2,100+ | ~8.5 MB |
 | Memory Files | 4,346 | — |

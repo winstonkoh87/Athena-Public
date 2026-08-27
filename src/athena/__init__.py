@@ -18,7 +18,7 @@ Usage:
     python -m athena --help       # Show help
 """
 
-__version__ = "9.9.8"
+__version__ = "9.9.9"
 
 # Auto-load environment variables on import
 try:

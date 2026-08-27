@@ -2,7 +2,7 @@
 
 Athena is the **Operating System for AI Agents** — a Hybrid RAG system that keeps your data locally (Markdown) and optionally syncs to the cloud (Supabase) for fast semantic retrieval.
 
-*Last Updated: 2026-08-27 · v9.9.8*
+*Last Updated: 2026-08-28 · v9.9.9*
 
 ---
 
@@ -122,7 +122,7 @@ graph TD
 
 ## 🔌 MCP Server
 
-*As of v9.9.8.* 10 tools + 2 resources via [Model Context Protocol](https://modelcontextprotocol.io/). Dual transport (stdio + SSE).
+*As of v9.9.9.* 10 tools + 2 resources via [Model Context Protocol](https://modelcontextprotocol.io/). Dual transport (stdio + SSE).
 
 | Tool | Permission | Description |
 |------|-----------|-------------|
@@ -141,9 +141,9 @@ graph TD
 > The tool had in fact been *defined twice* in `mcp_server.py`, and the later
 > definition silently shadowed the earlier, permission-gated one — so the count
 > was wrong in one direction and the governance behaviour wrong in the other.
-> Both fixed in v9.9.8.
+> Both fixed in v9.9.9.
 
-### 🚪 AgentGate (v9.9.8+)
+### 🚪 AgentGate (v9.9.9+)
 
 A model-agnostic interception layer, so governance does not depend on any one
 IDE's hook system. Two entry points:
@@ -181,7 +181,7 @@ Results are reranked using a **CrossEncoder** (`cross-encoder/ms-marco-MiniLM-L6
 
 | Layer | Technology | Purpose |
 |:------|:----------|:--------|
-| **SDK** | `athena` Python package (v9.9.8) | Core search, reranking, memory |
+| **SDK** | `athena` Python package (v9.9.9) | Core search, reranking, memory |
 | **Reasoning** | Gemini 3.5 Pro (High) / Claude Fable 5 (High) / GPT-5.6 Sol (Max) | Multi-model reasoning |
 | **Reranking** | Cross-Encoder (`cross-encoder/ms-marco-MiniLM-L6-v2`) | Second-stage reranking after RRF fusion |
 | **IDE / Agent** | Antigravity, Cursor, Claude Code, Gemini CLI, VS Code | Agentic development environment |

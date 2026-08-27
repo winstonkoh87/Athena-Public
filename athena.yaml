@@ -10,7 +10,7 @@
 
 spec_version: "1.0.0"
 name: athena
-version: 9.9.8
+version: 9.9.9
 description: >
   A local-first agentic PKM that helps you make better decisions with your
   own context — persistent memory, structured reasoning, and governed AI

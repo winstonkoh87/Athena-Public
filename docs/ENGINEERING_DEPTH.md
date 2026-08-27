@@ -1,7 +1,7 @@
 # Engineering Depth
 
 > **Last Updated**: 22 July 2026
-> **Version**: v9.9.8
+> **Version**: v9.9.9
 
 This document demonstrates the technical depth built into Athena over 1,900+ sessions.
 
