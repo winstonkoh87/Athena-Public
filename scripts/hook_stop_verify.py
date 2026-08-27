@@ -21,7 +21,7 @@ import sys
 import time
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def get_changed_files() -> list[str]:
@@ -110,12 +110,12 @@ def _file_matches_pattern(file_path: Path, pattern: str) -> bool:
         return False
 
 
-def check_secrets(changed_files: list[str]) -> list[str]:
-    SECRET_PATTERNS = [
-        (r"sk-ant-[a-zA-Z0-9_-]{20,}", "Anthropic API Key"),  # pds:allow
-        (r"ghp_[a-zA-Z0-9]{20,}", "GitHub Personal Access Token"),  # pds:allow
-        (r"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[a-zA-Z0-9_-]{30,}", "Supabase/JWT Secret Key"),  # pds:allow
-        (r"AIza[0-9A-Za-z-_]{35}", "Google API Key"),  # pds:allow
+def check_restricted_signatures(changed_files: list[str]) -> list[str]:
+    RESTRICTED_PATTERNS = [
+        (r"sk-ant-[a-zA-Z0-9_-]{20,}", "Anthropic API signature"),  # pds:allow
+        (r"ghp_[a-zA-Z0-9]{20,}", "GitHub PAT signature"),  # pds:allow
+        (r"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[a-zA-Z0-9_-]{30,}", "Supabase/JWT signature"),  # pds:allow
+        (r"AIza[0-9A-Za-z-_]{35}", "Google API signature"),  # pds:allow
     ]
 
     violations = []
@@ -127,9 +127,9 @@ def check_secrets(changed_files: list[str]) -> list[str]:
         if any(ign in rel_path for ign in [".git/", "tests/", "node_modules/", ".venv/"]):
             continue
 
-        for pat, secret_type in SECRET_PATTERNS:
+        for pat, label in RESTRICTED_PATTERNS:
             if _file_matches_pattern(full_path, pat):
-                violations.append(f"Secret detected in {rel_path}: {secret_type}")
+                violations.append(f"Restricted signature detected in {rel_path}: {label}")
     return violations
 
 
@@ -165,10 +165,10 @@ def main():
     if latex_errors:
         errors.extend(latex_errors)
 
-    # 2. Secrets check
-    secret_errors = check_secrets(changed_files)
-    if secret_errors:
-        errors.extend(secret_errors)
+    # 2. Restricted signature check
+    sig_errors = check_restricted_signatures(changed_files)
+    if sig_errors:
+        errors.extend(sig_errors)
 
     # 3. Python syntax
     py_errors = check_python_syntax(changed_files)

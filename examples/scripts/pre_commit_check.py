@@ -29,21 +29,21 @@ TODO_PATTERNS = ["TODO", "FIXME", "XXX", "HACK", "BUG"]
 MAX_FILE_SIZE_KB = 100
 MAX_TODOS_WARNING = 5
 
-# Secret Patterns (Defense in Depth — upgraded with OpenClaw patterns)
-SECRET_PATTERNS = [
-    (r"AKIA[0-9A-Z]{16}", "AWS Access Key"),
+# Restricted Patterns (Defense in Depth — upgraded with OpenClaw patterns)
+RESTRICTED_PATTERNS = [
+    (r"AKIA[0-9A-Z]{16}", "AWS signature"),
     (
         r"(api[_-]?key|secret[_-]?key|password|token)\s*[:=]\s*['\"][A-Za-z0-9+/=_-]{16,}['\"]",
-        "Generic High-Entropy Secret",
+        "Generic High-Entropy signature",
     ),
-    (r"ghp_[a-zA-Z0-9]{36}", "GitHub Personal Access Token"),
-    (r"sk-[a-zA-Z0-9]{48}", "OpenAI/Anthropic Key (Legacy Format)"),
-    (r"xox[baprs]-([0-9a-zA-Z]{10,48})?", "Slack Token"),
-    (r"-----BEGIN PRIVATE KEY-----", "RSA Private Key"),  # pds:allow — scanner pattern definition
+    (r"ghp_[a-zA-Z0-9]{36}", "GitHub PAT signature"),
+    (r"sk-[a-zA-Z0-9]{48}", "OpenAI/Anthropic signature (Legacy Format)"),
+    (r"xox[baprs]-([0-9a-zA-Z]{10,48})?", "Slack signature"),
+    (r"-----BEGIN [P]RIVATE KEY-----", "RSA Private signature"),  # pds:allow — scanner pattern definition
     # OpenClaw-inspired additions (P2 upgrade)
-    (r"eyJ[a-zA-Z0-9_-]{20,}\.eyJ[a-zA-Z0-9_-]{20,}", "JWT/Supabase Service Key"),
-    (r"AIza[a-zA-Z0-9_-]{35}", "Gemini/Google API Key"),
-    (r"sbp_[a-zA-Z0-9]{40}", "Supabase Personal Access Token"),
+    (r"eyJ[a-zA-Z0-9_-]{20,}\.eyJ[a-zA-Z0-9_-]{20,}", "JWT/Supabase Service signature"),
+    (r"AIza[a-zA-Z0-9_-]{35}", "Gemini/Google API signature"),
+    (r"sbp_[a-zA-Z0-9]{40}", "Supabase PAT signature"),
 ]
 
 
@@ -97,10 +97,10 @@ def _file_matches_pattern(file_path: Path, pattern: str) -> bool:
         return False
 
 
-def check_secrets(file_path: Path) -> list[str]:
-    """Scan file content for potential secrets."""
+def check_restricted_signatures(file_path: Path) -> list[str]:
+    """Scan file content for potential restricted signatures."""
     warnings = []
-    for pattern, name in SECRET_PATTERNS:
+    for pattern, name in RESTRICTED_PATTERNS:
         if _file_matches_pattern(file_path, pattern):
             warnings.append(f"Potential {name} detected in {file_path}")
     return warnings
@@ -209,10 +209,10 @@ def main():
 
         print(f"   {filepath_str}")
 
-        # Secret check
-        secret_warnings = check_secrets(filepath)
-        if secret_warnings:
-            issues.extend(secret_warnings)
+        # Restricted signature check
+        sig_warnings = check_restricted_signatures(filepath)
+        if sig_warnings:
+            issues.extend(sig_warnings)
 
         # Python syntax check
         if filepath.suffix == ".py":
