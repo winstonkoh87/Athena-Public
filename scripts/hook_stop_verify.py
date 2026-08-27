@@ -94,6 +94,22 @@ def check_latex_leaks(changed_files: list[str]) -> list[str]:
     return []
 
 
+def _file_matches_pattern(file_path: Path, pattern: str) -> bool:
+    """Check if file contains a regex pattern. Returns bool only.
+
+    The file content is read and discarded entirely within this function.
+    This is intentional: it prevents tainted file data from flowing to
+    any caller's log/output statements (CodeQL py/clear-text-logging).
+    """
+    try:
+        data = file_path.read_text(encoding="utf-8", errors="ignore")
+        result = bool(re.search(pattern, data))
+        del data
+        return result
+    except Exception:
+        return False
+
+
 def check_secrets(changed_files: list[str]) -> list[str]:
     SECRET_PATTERNS = [
         (r"sk-ant-[a-zA-Z0-9_-]{20,}", "Anthropic API Key"),  # pds:allow
@@ -111,23 +127,9 @@ def check_secrets(changed_files: list[str]) -> list[str]:
         if any(ign in rel_path for ign in [".git/", "tests/", "node_modules/", ".venv/"]):
             continue
 
-        try:
-            content = full_path.read_text(encoding="utf-8", errors="ignore")
-            for pat, secret_type in SECRET_PATTERNS:
-                # Use bool() to sever taint: we only need presence, not the
-                # matched value, so the sensitive content never flows to output.
-                found = bool(re.search(pat, content))  # noqa: S105
-                if found:
-                    # Log only the secret type and file path — never the value.
-                    safe_path = str(rel_path)
-                    safe_type = str(secret_type)
-                    violations.append(
-                        f"Secret detected in {safe_path}: {safe_type}"
-                    )
-            # Explicitly discard file content after scanning
-            del content
-        except Exception:
-            pass
+        for pat, secret_type in SECRET_PATTERNS:
+            if _file_matches_pattern(full_path, pat):
+                violations.append(f"Secret detected in {rel_path}: {secret_type}")
     return violations
 
 

@@ -79,31 +79,30 @@ def get_staged_files() -> list[str]:
         return []
 
 
+def _file_matches_pattern(file_path: Path, pattern: str) -> bool:
+    """Check if file contains a regex pattern. Returns bool only.
+
+    The file content is read and discarded entirely within this function.
+    This is intentional: it prevents tainted file data from flowing to
+    any caller's log/output statements (CodeQL py/clear-text-logging).
+    """
+    try:
+        if file_path.stat().st_size > MAX_FILE_SIZE_KB * 1024:
+            return False
+        data = file_path.read_text(encoding="utf-8", errors="ignore")
+        result = bool(re.search(pattern, data))
+        del data
+        return result
+    except Exception:
+        return False
+
+
 def check_secrets(file_path: Path) -> list[str]:
     """Scan file content for potential secrets."""
     warnings = []
-    try:
-        # Skip large files for secret scanning to avoid performance issues
-        if file_path.stat().st_size > MAX_FILE_SIZE_KB * 1024:
-            return warnings
-
-        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-            content = f.read()
-            for pattern, name in SECRET_PATTERNS:
-                # Use bool() to sever taint: we only need presence, not the
-                # matched value, so the sensitive content never flows to output.
-                found = bool(re.search(pattern, content))  # noqa: S105
-                if found:
-                    # Log only the secret type and file path — never the value.
-                    safe_path = str(file_path)
-                    safe_name = str(name)
-                    warnings.append(
-                        f"Potential {safe_name} detected in {safe_path}"
-                    )
-            # Explicitly discard file content after scanning
-            del content
-    except Exception:
-        pass  # Ignore read errors for secret scanning
+    for pattern, name in SECRET_PATTERNS:
+        if _file_matches_pattern(file_path, pattern):
+            warnings.append(f"Potential {name} detected in {file_path}")
     return warnings
 
 
