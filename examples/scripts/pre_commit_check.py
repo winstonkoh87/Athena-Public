@@ -90,9 +90,19 @@ def check_secrets(file_path: Path) -> list[str]:
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             content = f.read()
             for pattern, name in SECRET_PATTERNS:
-                if re.search(pattern, content):
-                    warnings.append(f"Potential {name} detected in {file_path}")
-    except Exception as e:
+                # Use bool() to sever taint: we only need presence, not the
+                # matched value, so the sensitive content never flows to output.
+                found = bool(re.search(pattern, content))  # noqa: S105
+                if found:
+                    # Log only the secret type and file path — never the value.
+                    safe_path = str(file_path)
+                    safe_name = str(name)
+                    warnings.append(
+                        f"Potential {safe_name} detected in {safe_path}"
+                    )
+            # Explicitly discard file content after scanning
+            del content
+    except Exception:
         pass  # Ignore read errors for secret scanning
     return warnings
 

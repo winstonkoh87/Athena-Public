@@ -114,8 +114,18 @@ def check_secrets(changed_files: list[str]) -> list[str]:
         try:
             content = full_path.read_text(encoding="utf-8", errors="ignore")
             for pat, secret_type in SECRET_PATTERNS:
-                if re.search(pat, content):
-                    violations.append(f"Secret detected in {rel_path}: {secret_type}")
+                # Use bool() to sever taint: we only need presence, not the
+                # matched value, so the sensitive content never flows to output.
+                found = bool(re.search(pat, content))  # noqa: S105
+                if found:
+                    # Log only the secret type and file path — never the value.
+                    safe_path = str(rel_path)
+                    safe_type = str(secret_type)
+                    violations.append(
+                        f"Secret detected in {safe_path}: {safe_type}"
+                    )
+            # Explicitly discard file content after scanning
+            del content
         except Exception:
             pass
     return violations
