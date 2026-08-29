@@ -25,7 +25,7 @@ Own the state. Rent the intelligence. Platforms forget. Athena doesn't.
 
 [Quickstart](#-quickstart) · [How It Works](#-how-it-works) · [Scheduled Tasks & Self-RSI](docs/SCHEDULED_TASKS.md) · [llms.txt](https://winstonkoh87.com/llms.txt) · [Docs](docs/GETTING_STARTED.md) · [FAQ](Athena-Public.wiki/FAQ.md) · [Safety](SAFETY.md) · [Contributing](CONTRIBUTING.md)
 
-*Last updated: 29 August 2026*
+*Last updated: 30 August 2026*
 
 </div>
 
@@ -605,6 +605,7 @@ Athena-Public/
 </details>
 
 <details>
+- **Full Synchronized Digital Portfolio Refresh** (2026-08-30): Synchronized complete portfolio update across all 4 public surfaces, releases, wiki, and internal docs. Updated canonical CAPS counts (418 active protocols / 452 total across 26 categories, 43 active skills, 74 workflows, 268 scripts, 4,371 memories).
 - **Full Synchronized Digital Portfolio Refresh** (2026-08-29): Synchronized complete portfolio update across all 4 public surfaces, releases, wiki, and internal docs. Updated canonical CAPS counts (418 active protocols / 452 total, 43 skills, 74 workflows, 268 scripts, 4,365 memories).
 - **Full Synchronized Digital Portfolio Refresh** (2026-08-28): Synchronized complete portfolio update across all 4 public surfaces, releases, wiki, and internal docs. Updated canonical CAPS counts (418 active protocols / 452 total, 43 skills, 74 workflows, 268 scripts, 4,361 memories). Fixed 7 High-severity CodeQL clear-text logging alerts across secret scanner modules.
 - **Full Synchronized Digital Portfolio & Feature Port Refresh** (Aug 27 2026): Ported 12 new intelligence, verification, and workflow modules to public repo (`gto_engine.py`, `personalisation.py`, `harness_score.py`, `claim_id.py`, `_venv_bootstrap.py`, `daily.md`, `portfolio-refresh.md`, etc.). Updated canonical CAPS counts (414 active protocols across 26 categories, 43 active skills, 74 workflows, 268 scripts, 4,357 memory files). Filed new domain-specific case studies and operational codifications across decision analysis, ontological arena modeling, and institutional deterrence dynamics.

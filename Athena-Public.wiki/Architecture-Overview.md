@@ -2,7 +2,7 @@
 
 Athena is the **Operating System for AI Agents** — a Hybrid RAG system that keeps your data locally (Markdown) and optionally syncs to the cloud (Supabase) for fast semantic retrieval.
 
-*Last Updated: 2026-08-29 · v9.9.9*
+*Last Updated: 2026-08-30 · v9.9.9*
 
 ---
 
