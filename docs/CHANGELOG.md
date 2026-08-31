@@ -1,10 +1,18 @@
 # Athena Changelog
 
-> **Last Updated**: 31 August 2026
+> **Last Updated**: 1 September 2026
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
+
+---
+
+## [9.9.9] — Synchronized Digital Portfolio Refresh (1 September 2026)
+
+- **Synchronized Digital Portfolio Update**: Complete synchronized refresh across all 4 public surfaces (`Athena-Public`, `winstonkoh87` GitHub profile, `winstonkoh87.com` personal site, `sgassignmenthelper.com` commercial site) and `Athena-Public.wiki` to 1 September 2026 state.
+- **Canonical Metrics Sync**: Updated `.agent/config/CAPS.json` and all public/internal documentation across the ecosystem (418 active protocols across 26 categories / 452 total, 43 active skills, 74 workflows, 269 scripts, 4,382 memory files).
+- **IndexNow & Sitemap Re-index**: Discovered verification keys and submitted full re-indexing payload across production web properties.
 
 ---
 
