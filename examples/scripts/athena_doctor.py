@@ -16,13 +16,11 @@ Zero external dependencies. Works with Python 3.10+.
 """
 
 import json
-import os
+import platform
 import re
 import sys
-import platform
-from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Optional
+from pathlib import Path
 
 # ─── Configuration ────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -46,7 +44,7 @@ class Finding:
     category: str
     severity: str  # "pass", "warn", "fail"
     message: str
-    fix: Optional[str] = None
+    fix: str | None = None
     auto_fixable: bool = False
 
     def icon(self) -> str:

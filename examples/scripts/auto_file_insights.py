@@ -17,10 +17,7 @@ Generates a numbered CS-NNN file in .context/memories/case_studies/.
 
 import argparse
 import os
-import sys
 from datetime import datetime
-from pathlib import Path
-
 
 CASE_STUDY_DIR = ".context/memories/case_studies"
 

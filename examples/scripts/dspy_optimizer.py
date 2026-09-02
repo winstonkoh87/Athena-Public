@@ -1,9 +1,9 @@
-import dspy
-from dspy.teleprompt import BootstrapFewShot
-from dspy.evaluate import Evaluate
 import json
 import os
+
+import dspy
 from dotenv import load_dotenv
+from dspy.teleprompt import BootstrapFewShot
 
 load_dotenv()
 
@@ -47,7 +47,7 @@ class LateralStrategist(dspy.Module):
 
 # 3. Load the Golden Dataset
 def load_dataset():
-    with open(".agent/datasets/golden_reasoning.json", "r") as f:
+    with open(".agent/datasets/golden_reasoning.json") as f:
         data = json.load(f)
 
     # Convert to DSPy Examples

@@ -11,9 +11,9 @@ Performs semantic check of Athena's governance boundaries and files:
 Exits with code 0 on success, or code 1 if contradictions/duplicates are found.
 """
 
+import json
 import re
 import sys
-import json
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -34,13 +34,13 @@ def lint_tech_debt() -> int:
     # Matches "## TD-XXX" or "## ~~TD-XXX~~" at the start of lines
     td_pattern = r"^##\s+(?:~~)?(TD-\d+)"
     all_tds = re.findall(td_pattern, content, re.MULTILINE)
-    
+
     duplicates = set(td for td in all_tds if all_tds.count(td) > 1)
-    
+
     if duplicates:
         print(f"❌ [LINT] Duplicate Tech Debt IDs found in TECH_DEBT.md: {', '.join(duplicates)}")
         return 1
-        
+
     print("✅ [LINT] TECH_DEBT.md duplicate check passed.")
     return 0
 
@@ -100,7 +100,7 @@ def lint_eval_queries() -> int:
 def lint_risk_thresholds() -> int:
     """Check that Lambda risk thresholds align between governance.py and workflows/."""
     errors = 0
-    
+
     # 1. Parse governance.py risk comments/constants
     gov_sniper_val = None
     gov_standard_val = None
@@ -143,12 +143,12 @@ def lint_risk_thresholds() -> int:
 def main():
     print("🤖 Running Athena Governance Linter...")
     print("=" * 60)
-    
+
     code = 0
     code |= lint_tech_debt()
     code |= lint_eval_queries()
     code |= lint_risk_thresholds()
-    
+
     print("=" * 60)
     if code == 0:
         print("🎉 [SUCCESS] All governance lint checks passed.")

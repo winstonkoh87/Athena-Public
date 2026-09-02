@@ -7,9 +7,8 @@ between sessions.
 """
 
 import sys
-import os
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Setup Paths
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -29,7 +28,7 @@ def init_handoff():
     print("🌅 WAKE-UP HANDOFF REPORT")
     print("=" * 60)
 
-    with open(WAKE_UP_FILE, "r") as f:
+    with open(WAKE_UP_FILE) as f:
         content = f.read()
         print(content)
 
@@ -47,7 +46,7 @@ Last Updated: {timestamp}
 """
     with open(WAKE_UP_FILE, "w") as f:
         f.write(template)
-        print(f"✅ Handoff note updated for next session.")
+        print("✅ Handoff note updated for next session.")
 
 
 def main():

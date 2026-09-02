@@ -10,13 +10,28 @@ GTO Fix: 2026-03-26 — Resolves retrieval hang bottleneck.
 """
 
 import argparse
+import os
 import subprocess
 import sys
-import os
 from pathlib import Path
 
-TIMEOUT_SECONDS = 30
+# 45s (raised from 30 on 2026-07-23): a *cold* CLI invocation pays one-time costs
+# — subprocess spawn, cold imports (supabase/google/onnxruntime), the first Gemini
+# embedding, and the first Supabase connect — which can cross 30s and silently drop
+# to the grep fallback even though the semantic core is healthy (verified: embedding
+# ~2s, RPC ~1s, rerank ~1s once warm). Warm runs finish in a few seconds, so this
+# ceiling only ever applies to the first cold call; a genuine hang still falls back,
+# just 15s later.
+TIMEOUT_SECONDS = 45
 PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
+
+# Callers reach us as a bare `python3`, which may be an interpreter with none of
+# the retrieval deps. Re-exec into a capable venv before importing anything that
+# would quietly degrade. See _venv_bootstrap for why this beats editing callers.
+sys.path.insert(0, str(Path(__file__).parent))
+from _venv_bootstrap import ensure_deps  # noqa: E402
+
+ensure_deps(PROJECT_ROOT)
 
 # Paths for grep fallback
 CANONICAL_PATH = PROJECT_ROOT / ".context" / "CANONICAL.md"
@@ -109,6 +124,38 @@ def run_grep_fallback(query: str, limit: int = 10) -> None:
             except Exception:
                 pass
 
+    # 3.5. Search session log CONTENT (last 200 files by mtime) — P3.3
+    if SESSION_LOGS_DIR.exists():
+        try:
+            # Get most recent 200 session log files by modification time
+            session_files = sorted(
+                SESSION_LOGS_DIR.rglob("*.md"),
+                key=lambda f: f.stat().st_mtime,
+                reverse=True,
+            )[:200]
+
+            if session_files:
+                # Build a file list for grep
+                file_list = [str(f) for f in session_files]
+                proc = subprocess.run(
+                    ["grep", "-i", "-l", "-E", grep_pattern] + file_list,
+                    capture_output=True, text=True, timeout=5,
+                )
+                if proc.stdout:
+                    for line in proc.stdout.strip().split("\n")[:5]:
+                        if line.strip():
+                            matched_file = Path(line)
+                            # Now get the matching line content
+                            content_proc = subprocess.run(
+                                ["grep", "-i", "-E", "-n", "-m", "3", grep_pattern, str(matched_file)],
+                                capture_output=True, text=True, timeout=3,
+                            )
+                            if content_proc.stdout:
+                                for content_line in content_proc.stdout.strip().split("\n")[:2]:
+                                    _add_unique("SESSION-CONTENT", f"{matched_file.name}:{content_line[:150]}")
+        except Exception:
+            pass
+
     # 4. Search memory_bank files
     if MEMORY_BANK_DIR.exists():
         try:
@@ -150,6 +197,121 @@ def run_grep_fallback(query: str, limit: int = 10) -> None:
         print("  (No results found via grep fallback)", file=sys.stderr)
 
 
+def _extract_date_from_filename(filename: str) -> str | None:
+    """Extract YYYY-MM-DD from session log filenames.
+
+    Supports both formats:
+      - Legacy: 2026-04-15-session-S248.md
+      - New:    S248_20260415_desc.md
+    Returns the date string or None if unparseable.
+    """
+    import re
+
+    # Legacy format: starts with YYYY-MM-DD
+    m = re.match(r"^(\d{4}-\d{2}-\d{2})", filename)
+    if m:
+        return m.group(1)
+
+    # New format: SNNN_YYYYMMDD_...
+    m = re.match(r"^S\d+_(\d{4})(\d{2})(\d{2})_", filename)
+    if m:
+        return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+
+    return None
+
+
+def run_temporal_grep(query: str, as_of: str, limit: int = 10) -> None:
+    """Bi-temporal read: grep session content only from files dated <= as_of.
+
+    This is the lightweight 'what did I believe about X on date Y' surface.
+    No database, no SQL — just a date filter on session log filenames + content grep.
+    Files dated AFTER as_of are excluded, so you only see what existed at that point in time.
+
+    Args:
+        query: Search terms.
+        as_of: YYYY-MM-DD cutoff date (inclusive).
+        limit: Max results to show.
+    """
+    print(f"\n🧬 TEMPORAL SEARCH (as-of {as_of}): \"{query}\"", file=sys.stderr)
+    print("=" * 60, file=sys.stderr)
+
+    if not SESSION_LOGS_DIR.exists():
+        print("  (No session logs directory found)", file=sys.stderr)
+        return
+
+    keywords = _extract_keywords(query)
+    if not keywords:
+        print("  (No searchable keywords extracted)", file=sys.stderr)
+        return
+
+    # Collect session files dated on or before as_of
+    eligible_files = []
+    for f in sorted(SESSION_LOGS_DIR.rglob("*.md")):
+        file_date = _extract_date_from_filename(f.name)
+        if file_date and file_date <= as_of:
+            eligible_files.append((file_date, f))
+
+    if not eligible_files:
+        print(f"  (No session logs found on or before {as_of})", file=sys.stderr)
+        return
+
+    # Sort by date descending (most recent within window first)
+    eligible_files.sort(key=lambda x: x[0], reverse=True)
+
+    grep_pattern = "|".join(keywords)
+    results = []
+    seen = set()
+
+    for file_date, filepath in eligible_files:
+        if len(results) >= limit:
+            break
+        try:
+            proc = subprocess.run(
+                ["grep", "-i", "-E", "-n", "-m", "3", grep_pattern, str(filepath)],
+                capture_output=True, text=True, timeout=3,
+            )
+            if proc.stdout:
+                for line in proc.stdout.strip().split("\n")[:2]:
+                    key = line.strip()[:80]
+                    if key not in seen:
+                        seen.add(key)
+                        results.append(
+                            f"[AS-OF {file_date}] {filepath.name}:{line.strip()[:150]}"
+                        )
+        except Exception:
+            pass
+
+    # Also search CANONICAL and decisionLog for the query (these are always in-window)
+    for label, path in [("CANONICAL", CANONICAL_PATH),
+                        ("DECISION_LOG", MEMORY_BANK_DIR / "decisionLog.md")]:
+        if not path.exists() or len(results) >= limit:
+            continue
+        try:
+            proc = subprocess.run(
+                ["grep", "-i", "-E", "-n", "-m", "5", grep_pattern, str(path)],
+                capture_output=True, text=True, timeout=3,
+            )
+            if proc.stdout:
+                for line in proc.stdout.strip().split("\n")[:3]:
+                    line_lower = line.lower()
+                    hits = sum(1 for k in keywords if k.lower() in line_lower)
+                    if hits >= min(2, len(keywords)):
+                        key = line.strip()[:80]
+                        if key not in seen:
+                            seen.add(key)
+                            results.append(f"[{label}] {line.strip()[:150]}")
+        except Exception:
+            pass
+
+    if results:
+        print(f"\n🏆 TEMPORAL RESULTS ({len(results)} matches, window <= {as_of}):")
+        for i, result in enumerate(results[:limit], 1):
+            print(f"  {i}. {result}")
+        print("-" * 60)
+    else:
+        print(f"  (No temporal matches for \"{query}\" on or before {as_of})", file=sys.stderr)
+
+
 def run_full_search(query: str, limit: int, strict: bool, rerank: bool,
                     debug: bool, json_output: bool, include_personal: bool) -> None:
     """Run the full SDK search engine in a subprocess with a hard timeout."""
@@ -173,10 +335,16 @@ run_search(
 """
     ]
 
+    # Reranking normally uses the ONNX fast path (~0.4s load) and fits the default
+    # budget. Only the torch CrossEncoder FALLBACK (ONNX assets missing) cold-loads
+    # ~20-60s; give headroom only in that case.
+    onnx_present = (PROJECT_ROOT / ".agent" / "models" / "reranker-onnx" / "tokenizer.json").exists()
+    effective_timeout = max(TIMEOUT_SECONDS, 75) if (rerank and not onnx_present) else TIMEOUT_SECONDS
+
     try:
         proc = subprocess.run(
             cmd,
-            timeout=TIMEOUT_SECONDS,
+            timeout=effective_timeout,
             capture_output=False,  # Let stdout/stderr pass through
             env={**os.environ, "PYTHONPATH": src_path},
         )
@@ -184,7 +352,8 @@ run_search(
             raise RuntimeError(f"Search exited with code {proc.returncode}")
     except subprocess.TimeoutExpired:
         print(
-            f"\n⚠️  Full search timed out after {TIMEOUT_SECONDS}s. "
+            f"\n⚠️  Full search timed out after {effective_timeout}s (usually a cold "
+            "start — imports + first network call; warm runs complete in seconds). "
             "Falling back to grep...",
             file=sys.stderr,
         )
@@ -199,12 +368,27 @@ if __name__ == "__main__":
     parser.add_argument("query", help="Search query")
     parser.add_argument("--limit", type=int, default=10, help="Max results")
     parser.add_argument("--strict", action="store_true", help="Suppress low-confidence results")
-    parser.add_argument("--rerank", action="store_true", help="Use Cross-Encoder reranking")
+    # Rerank is DEFAULT-ON (2026-07-03): the ONNX fast path loads in ~0.4s, so the
+    # old 20s torch cold-load rationale for opt-in no longer applies. --no-rerank
+    # remains as the escape hatch; --rerank is kept as a no-op for compatibility.
+    parser.add_argument("--rerank", dest="rerank", action="store_true", default=True,
+                        help="Use Cross-Encoder reranking (default: on)")
+    parser.add_argument("--no-rerank", dest="rerank", action="store_false",
+                        help="Disable Cross-Encoder reranking")
     parser.add_argument("--debug", action="store_true", help="Show debug signals")
     parser.add_argument("--json", action="store_true", help="Output JSON")
     parser.add_argument(
         "--include-personal", action="store_true",
         help="Include personal domain in results",
+    )
+    parser.add_argument(
+        "--as-of",
+        type=str,
+        default=None,
+        metavar="YYYY-MM-DD",
+        help="Temporal filter: only return session results dated on or before this date. "
+             "Lightweight bi-temporal read — answers 'what did I believe about X on date Y' "
+             "by filtering session logs to the as-of window.",
     )
     args = parser.parse_args()
 
@@ -226,3 +410,8 @@ if __name__ == "__main__":
         json_output=args.json,
         include_personal=args.include_personal,
     )
+
+    # If --as-of is specified, also run the temporal grep to surface
+    # session-dated context from the as-of window
+    if args.as_of:
+        run_temporal_grep(args.query, args.as_of, args.limit)

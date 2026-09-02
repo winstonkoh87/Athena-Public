@@ -1,6 +1,5 @@
 import os
 import re
-import sys
 
 # Configuration
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -35,35 +34,35 @@ def scan_protocols():
     if not os.path.exists(SKILL_INDEX_PATH):
         log("ERROR", f"SKILL_INDEX.md not found: {SKILL_INDEX_PATH}")
         return
-    
-    with open(SKILL_INDEX_PATH, "r") as f:
+
+    with open(SKILL_INDEX_PATH) as f:
         index_content = f.read()
-    
+
     # 3. Check for missing protocols
     missing_protocols = []
-    
+
     # Simple check: is the filename present in the content?
     # This avoids complex table parsing but is sufficient for existence check
     for p_file in actual_files:
         if p_file not in index_content:
             missing_protocols.append(p_file)
-    
+
     # 4. Fix missing protocols
     if missing_protocols:
         log("WARN", f"Found {len(missing_protocols)} protocols missing from index.")
         with open(SKILL_INDEX_PATH, "a") as f:
-            f.write("\n") 
+            f.write("\n")
             for p in missing_protocols:
                 # Attempt to extract title from file content
                 title = p.replace(".md", "").replace("-", " ").title()
                 try:
-                    with open(os.path.join(PROTOCOLS_DIR, p), "r") as pf:
+                    with open(os.path.join(PROTOCOLS_DIR, p)) as pf:
                         first_line = pf.readline().strip()
                         if first_line.startswith("# "):
                             title = first_line[2:].strip()
                 except Exception:
                     pass
-                
+
                 # Append to file
                 entry = f"| **{title}** | `protocols/{p}` | Auto-indexed by Integrity Script |\n"
                 f.write(entry)
@@ -74,42 +73,42 @@ def scan_protocols():
 def validate_links():
     """Scans .md files for broken relative links"""
     log("INFO", "Starting Link Validation...")
-    
+
     # Pattern to match [text](path)
     # Ignores http links, mailto, etc.
     link_pattern = re.compile(r'\[.*?\]\((?!http|mailto)(.*?)\)')
-    
+
     broken_links = 0
     scanned_files = 0
-    
+
     # Directories to scan
     scan_dirs = [
         os.path.join(PROJECT_ROOT, ".context"),
         os.path.join(PROJECT_ROOT, ".agent"),
         os.path.join(PROJECT_ROOT, ".framework")
     ]
-    
+
     for root_dir in scan_dirs:
         for root, dirs, files in os.walk(root_dir):
             for file in files:
                 if file.endswith(".md"):
                     scanned_files += 1
                     file_path = os.path.join(root, file)
-                    
-                    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+
+                    with open(file_path, encoding="utf-8", errors="ignore") as f:
                         content = f.read()
-                    
+
                     matches = link_pattern.findall(content)
                     for link in matches:
                         # cleanup anchors
                         clean_link = link.split('#')[0].strip()
                         if not clean_link:
                             continue
-                        
+
                         # Handle file:// prefix
                         if clean_link.startswith("file://"):
                             clean_link = clean_link.replace("file://", "")
-                        
+
                         # URL Decode (properties like %20)
                         try:
                             from urllib.parse import unquote
@@ -126,7 +125,7 @@ def validate_links():
                             target_path = os.path.join(PROJECT_ROOT, clean_link[1:])
                         else:
                             target_path = os.path.join(os.path.dirname(file_path), clean_link)
-                            
+
                         # Check existence
                         if not os.path.exists(target_path):
                             log("WARN", f"Broken Link in {os.path.basename(file)}: '{link}' (Resolved: {target_path})")

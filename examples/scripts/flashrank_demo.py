@@ -14,9 +14,7 @@ Usage:
     python3 flashrank_demo.py
 """
 
-import sys
 import time
-from typing import List, Dict
 
 # Mock the FlashRank import to allow the script to run without the package installed
 # In production, remove this mock and use: from flashrank import Ranker, RerankRequest
@@ -68,7 +66,7 @@ except ImportError:
 
 
 def hybrid_pipeline_with_flashrank(
-    query: str, local_results: List[Dict], web_results: List[Dict]
+    query: str, local_results: list[dict], web_results: list[dict]
 ):
     """
     Refines a mix of Local and Web results using FlashRank + Freshness Bias.
@@ -171,7 +169,7 @@ if __name__ == "__main__":
 
     ranked_docs = hybrid_pipeline_with_flashrank(query, local_hits, web_hits)
 
-    print(f"\n🏆 Final Top 5 Context:")
+    print("\n🏆 Final Top 5 Context:")
     for i, doc in enumerate(ranked_docs):
         boost_tag = " [BOOSTED]" if doc["meta"].get("boosted") else ""
         print(

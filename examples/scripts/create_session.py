@@ -7,7 +7,6 @@ Automates the creation of a new session log with the standard MoM template.
 Usage: python3 create_session.py
 """
 
-import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -26,14 +25,14 @@ def get_next_session_number() -> int:
     """Find the highest session number for today and return the next one."""
     today = datetime.now().strftime("%Y-%m-%d")
     pattern = re.compile(rf"^{today}-session-(\d+)\.md$")
-    
+
     max_session = 0
     for file in SESSION_LOG_DIR.iterdir():
         match = pattern.match(file.name)
         if match:
             session_num = int(match.group(1))
             max_session = max(max_session, session_num)
-    
+
     return max_session + 1
 
 
@@ -42,10 +41,10 @@ def create_session_log() -> Path:
     today = datetime.now().strftime("%Y-%m-%d")
     time_now = datetime.now().strftime("%H:%M")
     session_num = get_next_session_number()
-    
+
     filename = f"{today}-session-{session_num:02d}.md"
     filepath = SESSION_LOG_DIR / filename
-    
+
     template = f"""# Session Log: {today} (Session {session_num:02d})
 
 **Date**: {today}
@@ -111,18 +110,18 @@ def create_session_log() -> Path:
 ## Tagging
 #session #...
 """
-    
+
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(template)
-    
+
     return filepath
 
 
 def main():
     print(f"{CYAN}Creating new session log...{RESET}")
-    
+
     filepath = create_session_log()
-    
+
     print(f"{GREEN}✅ Created: {filepath.relative_to(PROJECT_ROOT)}{RESET}")
     print(f"   Session: {filepath.stem}")
 

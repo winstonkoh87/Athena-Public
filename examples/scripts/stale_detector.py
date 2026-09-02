@@ -11,7 +11,6 @@ Usage: python3 stale_detector.py [--days=30]
 import os
 import sys
 import time
-from datetime import datetime, timedelta
 
 # Configuration
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -71,21 +70,21 @@ def find_stale_files(md_files, stale_days):
     """Find files older than stale_days."""
     stale = []
     fresh = []
-    
+
     for file_path in md_files:
         basename = os.path.basename(file_path)
         if basename in EXCLUSIONS:
             continue
-        
+
         age = get_file_age_days(file_path)
         if age >= stale_days:
             stale.append((file_path, age))
         else:
             fresh.append((file_path, age))
-    
+
     # Sort by age (oldest first)
     stale.sort(key=lambda x: -x[1])
-    
+
     return stale, fresh
 
 
@@ -121,33 +120,33 @@ def main():
                 stale_days = int(arg.split("=")[1])
             except ValueError:
                 pass
-    
+
     print("=" * 70)
     print("  STALE DETECTOR (BIONIC)  ")
     print("=" * 70)
     print(f"  Threshold: {stale_days} days")
     print("=" * 70)
-    
+
     # Get all markdown files
     md_files = get_all_md_files()
     log("INFO", f"Scanning {len(md_files)} markdown files...")
-    
+
     # Find stale files
     stale, fresh = find_stale_files(md_files, stale_days)
-    
+
     print(f"\n--- STALE FILES (>{stale_days} days old) ---")
-    
+
     if stale:
         for file_path, age in stale:
             log("STALE", f"{relative_path(file_path)} ({format_age(age)})")
-        
+
         print(f"\n{YELLOW}Total: {len(stale)} stale files found.{RESET}")
         print(f"\n{CYAN}Action: Review these files and either:")
-        print(f"  - Update them with current information")
+        print("  - Update them with current information")
         print(f"  - Archive/delete if no longer relevant{RESET}")
     else:
         log("INFO", f"No stale files found. All files updated within {stale_days} days. ✓")
-    
+
     print("\n" + "=" * 70)
     print(f"\n{GREEN}SUMMARY:{RESET}")
     print(f"  Files scanned: {len(md_files)}")

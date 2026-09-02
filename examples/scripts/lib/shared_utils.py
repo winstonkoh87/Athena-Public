@@ -4,14 +4,16 @@ shared_utils.py - Centralized logic for Athena scripts.
 Reduces redundancy across searching, logging, and telemetry.
 """
 
+import hashlib
 import os
 import sys
-import hashlib
-import requests
-from pathlib import Path
 from functools import lru_cache
+from pathlib import Path
+
+import requests
 from dotenv import load_dotenv
-from supabase import create_client, Client
+
+from supabase import create_client
 
 # --- PATH RESOLUTION ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
@@ -70,7 +72,6 @@ def get_embedding(text: str):
 def log_violation(violation_type: str, message: str):
     """Log protocol compliance issues."""
     try:
-        from athena.core.config import SCRIPTS_DIR
         import subprocess
 
         subprocess.run(

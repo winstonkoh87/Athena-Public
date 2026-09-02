@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def simulate_paths(
@@ -64,9 +63,9 @@ stats_1 = simulate_paths(0.55, 1.0, 100)
 # Scenario 2: The Longshot (1:5, 18.33% WR)
 stats_5 = simulate_paths(0.1833, 5.0, 100)
 
-print(f"| Metric | 1:1 Grinder (55% WR) | 1:5 Longshot (18.3% WR) |")
-print(f"| :--- | :--- | :--- |")
-print(f"| **EV per bet** | +$10 | +$10 |")
+print("| Metric | 1:1 Grinder (55% WR) | 1:5 Longshot (18.3% WR) |")
+print("| :--- | :--- | :--- |")
+print("| **EV per bet** | +$10 | +$10 |")
 print(
     f"| **Median Balance** | ${stats_1['median_end']:,.0f} | ${stats_5['median_end']:,.0f} |"
 )

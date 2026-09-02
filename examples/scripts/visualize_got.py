@@ -13,13 +13,13 @@ Usage:
 Dependencies: None (Standard Library only)
 """
 
-import sys
 import argparse
 import json
-from typing import List, Dict, Any
+import sys
+from typing import Any
 
 
-def generate_ascii_tree(root: str, branches: List[Dict[str, Any]]) -> str:
+def generate_ascii_tree(root: str, branches: list[dict[str, Any]]) -> str:
     """Generates a directory-tree style ASCII visualization."""
     lines = [f"ROOT: {root}"]
 
@@ -40,7 +40,7 @@ def generate_ascii_tree(root: str, branches: List[Dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def generate_mermaid(root: str, branches: List[Dict[str, Any]]) -> str:
+def generate_mermaid(root: str, branches: list[dict[str, Any]]) -> str:
     """Generates Mermaid.js flowchart syntax."""
     lines = ["graph TD"]
     lines.append(f"    R[{root}]")

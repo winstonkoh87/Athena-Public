@@ -31,7 +31,7 @@ DRY_RUN = "--dry-run" in sys.argv
 def recount_assets() -> dict:
     """Natively recount all Athena filesystem assets."""
     counts = {}
-    
+
     protocols_dir = ROOT / ".agent" / "skills" / "protocols"
     skills_dir = ROOT / ".agent" / "skills"
     archive_skills_dir = ROOT / ".agent" / "archive_skills"
@@ -39,7 +39,7 @@ def recount_assets() -> dict:
     domain_workflows_dir = workflows_dir / "_domain"
     scripts_dir = ROOT / ".agent" / "scripts"
     memories_dir = ROOT / ".context" / "memories"
-    
+
     # 1. Count Protocols
     active_protos = 0
     archived_protos = 0
@@ -52,7 +52,7 @@ def recount_assets() -> dict:
                 archived_protos += 1
             else:
                 active_protos += 1
-                
+
         for p in protocols_dir.iterdir():
             if p.is_dir() and p.name != "archive":
                 categories += 1
@@ -74,7 +74,7 @@ def recount_assets() -> dict:
                     conditional_skills += 1
             except Exception:
                 pass
-                
+
     archived_skills = 0
     if archive_skills_dir.exists():
         for p in archive_skills_dir.iterdir():
@@ -90,12 +90,12 @@ def recount_assets() -> dict:
     if workflows_dir.exists():
         for p in workflows_dir.glob("*.md"):
             root_wf += 1
-            
+
     domain_wf = 0
     if domain_workflows_dir.exists():
         for p in domain_workflows_dir.glob("*.md"):
             domain_wf += 1
-            
+
     counts["workflows_root"] = root_wf
     counts["workflows_domain"] = domain_wf
     counts["workflows_total"] = root_wf + domain_wf
@@ -115,7 +115,7 @@ def recount_assets() -> dict:
             if p.is_file():
                 memories_count += 1
     counts["memories"] = memories_count
-    
+
     # Session Logs
     session_logs = 0
     session_logs_dir = memories_dir / "session_logs"
@@ -124,7 +124,7 @@ def recount_assets() -> dict:
             if p.is_file():
                 session_logs += 1
     counts["session_logs"] = session_logs
-    
+
     # Case Studies
     case_studies = 0
     case_studies_dir = memories_dir / "case_studies"
@@ -137,13 +137,13 @@ def recount_assets() -> dict:
     # 6. Count source files & test files
     src_dir = ROOT / "src"
     tests_dir = ROOT / "tests"
-    
+
     src_count = 0
     if src_dir.exists():
         for p in src_dir.rglob("*.py"):
             src_count += 1
     counts["source_sdk"] = src_count
-    
+
     tests_count = 0
     if tests_dir.exists():
         for p in tests_dir.rglob("*.py"):
@@ -157,31 +157,31 @@ def update_caps_json(counts: dict) -> dict:
     """Load, update, and save CAPS.json. Returns the full dict."""
     with open(CAPS) as f:
         caps = json.load(f)
-        
+
     caps["protocols"]["total"] = counts["protocols_total"]
     caps["protocols"]["active"] = counts["protocols_active"]
     caps["protocols"]["archived"] = counts["protocols_archived"]
     caps["protocols"]["categories"] = counts["protocols_categories"]
-    
+
     caps["skills"]["active"] = counts["skills_active"]
     caps["skills"]["archived"] = counts["skills_archived"]
     caps["skills"]["conditional_count"] = counts["skills_conditional"]
-    
+
     caps["workflows"]["root"] = counts["workflows_root"]
     caps["workflows"]["domain"] = counts["workflows_domain"]
     caps["workflows"]["total"] = counts["workflows_total"]
-    
+
     caps["scripts"] = counts["scripts"]
     caps["memories"]["total_files"] = counts["memories"]
     caps["_generated"] = datetime.now().strftime("%Y-%m-%d")
-    
+
     if not DRY_RUN:
         with open(CAPS, "w") as f:
             json.dump(caps, f, indent=2)
         print("  [UPDATE] CAPS.json updated with dynamic filesystem counts.")
     else:
         print("  [DRY-RUN] Would update CAPS.json.")
-        
+
     return caps
 
 
@@ -256,7 +256,7 @@ def patch_agents(content: str, caps: dict) -> tuple[str, int]:
 def patch_readme(content: str, counts: dict, system_ver: str) -> tuple[str, int]:
     """Patch README.md content."""
     patches = 0
-    
+
     # 1. Table values in "What This Is"
     proto_old = re.search(r"\|\s*\*\*Protocols\*\*\s*\|\s*(\d+)\s*\(\d+\s*active\s*\+\s*\d+\s*archived\)\s*\|", content)
     if proto_old:
@@ -264,35 +264,35 @@ def patch_readme(content: str, counts: dict, system_ver: str) -> tuple[str, int]
         if proto_old.group(0) != new_str:
             content = content.replace(proto_old.group(0), new_str, 1)
             patches += 1
-            
+
     skills_old = re.search(r"\|\s*\*\*Skills\*\*\s*\|\s*(\d+)\s*active\s*\(\d+\s*conditional\)\s*\|", content)
     if skills_old:
         new_str = f"| **Skills** | {counts['skills_active']} active ({counts['skills_conditional']} conditional) |"
         if skills_old.group(0) != new_str:
             content = content.replace(skills_old.group(0), new_str, 1)
             patches += 1
-            
+
     wf_old = re.search(r"\|\s*\*\*Workflows\*\*\s*\|\s*(\d+)\s*\(\+\d+\s*domain\)\s*\|", content)
     if wf_old:
         new_str = f"| **Workflows** | {counts['workflows_root']} (+{counts['workflows_domain']} domain) |"
         if wf_old.group(0) != new_str:
             content = content.replace(wf_old.group(0), new_str, 1)
             patches += 1
-            
+
     session_old = re.search(r"\|\s*\*\*Session Logs\*\*\s*\|\s*[\d,]+\s*\|", content)
     if session_old:
         new_str = f"| **Session Logs** | {counts['session_logs']:,} |"
         if session_old.group(0) != new_str:
             content = content.replace(session_old.group(0), new_str, 1)
             patches += 1
-            
+
     mem_old = re.search(r"\|\s*\*\*Memory Files\*\*\s*\|\s*[\d,]+\s*\|", content)
     if mem_old:
         new_str = f"| **Memory Files** | {counts['memories']:,} |"
         if mem_old.group(0) != new_str:
             content = content.replace(mem_old.group(0), new_str, 1)
             patches += 1
-            
+
     scripts_old = re.search(r"\|\s*\*\*Scripts\*\*\s*\|\s*(\d+)\s*\|", content)
     if scripts_old:
         new_str = f"| **Scripts** | {counts['scripts']} |"
@@ -414,7 +414,7 @@ def patch_readme(content: str, counts: dict, system_ver: str) -> tuple[str, int]
             if line != new_line:
                 lines[idx] = new_line
                 patches += 1
-                
+
     content = "\n".join(lines)
     return content, patches
 
@@ -422,7 +422,7 @@ def patch_readme(content: str, counts: dict, system_ver: str) -> tuple[str, int]
 def patch_arch(content: str, counts: dict, system_ver: str) -> tuple[str, int]:
     """Patch ARCHITECTURE.md content."""
     patches = 0
-    
+
     # 1. Version header
     old_ver = re.search(r">\s*\*\*Version\*\*:\s*[\d.]+", content)
     if old_ver:
@@ -430,7 +430,7 @@ def patch_arch(content: str, counts: dict, system_ver: str) -> tuple[str, int]:
         if old_ver.group(0) != new_str:
             content = content.replace(old_ver.group(0), new_str, 1)
             patches += 1
-            
+
     # 2. File tree comments
     skills_old = re.search(r"#\s*\d+\s*active\s*skills\s*\(\d+\s*with\s*context_trigger\)", content)
     if skills_old:
@@ -438,35 +438,35 @@ def patch_arch(content: str, counts: dict, system_ver: str) -> tuple[str, int]:
         if skills_old.group(0) != new_str:
             content = content.replace(skills_old.group(0), new_str, 1)
             patches += 1
-            
+
     proto_old = re.search(r"#\s*\d+\s*active\s*\+\s*\d+\s*archived\s*=\s*\d+\s*total,\s*\d+\s*categories", content)
     if proto_old:
         new_str = f"#   {counts['protocols_active']} active + {counts['protocols_archived']} archived = {counts['protocols_total']} total, {counts['protocols_categories']} categories"
         if proto_old.group(0) != new_str:
             content = content.replace(proto_old.group(0), new_str, 1)
             patches += 1
-            
+
     wf_old = re.search(r"#\s*\d+\s*root\s*\+\s*\d+\s*_domain\s*=\s*\d+\s*slash-command\s*workflows", content)
     if wf_old:
         new_str = f"#   {counts['workflows_root']} root + {counts['workflows_domain']} _domain = {counts['workflows_total']} slash-command workflows"
         if wf_old.group(0) != new_str:
             content = content.replace(wf_old.group(0), new_str, 1)
             patches += 1
-            
+
     scripts_old = re.search(r"#\s*\d+\s*automation\s*scripts", content)
     if scripts_old:
         new_str = f"#   {counts['scripts']} automation scripts"
         if scripts_old.group(0) != new_str:
             content = content.replace(scripts_old.group(0), new_str, 1)
             patches += 1
-            
+
     mems_old = re.search(r"#\s*[\d,]+\s*memory\s*files\s*\(session\s*logs\s*\+\s*case\s*studies\s*\+\s*profile\)", content)
     if mems_old:
         new_str = f"#   {counts['memories']:,} memory files (session logs + case studies + profile)"
         if mems_old.group(0) != new_str:
             content = content.replace(mems_old.group(0), new_str, 1)
             patches += 1
-            
+
     cs_old = re.search(r"#\s*\d+\s*documented\s*patterns", content)
     if cs_old:
         new_str = f"#     {counts['case_studies']} documented patterns"
@@ -559,7 +559,7 @@ def patch_arch(content: str, counts: dict, system_ver: str) -> tuple[str, int]:
 def patch_docs_arch(content: str, counts: dict, system_ver: str) -> tuple[str, int]:
     """Patch docs/ARCHITECTURE.md content."""
     patches = 0
-    
+
     # Version header
     old_ver = re.search(r">\s*\*\*System Version\*\*:\s*v[\d.]+", content)
     if old_ver:
@@ -575,28 +575,28 @@ def patch_docs_arch(content: str, counts: dict, system_ver: str) -> tuple[str, i
         if cs_old.group(0) != new_str:
             content = content.replace(cs_old.group(0), new_str, 1)
             patches += 1
-            
+
     proto_old = re.search(r"#\s*\d+\+\s*modular\s*skill\s*files", content)
     if proto_old:
         new_str = f"# {counts['protocols_total']}+ modular skill files"
         if proto_old.group(0) != new_str:
             content = content.replace(proto_old.group(0), new_str, 1)
             patches += 1
-            
+
     wf_old = re.search(r"#\s*\d+\s*slash\s*commands", content)
     if wf_old:
         new_str = f"# {counts['workflows_total']} slash commands"
         if wf_old.group(0) != new_str:
             content = content.replace(wf_old.group(0), new_str, 1)
             patches += 1
-            
+
     scripts_old = re.search(r"#\s*\d+\+\s*Python\s*automation\s*scripts", content)
     if scripts_old:
         new_str = f"# {counts['scripts']}+ Python automation scripts"
         if scripts_old.group(0) != new_str:
             content = content.replace(scripts_old.group(0), new_str, 1)
             patches += 1
-            
+
     return content, patches
 
 
@@ -615,7 +615,7 @@ def patch_product_ctx(content: str, counts: dict) -> tuple[str, int]:
 def patch_kg(content: str, counts: dict) -> tuple[str, int]:
     """Patch KNOWLEDGE_GRAPH.md content."""
     patches = 0
-    
+
     # 1. Inventory header
     inv_old = re.search(r">\s*\*\*Inventory\s*\([^)]*\)\*\*:\s*\d+\s*active\s*protocols\s*\(\d+\s*total\s*incl\.\s*\d+\s*archived\),\s*\d+\s*active\s*skills\s*\(\d+\s*total\s*incl\.\s*\d+\s*archived\),\s*\d+\s*workflows\s*\(\d+\s*root\s*\+\s*\d+\s*_domain\),\s*\d+\s*scripts,\s*[\d,]+\s*memory\s*files\.", content)
     if inv_old:
@@ -723,15 +723,15 @@ def main():
     if not CAPS.exists():
         print(f"ERROR: {CAPS} not found")
         sys.exit(1)
-        
+
     print("🤖 Recounting workspace assets...")
     counts = recount_assets()
-    
+
     # Load version context from existing CAPS
     with open(CAPS) as f:
         caps_temp = json.load(f)
     system_ver = caps_temp.get("version", {}).get("system", "9.9.0")
-    
+
     print(f"File counts: active_protocols={counts['protocols_active']}, total={counts['protocols_total']}, skills={counts['skills_active']}, workflows={counts['workflows_total']}, scripts={counts['scripts']}, memories={counts['memories']}")
 
     caps = update_caps_json(counts)

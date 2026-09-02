@@ -21,9 +21,9 @@ Audit Ref: Capability Upgrade REC-001
 
 import re
 import sys
-from pathlib import Path
-from datetime import datetime
 from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 CONTEXT_DIR = PROJECT_ROOT / ".context"
@@ -117,7 +117,7 @@ def validate_contradiction_with_llm(contradiction: dict) -> tuple[bool, str]:
     """
     for src in contradiction.get("sources", []):
         prompt += f"- Source: {src['source']} (Line {src['line']}) | Text: \"{src.get('text', '')}\" | Extracted Value: {src['value']}\n"
-        
+
     prompt += """
     Is this a genuine contradiction or fact drift in Project Athena's metadata, identity, or session records?
     Identify false positives where:

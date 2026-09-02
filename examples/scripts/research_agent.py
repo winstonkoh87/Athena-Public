@@ -4,14 +4,14 @@ Deep Research Agent
 Multi-turn agentic search using Gemini with Google Search grounding.
 """
 
-import sys
 import argparse
-from pathlib import Path
+import os
 from datetime import datetime
+from pathlib import Path
+
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-import os
 
 load_dotenv()
 

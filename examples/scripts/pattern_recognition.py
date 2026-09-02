@@ -6,13 +6,13 @@ Consolidates: analyze_chat_gemini.py, analyze_chat_json.py,
               analyze_chat_temporal.py, analyze_sessions.py
 """
 
-import sys
+import argparse
 import json
 import re
-import argparse
-from pathlib import Path
+import sys
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
+
 from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -84,7 +84,7 @@ class ChatAnalyzer:
 
     def _load(self):
         """Load chat JSON file."""
-        with open(self.chat_file, "r", encoding="utf-8") as f:
+        with open(self.chat_file, encoding="utf-8") as f:
             data = json.load(f)
         self.messages = data.get("messages", [])
 
@@ -162,7 +162,7 @@ Provide your analysis:"""
         client = get_client()
         return client.generate(full_prompt)
 
-    def analyze_keywords(self, target_id: str, keywords: Optional[list] = None) -> list:
+    def analyze_keywords(self, target_id: str, keywords: list | None = None) -> list:
         """Search messages by keyword patterns."""
         if keywords is None:
             keywords = PSYCH_KEYWORDS
@@ -190,8 +190,8 @@ Provide your analysis:"""
         """Analyze response latency, initiation patterns, and hourly trends."""
         user1_latency = []
         user2_latency = []
-        hourly_trauma = {h: 0 for h in range(24)}
-        hourly_sex = {h: 0 for h in range(24)}
+        hourly_trauma = dict.fromkeys(range(24), 0)
+        hourly_sex = dict.fromkeys(range(24), 0)
         initiations = {user1_id: 0, user2_id: 0}
 
         last_timestamp = None
@@ -485,7 +485,7 @@ Examples:
             if not args.user1 or not args.user2:
                 print("Error: --user1 and --user2 required for temporal mode")
                 sys.exit(1)
-            print(f"🔍 Temporal analysis...")
+            print("🔍 Temporal analysis...")
             data = analyzer.analyze_temporal(args.user1, args.user2)
             result = json.dumps(data, indent=2)
 

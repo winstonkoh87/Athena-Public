@@ -1,7 +1,6 @@
 import os
 import re
 from pathlib import Path
-from datetime import datetime
 
 # Configuration
 WORKSPACE_ROOT = Path(".")
@@ -68,7 +67,7 @@ def main():
                 leaks.append((path, findings))
 
     # Report
-    print(f"\n🔍 Scan Complete.")
+    print("\n🔍 Scan Complete.")
     if leaks:
         print(f"⚠️  WARNING: POTENTIAL LEAKS FOUND IN {len(leaks)} FILES:")
         for path, what in leaks:

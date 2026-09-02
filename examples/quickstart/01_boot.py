@@ -17,28 +17,28 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from athena import __version__
-from athena.core.config import PROJECT_ROOT, get_project_root
+from athena.core.config import get_project_root
 
 
 def main():
     print("=" * 60)
     print("🏛️  ATHENA SDK BOOT CHECK")
     print("=" * 60)
-    
+
     # Version
     print(f"\n📦 SDK Version: {__version__}")
-    
+
     # Project root discovery
     root = get_project_root()
     print(f"📂 Project Root: {root}")
-    
+
     # Check for key directories
     checks = [
         ("pyproject.toml", root / "pyproject.toml"),
         ("src/athena", root / "src" / "athena"),
         ("examples", root / "examples"),
     ]
-    
+
     print("\n🔍 Directory Check:")
     all_ok = True
     for name, path in checks:
@@ -47,7 +47,7 @@ def main():
         print(f"   {status} {name}")
         if not exists:
             all_ok = False
-    
+
     # Summary
     print("\n" + "=" * 60)
     if all_ok:
@@ -55,7 +55,7 @@ def main():
     else:
         print("⚠️  PARTIAL BOOT — Some paths missing (may be normal)")
     print("=" * 60)
-    
+
     return 0 if all_ok else 1
 
 

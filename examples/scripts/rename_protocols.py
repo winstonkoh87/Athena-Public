@@ -18,7 +18,6 @@ Usage:
     python3 rename_protocols.py --execute    # Apply changes
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -126,8 +125,8 @@ def main():
 
 def count_collisions(root: Path) -> int:
     """Count how many numeric prefixes map to more than one file."""
-    from collections import Counter
     import re
+    from collections import Counter
 
     prefixes = []
     for md_file in root.rglob("*.md"):

@@ -18,6 +18,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
 LOG_PATH = PROJECT_ROOT / ".agent" / "telemetry" / "retrieval_log.jsonl"
+INVOCATIONS_PATH = PROJECT_ROOT / ".athena" / "invocations.jsonl"
 
 
 def load_entries(days: int = 14) -> list[dict]:
@@ -41,7 +42,36 @@ def load_entries(days: int = 14) -> list[dict]:
     return entries
 
 
-def report(entries: list[dict], top: int = 20) -> None:
+def load_invocations(days: int = 14) -> list[dict]:
+    if not INVOCATIONS_PATH.exists():
+        return []
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    entries = []
+    try:
+        with open(INVOCATIONS_PATH) as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                    ts_str = entry.get("timestamp", entry.get("ts", ""))
+                    if ts_str:
+                        ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                        if ts.tzinfo is None:
+                            ts = ts.replace(tzinfo=timezone.utc)
+                        if ts >= cutoff:
+                            entries.append(entry)
+                    else:
+                        entries.append(entry)
+                except (json.JSONDecodeError, ValueError):
+                    pass
+    except Exception:
+        pass
+    return entries
+
+
+def report(entries: list[dict], top: int = 20, days: int = 14) -> None:
     if not entries:
         print("No data to analyze.")
         return
@@ -108,6 +138,53 @@ def report(entries: list[dict], top: int = 20) -> None:
         print(f"  {day}  hit={d['hit']:2d}  partial={d['partial']:2d}  miss={d['miss']:2d}  recall={hr:5.1f}%")
     print()
 
+    # 5. Retrieval Compliance
+    print("── 5. RETRIEVAL COMPLIANCE ──")
+    invocations = load_invocations(days)
+
+    retrieval_turns = sum(
+        1 for e in invocations
+        if e.get("type") in ("smart_search", "context_gate", "agentic_search")
+    ) + len(entries)
+
+    total_turns = len(invocations)
+    violation_turns = sum(
+        1 for e in invocations
+        if e.get("type") == "quicksave" and "violation" in str(e.get("governance", "")).lower()
+    )
+    non_sniper_turns = max(retrieval_turns + violation_turns, 1)
+    compliance_rate = min(retrieval_turns / non_sniper_turns * 100, 100.0)
+    target = 90.0
+    status = "PASS" if compliance_rate >= target else "BELOW TARGET"
+
+    print(f"  Retrieval turns:   {retrieval_turns}")
+    print(f"  Non-SNIPER turns:  {non_sniper_turns}")
+    print(f"  Compliance rate:   {compliance_rate:.1f}% (target: {target}%) [{status}]\n")
+
+    # 6. Web Channel Metrics
+    print("── 6. WEB CHANNEL METRICS ──")
+    web_required = 0
+    web_fired = 0
+    web_hit = 0
+
+    for entry in entries:
+        sources = entry.get("source_distribution", {})
+        if not sources and "sources" in entry:
+            sources = entry["sources"]
+        web_count = sources.get("web_search", 0)
+
+        intent = entry.get("intent", "")
+        if intent in ("GENERAL", "PERSONALISED_DECISION"):
+            web_required += 1
+
+        if web_count > 0:
+            web_fired += 1
+            web_hit += 1
+
+    print(f"  Web required:  {web_required}")
+    print(f"  Web fired:     {web_fired}")
+    print(f"  Web hit:       {web_hit}\n")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Athena Retrieval Audit")
@@ -116,7 +193,7 @@ def main():
     args = parser.parse_args()
 
     entries = load_entries(args.days)
-    report(entries, args.top)
+    report(entries, args.top, args.days)
 
 
 if __name__ == "__main__":

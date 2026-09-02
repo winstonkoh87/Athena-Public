@@ -15,11 +15,11 @@ Usage:
     python3 .agent/scripts/batch_audit.py --skip-graphrag  # Skip heavy indexing
 """
 
-import sys
 import subprocess
+import sys
 import time
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 # === Configuration ===
 SCRIPTS_DIR = Path(__file__).parent
@@ -46,7 +46,7 @@ def run_script(script_name: str, args: list = None) -> tuple[str, bool, float]:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         elapsed = time.time() - start
         return (script_name, True, elapsed)
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         elapsed = time.time() - start
         return (script_name, False, elapsed)
     except FileNotFoundError:

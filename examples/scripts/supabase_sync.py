@@ -9,19 +9,19 @@ get_embeddings_batch(), which pre-warms the embedding cache in batched API calls
 per-file pass below hits cache instantly. Upserts (not rate-limited) run across threads.
 """
 
-import sys
 import argparse
-import time
+import sys
 import threading
-from pathlib import Path
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 # Add src to sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from athena.memory.sync import sync_file_to_supabase, delete_file_from_vector
 from athena.memory.delta_manifest import DeltaManifest
+from athena.memory.sync import delete_file_from_vector, sync_file_to_supabase
 
 # Global counter for periodic saving
 _processed_count = 0
@@ -84,7 +84,7 @@ def get_db_indexed_files() -> set:
 
     indexed = set()
     tables = [
-        "sessions", "case_studies", "protocols", "capabilities", 
+        "sessions", "case_studies", "protocols", "capabilities",
         "workflows", "system_docs", "playbooks", "references", "frameworks", "user_profile"
     ]
     print("🔌 Checking database for existing embeddings...")

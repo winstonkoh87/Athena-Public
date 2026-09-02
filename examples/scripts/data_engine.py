@@ -19,12 +19,13 @@ Dependencies:
 """
 
 import argparse
-import duckdb
 import json
 import os
 import sys
 import time
 from pathlib import Path
+
+import duckdb
 
 try:
     import pandas as pd
@@ -92,7 +93,7 @@ class DataEngine:
         t0 = time.time()
 
         # Read the JSON structure first to detect Telegram format
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             # Read just enough to detect structure
             chunk = f.read(500)
             f.seek(0)
@@ -107,7 +108,7 @@ class DataEngine:
             # Load JSON and extract messages (DuckDB can handle this)
             # But for 800MB files, use Python streaming approach
             print("  Loading JSON (this may take a minute for large files)...")
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 data = json.load(f)
 
             channel_name = data.get('name', 'unknown')
@@ -289,7 +290,7 @@ class DataEngine:
         print(f"\n📏 Rows: {row_count:,}")
 
         # Null counts
-        print(f"\n🔍 Null Analysis:")
+        print("\n🔍 Null Analysis:")
         self.con.execute(f"CREATE OR REPLACE VIEW data AS SELECT * FROM read_parquet('{pq_path}')")
         for col_name, col_type, *_ in schema:
             null_count = self.con.execute(f'SELECT COUNT(*) FROM data WHERE "{col_name}" IS NULL').fetchone()[0]
@@ -305,7 +306,7 @@ class DataEngine:
         # Date range (if date column exists)
         date_cols = [c for c, t, *_ in schema if 'date' in c.lower()]
         if date_cols:
-            print(f"\n📅 Date Range:")
+            print("\n📅 Date Range:")
             for dc in date_cols:
                 try:
                     min_date = self.con.execute(f'SELECT MIN("{dc}") FROM data WHERE "{dc}" IS NOT NULL AND "{dc}" != \'\'').fetchone()[0]

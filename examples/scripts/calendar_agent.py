@@ -4,8 +4,9 @@ Calendar Agent (Bankai Module C)
 Google Calendar Interface.
 """
 
-import os
 import datetime
+import os
+
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -20,17 +21,17 @@ def get_service():
     creds = None
     if os.path.exists(TOKEN_PATH):
         creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
-    
+
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
             if not os.path.exists(CREDENTIALS_PATH):
                 raise FileNotFoundError("credentials.json not found. Run setup_calendar_auth.py")
-                
+
             flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
             creds = flow.run_local_server(port=0)
-            
+
         # Save credentials
         with open(TOKEN_PATH, 'w') as token:
             token.write(creds.to_json())
@@ -48,15 +49,15 @@ def list_events(n: int = 5) -> list[str]:
             orderBy='startTime'
         ).execute()
         events = events_result.get('items', [])
-        
+
         output = []
         if not events:
             return ["No upcoming events found."]
-            
+
         for event in events:
             start = event['start'].get('dateTime', event['start'].get('date'))
             output.append(f"{start}: {event['summary']}")
-            
+
         return output
     except Exception as e:
         return [f"Error: {e}"]

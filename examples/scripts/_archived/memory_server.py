@@ -1,8 +1,9 @@
-from mcp.server.fastmcp import FastMCP
-import sqlite3
 import os
+import sqlite3
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import Any
+
+from mcp.server.fastmcp import FastMCP
 
 # Constants
 DB_PATH = ".context/memori.db"
@@ -69,7 +70,7 @@ def store_memory(category: str, key: str, value: str) -> str:
         return f"Error storing memory: {str(e)}"
 
 @mcp.tool()
-def query_memory(query: str, parameters: List[Any] = []) -> str:
+def query_memory(query: str, parameters: list[Any] = []) -> str:
     """
     Execute a read-only SQL query against the memory database.
     Restricted to SELECT statements for safety.
@@ -87,7 +88,7 @@ def query_memory(query: str, parameters: List[Any] = []) -> str:
         cursor.execute(query, parameters)
         rows = cursor.fetchall()
         conn.close()
-        
+
         # Convert rows to list of dicts for JSON serialization
         results = [dict(row) for row in rows]
         return str(results)
@@ -106,7 +107,7 @@ def get_memory(category: str, key: str) -> str:
         cursor.execute("SELECT value FROM memory WHERE category = ? AND key = ?", (category, key))
         row = cursor.fetchone()
         conn.close()
-        
+
         if row:
             return row['value']
         else:

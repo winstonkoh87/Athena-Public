@@ -3,9 +3,10 @@
 Protocol Generator
 Describe a rough idea → get a full workflow.md with phases and turbo annotations.
 """
-import sys
 import argparse
+import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -72,9 +73,9 @@ Rules:
 def generate_protocol(description: str, name: str = None) -> str:
     """Generate a protocol from description."""
     client = get_client()
-    
+
     name_hint = f"Workflow name should be: {name}" if name else "Suggest an appropriate workflow name."
-    
+
     prompt = f"""{SYSTEM_PROMPT}
 
 USER REQUEST:
@@ -83,9 +84,9 @@ USER REQUEST:
 {name_hint}
 
 Generate the complete workflow file:"""
-    
+
     response = client.generate(prompt)
-    
+
     # Clean up if wrapped in code blocks
     if response.startswith("```markdown"):
         response = response[11:]
@@ -93,7 +94,7 @@ Generate the complete workflow file:"""
         response = response[3:]
     if response.endswith("```"):
         response = response[:-3]
-    
+
     return response.strip()
 
 def main():
@@ -117,7 +118,7 @@ def main():
 
     print("🤖 Generating protocol...")
     protocol = generate_protocol(description, name)
-    
+
     if args.output:
         output_path = Path(args.output)
     elif name:
@@ -125,7 +126,7 @@ def main():
     else:
         # Extract name from generated content
         output_path = None
-    
+
     if output_path:
         output_path.write_text(protocol, encoding="utf-8")
         print(f"✅ Saved to {output_path}")

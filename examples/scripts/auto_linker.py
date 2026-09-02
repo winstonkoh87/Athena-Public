@@ -114,7 +114,7 @@ def get_abs_path(rel_path):
 
 def process_file(file_path):
     try:
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             content = f.read()
     except Exception as e:
         print(f"Error reading {file_path}: {e}")

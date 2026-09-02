@@ -15,10 +15,10 @@ Usage:
     python3 jargon_injector.py "Dermatology"
 """
 
-import sys
 import math
-from collections import Counter
 import re
+import sys
+from collections import Counter
 
 # Mock the sklearn import to allow the script to run without the package installed
 # In production, remove this mock and use: from sklearn.feature_extraction.text import TfidfVectorizer

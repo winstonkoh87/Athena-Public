@@ -6,6 +6,7 @@ Uses a Cross-Encoder to refine the top-k results from the initial retrieval.
 
 import sys
 import time
+
 # Try importing SearchResult type for type hinting if available, otherwise ignore
 try:
     from smart_search import SearchResult
@@ -21,7 +22,7 @@ def get_model():
         try:
             from sentence_transformers import CrossEncoder
             # fast and accurate for MS MARCO (passage retrieval)
-            model_name = 'cross-encoder/ms-marco-MiniLM-L6-v2' 
+            model_name = 'cross-encoder/ms-marco-MiniLM-L6-v2'
             # print(f"   🧠 Loading Reranker: {model_name}...", file=sys.stderr)
             _model = CrossEncoder(model_name)
         except ImportError:
@@ -48,28 +49,28 @@ def rerank_results(query: str, results: list, top_k: int = 5) -> list:
     start_time = time.time()
     try:
         scores = model.predict(pairs)
-        
+
         # Attach scores and re-sort
         for doc, score in zip(results, scores):
             # doc is a SearchResult object instance
             # We add a reranker signal
-            
+
             # Note: CrossEncoder returns logits (unbounded).
             # We store it for debugging and sorting.
             if not hasattr(doc, 'signals'):
                  doc.signals = {}
             doc.signals['reranker'] = {"score": float(score)}
-            
+
             # We DO NOT overwrite rrf_score (fused_score) because that represents the fusion confidence.
             # But the FINAL sort order should be by reranker score.
-            
+
         # Sort descending by reranker score
         reranked = sorted(results, key=lambda x: x.signals['reranker']['score'], reverse=True)
-        
+
         duration = time.time() - start_time
-        
+
         return reranked[:top_k]
-        
+
     except Exception as e:
         print(f"   ⚠️  Reranking failed: {e}", file=sys.stderr)
         return results[:top_k]

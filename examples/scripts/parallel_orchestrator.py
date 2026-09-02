@@ -15,24 +15,24 @@ Changes in v4.1:
 - Added rate-limit retry with 30s backoff
 """
 
+import argparse
 import asyncio
+import json
 import os
 import sys
-import json
-import argparse
-from pathlib import Path
-from typing import Optional  # noqa: F401 — kept for potential future use
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
+from typing import Optional  # noqa: F401 — kept for potential future use
 
 # Add src to path
 src_path = (Path(__file__).parent.parent.parent / "src").resolve()
 sys.path.insert(0, str(src_path))
 
+import google.api_core.exceptions
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-import google.api_core.exceptions
 
 load_dotenv()
 
@@ -290,7 +290,7 @@ class ParallelOrchestrator:
                         ),
                     )
                     break
-                except google.api_core.exceptions.ResourceExhausted as e:
+                except google.api_core.exceptions.ResourceExhausted:
                     self._log(
                         f"  ⏳ Rate limit hit on Track {track_name}, waiting 30s..."
                     )

@@ -12,14 +12,14 @@ Features:
 - Strict Gemini 3 Flash Enforcement.
 """
 
-import os
-import sys
-import json
-import re
-import time
 import asyncio
+import json
+import os
+import re
+import sys
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -105,7 +105,7 @@ class TextSplitter:
         self.chunk_overlap = chunk_overlap
         self.separators = ["\n\n", "\n", ". ", "! ", "? ", " ", ""]
 
-    def split_text(self, text: str) -> List[str]:
+    def split_text(self, text: str) -> list[str]:
         final_chunks = []
         if len(text) <= self.chunk_size:
             return [text]
@@ -175,7 +175,7 @@ def get_model_name(index: int) -> str:
     return MODEL_ROSTER[index % len(MODEL_ROSTER)]
 
 
-async def extract_chunk_async(chunk: str) -> Dict[str, Any]:
+async def extract_chunk_async(chunk: str) -> dict[str, Any]:
     """Async calling of Gemini API."""
     model_name = MODEL_ROSTER[0]  # Single model policy
 
@@ -204,7 +204,7 @@ async def extract_chunk_async(chunk: str) -> Dict[str, Any]:
                 "relationships": data.get(rels_key, []),
             }
 
-    except Exception as e:
+    except Exception:
         return {"entities": [], "relationships": []}
 
     return {"entities": [], "relationships": []}
@@ -252,7 +252,7 @@ async def write_to_jsonl(data: dict):
 
 async def process_file(
     file_path: Path, semaphore: asyncio.Semaphore
-) -> tuple[List, List]:
+) -> tuple[list, list]:
     """Process a single file with semaphore lock."""
     async with semaphore:
         try:
@@ -401,7 +401,7 @@ async def main_async():
     seen_files = set()
 
     if OUTPUT_JSONL.exists():
-        with open(OUTPUT_JSONL, "r", encoding="utf-8") as f:
+        with open(OUTPUT_JSONL, encoding="utf-8") as f:
             for line in f:
                 try:
                     data = json.loads(line)
@@ -445,7 +445,7 @@ async def main_async():
     OUTPUT_FILE.write_text(json.dumps(output_data, indent=2))
     print("\n" + "=" * 60)
     print(f"💾 Saved {len(unique_entities)} entities to {OUTPUT_FILE}")
-    print(f"✅ COMPLETE.")
+    print("✅ COMPLETE.")
     print("=" * 60)
 
 

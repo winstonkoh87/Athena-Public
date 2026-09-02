@@ -6,7 +6,6 @@ Analyzes recent activity to update hot_manifest.json with the most relevant file
 Restored and Upgraded for v8.2-Stable.
 """
 
-import os
 import json
 from datetime import datetime
 from pathlib import Path

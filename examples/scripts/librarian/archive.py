@@ -4,8 +4,8 @@ Athena Librarian - Unified Archiver Dispatcher
 Routes URLs to the appropriate archiver (Article or YouTube).
 """
 
-import sys
 import subprocess
+import sys
 from pathlib import Path
 from urllib.parse import urlparse
 

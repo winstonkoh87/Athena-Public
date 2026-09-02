@@ -6,15 +6,15 @@ Saves a checkpoint to the current session log via athena.sessions.
 """
 
 import sys
-from pathlib import Path
 
-from lib.shared_utils import setup_paths, log_violation
+from lib.shared_utils import log_violation, setup_paths
 
 setup_paths()
 
 
 def main():
     import argparse
+
     from athena.core.governance import get_governance
     from athena.sessions import append_checkpoint, log_to_decision_ledger
 

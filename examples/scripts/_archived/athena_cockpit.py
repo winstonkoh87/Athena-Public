@@ -8,20 +8,20 @@ Provides real-time visibility into system metrics, memory, and session state.
 Usage: python3 athena_cockpit.py [--live]
 """
 
+import json
 import os
 import sys
-import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 try:
+    from rich import box
     from rich.console import Console
-    from rich.panel import Panel
-    from rich.table import Table
     from rich.layout import Layout
     from rich.live import Live
+    from rich.panel import Panel
+    from rich.table import Table
     from rich.text import Text
-    from rich import box
 except ImportError:
     print("⚠️  Rich library not installed. Run: pip install rich")
     sys.exit(1)
@@ -31,11 +31,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from athena.core.config import (
+    AGENT_DIR,
     CONTEXT_DIR,
     SESSIONS_DIR,
-    AGENT_DIR,
-    FRAMEWORK_DIR,
-    MEMORY_DIR,
 )
 
 console = Console()
@@ -77,7 +75,7 @@ def get_graphrag_status() -> tuple:
     graph_file = AGENT_DIR / "graphrag" / "knowledge_graph.gpickle"
     if graph_file.exists():
         size = graph_file.stat().st_size / (1024 * 1024)
-        return (f"[green]Active[/green]", f"{size:.1f} MB")
+        return ("[green]Active[/green]", f"{size:.1f} MB")
     return ("[red]Inactive[/red]", "0 MB")
 
 

@@ -17,7 +17,6 @@ Usage:
 
 import argparse
 import json
-import os
 from datetime import datetime
 from pathlib import Path
 
@@ -46,23 +45,23 @@ def log_outcome(event_type: str, description: str, link: str = None, scope: str 
     """Log an outcome to the ledger."""
     if event_type not in SCORES:
         raise ValueError(f"Invalid event type: {event_type}. Valid: {list(SCORES.keys())}")
-    
+
     if scope not in SCOPE_MULTIPLIERS:
          scope = "small"
-         
+
     # Trust the user. No strict validation.
     # The ledger is a mirror, not a judge.
 
     base_score = SCORES[event_type]
     multiplier = SCOPE_MULTIPLIERS.get(scope, 1.0) # Default to 1.0 if not found
-    
+
     # Remove artificial caps. If the user says it's a large META task, so be it.
     # if event_type == "META":
-    #     multiplier = 1.0 
-        
+    #     multiplier = 1.0
+
     final_score = base_score * multiplier
     timestamp = datetime.now().isoformat()
-    
+
     entry = {
         "timestamp": timestamp,
         "type": event_type,
@@ -71,26 +70,26 @@ def log_outcome(event_type: str, description: str, link: str = None, scope: str 
         "description": description,
         "link": link
     }
-    
+
     # 1. Append to JSONL (Machine Readable)
     with open(OUTCOME_DB, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry) + "\n")
-        
+
     # 2. Append to Human Log (Text)
     log_line = f"[{timestamp[:16]}] [{event_type}] ({final_score}) [{scope.upper()}] {description}"
     if link:
         log_line += f" -> {link}"
-        
+
     # Check if we need to create the file (and header)
     if not OUTCOME_LOG.exists():
         OUTCOME_LOG.parent.mkdir(parents=True, exist_ok=True)
         with open(OUTCOME_LOG, "w") as f:
             f.write("# Outcome Ledger (The Project Scoreboard)\n")
             f.write(f"# Since: {datetime.now().strftime('%Y-%m-%d')}\n\n")
-            
+
     with open(OUTCOME_LOG, "a", encoding="utf-8") as f:
         f.write(log_line + "\n")
-        
+
     print(f"✅ Logged Outcome: {event_type} (+{final_score})")
     print(f"   {description}")
 
@@ -100,9 +99,9 @@ def main():
     parser.add_argument("--desc", type=str, required=True, help="Description of what happened")
     parser.add_argument("--link", type=str, help="Link to artifact or PR (Optional)")
     parser.add_argument("--scope", type=str.lower, choices=SCOPE_MULTIPLIERS.keys(), default="small", help="Impact scope (small/medium/large)")
-    
+
     args = parser.parse_args()
-    
+
     log_outcome(args.event, args.desc, args.link, args.scope)
 
 if __name__ == "__main__":

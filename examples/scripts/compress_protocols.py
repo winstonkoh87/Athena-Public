@@ -12,13 +12,11 @@ Usage:
 """
 
 import asyncio
-import os
 import re
-import sys
 import subprocess
-import json
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # Configuration
 WORKSPACE = Path(__file__).resolve().parent.parent.parent

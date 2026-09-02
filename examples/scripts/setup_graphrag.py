@@ -13,10 +13,9 @@ Requirements:
     - Internet connection to download Python 3.12.
 """
 
-import os
-import sys
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent.parent.parent
@@ -53,15 +52,15 @@ def install_deps(uv):
     """Install GraphRAG and dependencies."""
     print("📦 Installing graphrag...")
     python_exe = GRAPH_ENV_DIR / "bin" / "python3"
-    
+
     # We use 'uv pip install' targeting the venv python
     cmd = [
-        uv, "pip", "install", 
+        uv, "pip", "install",
         "--python", str(python_exe),
-        "graphrag", 
-        "google-genai", 
-        "chromadb", 
-        "chromadb", 
+        "graphrag",
+        "google-genai",
+        "chromadb",
+        "chromadb",
         "networkx",
         "sentence_transformers"
     ]
@@ -69,16 +68,16 @@ def install_deps(uv):
 
 def main():
     print("=== GraphRAG Setup (Compatibility Fix) ===")
-    
+
     try:
         uv = check_uv()
         create_venv(uv)
         install_deps(uv)
-        
+
         print("\n✅ Setup complete!")
         print(f"   Venv: {GRAPH_ENV_DIR}")
         print("   You can now run: python3 .agent/scripts/index_graphrag.py")
-        
+
     except subprocess.CalledProcessError as e:
         print(f"\n❌ Setup failed: {e}")
         sys.exit(1)

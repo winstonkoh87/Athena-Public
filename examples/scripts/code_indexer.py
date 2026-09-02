@@ -13,12 +13,10 @@ Usage:
 """
 
 import ast
-import sys
 import json
-import hashlib
-from pathlib import Path
+import sys
 from collections import defaultdict
-from typing import Dict, List, Tuple, Optional
+from pathlib import Path
 
 # Add src to sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -54,10 +52,10 @@ class CodeEntity:
         file_path: Path,
         line_start: int,
         line_end: int,
-        docstring: Optional[str] = None,
-        signature: Optional[str] = None,
-        imports: List[str] = None,
-        calls: List[str] = None,
+        docstring: str | None = None,
+        signature: str | None = None,
+        imports: list[str] = None,
+        calls: list[str] = None,
     ):
         self.name = name
         self.entity_type = entity_type
@@ -69,7 +67,7 @@ class CodeEntity:
         self.imports = imports or []
         self.calls = calls or []
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "name": self.name,
             "type": self.entity_type,
@@ -92,7 +90,7 @@ class CodeEntity:
         return "\n".join(p for p in parts if p)
 
 
-def parse_python_file(file_path: Path) -> List[CodeEntity]:
+def parse_python_file(file_path: Path) -> list[CodeEntity]:
     """Parse a Python file and extract code entities."""
     entities = []
 
@@ -123,7 +121,7 @@ def parse_python_file(file_path: Path) -> List[CodeEntity]:
 
 
 def _parse_function(
-    node: ast.FunctionDef, file_path: Path, imports: List[str]
+    node: ast.FunctionDef, file_path: Path, imports: list[str]
 ) -> CodeEntity:
     """Parse a function definition."""
     # Build signature
@@ -162,7 +160,7 @@ def _parse_function(
     )
 
 
-def _parse_class(node: ast.ClassDef, file_path: Path, imports: List[str]) -> CodeEntity:
+def _parse_class(node: ast.ClassDef, file_path: Path, imports: list[str]) -> CodeEntity:
     """Parse a class definition."""
     # Build signature with bases
     bases = [ast.unparse(b) for b in node.bases]
@@ -189,7 +187,7 @@ def _parse_class(node: ast.ClassDef, file_path: Path, imports: List[str]) -> Cod
     )
 
 
-def build_call_graph(entities: List[CodeEntity]) -> Dict[str, List[str]]:
+def build_call_graph(entities: list[CodeEntity]) -> dict[str, list[str]]:
     """Build a call graph from parsed entities."""
     graph = defaultdict(list)
 
@@ -205,11 +203,11 @@ def build_call_graph(entities: List[CodeEntity]) -> Dict[str, List[str]]:
 
 
 def compute_pagerank(
-    graph: Dict[str, List[str]], all_entities: List[str]
-) -> Dict[str, float]:
+    graph: dict[str, list[str]], all_entities: list[str]
+) -> dict[str, float]:
     """Compute PageRank scores for code entities."""
     if not HAS_NETWORKX:
-        return {e: 1.0 for e in all_entities}
+        return dict.fromkeys(all_entities, 1.0)
 
     G = nx.DiGraph()
     G.add_nodes_from(all_entities)
@@ -226,7 +224,7 @@ def compute_pagerank(
     return scores
 
 
-def sync_to_supabase(entities: List[CodeEntity], pagerank: Dict[str, float]):
+def sync_to_supabase(entities: list[CodeEntity], pagerank: dict[str, float]):
     """Sync code entities to Supabase vector database."""
     client = get_client()
     synced = 0
@@ -289,7 +287,7 @@ def main():
 
     # Sort by importance
     top_5 = sorted(pagerank.items(), key=lambda x: x[1], reverse=True)[:5]
-    print(f"\n🏆 Top 5 by PageRank:")
+    print("\n🏆 Top 5 by PageRank:")
     for name, score in top_5:
         print(f"   {name}: {score:.4f}")
 

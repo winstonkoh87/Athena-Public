@@ -13,11 +13,10 @@ Usage:
     python recover_from_supabase.py                    # Recover to default location
 """
 
-import os
-import sys
 import argparse
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # Fix sys.path for SDK access
 SDK_PATH = Path(__file__).resolve().parent.parent.parent / "src"

@@ -13,8 +13,8 @@ Output:
     Creates/updates .agent/chroma_db/ with vector embeddings.
 """
 
-import os
 from pathlib import Path
+
 import chromadb
 from chromadb.utils import embedding_functions
 
@@ -49,7 +49,7 @@ def chunk_text(text: str, max_size: int = MAX_CHUNK_SIZE, overlap: int = CHUNK_O
     """Split text into overlapping chunks."""
     if len(text) <= max_size:
         return [text]
-    
+
     chunks = []
     start = 0
     while start < len(text):
@@ -64,41 +64,41 @@ def main():
     print("=" * 60)
     print("🧠 CODEX EMBEDDING PIPELINE")
     print("=" * 60)
-    
+
     # Initialize ChromaDB with persistent storage
     print(f"\n📁 Initializing ChromaDB at: {CHROMA_DIR}")
     client = chromadb.PersistentClient(path=str(CHROMA_DIR))
-    
+
     # Use sentence-transformers for embeddings (local, no API key)
     embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
         model_name="all-MiniLM-L6-v2"
     )
-    
+
     # Delete existing collection if it exists (fresh index)
     existing_collections = [c.name for c in client.list_collections()]
     if COLLECTION_NAME in existing_collections:
         client.delete_collection(COLLECTION_NAME)
         print("🗑️  Deleted existing collection (fresh index)")
-    
+
     # Create collection
     collection = client.create_collection(
         name=COLLECTION_NAME,
         embedding_function=embedding_fn,
         metadata={"hnsw:space": "cosine"}
     )
-    
+
     # Find all markdown files
     print("\n🔍 Scanning directories...")
     md_files = get_all_md_files(SCAN_DIRS)
     print(f"   Found {len(md_files)} markdown files")
-    
+
     # Process each file
     total_chunks = 0
     for file_path in md_files:
         try:
             content = file_path.read_text(encoding="utf-8")
             chunks = chunk_text(content)
-            
+
             # Generate IDs and metadata for each chunk
             for i, chunk in enumerate(chunks):
                 chunk_id = f"{file_path.stem}_{i}"
@@ -108,21 +108,21 @@ def main():
                     "chunk_index": i,
                     "total_chunks": len(chunks),
                 }
-                
+
                 collection.add(
                     ids=[chunk_id],
                     documents=[chunk],
                     metadatas=[metadata]
                 )
-            
+
             total_chunks += len(chunks)
             print(f"   ✓ {file_path.name} ({len(chunks)} chunks)")
-            
+
         except Exception as e:
             print(f"   ✗ {file_path.name}: {e}")
-    
+
     print("\n" + "=" * 60)
-    print(f"✅ INDEXING COMPLETE")
+    print("✅ INDEXING COMPLETE")
     print(f"   Files indexed: {len(md_files)}")
     print(f"   Total chunks: {total_chunks}")
     print(f"   Database: {CHROMA_DIR}")

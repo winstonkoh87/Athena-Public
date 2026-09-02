@@ -15,11 +15,10 @@ Usage:
     python3 .agent/scripts/index_graphrag.py --skip-embed  # Skip vector embedding
 """
 
-import sys
 import subprocess
-import shutil
-from pathlib import Path
+import sys
 import time
+from pathlib import Path
 
 # === Configuration ===
 WORKSPACE = Path(__file__).resolve().parent.parent.parent
@@ -51,7 +50,7 @@ def run_script(script_name: str, args: list = None, retries: int = 3) -> bool:
         try:
             subprocess.run(cmd, check=True)
             return True
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             if attempt < retries:
                 wait_time = 2 ** (attempt - 1)
                 print(
@@ -74,7 +73,7 @@ def main():
     interpreter = get_interpreter()
 
     print("=" * 60)
-    print(f"🚀 GRAPHRAG FULL INDEXING PIPELINE")
+    print("🚀 GRAPHRAG FULL INDEXING PIPELINE")
     print(f"🐍 Interpreter: {interpreter}")
     if use_ollama:
         print("🦙 Mode: Ollama (llama3.1:8b - Local)")

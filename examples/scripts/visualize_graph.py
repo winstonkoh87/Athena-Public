@@ -9,11 +9,10 @@ Usage:
     python3 .agent/scripts/visualize_graph.py
 """
 
-import pickle
 import json
-import os
+import pickle
 from pathlib import Path
-import networkx as nx
+
 from pyvis.network import Network
 
 # === Configuration ===
@@ -36,7 +35,7 @@ def load_communities():
     if not COMMUNITIES_FILE.exists():
         return {}
     data = json.loads(COMMUNITIES_FILE.read_text())
-    
+
     # Map node -> community_id
     node_community = {}
     for comm in data.get("communities", []):
@@ -54,16 +53,16 @@ def generate_visualization():
     G = load_graph()
     if G is None:
         return
-    
+
     communities = load_communities()
     print(f"   Loaded graph: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges")
     print(f"   Loaded community mappings for {len(communities)} nodes")
 
     # Initialize PyVis network
     net = Network(
-        height="900px", 
-        width="100%", 
-        bgcolor="#111111", 
+        height="900px",
+        width="100%",
+        bgcolor="#111111",
         font_color="white",
         select_menu=True,
         cdn_resources="remote"
@@ -83,18 +82,18 @@ def generate_visualization():
     # Generate a color palette for communities
     community_ids = set(communities.values())
     # Simple color mapping logic (using PyVis default or custom if needed)
-    
+
     print("\n🎨 processing nodes...")
     for node in G.nodes():
         comm_id = communities.get(node, -1)
-        
+
         # Base attributes
         attrs = G.nodes[node]
         title = f"{node}\nType: {attrs.get('type', 'unknown')}\n{attrs.get('description', '')[:100]}"
-        
+
         # Color by community
         group = comm_id if comm_id != -1 else "Unclustered"
-        
+
         net.add_node(
             node,
             label=node,
@@ -107,11 +106,11 @@ def generate_visualization():
     print("🔗 processing edges...")
     for u, v, data in G.edges(data=True):
         net.add_edge(
-            u, 
-            v, 
+            u,
+            v,
             title=data.get('type', 'relates_to'),
             width=1.0,
-            color="#444444" 
+            color="#444444"
         )
 
     # Add physics controls

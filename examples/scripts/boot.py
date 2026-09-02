@@ -9,7 +9,6 @@ Update v2.1: Integrated Local Recall Memory (SQLite FTS5) sync on boot.
 
 import os
 import sys
-import subprocess
 from pathlib import Path
 
 # === STDLIB-ONLY SECTION ===

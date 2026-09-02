@@ -1,8 +1,9 @@
+import datetime
 import os
 import re
-import datetime
-import yaml
 from pathlib import Path
+
+import yaml
 
 # Configuration
 TARGET_DIR = "/Users/[AUTHOR]/Desktop/Project Athena/.context"
@@ -93,7 +94,7 @@ def fix_frontmatter(content, filepath):
                     d = yaml.safe_load(clean_body)
                     if isinstance(d, dict):
                         extracted_keys.update(d)
-                except Exception as e:
+                except Exception:
                     # If parsing fails, maybe it wasn't a block?
                     # Or maybe it was just garbage.
                     # We assume if we found a closing `---`, it WAS intended as a block.
@@ -147,9 +148,7 @@ def fix_frontmatter(content, filepath):
         if not isinstance(final_created, (str, datetime.date, datetime.datetime)):
             final_created = str(final_created)
 
-        if isinstance(final_created, datetime.date):
-            final_created = final_created.strftime("%Y-%m-%d")
-        elif isinstance(final_created, datetime.datetime):
+        if isinstance(final_created, datetime.date) or isinstance(final_created, datetime.datetime):
             final_created = final_created.strftime("%Y-%m-%d")
     else:
         final_created = fs_created
@@ -158,9 +157,7 @@ def fix_frontmatter(content, filepath):
         if not isinstance(final_updated, (str, datetime.date, datetime.datetime)):
             final_updated = str(final_updated)
 
-        if isinstance(final_updated, datetime.date):
-            final_updated = final_updated.strftime("%Y-%m-%d")
-        elif isinstance(final_updated, datetime.datetime):
+        if isinstance(final_updated, datetime.date) or isinstance(final_updated, datetime.datetime):
             final_updated = final_updated.strftime("%Y-%m-%d")
     else:
         final_updated = fs_updated
@@ -201,7 +198,7 @@ def process_directory(directory):
     for file_path in path_list:
         files_processed += 1
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
 
             new_content = fix_frontmatter(content, str(file_path))
@@ -219,7 +216,7 @@ def process_directory(directory):
         except Exception as e:
             print(f"[ERROR]  {file_path}: {e}")
 
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"Processed: {files_processed}")
     print(f"Changed:   {files_changed}")
 

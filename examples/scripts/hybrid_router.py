@@ -11,11 +11,10 @@ Usage:
     python3 hybrid_router.py "Who is the US President?"
 """
 
-import sys
-import concurrent.futures
-from typing import List, Dict, Literal
-from dataclasses import dataclass
 import os
+import sys
+from dataclasses import dataclass
+from typing import Literal
 
 # Import Kinetic Engine
 try:
@@ -29,7 +28,7 @@ except ImportError:
 # --- 1. DATA SOURCES ---
 
 
-def retrieve_local(query: str) -> List[Dict]:
+def retrieve_local(query: str) -> list[dict]:
     """
     Searches the Exocortex (SQLite FTS5) via Kinetic Engine.
     Returns logic-compatible dicts.
@@ -53,13 +52,13 @@ def retrieve_local(query: str) -> List[Dict]:
     return formatted_results
 
 
-def search_web_interactive(query: str) -> List[Dict]:
+def search_web_interactive(query: str) -> list[dict]:
     """
     Prompts the USER to perform the search in Gemini/Browser and paste results.
     """
     print("\n" + "=" * 60)
-    print(f"🛑 HITL ACTION REQUIRED: WEB SEARCH BRIDGE")
-    print(f"Please ask your Gemini/ChatGPT window:")
+    print("🛑 HITL ACTION REQUIRED: WEB SEARCH BRIDGE")
+    print("Please ask your Gemini/ChatGPT window:")
     print(f"   'Search the web for \"{query}\" and summarize.'")
     print("-" * 60)
     print("Paste the result below (Press Enter then Ctrl+D to finish):")
@@ -186,7 +185,7 @@ def execute_hybrid_search(user_query: str):
     print("-" * 40)
     print("SYSTEM: You have two distinct data streams.\n")
 
-    print(f"--- STREAM A: FOUNDATIONAL KNOWLEDGE (Static Exocortex) ---")
+    print("--- STREAM A: FOUNDATIONAL KNOWLEDGE (Static Exocortex) ---")
     if local_results:
         for i, res in enumerate(local_results[:3]):
             content_preview = (
@@ -198,7 +197,7 @@ def execute_hybrid_search(user_query: str):
     else:
         print("(No Local Data Found)")
 
-    print(f"\n--- STREAM B: LIVE INTELLIGENCE (Manual Web Bridge) ---")
+    print("\n--- STREAM B: LIVE INTELLIGENCE (Manual Web Bridge) ---")
     if web_results:
         for i, res in enumerate(web_results[:1]):
             print(f"[User Paste] {res['content']}")

@@ -12,10 +12,9 @@ Commands:
   clean-all      Remove all worktrees for current project
 """
 
-import os
+import hashlib
 import subprocess
 import sys
-import hashlib
 from pathlib import Path
 
 # Configuration

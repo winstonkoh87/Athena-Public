@@ -9,10 +9,8 @@ Usage:
     python3 reindex_supabase.py
 """
 
-import os
 import sys
 from pathlib import Path
-from dotenv import load_dotenv
 
 # Setup Path to import athena
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -32,14 +30,14 @@ INDEX_MAP = {
     "sessions": "idx_sessions_embedding",
     "protocols": "idx_protocols_embedding",
     "case_studies": "idx_case_studies_embedding",
-    
+
     # Expansion Tables
     "playbooks": "playbooks_embedding_idx",
     "capabilities": "capabilities_embedding_idx",
     "references": "references_embedding_idx",
     "frameworks": "frameworks_embedding_idx",
     "workflows": "workflows_embedding_idx",
-    
+
     # Others (Confirmed via 003_full_workspace_sync.sql)
     "user_profile": "user_profile_embedding_idx",
     "system_docs": "system_docs_embedding_idx",
@@ -62,31 +60,31 @@ def main():
     print("=" * 60)
     print("🚀 SUPABASE RE-INDEXING ORCHESTRATOR")
     print("=" * 60)
-    
+
     # 1. Generate SQL
     full_sql = "-- RE-INDEXING SCRIPT\n"
     full_sql += "\n".join(INDEX_SQL) + "\n\n"
     full_sql += "-- Standard Indexes\n"
     full_sql += "\n".join(OTHER_INDEX_SQL)
-    
+
     print(f"\n📋 SQL GENERATED ({len(INDEX_MAP)} vector tables):")
     print("-" * 30)
     print(full_sql)
     print("-" * 30)
-    
+
     # 2. Attempt Execution (if possible)
     # Note: Supabase Python client doesn't support REINDEX via PostgREST.
     # We check if direct postgres connection is configured or suggest Dashboard.
-    
+
     print("\n⚠️  Supabase PostgREST (Python Client) does not support DDL (REINDEX).")
     print("   Please execute the SQL above in the Supabase Dashboard SQL Editor:")
     print("   → https://supabase.com/dashboard/project/_/sql")
-    
+
     # Optional: Save to a temp .sql file for easy copy-paste
     sql_file = PROJECT_ROOT / "supabase" / "migrations" / "999_manual_reindex.sql"
     sql_file.parent.mkdir(parents=True, exist_ok=True)
     sql_file.write_text(full_sql)
-    
+
     print(f"\n💾 SQL saved to: {sql_file.relative_to(PROJECT_ROOT)}")
     print("=" * 60)
 

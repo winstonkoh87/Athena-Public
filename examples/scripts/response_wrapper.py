@@ -19,11 +19,9 @@ Protocol References:
     - Protocol 96: Λ Latency Indicator
 """
 
-import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
-from datetime import datetime
 
 # Configuration
 WORKSPACE = Path(__file__).resolve().parent.parent.parent
@@ -49,14 +47,14 @@ def print_banner(text: str, color: str = CYAN):
 def run_semantic_search(query: str) -> bool:
     """Execute semantic search and return success status."""
     print_banner("⚡ PROTOCOL §0.7.1: SEMANTIC SEARCH", CYAN)
-    
+
     smart_search = SCRIPTS_DIR / "smart_search.py"
-    
+
     if not smart_search.exists():
         print(f"{RED}❌ smart_search.py not found!{RESET}")
         log_violation("semantic_search", "Script not found")
         return False
-    
+
     try:
         result = subprocess.run(
             ["python3", str(smart_search), query],
@@ -64,7 +62,7 @@ def run_semantic_search(query: str) -> bool:
             text=True,
             cwd=str(WORKSPACE)
         )
-        
+
         if result.returncode == 0:
             print(f"\n{GREEN}✅ Semantic search completed.{RESET}")
             return True
@@ -72,7 +70,7 @@ def run_semantic_search(query: str) -> bool:
             print(f"\n{RED}❌ Semantic search failed (exit code: {result.returncode}){RESET}")
             log_violation("semantic_search", f"Exit code: {result.returncode}")
             return False
-            
+
     except Exception as e:
         print(f"{RED}❌ Error running semantic search: {e}{RESET}")
         log_violation("semantic_search", str(e))
@@ -82,14 +80,14 @@ def run_semantic_search(query: str) -> bool:
 def run_quicksave(summary: str) -> bool:
     """Execute quicksave and return success status."""
     print_banner("💾 PROTOCOL §0.6: QUICKSAVE", GREEN)
-    
+
     quicksave = SCRIPTS_DIR / "quicksave.py"
-    
+
     if not quicksave.exists():
         print(f"{RED}❌ quicksave.py not found!{RESET}")
         log_violation("quicksave", "Script not found")
         return False
-    
+
     try:
         result = subprocess.run(
             ["python3", str(quicksave), summary],
@@ -97,7 +95,7 @@ def run_quicksave(summary: str) -> bool:
             text=True,
             cwd=str(WORKSPACE)
         )
-        
+
         if result.returncode == 0:
             print(f"{GREEN}✅ Quicksave completed.{RESET}")
             return True
@@ -105,7 +103,7 @@ def run_quicksave(summary: str) -> bool:
             print(f"{RED}❌ Quicksave failed (exit code: {result.returncode}){RESET}")
             log_violation("quicksave", f"Exit code: {result.returncode}")
             return False
-            
+
     except Exception as e:
         print(f"{RED}❌ Error running quicksave: {e}{RESET}")
         log_violation("quicksave", str(e))
@@ -115,7 +113,7 @@ def run_quicksave(summary: str) -> bool:
 def log_violation(violation_type: str, details: str):
     """Log a protocol violation."""
     compliance_script = SCRIPTS_DIR / "protocol_compliance.py"
-    
+
     if compliance_script.exists():
         try:
             subprocess.run(
@@ -154,9 +152,9 @@ def main():
         print("  python3 response_wrapper.py checklist               # Show protocol steps")
         print_checklist()
         return
-    
+
     command = sys.argv[1].lower()
-    
+
     if command == "search":
         if len(sys.argv) < 3:
             print(f"{RED}❌ Missing search query{RESET}")
@@ -164,7 +162,7 @@ def main():
             return
         query = " ".join(sys.argv[2:])
         run_semantic_search(query)
-    
+
     elif command == "save":
         if len(sys.argv) < 3:
             print(f"{RED}❌ Missing summary{RESET}")
@@ -172,7 +170,7 @@ def main():
             return
         summary = " ".join(sys.argv[2:])
         run_quicksave(summary)
-    
+
     elif command == "full":
         if len(sys.argv) < 4:
             print(f"{RED}❌ Missing query and/or summary{RESET}")
@@ -180,32 +178,32 @@ def main():
             return
         query = sys.argv[2]
         summary = sys.argv[3]
-        
+
         print_banner("🔄 FULL RESPONSE CYCLE", YELLOW)
         print(f"Query: {query}")
         print(f"Summary: {summary[:50]}...\n")
-        
+
         # Step 1: Semantic search
         search_ok = run_semantic_search(query)
-        
+
         print(f"\n{YELLOW}[AI RESPONSE WOULD GO HERE]{RESET}\n")
-        
+
         # Step 2: Quicksave
         save_ok = run_quicksave(summary)
-        
+
         # Final status
         if search_ok and save_ok:
             print(f"\n{GREEN}{'═' * 60}")
-            print(f"✅ FULL PROTOCOL COMPLIANCE — Both hooks executed")
+            print("✅ FULL PROTOCOL COMPLIANCE — Both hooks executed")
             print(f"{'═' * 60}{RESET}")
         else:
             print(f"\n{RED}{'═' * 60}")
-            print(f"⚠️  PARTIAL COMPLIANCE — Check logs above")
+            print("⚠️  PARTIAL COMPLIANCE — Check logs above")
             print(f"{'═' * 60}{RESET}")
-    
+
     elif command == "checklist":
         print_checklist()
-    
+
     else:
         print(f"{RED}❌ Unknown command: {command}{RESET}")
         print("Valid commands: search, save, full, checklist")

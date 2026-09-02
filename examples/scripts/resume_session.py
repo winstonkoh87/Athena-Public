@@ -8,10 +8,9 @@ Usage:
 Returns context from the most recent incomplete session.
 """
 
+import glob
 import os
 import re
-import glob
-from datetime import datetime
 from pathlib import Path
 
 # Configuration
@@ -40,30 +39,30 @@ def find_incomplete_session() -> Path | None:
     """Find the most recent session that is still in progress."""
     if not LOGS_DIR.exists():
         return None
-    
-    files = [f for f in glob.glob(str(LOGS_DIR / "*.md")) 
+
+    files = [f for f in glob.glob(str(LOGS_DIR / "*.md"))
              if "session" in os.path.basename(f).lower()]
-    
+
     if not files:
         return None
-    
+
     # Sort by recency
     files.sort(key=parse_session_key, reverse=True)
-    
+
     # Check if most recent is incomplete
     latest_file = Path(files[0])
     content = latest_file.read_text(encoding='utf-8')
-    
+
     # Check status
     if "**Status**: ⏳ In Progress" in content or "**Status**: ..." in content:
         return latest_file
     if "**Status**: ✅ Closed" in content:
         return None  # Session was properly closed
-    
+
     # Default: assume incomplete if status line not found
     if "## Session Closed" in content and "✅ Closed" not in content:
         return latest_file
-    
+
     return None
 
 
@@ -72,18 +71,18 @@ def extract_checkpoints(content: str, limit: int = 5) -> list:
     checkpoints = []
     pattern = r"### ⚡ Checkpoint \[([^\]]+)\]\n(.*?)(?=\n###|\n## |$)"
     matches = re.findall(pattern, content, re.DOTALL)
-    
+
     for time_str, body in matches[-limit:]:
         summary = body.strip().split('\n')[0][:80]  # First line, truncated
         checkpoints.append((time_str, summary))
-    
+
     return checkpoints
 
 
 def extract_action_items(content: str) -> list:
     """Extract pending action items."""
     items = []
-    
+
     # Look for Action Items section with Pending status
     in_action = False
     for line in content.split('\n'):
@@ -96,7 +95,7 @@ def extract_action_items(content: str) -> list:
             parts = [p.strip() for p in line.split("|")]
             if len(parts) >= 3 and parts[1] and parts[1] != "Action":
                 items.append(parts[1])
-    
+
     return items
 
 
@@ -107,19 +106,19 @@ def count_exchanges(content: str) -> int:
 
 def main():
     session_file = find_incomplete_session()
-    
+
     if not session_file:
         print(f"\n{YELLOW}No interrupted session found.{RESET}")
         print(f"{DIM}All sessions are closed. Use /start to begin a new session.{RESET}\n")
         return 1
-    
+
     content = session_file.read_text(encoding='utf-8')
     filename = session_file.name
-    
+
     print(f"\n{BOLD}{CYAN}{'─' * 60}{RESET}")
     print(f"{BOLD}{CYAN}🔄 RESUMING SESSION: {filename}{RESET}")
     print(f"{BOLD}{CYAN}{'─' * 60}{RESET}\n")
-    
+
     # Extract Focus
     for line in content.split('\n'):
         if line.startswith("**Focus**:"):
@@ -127,7 +126,7 @@ def main():
             if focus and focus != "...":
                 print(f"🎯 Focus: {focus}\n")
             break
-    
+
     # Checkpoints
     checkpoints = extract_checkpoints(content, 3)
     if checkpoints:
@@ -135,7 +134,7 @@ def main():
         for time_str, summary in checkpoints:
             print(f"   [{time_str}] {summary}")
         print()
-    
+
     # Action Items
     items = extract_action_items(content)
     if items:
@@ -143,15 +142,15 @@ def main():
         for item in items[:5]:
             print(f"   - {item}")
         print()
-    
+
     # Stats
     exchanges = count_exchanges(content)
     print(f"{DIM}⏰ Exchanges so far: {exchanges}{RESET}")
-    
+
     print(f"\n{BOLD}{'─' * 60}{RESET}")
     print(f"{GREEN}✅ Context recovered. Continuing session.{RESET}")
     print(f"{BOLD}{'─' * 60}{RESET}\n")
-    
+
     return 0
 
 

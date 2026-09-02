@@ -114,7 +114,7 @@ def _candidate_venvs(project_root: Path) -> list[Path]:
 
 
 def ensure_deps(
-    project_root: Path, *, quiet: bool = False, extra: "tuple[str, ...]" = ()
+    project_root: Path, *, quiet: bool = False, extra: tuple[str, ...] = ()
 ) -> list[str]:
     """Re-exec into a capable venv if this interpreter is missing deps.
 

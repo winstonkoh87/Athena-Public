@@ -57,7 +57,7 @@ def build_context_bundle() -> dict:
     today = datetime.now().strftime("%Y-%m-%d")
     eval_files = sorted(EVAL_DIR.glob("*.json"), key=lambda p: p.name, reverse=True) if EVAL_DIR.exists() else []
     last_eval = eval_files[0] if eval_files else None
-    
+
     caps_hash = "(missing)"
     if CAPS_PATH.exists():
         caps_hash = hashlib.sha256(CAPS_PATH.read_bytes()).hexdigest()[:12]
@@ -89,7 +89,7 @@ def run_self_rsi(dry_run: bool = False, prompt_only: bool = False) -> int:
         return 1
 
     bundle = build_context_bundle()
-    
+
     # Backpressure circuit breaker check
     if bundle["unreviewed_tickets_7d"] >= 3:
         print(f"⚠️ Circuit Breaker Tripped: {bundle['unreviewed_tickets_7d']} unreviewed tickets pending. Throttling daily run.")

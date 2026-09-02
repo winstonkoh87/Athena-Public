@@ -10,11 +10,10 @@ Usage:
     python3 skill_loader.py match <msg> # Find skills matching a message
 """
 
-import json
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+
 import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -38,7 +37,7 @@ def parse_frontmatter(content: str) -> tuple[dict, str]:
         return {}, content
 
 
-def discover_skills() -> Dict[str, dict]:
+def discover_skills() -> dict[str, dict]:
     """Discover all available skills with metadata."""
     skills = {}
 
@@ -91,7 +90,7 @@ def list_skills():
             print(f"    Triggers: {triggers}")
 
 
-def match_triggers(message: str, triggers: List[str]) -> bool:
+def match_triggers(message: str, triggers: list[str]) -> bool:
     """Check if message matches any triggers."""
     message_lower = message.lower()
 
@@ -116,7 +115,7 @@ def match_triggers(message: str, triggers: List[str]) -> bool:
     return False
 
 
-def find_matching_skills(message: str) -> List[str]:
+def find_matching_skills(message: str) -> list[str]:
     """Find skills whose triggers match the message."""
     skills = discover_skills()
     matched = []
@@ -162,7 +161,7 @@ def generate_index():
     print(f"✅ Generated skill index: {index_path}")
 
 
-def load_skill(name: str) -> Optional[str]:
+def load_skill(name: str) -> str | None:
     """Load a skill's content."""
     skills = discover_skills()
 

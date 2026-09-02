@@ -3,13 +3,13 @@
 Grounded Search
 Uses Gemini with Google Search grounding for research queries.
 """
-import sys
 import argparse
+import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-import os
 
 load_dotenv()
 
@@ -26,15 +26,15 @@ def search(query: str) -> str:
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
         raise ValueError("GOOGLE_API_KEY not found")
-    
+
     client = genai.Client(api_key=api_key)
-    
+
     prompt = f"""{SYSTEM_PROMPT}
 
 USER QUERY: {query}
 
 Search the web and provide a well-sourced answer:"""
-    
+
     try:
         # Configure model with search grounding
         response = client.models.generate_content(
@@ -45,7 +45,7 @@ Search the web and provide a well-sourced answer:"""
             ),
         )
         return response.text
-    except Exception as e:
+    except Exception:
         # Fallback to non-grounded if quota exhausted
         print("⚠️ Search grounding unavailable, using standard model")
         response = client.models.generate_content(
@@ -80,7 +80,7 @@ def main():
         query = " ".join(args.query)
         print(f"🔍 Searching: {query}\n")
         result = search(query)
-        
+
         if args.output:
             Path(args.output).write_text(result, encoding="utf-8")
             print(f"✅ Saved to {args.output}")

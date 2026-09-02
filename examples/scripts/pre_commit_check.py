@@ -14,10 +14,9 @@ Checks:
 - Large uncommitted changes
 """
 
-import sys
-import subprocess
 import ast
 import re
+import subprocess
 from pathlib import Path
 
 # Configuration
@@ -39,7 +38,7 @@ RESTRICTED_PATTERNS = [
     (r"ghp_[a-zA-Z0-9]{36}", "GitHub PAT signature"),
     (r"sk-[a-zA-Z0-9]{48}", "OpenAI/Anthropic signature (Legacy Format)"),
     (r"xox[baprs]-([0-9a-zA-Z]{10,48})?", "Slack signature"),
-    (r"-----BEGIN [P]RIVATE KEY-----", "RSA Private signature"),  # pds:allow — scanner pattern definition
+    (r"-----BEGIN [P]RIVATE KEY-----", "RSA Private signature"),
     # OpenClaw-inspired additions (P2 upgrade)
     (r"eyJ[a-zA-Z0-9_-]{20,}\.eyJ[a-zA-Z0-9_-]{20,}", "JWT/Supabase Service signature"),
     (r"AIza[a-zA-Z0-9_-]{35}", "Gemini/Google API signature"),

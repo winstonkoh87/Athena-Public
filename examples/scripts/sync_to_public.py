@@ -13,8 +13,8 @@ Purpose:
 """
 
 import os
-import shutil
 import re
+import shutil
 
 # --- Configuration ---
 
@@ -95,7 +95,7 @@ def load_blocklist():
     blocklist_path = os.path.join(DEST_ROOT, ".github", "privacy_blocklist.txt")
     terms = []
     if os.path.exists(blocklist_path):
-        with open(blocklist_path, "r") as f:
+        with open(blocklist_path) as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#"):
@@ -128,7 +128,7 @@ def verify_no_blocklist_violations(dest_root, blocklist_terms):
                 continue
             fpath = os.path.join(root, fname)
             try:
-                with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
+                with open(fpath, encoding="utf-8", errors="ignore") as f:
                     content = f.read()
                 for term in blocklist_terms:
                     # Use the term as a regex pattern (blocklist uses regex)
@@ -277,7 +277,7 @@ def main():
                             shutil.copy2(src_file_abs, dest_file_abs)
                         else:
                             with open(
-                                src_file_abs, "r", encoding="utf-8", errors="ignore"
+                                src_file_abs, encoding="utf-8", errors="ignore"
                             ) as f:
                                 content = f.read()
                             content = sanitize_content(content, blocklist_terms)
@@ -309,10 +309,10 @@ def main():
     else:
         print("\n⚠️  Skipping privacy gate (no blocklist loaded).")
 
-    print(f"\n✅ Sync Complete!")
+    print("\n✅ Sync Complete!")
     print(f"   📦 Files synced: {files_synced}")
     print(f"   🚫 Files skipped (blacklisted): {files_skipped}")
-    print(f"\n💡 Note: No purge performed. Existing files preserved.")
+    print("\n💡 Note: No purge performed. Existing files preserved.")
     return 0
 
 

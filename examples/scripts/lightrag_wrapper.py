@@ -9,11 +9,12 @@ Purpose:
       python3 lightrag_wrapper.py --query "How does Protocol 10 relate to Protocol 50?" --mode hybrid
 """
 
-import os
 import argparse
 import logging
+import os
+
 from lightrag import LightRAG, QueryParam
-from lightrag.llm.ollama import ollama_model_complete, ollama_embed
+from lightrag.llm.ollama import ollama_embed, ollama_model_complete
 from lightrag.utils import EmbeddingFunc, always_get_an_event_loop
 
 # --- Configuration ---
@@ -57,7 +58,7 @@ def index_directory(rag, directory_path):
             if file.endswith(".md"):
                 file_path = os.path.join(root, file)
                 try:
-                    with open(file_path, "r", encoding="utf-8") as f:
+                    with open(file_path, encoding="utf-8") as f:
                         content = f.read()
                         if not content.strip():
                             continue

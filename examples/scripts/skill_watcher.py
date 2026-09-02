@@ -20,8 +20,8 @@ from pathlib import Path
 
 # Try to import watchdog, provide helpful message if missing
 try:
-    from watchdog.observers import Observer
     from watchdog.events import FileSystemEventHandler
+    from watchdog.observers import Observer
 
     WATCHDOG_AVAILABLE = True
 except ImportError:

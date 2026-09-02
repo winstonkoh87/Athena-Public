@@ -13,8 +13,8 @@ Config: .agent/config/orphan_exclusions.yaml
 import os
 import re
 from collections import defaultdict
-from urllib.parse import unquote
 from pathlib import Path
+from urllib.parse import unquote
 
 # Configuration
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -50,7 +50,7 @@ def load_exclusions() -> tuple[list[str], list[str]]:
         "archive",
         "__pycache__",
     ]
-    
+
     if CONFIG_FILE.exists():
         try:
             import yaml
@@ -63,7 +63,7 @@ def load_exclusions() -> tuple[list[str], list[str]]:
             pass  # yaml not installed, use defaults
         except Exception:
             pass  # config parse error, use defaults
-    
+
     return default_files, default_dirs
 
 
@@ -115,13 +115,13 @@ def extract_links(file_path):
     table_path_pattern = re.compile(r'`([^`]+\.md)`')
     # Pattern 3: Shorthand protocol paths like `protocols/01-name.md`
     protocol_shorthand = re.compile(r'`(protocols/[^`]+\.md)`')
-    
+
     links = []
-    
+
     try:
-        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+        with open(file_path, encoding="utf-8", errors="ignore") as f:
             content = f.read()
-        
+
         # Extract markdown links
         matches = link_pattern.findall(content)
         for link in matches:
@@ -134,7 +134,7 @@ def extract_links(file_path):
                 # Fallback: check relative to root
                 elif os.path.exists(os.path.join(PROJECT_ROOT, normalized)):
                     links.append(os.path.join(PROJECT_ROOT, normalized))
-        
+
         # Extract table path references
         table_matches = table_path_pattern.findall(content)
         for path in table_matches:
@@ -143,13 +143,13 @@ def extract_links(file_path):
             if os.path.exists(abs_path):
                 links.append(abs_path)
                 continue
-            
+
             # 2. Try relative to project root
             root_path = os.path.join(PROJECT_ROOT, path)
             if os.path.exists(root_path):
                 links.append(root_path)
                 continue
-            
+
             # 3. Try removing leading dot if present (e.g. .agent -> agent)
             if path.startswith("."):
                  root_path_clean = os.path.join(PROJECT_ROOT, path.lstrip("./"))
@@ -162,10 +162,10 @@ def extract_links(file_path):
             full_path = os.path.join(PROJECT_ROOT, ".agent", "skills", path)
             if os.path.exists(full_path):
                 links.append(os.path.abspath(full_path))
-                
+
     except Exception as e:
         log("ERROR", f"Could not read {file_path}: {e}")
-    
+
     return links
 
 
@@ -173,18 +173,18 @@ def find_orphans(md_files):
     """Find files that have no inbound links."""
     # Build inbound link map
     inbound_count = defaultdict(int)
-    
+
     # Initialize all files with 0 inbound
     for f in md_files:
         inbound_count[os.path.abspath(f)] = 0
-    
+
     # Count inbound links
     for file_path in md_files:
         links = extract_links(file_path)
         for link in links:
             if link in inbound_count:
                 inbound_count[link] += 1
-    
+
     # Find orphans (0 inbound)
     orphans = []
     for file_path, count in inbound_count.items():
@@ -197,7 +197,7 @@ def find_orphans(md_files):
             if any(excluded_dir in file_path for excluded_dir in EXCLUDED_DIRS):
                 continue
             orphans.append(file_path)
-    
+
     return orphans
 
 
@@ -210,26 +210,26 @@ def main():
     print("=" * 70)
     print("  ORPHAN DETECTOR (BIONIC)  ")
     print("=" * 70)
-    
+
     # Get all markdown files
     md_files = get_all_md_files()
     log("INFO", f"Scanning {len(md_files)} markdown files...")
-    
+
     # Find orphans
     orphans = find_orphans(md_files)
-    
+
     print("\n--- ORPHAN FILES (Zero Inbound Links) ---")
-    
+
     if orphans:
         for orphan in sorted(orphans):
             log("ORPHAN", f"{relative_path(orphan)}")
-        
+
         print(f"\n{YELLOW}Total: {len(orphans)} orphan files found.{RESET}")
         print(f"\n{CYAN}Action: Consider linking these files from relevant documents,")
         print(f"or archive them if they are no longer needed.{RESET}")
     else:
         log("INFO", "No orphan files found. All files are connected. ✓")
-    
+
     print("\n" + "=" * 70)
     print(f"\n{GREEN}SUMMARY:{RESET}")
     print(f"  Files scanned: {len(md_files)}")

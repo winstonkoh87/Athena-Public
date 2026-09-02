@@ -7,9 +7,8 @@ Designed to be launched by parallel_swarm.py in a separate Terminal window.
 """
 
 import argparse
-import sys
 import os
-import time
+import sys
 from pathlib import Path
 
 # Add script directory to path to import gemini_client

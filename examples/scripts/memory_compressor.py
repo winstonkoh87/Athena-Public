@@ -6,13 +6,14 @@ Standalone script to compress raw text into structured atomic facts.
 Uses Protocol 104 logic.
 """
 
+import argparse
 import os
 import sys
-import argparse
-from google import genai
 from datetime import datetime
 from pathlib import Path
+
 from dotenv import load_dotenv
+from google import genai
 
 # Protocol 104 Prompt
 SYSTEM_PROMPT = """

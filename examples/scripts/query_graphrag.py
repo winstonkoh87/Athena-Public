@@ -64,10 +64,10 @@ def search_vectors(query: str) -> list:
         return []
 
     try:
+        import logging
+
         import chromadb
         from chromadb.utils import embedding_functions
-
-        import logging
 
         logging.getLogger("chromadb").setLevel(logging.ERROR)
 

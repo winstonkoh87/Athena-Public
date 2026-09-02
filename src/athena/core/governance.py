@@ -302,6 +302,44 @@ class GovernanceEngine:
             "doom_loop": self.doom_loop.get_stats(),
         }
 
+    def evaluate_triple_lock(self) -> dict:
+        """Evaluate Triple-Lock compliance with a single, canonical rule.
+
+        Rule (AND, SNIPER-exempt):
+        - SNIPER: Always compliant (search exempt).
+        - STANDARD/ULTRA: Requires BOTH semantic AND web search performed.
+
+        Returns:
+            {
+                "compliant": bool,
+                "missing": list[str],  # e.g. ["Semantic Search", "Web Research"]
+                "risk_level": str,     # "SNIPER", "STANDARD", or "ULTRA"
+            }
+        """
+        risk_name = self._risk_level.name
+
+        if self._risk_level == RiskLevel.SNIPER:
+            return {
+                "compliant": True,
+                "missing": [],
+                "risk_level": risk_name,
+            }
+
+        semantic = self._state.get("semantic_search_performed", False)
+        web = self._state.get("web_search_performed", False)
+
+        missing = []
+        if not semantic:
+            missing.append("Semantic Search")
+        if not web:
+            missing.append("Web Research")
+
+        return {
+            "compliant": len(missing) == 0,
+            "missing": missing,
+            "risk_level": risk_name,
+        }
+
 
 # Singleton instance (lazy)
 _governance_engine = None

@@ -3,10 +3,10 @@ Athena Reaper (Sunset Protocol)
 Purpose: Enforces Protocol 106 by archiving unused skill files.
 """
 
+import datetime
 import os
 import shutil
 import time
-import datetime
 
 # CONFIGURATION
 SKILLS_DIR = os.path.abspath(

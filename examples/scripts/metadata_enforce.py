@@ -1,7 +1,6 @@
+import datetime
 import os
 import subprocess
-import datetime
-import re
 
 TARGET_DIRS = [".context", ".agent", ".projects"]
 EXCLUDE_DIRS = [
@@ -37,7 +36,7 @@ def get_git_dates(filepath):
         cmd_updated = ["git", "log", "-1", "--format=%aI", "--", filepath]
         result = subprocess.run(cmd_updated, capture_output=True, text=True)
         updated = result.stdout.strip()
-    except Exception as e:
+    except Exception:
         created = None
         updated = None
 
@@ -46,9 +45,9 @@ def get_git_dates(filepath):
 
 def process_file(filepath):
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             content = f.read()
-    except Exception as e:
+    except Exception:
         print(f"Skipping binary/unreadable: {filepath}")
         return
 

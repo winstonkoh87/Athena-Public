@@ -4,10 +4,9 @@ Case Study ID Remediation Script
 Renames duplicate CS-XXX files to unique IDs starting from CS-400.
 """
 
-import os
 import re
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
 CASE_STUDY_DIR = Path(".context/memories/case_studies")
 START_NEW_ID = 400

@@ -15,6 +15,7 @@ import sys
 from collections import defaultdict
 from concurrent.futures import ALL_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
+from typing import Any
 
 from athena.core.cache import get_search_cache
 from athena.core.config import (
@@ -77,6 +78,129 @@ WEIGHTS = {
     "sqlite": 1.5,
     "web_search": 2.8,
 }
+
+# SOTA Intent-Specific RRF Weights
+PERSONALISED_DECISION_WEIGHTS = {
+    "user_profile": 4.0,   # Primary: user constraints, rate floor, psychology
+    "canonical": 2.8,      # Financial metrics, active constraints, tier-1 rules
+    "session": 3.0,        # Recent lived experience and precedent
+    "case_study": 2.8,     # Applied case studies
+    "protocol": 2.0,       # Supporting heuristics
+    "system_doc": 0.8,     # Demoted
+    "framework": 0.8,
+    "framework_docs": 0.8,
+    "capability": 1.5,
+    "workflow": 1.5,
+    "filename": 1.8,
+    "sqlite": 1.5,
+    "web_search": 2.5,
+    "playbook": 1.8,
+    "entity": 1.8,
+    "reference": 1.8,
+    "tags": 2.2,
+    "vector": 2.0,
+}
+
+SYSTEM_KNOWLEDGE_WEIGHTS = {
+    "protocol": 3.5,       # Primary: authoritative system protocols
+    "capability": 3.2,     # Primary: skill tools
+    "workflow": 2.5,
+    "case_study": 2.5,
+    "filename": 2.5,
+    "user_profile": 1.5,
+    "canonical": 1.2,
+    "system_doc": 1.2,
+    "framework": 1.2,
+    "framework_docs": 1.2,
+    "session": 2.0,
+    "sqlite": 1.5,
+    "web_search": 2.0,
+    "playbook": 1.8,
+    "entity": 1.8,
+    "reference": 1.8,
+    "tags": 2.2,
+    "vector": 1.8,
+}
+
+
+def classify_query_intent(query: str) -> str:
+    """
+    Classify query intent into PERSONALISED_DECISION, SYSTEM_KNOWLEDGE, or GENERAL.
+
+    PERSONALISED_DECISION: Queries requiring user-specific context, rate floors,
+                          capital risk limits, pricing, client evaluation, or life decisions.
+    SYSTEM_KNOWLEDGE:     Queries asking about protocols, tools, architecture, code,
+                          or explicit system patterns (ARC-, PAT-, DEC-, P5xx, etc.).
+    GENERAL:              Balanced general hybrid search.
+    """
+    q_lower = query.lower().strip()
+
+    # 1. Strong System Knowledge Indicators
+    system_patterns = [
+        r"\b(?:protocol|arc|pat|dec|cs|eva|td|rsn|sys|beh|cal|sgp|str|qa|eco|fin|ldr|acq|psy)(?:-[a-z0-9]+)?-\d+\b",
+        r"\bp(?:5\d{2}|[0-4]\d{2})\b",  # P509, P512, P133, etc.
+        r"\b(?:hook|linter|architecture|orchestrator|reranker|pgvector|fts5|subagent|workflow|manifest)\b",
+        r"\b(?:what is protocol|how does protocol|explain protocol|list protocols|system architecture)\b",
+        r"\b(?:test_|unittest|pytest|ci/cd|gitkraken|supabase_sync)\b",
+        # Code-level queries: function names, .py files, skill names
+        r"\b(?:search\.py|agentic_search\.py|personalisation\.py|config\.py|models\.py)\b",
+        r"\b(?:weighted_rrf|collect_vectors|run_search|get_embedding|classify_query_intent)\b",
+        r"\b(?:bionic-decision-engine|sovereign-economics-engine|social-physics-filter|structural-trading-gate)\b",
+        r"\b(?:explain|describe|show|list)\s+(?:the\s+)?(?:\w+-)+(?:skill|engine|protocol|module)\b",
+    ]
+    if any(re.search(p, q_lower) for p in system_patterns):
+        return "SYSTEM_KNOWLEDGE"
+
+    # 2. Strong Personal Decision & Strategy Indicators
+    decision_phrases = [
+        r"\b(?:should i|would i|can i|how should i|how much should i|how do i)\b",
+        r"\b(?:what should i charge|rate floor|pricing curve|hourly rate|consulting rate)\b",
+        r"\b(?:take or pass|accept or decline|is it worth|evaluate (?:this )?deal|evaluate (?:this )?client)\b",
+        r"\b(?:key-man risk|runway|burn rate|cash buffer|active float|war chest|pipeline drought)\b",
+        r"\b(?:cptsd|trigger log|inner work|ifs|boundary|pryce|consiglieri|deconstruct (?:this )?trigger)\b",
+        r"\b(?:feel(?:ing)? anxious|anxiety|schema deconstruction)\b",
+        r"\b(?:gym session|solo session|pt dependency|tanita|barbell)\b",
+        r"\b(?:winston|my rate|my business|my trades?|my runway|my client)\b",
+        # Additional personal crisis / life decision patterns
+        r"\b(?:what do i do|what should i do|how do i handle|how do i deal|how do i calculate)\b",
+        r"\b(?:cheat(?:ed|ing)?|divorce|breakup|break up|separation|custody|affair|spouse)\b",
+    ]
+    if any(re.search(p, q_lower) for p in decision_phrases):
+        return "PERSONALISED_DECISION"
+
+    # 3. Keyword-level heuristic for personal decision
+    personal_keywords = {
+        "charge", "rate", "rates", "pricing", "quote", "client", "assignment",
+        "deal", "runway", "burn", "trade", "trading", "crypto", "forex", "gold",
+        "gym", "diet", "habit", "boundary", "anxiety", "anxious", "cptsd", "trigger",
+        "partner", "negotiate", "pipeline", "drought", "schema",
+        "bto", "hdb", "cpf", "mortgage", "wife", "husband", "spouse", "affair",
+        "settlement", "alimony", "flat", "mop", "leverage", "proceeds", "sscs",
+    }
+    decision_verbs = {
+        "should", "would", "decide", "decision", "advise", "recommend", "worth",
+        "take", "accept", "proceed", "prioritise", "prioritize", "evaluate",
+        "feel", "feeling", "deconstruct", "want", "negotiate", "handle",
+        "calculate", "use", "rent", "keep", "sell", "split",
+    }
+    tokens = set(re.findall(r"\b\w+\b", q_lower))
+    if (tokens & personal_keywords) and (tokens & decision_verbs):
+        return "PERSONALISED_DECISION"
+    if "winston" in tokens and (tokens & decision_verbs or tokens & personal_keywords):
+        return "PERSONALISED_DECISION"
+
+    return "GENERAL"
+
+
+def get_intent_weights(intent: str = "GENERAL") -> dict[str, float]:
+    """Retrieve the optimal RRF weight profile based on query intent."""
+    if intent == "PERSONALISED_DECISION":
+        return PERSONALISED_DECISION_WEIGHTS
+    elif intent == "SYSTEM_KNOWLEDGE":
+        return SYSTEM_KNOWLEDGE_WEIGHTS
+    return WEIGHTS
+
+
 RRF_K = 60
 CONFIDENCE_HIGH = 0.03
 CONFIDENCE_MED = 0.02
@@ -205,7 +329,7 @@ def collect_vectors(
 ) -> "list[SearchResult]":
     """Collect semantic matches via Supabase using a unified database search."""
     if exclude_domains is None:
-        exclude_domains = ["personal"]  # Default: exclude personal domain
+        exclude_domains = []  # Default: un-gated (includes personal domain for private workspace)
 
     results = []
     try:
@@ -353,6 +477,14 @@ def collect_filenames(query: str) -> list[SearchResult]:
             "-prune",
             "-o",
             "-path",
+            "./.venv",
+            "-prune",
+            "-o",
+            "-path",
+            "./.pytest_cache",
+            "-prune",
+            "-o",
+            "-path",
             "./Athena-Public",
             "-prune",
             "-o",
@@ -378,7 +510,7 @@ def collect_filenames(query: str) -> list[SearchResult]:
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
-            timeout=3,  # Slightly increased for the heavier single query
+            timeout=5,
         )
 
         if process.stdout:
@@ -539,9 +671,9 @@ def collect_sqlite(query: str, limit: int = 10) -> list[SearchResult]:
     """Sovereign Fallback: Search the local SQLite index (athena.db)."""
     import sqlite3
 
-    from athena.core.config import INPUTS_DIR
+    from athena.core.config import ATHENA_DB
 
-    db_path = INPUTS_DIR / "athena.db"
+    db_path = ATHENA_DB
     if not db_path.exists():
         return []
 
@@ -639,32 +771,58 @@ def collect_web_search(query: str, limit: int = 5) -> list[SearchResult]:
                 queries = urllib.parse.parse_qs(parsed_url.query)
                 target_url = queries.get("uddg", [raw_url])[0]
 
+                from datetime import datetime, timezone
                 results.append(
                     SearchResult(
                         id=f"Web: {title}",
                         content=snippet,
                         source="web_search",
                         score=1.0 - (len(results) * 0.1),
-                        metadata={"path": target_url},
+                        metadata={"path": target_url, "fetched_at": datetime.now(timezone.utc).isoformat()},
                     )
                 )
     except Exception:
         pass
     return results
+def collect_web_search_v2(query: str, limit: int = 5) -> list[SearchResult]:
+    """Web search via provider layer (P1.2). Falls back to legacy DDG scraper."""
+    try:
+        from athena.tools.web_providers import web_search as provider_web_search
+        results_raw, meta = provider_web_search(query, limit=limit)
+        results = []
+        for wr in results_raw:
+            results.append(
+                SearchResult(
+                    id=f"Web: {wr.title}",
+                    content=wr.snippet,
+                    source="web_search",
+                    score=1.0 - (len(results) * 0.1),
+                    metadata={
+                        "path": wr.url,
+                        "fetched_at": wr.fetched_at,
+                        "provider": wr.provider,
+                    },
+                )
+            )
+        return results
+    except Exception:
+        # Fallback to legacy scraper
+        return collect_web_search(query, limit)
 
 
 # --- Fusion Logic ---
 
 
 def weighted_rrf(
-    ranked_lists: dict[str, list[SearchResult]], k: int = 60
+    ranked_lists: dict[str, list[SearchResult]], k: int = 60, intent: str = "GENERAL"
 ) -> list[SearchResult]:
     fused_scores = defaultdict(float)
     doc_map = {}
     doc_signals = defaultdict(dict)
+    weights = get_intent_weights(intent)
 
     for source, docs in ranked_lists.items():
-        weight = WEIGHTS.get(source, 1.0)
+        weight = weights.get(source, 1.0)
         for rank, doc in enumerate(docs, start=1):
             score_mod = 0.5 + doc.score  # Dynamic: range 0.5 to 1.5
 
@@ -681,6 +839,23 @@ def weighted_rrf(
                     temporal_mod = 0.90
                 elif re.search(r"(?:^|[/_\-\s])2024(?:[/_\-.\s]|$)", target_str):
                     temporal_mod = 0.75
+
+            # Web result freshness decay (based on fetched_at)
+            if source == "web_search" and hasattr(doc, 'metadata') and doc.metadata:
+                fetched_at_str = doc.metadata.get("fetched_at", "")
+                if fetched_at_str:
+                    try:
+                        from datetime import datetime, timezone
+                        fetched_at = datetime.fromisoformat(fetched_at_str)
+                        age_hours = (datetime.now(timezone.utc) - fetched_at).total_seconds() / 3600
+                        if age_hours < 1:
+                            temporal_mod = 1.0
+                        elif age_hours < 24:
+                            temporal_mod = 0.9
+                        else:
+                            temporal_mod = 0.75
+                    except Exception:
+                        temporal_mod = 0.85  # Unknown age, slight penalty
 
             contrib = weight * score_mod * temporal_mod * (1.0 / (k + rank))
             fused_scores[doc.id] += contrib
@@ -700,6 +875,66 @@ def weighted_rrf(
     return sorted(final_list, key=lambda x: x.rrf_score, reverse=True)
 
 
+def redact_query_for_web(query: str, intent: str) -> tuple[str, bool]:
+    """Redact personal information from a query before sending to web search.
+
+    When intent is PERSONALISED_DECISION and web fires, strip names,
+    possessive phrases, and personal keywords so personal queries never
+    leave the machine with identifying information.
+
+    Args:
+        query: The original query.
+        intent: The classified intent.
+
+    Returns:
+        Tuple of (redacted_query, was_redacted: bool).
+        If redaction would strip too many informative tokens (>75%),
+        returns the original query with was_redacted=False.
+    """
+    import re
+
+    if intent != "PERSONALISED_DECISION":
+        return query, False
+
+    redacted = query
+
+    # Personal keywords to strip (from search.py's existing personal_keywords family)
+    PERSONAL_STRIP = {
+        'wife', 'husband', 'girlfriend', 'boyfriend', 'partner', 'spouse',
+        'affair', 'divorce', 'marriage', 'wedding',
+        'mortgage', 'bto', 'hdb', 'condo', 'rental',
+        'salary', 'income', 'pay', 'bonus', 'savings',
+    }
+
+    # Strip possessive phrases: "my wife", "my husband", "our mortgage"
+    redacted = re.sub(r'\b(my|our|her|his)\s+(\w+)',
+                      lambda m: m.group(2) if m.group(2).lower() not in PERSONAL_STRIP else '',
+                      redacted, flags=re.IGNORECASE)
+
+    # Strip personal keywords
+    for kw in PERSONAL_STRIP:
+        redacted = re.sub(rf'\b{re.escape(kw)}\b', '', redacted, flags=re.IGNORECASE)
+
+    # Strip currency amounts with S$ prefix
+    redacted = re.sub(r'S?\$[\d,]+(?:\.\d{2})?', '', redacted)
+
+    # Strip standalone numbers that look like amounts (4+ digits)
+    redacted = re.sub(r'\b\d{4,}\b', '', redacted)
+
+    # Clean up multiple spaces
+    redacted = re.sub(r'\s+', ' ', redacted).strip()
+
+    # Check if redaction stripped too much (abort guard)
+    try:
+        from athena.tools.web_triggers import should_abort_web_redaction
+        if should_abort_web_redaction(query, redacted):
+            return query, False  # Too much stripped, use original (accept privacy risk)
+    except ImportError:
+        pass
+
+    return redacted, True
+
+
 # --- Main Entry Point ---
 
 
@@ -710,19 +945,36 @@ def run_search(
     rerank: bool = True,  # default-on for programmatic/agent callers; crash-safe no-op if sentence_transformers unavailable
     debug: bool = False,
     json_output: bool = False,
-    include_personal: bool = False,
-    web: bool = False,
+    include_personal: bool = True,  # default-true for sovereign workspace
+    privacy_mode: bool = False,
+    intent: str | None = None,
+    web: bool | None = None,  # None = auto via needs_web(); True/False = explicit override
 ):
     import time
     t0 = time.time()
+
+    detected_intent = intent or classify_query_intent(query)
+
+    # P1.3: Auto-fire web search based on freshness classification
+    if web is None:
+        try:
+            from athena.tools.web_triggers import needs_web
+            web, _web_reason = needs_web(query, detected_intent)
+        except ImportError:
+            web = False  # web_triggers not available, default to local-only
+
+    effective_web = web
+    effective_personal = False if privacy_mode else include_personal
+    vector_failed = False  # FIX-03: Track vector channel health for degraded_recall flag
 
     # Define execution scope for strict cache isolation
     search_scope = {
         "limit": limit,
         "strict": strict,
         "rerank": rerank,
-        "personal": include_personal,
-        "web": web,
+        "personal": effective_personal,
+        "intent": detected_intent,
+        "web": effective_web,
     }
 
     # 0. Check cache first
@@ -785,6 +1037,7 @@ def run_search(
                         file=sys.stderr,
                     )
                 query_embedding = None  # Proceed without vectors
+                vector_failed = True  # FIX-03: Flag degraded recall
 
             # Fallback to full search
             if not json_output:
@@ -797,7 +1050,7 @@ def run_search(
             # Wrapper for robust execution
 
             # 1. Collect (Parallel execution)
-            exclude_domains = [] if include_personal else ["personal"]
+            exclude_domains = [] if effective_personal else ["personal"]
 
             # Helper to create safe lambdas
             def safe_exec(name, func):
@@ -810,6 +1063,13 @@ def run_search(
             # Live channels (2026-06-19): "tags" and "exocortex" retired — both were
             # dead on disk (TAG_INDEX moved to .context/archive/; exocortex.db absent).
             # Vector is the ONLY semantic channel; the rest are lexical. See TECH_DEBT.md.
+
+            # P1.6: Privacy guard — redact personal info from web queries
+            web_query = query
+            web_redacted = False
+            if effective_web and detected_intent == "PERSONALISED_DECISION":
+                web_query, web_redacted = redact_query_for_web(query, detected_intent)
+
             collection_tasks = {
                 "canonical": lambda: collect_canonical(query),
                 "vector": lambda: collect_vectors(
@@ -819,8 +1079,8 @@ def run_search(
                 "filename": lambda: collect_filenames(query),
                 "framework_docs": lambda: collect_framework_docs(query),
             }
-            if web:
-                collection_tasks["web_search"] = lambda: collect_web_search(query, limit=limit)
+            if effective_web:
+                collection_tasks["web_search"] = lambda: collect_web_search_v2(web_query, limit=limit)
 
             lists = {}
             with ThreadPoolExecutor(max_workers=len(collection_tasks)) as executor:
@@ -833,7 +1093,7 @@ def run_search(
 
                 # 2. Wait for non-vector tasks to complete (local processes are very fast)
                 done, not_done = wait(
-                    future_to_source.keys(), timeout=3, return_when=ALL_COMPLETED
+                    future_to_source.keys(), timeout=5, return_when=ALL_COMPLETED
                 )
 
                 # Collect non-vector results
@@ -885,6 +1145,12 @@ def run_search(
                             if not json_output:
                                 print(f"   ⚠️ {source} timed out or failed: {e}", file=sys.stderr)
                             lists[source] = []
+                            if source == "vector":
+                                vector_failed = True  # FIX-03: Flag degraded recall
+
+            if effective_web and len(lists.get("web_search", [])) >= 1:
+                from athena.core.governance import get_governance
+                get_governance().mark_web_search_performed(query)
 
             # 2. Fuse
             # Split vector results by their type-specific source for correct
@@ -896,7 +1162,7 @@ def run_search(
                     lists[type_key] = []
                 lists[type_key].append(item)
 
-            fused_results = weighted_rrf(lists)
+            fused_results = weighted_rrf(lists, intent=detected_intent)
 
         # 3. Rerank
         if rerank and fused_results:
@@ -935,7 +1201,9 @@ def run_search(
         suppressed_count = 0
 
     if not json_output and fused_results:
-        print("\n<athena_grounding>")
+        print(f'\n<athena_grounding intent="{detected_intent}">')
+        if detected_intent == "PERSONALISED_DECISION":
+            print("   🎯 Intent: PERSONALISED DECISION (Prioritizing user profile, canonical constraints & precedent)")
 
     # 5. Present
     if not fused_results:
@@ -945,6 +1213,8 @@ def run_search(
                     {
                         "results": [],
                         "suppressed": suppressed_count,
+                        "intent": detected_intent,
+                        "degraded_recall": vector_failed,
                         "message": "No high-confidence results",
                     }
                 )
@@ -987,7 +1257,38 @@ def run_search(
     else:
         # JSON output logic
         output = [doc.to_dict() for doc in fused_results[:limit]]
-        print(json.dumps({"results": output, "suppressed": suppressed_count}))
+        json_payload: dict[str, Any] = {
+            "results": output,
+            "suppressed": suppressed_count,
+            "intent": detected_intent,
+            "degraded_recall": vector_failed,  # FIX-03: Surface vector health to MCP consumers
+        }
+
+        # Attach active personalisation frame for decision queries
+        if detected_intent == "PERSONALISED_DECISION":
+            try:
+                from athena.tools.personalisation import (
+                    build_personalisation_prompt,
+                    build_user_state_snapshot,
+                )
+
+                user_state = build_user_state_snapshot()
+                personalisation_ctx = build_personalisation_prompt(
+                    query, fused_results[:limit], user_state=user_state, intent=detected_intent
+                )
+                # FIX-03: Append degraded recall warning to personalisation context
+                if vector_failed:
+                    personalisation_ctx += (
+                        "\n\n⚠️ [DEGRADED RECALL] Vector search channel unavailable. "
+                        "Semantic memory (case studies, sessions, protocols) may be missing. "
+                        "Cross-verify critical decisions against .context/ files directly."
+                    )
+                json_payload["personalisation_context"] = personalisation_ctx
+                json_payload["user_state"] = user_state
+            except Exception:
+                pass  # Graceful degradation if personalisation module unavailable
+
+        print(json.dumps(json_payload))
 
     # Retrieval Telemetry — A7 Instrumentation (MCDA Rank #1)
     # Logs every search invocation to enable data-driven pruning.
@@ -1042,6 +1343,7 @@ def run_search(
             "top_rrf": round(top_results[0].rrf_score, 5) if top_results else 0,
             "latency_ms": latency_ms,
             "tokens": tokens,
+            "intent": detected_intent,
         }
 
         with open(log_path, "a", encoding="utf-8") as f:
@@ -1083,6 +1385,9 @@ if __name__ == "__main__":
     parser.add_argument("--no-rerank", dest="rerank", action="store_false")
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--privacy-mode", action="store_true", help="Exclude personal/psychology vectors")
+    parser.add_argument("--intent", choices=["PERSONALISED_DECISION", "SYSTEM_KNOWLEDGE", "GENERAL"],
+                        help="Explicitly override query intent classification")
     parser.add_argument("--web", action="store_true", help="Enable live web search grounding channel")
     args = parser.parse_args()
 
@@ -1093,5 +1398,7 @@ if __name__ == "__main__":
         args.rerank,
         args.debug,
         args.json,
+        privacy_mode=args.privacy_mode,
+        intent=args.intent,
         web=args.web,
     )

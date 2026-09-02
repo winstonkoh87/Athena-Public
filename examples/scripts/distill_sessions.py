@@ -11,11 +11,10 @@ Usage:
     python3 distill_sessions.py --dry-run # Preview without writing
 """
 
-import os
 import re
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Configuration
 WORKSPACE = Path(__file__).resolve().parent.parent.parent
@@ -31,7 +30,7 @@ def extract_existing_insights(content: str) -> list[str] | None:
         r"###\s*Key Decisions?\s*\n((?:[-*]\s*.+\n?)+)",
         r"##\s*\d+\.\s*Key Insights?\s*\n((?:[-*]\s*.+\n?)+)",
     ]
-    
+
     for pattern in patterns:
         match = re.search(pattern, content, re.IGNORECASE)
         if match:
@@ -51,7 +50,7 @@ def generate_insights_via_gemini(content: str, session_name: str) -> list[str]:
     try:
         sys.path.insert(0, str(WORKSPACE / ".agent" / "scripts"))
         from gemini_client import get_client
-        
+
         prompt = f"""Extract 3-5 key insights from this session log.
 Focus on: Learnings, decisions made, patterns detected, new frameworks applied.
 Output as bullet points, each max 100 chars.
@@ -61,14 +60,14 @@ Content (last 4000 chars):
 {content[-4000:]}
 
 Key Insights (3-5 bullets):"""
-        
+
         client = get_client()
         response = client.generate(prompt).strip()
-        
+
         # Parse bullets from response
         items = re.findall(r"[-*•]\s*(.+)", response)
         return items[:5] if items else ["Session processed."]
-        
+
     except Exception as e:
         print(f"   ⚠️ Gemini failed: {e}")
         # Fallback to checkpoints
@@ -84,53 +83,53 @@ def parse_session_filename(filename: str) -> tuple[str, int] | tuple[None, None]
 def main():
     dry_run = "--dry-run" in sys.argv
     recent_only = "--recent" in sys.argv
-    
+
     print("🔍 SESSION DISTILLATION")
     print("=" * 50)
-    
+
     # Ensure output directory exists
     if not dry_run:
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    
+
     # Collect session files
     session_files = list(SESSION_LOGS_DIR.glob("*-session-*.md"))
     if ARCHIVE_DIR.exists():
         session_files.extend(list(ARCHIVE_DIR.glob("*-session-*.md")))
-    
+
     # Sort by date/session number
-    session_files = sorted(session_files, 
+    session_files = sorted(session_files,
         key=lambda f: (parse_session_filename(f.name) or ("", 0)),
         reverse=True)
-    
+
     if recent_only:
         session_files = session_files[:10]
-    
+
     print(f"   Found {len(session_files)} session files")
-    
+
     distilled = 0
     skipped = 0
     extracted = 0
     generated = 0
-    
+
     for file_path in session_files:
         date_str, session_num = parse_session_filename(file_path.name)
         if not date_str:
             skipped += 1
             continue
-        
+
         output_name = f"{date_str}-session-{session_num:02d}-insights.md"
         output_path = OUTPUT_DIR / output_name
-        
+
         # Skip if already distilled
         if output_path.exists():
             skipped += 1
             continue
-        
+
         content = file_path.read_text(encoding="utf-8")
-        
+
         # Try to extract existing insights first
         insights = extract_existing_insights(content)
-        
+
         if insights:
             source = "extracted"
             extracted += 1
@@ -144,7 +143,7 @@ def main():
                 source = "generated"
                 generated += 1
                 print(f"   🤖 {file_path.name}: Generated {len(insights)} insights")
-        
+
         # Build distilled file
         distilled_content = f"""# Session Insights: {date_str} (Session {session_num})
 
@@ -156,24 +155,24 @@ def main():
 """
         for insight in insights:
             distilled_content += f"- {insight}\n"
-        
-        distilled_content += f"""
+
+        distilled_content += """
 ---
 
 #session-insights #distilled
 """
-        
+
         if not dry_run:
             output_path.write_text(distilled_content, encoding="utf-8")
-        
+
         distilled += 1
-    
+
     print(f"\n{'[DRY RUN] ' if dry_run else ''}Summary:")
     print(f"   Distilled: {distilled}")
     print(f"   Extracted: {extracted}")
     print(f"   Generated: {generated}")
     print(f"   Skipped: {skipped}")
-    
+
     if not dry_run:
         print(f"\n✅ Insights saved to {OUTPUT_DIR}")
 

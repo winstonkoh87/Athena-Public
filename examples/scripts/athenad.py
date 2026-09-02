@@ -14,17 +14,16 @@ Architecture:
   [File System] <-------- [GraphRAG Store]
 """
 
-import os
-import time
-import sqlite3
-import hashlib
-import re
-import sys
-import threading
-import queue
 import logging
 import logging.handlers
+import os
+import queue
+import re
+import sqlite3
 import subprocess
+import sys
+import threading
+import time
 from pathlib import Path
 
 # --- CONFIGURATION ---
@@ -87,7 +86,7 @@ def extract_tags(filepath):
     """Extract tags from Markdown."""
     tags = []
     try:
-        with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+        with open(filepath, encoding="utf-8", errors="ignore") as f:
             content = f.read()
             tags = re.findall(r"#([\w-]+)", content)
     except Exception as e:
@@ -123,7 +122,7 @@ class BackgroundIndexer(threading.Thread):
 
         try:
             # Read content to verify it's valid
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 content = f.read()
                 if len(content) < 50:  # Skip empty/stub files
                     return
@@ -190,7 +189,7 @@ class AthenaDaemon:
     def init_db(self):
         if not DB_PATH.exists() and SCHEMA_PATH.exists():
             conn = self.get_db_connection()
-            with open(SCHEMA_PATH, "r") as f:
+            with open(SCHEMA_PATH) as f:
                 conn.executescript(f.read())
             conn.commit()
             conn.close()

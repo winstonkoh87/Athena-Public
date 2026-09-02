@@ -1,6 +1,6 @@
-import sys
 import os
 import re
+import sys
 import urllib.parse
 from pathlib import Path
 

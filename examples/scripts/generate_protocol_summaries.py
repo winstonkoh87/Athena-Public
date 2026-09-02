@@ -11,7 +11,6 @@ Walks .agent/skills/protocols/<category>/<file>.md, extracts:
 Output: .context/PROTOCOL_SUMMARIES.md
 """
 
-import os
 import re
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -145,7 +144,7 @@ def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     lines = [
         "---",
-        f"created: 2026-03-16",
+        "created: 2026-03-16",
         f"last_updated: {now}",
         "description: Quick-lookup summaries for all protocols, grouped by category",
         "auto_generated: true",
@@ -154,7 +153,7 @@ def main():
         "",
         "# Protocol Summaries",
         "",
-        f"> **Purpose**: One-line summaries for rapid protocol discovery. Referenced by `AGENTS.md` for agent retrieval.",
+        "> **Purpose**: One-line summaries for rapid protocol discovery. Referenced by `AGENTS.md` for agent retrieval.",
         f"> **Inventory**: {total} protocols across {len(categories)} categories.",
         '> **Path**: `.agent/skills/protocols/<category>/<filename>.md`',
         f"> **Generated**: {now} by `generate_protocol_summaries.py`",

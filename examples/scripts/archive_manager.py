@@ -18,11 +18,10 @@ Logic:
        Move to .context/archive/session_logs/{YYYY}/{MM}/
 """
 
-import os
-import shutil
 import argparse
-from pathlib import Path
+import shutil
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 # Configuration
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -87,7 +86,7 @@ def archive_workspace(days: int = 30, dry_run: bool = False):
                     print(f"  ❌ Failed to move {f.name}: {e}")
                     errors += 1
 
-    print(f"\n✅ Hygiene Complete.")
+    print("\n✅ Hygiene Complete.")
     print(f"   Items Archived: {moved_count}")
     print(f"   Errors: {errors}")
 

@@ -15,7 +15,6 @@ Usage:
 """
 
 import json
-import re
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
@@ -44,14 +43,14 @@ def parse_canonical() -> tuple[list[str], list[str], list[str], list[str]]:
     - after_section4: lines after Section 4
     """
     lines = CANONICAL_PATH.read_text(encoding="utf-8").splitlines(keepends=True)
-    
+
     before = []
     header = []
     rows = []
     after = []
-    
+
     state = "before"
-    
+
     for i, line in enumerate(lines):
         if state == "before":
             if line.startswith("## 4. Strategic Frameworks"):
@@ -75,84 +74,84 @@ def parse_canonical() -> tuple[list[str], list[str], list[str], list[str]]:
                 rows.append(line)
         elif state == "after":
             after.append(line)
-    
+
     return before, header, rows, after
 
 
 def classify_rows(rows: list[str], tier_map: dict) -> dict[int, list[str]]:
     """Classify each row into its tier based on the tier_map entries."""
     entries = tier_map["entries"]
-    
+
     # Build a lookup: framework name -> tier
     name_to_tier = {}
     for entry in entries:
         name_to_tier[entry["name"].lower().strip()] = entry["tier"]
-    
+
     tiered = {1: [], 2: [], 3: []}
-    
+
     for row in rows:
         if not row.strip() or not row.strip().startswith("|"):
             continue
-        
+
         # Extract framework name from the first column
         parts = [p.strip() for p in row.split("|")]
         parts = [p for p in parts if p]
         if not parts:
             continue
-        
+
         name = parts[0].replace("**", "").strip().lower()
-        
+
         # Look up tier
         tier = name_to_tier.get(name, 2)  # Default to Tier 2 if not found
         tiered[tier].append(row)
-    
+
     return tiered
 
 
 def generate_tier_file(tier: int, header_lines: list[str], rows: list[str]) -> str:
     """Generate content for a tier file."""
     label = TIER_LABELS[tier]
-    
+
     lines = []
     lines.append(f"# CANONICAL Section 4 — Tier {tier}\n")
-    lines.append(f"\n")
+    lines.append("\n")
     lines.append(f"> **Classification**: {label}\n")
-    lines.append(f"> **Source**: Split from CANONICAL.md Section 4 (TD-021, 2026-05-09)\n")
+    lines.append("> **Source**: Split from CANONICAL.md Section 4 (TD-021, 2026-05-09)\n")
     lines.append(f"> **Entries**: {len(rows)}\n")
-    
+
     if tier == 1:
-        lines.append(f"> **Load**: ALWAYS — included in every /start and /ultrastart boot.\n")
+        lines.append("> **Load**: ALWAYS — included in every /start and /ultrastart boot.\n")
     elif tier == 2:
-        lines.append(f"> **Load**: When query domain matches (trading, business/pricing, psychology, content/marketing, architecture, real estate/geo).\n")
+        lines.append("> **Load**: When query domain matches (trading, business/pricing, psychology, content/marketing, architecture, real estate/geo).\n")
     else:
-        lines.append(f"> **Load**: On explicit request or Exocortex search hit only.\n")
-    
-    lines.append(f"\n")
-    lines.append(f"| Framework | Protocol | Core Principle |\n")
-    lines.append(f"| :--- | :--- | :--- |\n")
-    
+        lines.append("> **Load**: On explicit request or Exocortex search hit only.\n")
+
+    lines.append("\n")
+    lines.append("| Framework | Protocol | Core Principle |\n")
+    lines.append("| :--- | :--- | :--- |\n")
+
     for row in rows:
         lines.append(row if row.endswith("\n") else row + "\n")
-    
-    lines.append(f"\n")
-    lines.append(f"---\n")
-    lines.append(f"\n")
-    lines.append(f"> **Navigation**: [CANONICAL.md](file:///Users/[AUTHOR]/Project%20Athena/.context/CANONICAL.md) · ")
-    lines.append(f"[Tier 1](file:///Users/[AUTHOR]/Project%20Athena/.context/CANONICAL_TIER1.md) · ")
-    lines.append(f"[Tier 2](file:///Users/[AUTHOR]/Project%20Athena/.context/CANONICAL_TIER2.md) · ")
-    lines.append(f"[Tier 3](file:///Users/[AUTHOR]/Project%20Athena/.context/CANONICAL_TIER3.md)\n")
-    
+
+    lines.append("\n")
+    lines.append("---\n")
+    lines.append("\n")
+    lines.append("> **Navigation**: [CANONICAL.md](file:///Users/[AUTHOR]/Project%20Athena/.context/CANONICAL.md) · ")
+    lines.append("[Tier 1](file:///Users/[AUTHOR]/Project%20Athena/.context/CANONICAL_TIER1.md) · ")
+    lines.append("[Tier 2](file:///Users/[AUTHOR]/Project%20Athena/.context/CANONICAL_TIER2.md) · ")
+    lines.append("[Tier 3](file:///Users/[AUTHOR]/Project%20Athena/.context/CANONICAL_TIER3.md)\n")
+
     return "".join(lines)
 
 
-def rewrite_canonical_section4(before: list[str], header: list[str], 
+def rewrite_canonical_section4(before: list[str], header: list[str],
                                  tiered: dict[int, list[str]], after: list[str]) -> str:
     """Rewrite CANONICAL.md with only Tier 1 in Section 4, plus navigation to Tier 2/3."""
     result = []
-    
+
     # Everything before Section 4
     result.extend(before)
-    
+
     # Section 4 header (modified)
     result.append("## 4. Strategic Frameworks (Active) — Tier 1: Always Boot\n")
     result.append("\n")
@@ -167,15 +166,15 @@ def rewrite_canonical_section4(before: list[str], header: list[str],
     result.append("\n")
     result.append("| Framework | Protocol | Core Principle |\n")
     result.append("| :--- | :--- | :--- |\n")
-    
+
     for row in tiered[1]:
         result.append(row if row.endswith("\n") else row + "\n")
-    
+
     result.append("\n")
-    
+
     # Section 5 onwards
     result.extend(after)
-    
+
     return "".join(result)
 
 
@@ -184,43 +183,43 @@ def main():
     parser = argparse.ArgumentParser(description="CANONICAL Section 4 Tiered Split")
     parser.add_argument("--dry-run", action="store_true", help="Print stats without writing files")
     args = parser.parse_args()
-    
+
     # Load data
     tier_map = load_tier_map()
     before, header, rows, after = parse_canonical()
-    
+
     # Classify rows
     tiered = classify_rows(rows, tier_map)
-    
+
     print(f"\n{'='*60}")
-    print(f"📊 CANONICAL SECTION 4 TIERED SPLIT")
+    print("📊 CANONICAL SECTION 4 TIERED SPLIT")
     print(f"{'='*60}\n")
-    
+
     for t in [1, 2, 3]:
         label = TIER_LABELS[t]
         count = len(tiered[t])
         chars = sum(len(r) for r in tiered[t])
         print(f"  Tier {t} ({label[:30]:30s}): {count:3d} entries, {chars:6,d} chars (~{chars//1024}KB)")
-    
+
     total_t2t3 = sum(len(r) for r in tiered[2]) + sum(len(r) for r in tiered[3])
     print(f"\n  🎯 Boot savings: ~{total_t2t3:,d} chars (~{total_t2t3//1024}KB) removed from /start context")
-    
+
     if args.dry_run:
-        print(f"\n  [DRY RUN] No files written.")
+        print("\n  [DRY RUN] No files written.")
         return
-    
+
     # Write tier files
     for t in [1, 2, 3]:
         path = OUTPUT_DIR / f"CANONICAL_TIER{t}.md"
         content = generate_tier_file(t, header, tiered[t])
         path.write_text(content, encoding="utf-8")
         print(f"\n  💾 Written: {path.relative_to(PROJECT_ROOT)} ({len(tiered[t])} entries)")
-    
+
     # Rewrite CANONICAL.md
     new_canonical = rewrite_canonical_section4(before, header, tiered, after)
     CANONICAL_PATH.write_text(new_canonical, encoding="utf-8")
-    print(f"  💾 Rewritten: .context/CANONICAL.md (Section 4 now Tier 1 only)")
-    
+    print("  💾 Rewritten: .context/CANONICAL.md (Section 4 now Tier 1 only)")
+
     # Update tier_map.json with execution metadata
     tier_map["meta"]["split_executed"] = True
     tier_map["meta"]["split_date"] = "2026-05-09"
@@ -230,9 +229,9 @@ def main():
         "tier3": ".context/CANONICAL_TIER3.md",
     }
     TIER_MAP_PATH.write_text(json.dumps(tier_map, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"  💾 Updated: .agent/telemetry/tier_map.json (split_executed=true)")
-    
-    print(f"\n✅ TD-021 split complete.")
+    print("  💾 Updated: .agent/telemetry/tier_map.json (split_executed=true)")
+
+    print("\n✅ TD-021 split complete.")
 
 
 if __name__ == "__main__":

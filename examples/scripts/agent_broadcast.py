@@ -14,9 +14,8 @@ import json
 import os
 import sys
 import time
-from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
 
 ATHENA_DIR = Path.home() / ".athena"
 STATUS_FILE = ATHENA_DIR / "agent_status.json"
@@ -35,7 +34,7 @@ def get_agent_id() -> str:
 
 
 def set_status(
-    status: str, task: Optional[str] = None, progress: Optional[dict] = None
+    status: str, task: str | None = None, progress: dict | None = None
 ):
     """Update agent status for orchestration visibility."""
     if status not in VALID_STATUSES:
@@ -57,7 +56,7 @@ def set_status(
     print(f"📡 Status: {status}" + (f" — {task}" if task else ""))
 
 
-def get_status() -> Optional[dict]:
+def get_status() -> dict | None:
     """Get current agent status."""
     if not STATUS_FILE.exists():
         print("⚠️  No status file found")
@@ -65,7 +64,7 @@ def get_status() -> Optional[dict]:
 
     data = json.loads(STATUS_FILE.read_text())
 
-    print(f"📊 Agent Status:")
+    print("📊 Agent Status:")
     print(f"   Session: {data.get('session_id')}")
     print(f"   Agent:   {data.get('agent_id')}")
     print(f"   Status:  {data.get('status')}")
@@ -90,7 +89,7 @@ def watch_status(interval: float = 1.0):
                 data = json.loads(STATUS_FILE.read_text())
                 if data != last_data:
                     os.system("clear" if os.name == "posix" else "cls")
-                    print(f"📡 Agent Status (live)")
+                    print("📡 Agent Status (live)")
                     print("=" * 40)
                     print(f"Session: {data.get('session_id')}")
                     print(f"Agent:   {data.get('agent_id')}")

@@ -1,13 +1,12 @@
-import os
-import sys
-import gzip
-import sqlite3
 import argparse
+import bz2
+import os
+import re
+import sqlite3
+import sys
 import time
 import urllib.request
-import re
 from pathlib import Path
-import bz2
 
 # Configuration
 DATA_DIR = Path(".context/knowledge")
@@ -36,7 +35,7 @@ def download_dump():
         print(f"✅ Dump already exists at {LOCAL_FILE}")
         return
 
-    print(f"⬇️  Downloading DBPedia Long Abstracts (~890MB)...")
+    print("⬇️  Downloading DBPedia Long Abstracts (~890MB)...")
     print(f"   Source: {DBPEDIA_URL}")
     print("   This may take a while. Please wait...")
 
@@ -68,11 +67,11 @@ def build_index():
     """Builds a SQLite FTS index from the DBPedia TTL dump."""
     if not LOCAL_FILE.exists():
         print(
-            f"❌ Dump not found. Run 'python3 .agent/scripts/exocortex.py download' first."
+            "❌ Dump not found. Run 'python3 .agent/scripts/exocortex.py download' first."
         )
         return
 
-    print(f"⚡ Building Exocortex Index from DBPedia (SQLite)...")
+    print("⚡ Building Exocortex Index from DBPedia (SQLite)...")
 
     try:
         conn = sqlite3.connect(DB_FILE)
@@ -133,7 +132,7 @@ def build_index():
             conn.commit()
             count += len(batch)
 
-        print(f"\n   ✅ Formatting Index...")
+        print("\n   ✅ Formatting Index...")
         c.execute("INSERT INTO abstracts(abstracts) VALUES('optimize')")
         conn.commit()
 

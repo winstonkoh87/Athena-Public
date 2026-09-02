@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import sys
 import argparse
+
 
 def assess_complexity(task_description):
     """
@@ -8,7 +8,7 @@ def assess_complexity(task_description):
     based on keywords and implied scope, following Protocol 330.
     """
     task = task_description.lower()
-    
+
     # Keyword Heuristics
     l5_keywords = ["enterprise", "scalability", "migration", "security review", "audit", "full lifecycle", "platform", "rewrite"]
     l4_keywords = ["system", "architecture", "design", "module", "integration", "workflow", "database", "api", "breaking change"]

@@ -20,8 +20,8 @@ Example template:
 import re
 import subprocess
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Pattern: !`command` (backticks with ! prefix)
 PATTERN = r"!\`([^`]+)\`"

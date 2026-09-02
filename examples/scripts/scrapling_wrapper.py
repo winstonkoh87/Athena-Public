@@ -4,7 +4,6 @@ Scrapling Wrapper for Project Athena (Sovereign Acquisition)
 """
 
 import argparse
-import sys
 import json
 import logging
 

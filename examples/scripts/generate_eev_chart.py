@@ -24,10 +24,11 @@ Output:
     Saves to: examples/protocols/decision/eev_three_line_model.png
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.interpolate import PchipInterpolator
 from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.interpolate import PchipInterpolator
 
 # ═══════════════════════════════════════════════════════════════
 # Configuration
@@ -352,15 +353,15 @@ plt.close()
 # ═══════════════════════════════════════════════════════════════
 
 print(f"EEV Three-Line Model saved to: {output_path}")
-print(f"")
-print(f"=== Key Values ===")
+print("")
+print("=== Key Values ===")
 print(f"  UEV peak:       ${uev_peak_val:.2f} at ${uev_peak_x:.1f}")
 print(f"  UEV = 0:        ${uev_zero_x:.0f} (System 9 boundary)")
 print(f"  EEV = 0:        ${limit_point:.1f} (LIMIT POINT)")
 print(f"  MEV at limit:   ${mev[eev_zero_idx]:.2f}")
 print(f"  UEV at limit:   ${uev[eev_zero_idx]:.2f}")
-print(f"")
-print(f"=== Diagnostics at TOTO Price Points ===")
+print("")
+print("=== Diagnostics at TOTO Price Points ===")
 for cost, label in [
     (1, "Ordinary"),
     (7, "Sys7"),

@@ -20,9 +20,8 @@ Violation Types:
 Integrates with quicksave.py for automatic tracking.
 """
 
-import os
-import sys
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -88,22 +87,22 @@ def log_violation(violation_type: str, details: str = ""):
         print(f"❌ Unknown violation type: {violation_type}")
         print(f"   Valid types: {', '.join(VIOLATION_TYPES.keys())}")
         return
-    
+
     data = load_violations()
-    
+
     if data["session_start"] is None:
         data["session_start"] = datetime.now().isoformat()
-    
+
     violation = {
         "type": violation_type,
         "timestamp": datetime.now().isoformat(),
         "details": details,
         **VIOLATION_TYPES[violation_type]
     }
-    
+
     data["violations"].append(violation)
     save_violations(data)
-    
+
     print(f"📝 Logged: {violation_type} ({VIOLATION_TYPES[violation_type]['protocol']})")
 
 
@@ -111,30 +110,30 @@ def generate_report() -> str:
     """Generate compliance report."""
     data = load_violations()
     violations = data.get("violations", [])
-    
+
     if not violations:
         return "✅ No protocol violations this session. Perfect compliance."
-    
+
     # Count by type
     counts = {}
     for v in violations:
         t = v["type"]
         counts[t] = counts.get(t, 0) + 1
-    
+
     # Count by severity
     severity_counts = {"high": 0, "medium": 0, "low": 0}
     for v in violations:
         sev = v.get("severity", "low")
         severity_counts[sev] += 1
-    
+
     report = []
     report.append("\n" + "="*60)
     report.append("📊 PROTOCOL COMPLIANCE REPORT")
     report.append("="*60 + "\n")
-    
+
     report.append(f"Session Start: {data.get('session_start', 'Unknown')}")
     report.append(f"Total Violations: {len(violations)}\n")
-    
+
     # By severity
     report.append("By Severity:")
     if severity_counts["high"] > 0:
@@ -144,7 +143,7 @@ def generate_report() -> str:
     if severity_counts["low"] > 0:
         report.append(f"  🟢 Low: {severity_counts['low']}")
     report.append("")
-    
+
     # By type
     report.append("By Type:")
     for vtype, count in sorted(counts.items(), key=lambda x: -x[1]):
@@ -152,15 +151,15 @@ def generate_report() -> str:
         protocol = meta.get("protocol", "Unknown")
         report.append(f"  {vtype}: {count} ({protocol})")
     report.append("")
-    
+
     # Recent violations (last 5)
     report.append("Recent Violations:")
     for v in violations[-5:]:
         ts = v["timestamp"].split("T")[1][:5]
         report.append(f"  [{ts}] {v['type']}: {v.get('details', '')[:50]}")
-    
+
     report.append("\n" + "="*60)
-    
+
     return "\n".join(report)
 
 
@@ -175,21 +174,21 @@ def update_markdown_log():
     """Append session summary to PROTOCOL_VIOLATIONS.md."""
     data = load_violations()
     violations = data.get("violations", [])
-    
+
     if not violations:
         return
-    
+
     # Count by type
     counts = {}
     for v in violations:
         t = v["type"]
         counts[t] = counts.get(t, 0) + 1
-    
+
     # Build summary line
     session_date = datetime.now().strftime("%Y-%m-%d")
     summary_parts = [f"{t}:{c}" for t, c in counts.items()]
     summary = f"| {session_date} | {len(violations)} | {', '.join(summary_parts)} |"
-    
+
     # Append to markdown file
     if not VIOLATIONS_FILE.exists():
         header = """# Protocol Violations Log
@@ -200,10 +199,10 @@ def update_markdown_log():
 |------|-------|-----------|
 """
         VIOLATIONS_FILE.write_text(header)
-    
+
     with open(VIOLATIONS_FILE, "a") as f:
         f.write(summary + "\n")
-    
+
     print(f"📝 Logged to {VIOLATIONS_FILE.name}")
 
 
@@ -216,9 +215,9 @@ def main():
         print("  reset                 - Reset for new session")
         print(f"\nViolation types: {', '.join(VIOLATION_TYPES.keys())}")
         return
-    
+
     command = sys.argv[1].lower()
-    
+
     if command == "log":
         if len(sys.argv) < 3:
             print("❌ Missing violation type")
@@ -226,15 +225,15 @@ def main():
         vtype = sys.argv[2]
         details = " ".join(sys.argv[3:]) if len(sys.argv) > 3 else ""
         log_violation(vtype, details)
-    
+
     elif command == "report":
         print(generate_report())
         # Also update the markdown log
         update_markdown_log()
-    
+
     elif command == "reset":
         reset_violations()
-    
+
     else:
         print(f"❌ Unknown command: {command}")
 

@@ -77,18 +77,20 @@ def smart_search(
     limit: int = 10,
     strict: bool = False,
     rerank: bool = True,  # default-on; Cross-Encoder rerank is crash-safe (no-op if sentence_transformers unavailable)
-    web: bool = False,
+    web: bool | None = None,
 ) -> dict:
     """
-    Search Athena's knowledge base using hybrid RAG (Canonical + Tags +
-    Vectors + GraphRAG + SQLite + Filenames) with RRF fusion.
+    Search Athena's knowledge base using hybrid RAG (Canonical + Vectors +
+    Filenames + Framework Docs + SQLite) with RRF fusion and ONNX reranker.
 
     Args:
         query: The search query string.
         limit: Maximum number of results to return (default 10).
         strict: If True, filter out low-confidence results.
-        rerank: If True, apply LLM-based reranking to top candidates.
-        web: If True, enable live web search grounding.
+        rerank: If True, apply Cross-Encoder reranking to top candidates.
+        web: If True, enable live web search grounding. Default auto —
+             live web grounding fires automatically for freshness-sensitive
+             queries when set to None/False; pass True to force web.
 
     Returns:
         dict with 'results' (list of matches) and 'meta' (query info).
@@ -153,7 +155,7 @@ def agentic_search(
     query: str,
     limit: int = 10,
     validate: bool = True,
-    web: bool = False,
+    web: bool | None = None,
 ) -> dict:
     """
     Agentic RAG v2 — Multi-step query decomposition with parallel search
@@ -220,19 +222,12 @@ def quicksave(
     perms = get_permissions()
     perms.gate("quicksave")
 
-    # Governance: Check Triple-Lock compliance
+    # Governance: Check Triple-Lock compliance (canonical rule)
     gov = get_governance()
-    semantic = gov._state.get("semantic_search_performed", False)
-    web = gov._state.get("web_search_performed", False)
-
+    lock_result = gov.evaluate_triple_lock()
     violation = None
-    if not (semantic and web):
-        missing = []
-        if not semantic:
-            missing.append("Semantic Search")
-        if not web:
-            missing.append("Web Research")
-        violation = f"TRIPLE-LOCK VIOLATION: Missing: {', '.join(missing)}"
+    if not lock_result["compliant"]:
+        violation = f"TRIPLE-LOCK VIOLATION: Missing: {', '.join(lock_result['missing'])}"
 
     gov.verify_exchange_integrity()  # Reset state
 
@@ -549,6 +544,369 @@ def permission_status() -> dict:
 # ---------------------------------------------------------------------------
 # Entry Point
 # ---------------------------------------------------------------------------
+
+@mcp.tool(
+    tags={"governance", "compliance"},
+)
+def report_external_web_search(
+    query: str,
+) -> dict:
+    """Report that external web research was performed (e.g., via IDE's native
+    search_web tool). This marks the web leg of the Triple-Lock as satisfied
+    so that quicksave governance reports COMPLIANT.
+
+    Use this when the client IDE performed web search using its own tools
+    rather than Athena's built-in web channel.
+
+    Args:
+        query: The query that was searched on the web.
+
+    Returns:
+        dict with confirmation and timestamp.
+    """
+    import json
+
+    from athena.core.config import PROJECT_ROOT
+    from athena.core.governance import get_governance
+
+    perms = get_permissions()
+    perms.gate("report_external_web_search")
+
+    gov = get_governance()
+    gov.mark_web_search_performed(query)
+
+    # Log to invocations.jsonl
+    invocations_path = PROJECT_ROOT / ".athena" / "invocations.jsonl"
+    try:
+        invocations_path.parent.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "timestamp": datetime.now().isoformat(),
+            "type": "web_search_external",
+            "query": query[:200],  # Truncate for privacy
+        }
+        with open(invocations_path, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception:
+        pass  # Best effort logging
+
+    return {
+        "status": "ok",
+        "message": "Web research marked for Triple-Lock compliance.",
+        "timestamp": datetime.now().isoformat(),
+    }
+
+
+@mcp.tool(
+    tags={"governance", "classification"},
+)
+def classify_turn(
+    query: str,
+) -> dict:
+    """Classify a user query's risk level and determine if web search is needed.
+
+    This is a deterministic classifier (no LLM). Call at the start of each turn
+    to set the appropriate risk level for governance. This makes SNIPER/ULTRA
+    modes reachable — without this call, everything defaults to STANDARD.
+
+    Args:
+        query: The user's query text.
+
+    Returns:
+        dict with risk_level, web_required, intent, and reason.
+    """
+    from athena.core.governance import RiskLevel, get_governance
+    from athena.tools.search import classify_query_intent
+
+    perms = get_permissions()
+    perms.gate("classify_turn")
+
+    intent = classify_query_intent(query)
+    gov = get_governance()
+
+    # Determine web requirement and frame detection
+    web_required = False
+    web_reason = "none"
+    underspec_opt = False
+    try:
+        from athena.tools.web_triggers import is_underspecified_optimization, needs_web
+        web_required, web_reason = needs_web(query, intent)
+        underspec_opt = is_underspecified_optimization(query)
+    except ImportError:
+        # web_triggers not yet available — fall back to intent-based rule
+        web_required = intent == "GENERAL"  # Conservative default
+        web_reason = "fallback_intent"
+
+    # Classify risk level
+    query_lower = query.lower().strip()
+    word_count = len(query_lower.split())
+
+    # SNIPER: Short, simple, low-stakes queries
+    # underspec_opt questions are NEVER sniper — they need the frame directive
+    sniper_signals = (
+        word_count <= 5
+        and intent == "SYSTEM_KNOWLEDGE"
+        and not web_required
+        and not underspec_opt
+    )
+
+    # ULTRA: Complex, multi-part, high-stakes queries
+    ultra_signals = (
+        word_count > 20
+        or any(marker in query_lower for marker in [
+            "analyze", "analyse", "deep dive", "comprehensive",
+            "compare", "evaluate", "strategy", "trade",
+            "should i", "what are the implications",
+            "risk", "ruin", "circuit breaker",
+        ])
+        or (intent == "PERSONALISED_DECISION" and web_required)
+    )
+
+    if sniper_signals:
+        risk_level = RiskLevel.SNIPER
+    elif ultra_signals:
+        risk_level = RiskLevel.ULTRA
+        web_required = True  # ULTRA always requires web
+        if web_reason == "none":
+            web_reason = "ultra_tier"
+    else:
+        risk_level = RiskLevel.STANDARD
+
+    # Set the governance risk level (this is what makes SNIPER/ULTRA reachable)
+    gov.set_risk_level(risk_level)
+
+    return {
+        "risk_level": risk_level.name,
+        "web_required": web_required,
+        "web_reason": web_reason,
+        "underspec_opt": underspec_opt,
+        "intent": intent,
+        "query_words": word_count,
+        "timestamp": datetime.now().isoformat(),
+    }
+
+
+@mcp.tool(
+    tags={"read", "memory", "governance", "context"},
+)
+def context_gate(
+    query: str,
+    limit: int = 10,
+    web: bool | None = None,
+) -> dict:
+    """Pre-answer context assembly gate. Call this BEFORE answering any
+    STANDARD/ULTRA query. Returns the complete retrieval bundle including
+    local results, web grounding (when needed), personalisation frame,
+    user state, and a machine-authored directive for the answering model.
+
+    This is the single tool that satisfies Law #6 (Risk-Proportional
+    Triple-Lock) in one call. It runs smart_search with auto-web,
+    builds the personalisation frame when relevant, and returns
+    governance compliance state.
+
+    Args:
+        query: The user's query text.
+        limit: Maximum number of context results (default 10).
+        web: Force web search on/off. None = auto (recommended).
+
+    Returns:
+        dict with context bundle, web metadata, governance state,
+        missing requirements, and a directive for the answering model.
+    """
+    import io
+    import json as _json
+
+    from athena.core.governance import RiskLevel, get_governance
+    from athena.tools.search import classify_query_intent, run_search
+
+    perms = get_permissions()
+    perms.gate("context_gate")
+
+    # 1. Classify intent and set risk level
+    intent = classify_query_intent(query)
+    gov = get_governance()
+
+    # Determine risk level
+    # Determine risk level and frame detection
+    web_required = False
+    web_reason = "none"
+    underspec_opt = False
+    try:
+        from athena.tools.web_triggers import is_underspecified_optimization, needs_web
+        web_required, web_reason = needs_web(query, intent)
+        underspec_opt = is_underspecified_optimization(query)
+    except ImportError:
+        pass
+
+    query_lower = query.lower().strip()
+    word_count = len(query_lower.split())
+
+    sniper_signals = (
+        word_count <= 5
+        and intent == "SYSTEM_KNOWLEDGE"
+        and not web_required
+        and not underspec_opt
+    )
+    ultra_signals = (
+        word_count > 20
+        or any(m in query_lower for m in [
+            "analyze", "analyse", "deep dive", "comprehensive",
+            "compare", "evaluate", "strategy", "trade",
+            "should i", "what are the implications",
+            "risk", "ruin", "circuit breaker",
+        ])
+        or (intent == "PERSONALISED_DECISION" and web_required)
+    )
+
+    if sniper_signals:
+        risk_level = RiskLevel.SNIPER
+    elif ultra_signals:
+        risk_level = RiskLevel.ULTRA
+        web_required = True
+        if web_reason == "none":
+            web_reason = "ultra_tier"
+    else:
+        risk_level = RiskLevel.STANDARD
+
+    gov.set_risk_level(risk_level)
+
+    # 2. Determine effective web setting
+    effective_web = web if web is not None else web_required
+
+    # 3. Run search (captures JSON output)
+    gov.mark_search_performed(query)  # Mark semantic leg
+
+    old_stdout = sys.stdout
+    sys.stdout = buffer = io.StringIO()
+    try:
+        run_search(
+            query,
+            limit=limit,
+            json_output=True,
+            include_personal=True,
+            web=effective_web,
+            intent=intent,
+        )
+    finally:
+        sys.stdout = old_stdout
+
+    raw_output = buffer.getvalue().strip()
+
+    # Parse search results
+    search_results = {}
+    try:
+        search_results = _json.loads(raw_output)
+    except (ValueError, _json.JSONDecodeError):
+        search_results = {"results": [], "error": "Failed to parse search output"}
+
+    # 4. Build personalisation frame (when relevant)
+    personalisation = None
+    user_state = None
+    if intent == "PERSONALISED_DECISION":
+        try:
+            from athena.tools.personalisation import (
+                build_personalisation_prompt,
+                build_user_state_snapshot,
+            )
+            personalisation = build_personalisation_prompt(query)
+            user_state = build_user_state_snapshot()
+        except Exception:
+            pass
+
+    # 5. Check for strong local hit
+    local_first = False
+    results_list = search_results.get("results", [])
+    if isinstance(results_list, list) and results_list:
+        top_result = results_list[0] if results_list else {}
+        top_score = top_result.get("rrf_score", 0) if isinstance(top_result, dict) else 0
+        if top_score >= 0.8:
+            local_first = True
+
+    # 6. Determine missing requirements
+    missing = []
+    if risk_level == RiskLevel.ULTRA and not effective_web and web_required:
+        missing.append("web")
+
+    # 7. Build directive
+    directive_parts = []
+    if effective_web and any(
+        isinstance(r, dict) and r.get("source") == "web_search"
+        for r in (results_list if isinstance(results_list, list) else [])
+    ):
+        web_results = [
+            r for r in results_list
+            if isinstance(r, dict) and r.get("source") == "web_search"
+        ]
+        if web_results:
+            fetched_at = ""
+            for wr in web_results:
+                meta = wr.get("metadata", {})
+                if isinstance(meta, dict):
+                    fetched_at = meta.get("fetched_at", "")
+                    if fetched_at:
+                        break
+            if fetched_at:
+                directive_parts.append(
+                    f"Web results fetched at {fetched_at}. Cite fetched_at in answer; "
+                    "re-verify if the answer pivots on a time-sensitive fact."
+                )
+
+    if local_first:
+        directive_parts.append(
+            "Strong local hit found. Prefer local knowledge; web supplements."
+        )
+
+    if missing:
+        directive_parts.append(
+            f"Missing requirements: {', '.join(missing)}. Satisfy before answering."
+        )
+
+    # Frame directive: underspecified optimization (DEC-180 / Nudge Test)
+    if underspec_opt:
+        directive_parts.append(
+            "FRAME DIRECTIVE: Underspecified optimization detected (objective function "
+            "undefined). Do NOT solve for a single scalar answer. First decouple "
+            "Expected Value invariance from Utility Profiles (Sharpe/Arbitrage vs "
+            "Recreational Comfort vs Tournament Skewness), present the level "
+            "hierarchy, and hand the choice back to the user (DEC-180)."
+        )
+
+    if not directive_parts:
+        directive_parts.append("Context bundle assembled. Proceed with answer.")
+
+    directive = " ".join(directive_parts)
+
+    # 8. Web metadata
+    web_meta = {
+        "fired": effective_web,
+        "required": web_required,
+        "reason": web_reason,
+        "count": len([
+            r for r in (results_list if isinstance(results_list, list) else [])
+            if isinstance(r, dict) and r.get("source") == "web_search"
+        ]),
+    }
+
+    # Add provider info if available
+    for r in (results_list if isinstance(results_list, list) else []):
+        if isinstance(r, dict) and r.get("source") == "web_search":
+            meta = r.get("metadata", {})
+            if isinstance(meta, dict) and "provider" in meta:
+                web_meta["provider"] = meta["provider"]
+                break
+
+    return {
+        "context": search_results,
+        "personalisation": personalisation,
+        "user_state": user_state,
+        "web": web_meta,
+        "local_first": local_first,
+        "missing": missing,
+        "underspec_opt": underspec_opt,
+        "directive": directive,
+        "risk_level": risk_level.name,
+        "intent": intent,
+        "timestamp": datetime.now().isoformat(),
+    }
 
 if __name__ == "__main__":
     import argparse

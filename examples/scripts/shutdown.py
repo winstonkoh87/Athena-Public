@@ -31,10 +31,10 @@ v2.0 — GTO Rewrite (2026-03-09)
 from __future__ import annotations
 
 import re
-import sys
 import subprocess
-from datetime import datetime
+import sys
 from collections import Counter
+from datetime import datetime
 from pathlib import Path
 
 # --- YAML (optional) ---
@@ -55,13 +55,13 @@ from athena.core.config import (
     SYSTEM_LEARNINGS_FILE,
     USER_PROFILE_FILE,
 )
+from athena.intelligence.sentinel import check_shutdown_sentinel
 from athena.sessions import (
-    get_current_session_log,
-    extract_learnings,
     extract_lambda_stats,
+    extract_learnings,
+    get_current_session_log,
     parse_yaml_frontmatter,
 )
-from athena.intelligence.sentinel import check_shutdown_sentinel
 
 # --- Compliance imports (top-level, not runtime) ---
 SCRIPTS_DIR = PROJECT_ROOT / ".agent" / "scripts"
@@ -69,8 +69,8 @@ SYNC_SCRIPT = SCRIPTS_DIR / "sync_agents_md.py"
 sys.path.insert(0, str(SCRIPTS_DIR))
 try:
     from protocol_compliance import generate_report as compliance_generate_report
-    from protocol_compliance import update_markdown_log as compliance_update_log
     from protocol_compliance import reset_violations as compliance_reset
+    from protocol_compliance import update_markdown_log as compliance_update_log
 
     HAS_COMPLIANCE = True
 except ImportError:

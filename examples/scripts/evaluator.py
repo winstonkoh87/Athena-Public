@@ -18,12 +18,10 @@ Usage:
 """
 
 import json
-import os
 import sys
 import time
-from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
 
 # Path setup
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -43,9 +41,9 @@ BASELINE_PATH = PROJECT_ROOT / ".agent" / "eval" / "baseline.json"
 RESULTS_DIR = PROJECT_ROOT / ".agent" / "eval" / "results"
 
 
-def load_golden_queries(category: Optional[str] = None) -> list[dict]:
+def load_golden_queries(category: str | None = None) -> list[dict]:
     """Load and optionally filter golden queries."""
-    with open(GOLDEN_QUERIES_PATH, "r") as f:
+    with open(GOLDEN_QUERIES_PATH) as f:
         queries = json.load(f)
     if category:
         queries = [q for q in queries if q.get("category") == category]
@@ -54,10 +52,9 @@ def load_golden_queries(category: Optional[str] = None) -> list[dict]:
 
 def run_single_query(query: str, limit: int = 5, rerank: bool = False) -> tuple[list[dict], float]:
     """Run a single search query and return structured results and elapsed time."""
-    from athena.tools.search import run_search
-
     import io
-    import time
+
+    from athena.tools.search import run_search
 
     old_stdout = sys.stdout
     old_stderr = sys.stderr
@@ -193,7 +190,7 @@ def compute_coverage(results: list[dict], expected_sources: list[str]) -> float:
 
 
 def run_evaluation(
-    category: Optional[str] = None,
+    category: str | None = None,
     verbose: bool = False,
     k: int = 5,
     rerank: bool = False,
@@ -205,14 +202,14 @@ def run_evaluation(
         print("❌ No golden queries found.")
         return {}
 
-    print(f"\n🔍 ATHENA SEARCH EVALUATOR")
+    print("\n🔍 ATHENA SEARCH EVALUATOR")
     print(f"{'─' * 50}")
     print(f"   Golden Queries: {len(queries)}")
     if category:
         print(f"   Category: {category}")
     print(f"   K: {k}")
     if rerank:
-        print(f"   Reranking: Enabled")
+        print("   Reranking: Enabled")
     print(f"{'─' * 50}\n")
 
     rr_scores = []
@@ -299,7 +296,7 @@ def run_evaluation(
 
     # Display summary
     print(f"\n{'═' * 50}")
-    print(f"   📊 RESULTS")
+    print("   📊 RESULTS")
     print(f"{'═' * 50}")
 
     mrr_color = "\033[92m" if mrr >= 0.7 else "\033[93m" if mrr >= 0.5 else "\033[91m"
@@ -320,7 +317,7 @@ def run_evaluation(
     # Per-category breakdown
     categories = set(gq["category"] for gq in queries)
     if len(categories) > 1:
-        print(f"\n   📁 BY CATEGORY:")
+        print("\n   📁 BY CATEGORY:")
         for cat in sorted(categories):
             cat_rrs = [
                 pq["rr"]
@@ -334,7 +331,7 @@ def run_evaluation(
 
     # Worst performers
     worst = sorted(per_query, key=lambda x: x["rr"])[:5]
-    print(f"\n   🔻 WORST 5 QUERIES:")
+    print("\n   🔻 WORST 5 QUERIES:")
     for w in worst:
         print(f'      [{w["id"]}] RR={w["rr"]:.2f} "{w["query"][:40]}"')
 
@@ -355,11 +352,11 @@ def compare_baseline(metrics: dict):
         print("\n⚠️  No baseline found. Run with --baseline first.")
         return
 
-    with open(BASELINE_PATH, "r") as f:
+    with open(BASELINE_PATH) as f:
         baseline = json.load(f)
 
     print(f"\n{'═' * 50}")
-    print(f"   📈 COMPARISON vs BASELINE")
+    print("   📈 COMPARISON vs BASELINE")
     print(f"   Baseline: {baseline.get('timestamp', 'unknown')}")
     print(f"{'═' * 50}")
 

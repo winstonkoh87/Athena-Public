@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import sys
 import argparse
+import sys
 from pathlib import Path
 
 # Add src to path

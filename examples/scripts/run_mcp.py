@@ -9,7 +9,6 @@ Usage:
     python3 .agent/scripts/run_mcp.py --sse     # SSE transport (remote)
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -27,10 +26,10 @@ except ImportError:
     pass
 
 if __name__ == "__main__":
-    from athena.mcp_server import mcp
-
     # Pass through CLI args
     import argparse
+
+    from athena.mcp_server import mcp
 
     parser = argparse.ArgumentParser(description="Athena MCP Server Launcher")
     parser.add_argument("--sse", action="store_true", help="Use SSE transport")

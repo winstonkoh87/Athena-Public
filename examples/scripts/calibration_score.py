@@ -13,12 +13,12 @@ Usage:
 Audit Ref: Capability Upgrade CAL-001
 """
 
-import re
 import math
+import re
 import sys
-from pathlib import Path
-from datetime import datetime
 from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 LEDGER_PATH = PROJECT_ROOT / ".context" / "calibration" / "CALIBRATION_LEDGER.md"
@@ -236,7 +236,7 @@ def main():
             f"| {scores['brier']:.4f} | {scores['log_loss']:.4f} "
             f"| {'✅' if scores['brier'] < 0.2 else '⚠️'} |"
         )
-        print(f"\n📝 Append this row to the Weekly Calibration Score table:")
+        print("\n📝 Append this row to the Weekly Calibration Score table:")
         print(f"   {row}")
 
 

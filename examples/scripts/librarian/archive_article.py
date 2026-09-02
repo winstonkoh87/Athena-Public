@@ -4,15 +4,15 @@ Athena Librarian - Smart Link Archiver
 Fetches a URL, extracts content, enriches with AI metadata, and saves to the Library.
 """
 
-import sys
-import os
-import re
-import json
-import requests
 import datetime
+import json
+import re
+import sys
 from pathlib import Path
-from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+
+import requests
+from bs4 import BeautifulSoup
 
 # Add parent directory to path to import gemini_client
 sys.path.append(str(Path(__file__).resolve().parent.parent))

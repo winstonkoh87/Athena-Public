@@ -15,7 +15,6 @@ Usage:
 """
 
 import json
-import os
 import re
 import subprocess
 import sys
@@ -35,7 +34,7 @@ def load_yaml_fallback(path: Path) -> dict:
     """Load YAML with PyYAML or minimal fallback parser."""
     try:
         import yaml
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return yaml.safe_load(f)
     except ImportError:
         pass
@@ -44,7 +43,7 @@ def load_yaml_fallback(path: Path) -> dict:
     data = {"pillars": {}}
     current_pillar = None
     current_sub = None
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         for line in f:
             line_str = line.rstrip()
             if not line_str or line_str.strip().startswith("#"):
@@ -105,7 +104,7 @@ def probe_claude_settings() -> dict:
     if not CLAUDE_SETTINGS_PATH.exists():
         return {}
     try:
-        with open(CLAUDE_SETTINGS_PATH, "r", encoding="utf-8") as f:
+        with open(CLAUDE_SETTINGS_PATH, encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return {}
@@ -133,10 +132,10 @@ def probe_reranker() -> float:
 
 def run_probe(probe_name: str, claude_settings: dict) -> float:
     hooks = claude_settings.get("hooks", {})
-    
+
     if probe_name == "git_hooks_path":
         return probe_git_hooks()
-    
+
     elif probe_name == "session_lifecycle":
         has_start = "SessionStart" in hooks
         has_end = "SessionEnd" in hooks

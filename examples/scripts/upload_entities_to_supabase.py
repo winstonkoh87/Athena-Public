@@ -5,9 +5,8 @@ upload_entities_to_supabase.py — Upload GraphRAG entities to Supabase
 Reads from .agent/graphrag/entities.json and upserts to the 'entities' table.
 """
 
-import os
-import sys
 import json
+import sys
 from pathlib import Path
 
 # Fix sys.path for SDK access

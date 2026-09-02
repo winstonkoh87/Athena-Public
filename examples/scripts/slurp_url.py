@@ -1,7 +1,9 @@
-import sys
 import re
+import sys
+
 import requests
 from bs4 import BeautifulSoup
+
 
 def slurp_url(url):
     """
@@ -41,7 +43,7 @@ def slurp_url(url):
 
         # 2. Heuristic Content Extraction
         # We look for common semantic tags or large blocks of text
-        
+
         # Strategy A: Specific Forum tags (XenForo/EDMW style)
         posts = soup.find_all('article', class_='message')
         if posts:
@@ -70,7 +72,7 @@ def slurp_url(url):
         else:
             # Fallback to <main>
             main_content = soup.find('main')
-            
+
         if not main_content:
             # Fallback to finding the div with the most p tags
             max_p = 0
@@ -86,7 +88,7 @@ def slurp_url(url):
             # Cleanup noise within content
             for tag in main_content(['script', 'style', 'nav', 'footer', 'aside']):
                 tag.decompose()
-            
+
             text = main_content.get_text(separator='\n\n', strip=True)
             # Normalize whitespace
             text = re.sub(r'\n{3,}', '\n\n', text)

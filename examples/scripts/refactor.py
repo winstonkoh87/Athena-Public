@@ -8,10 +8,10 @@ Usage:
     python3 .agent/scripts/refactor.py --dry-run
 """
 
-import sys
-import subprocess
-import time
 import argparse
+import subprocess
+import sys
+import time
 from pathlib import Path
 
 # === Configuration ===
@@ -35,7 +35,7 @@ def run_cmd(cmd: list, description: str, ignore_error: bool = False, capture_out
         start_t = time.time()
         result = subprocess.run(cmd, capture_output=True, text=True)
         elapsed = time.time() - start_t
-        
+
         if result.returncode == 0:
             print(f"\r  {GREEN}✓{RESET} {description} ({elapsed:.1f}s)")
             return True
@@ -51,9 +51,7 @@ def run_cmd(cmd: list, description: str, ignore_error: bool = False, capture_out
         # For interactive or heavy output commands
         print("\n")
         returncode = subprocess.call(cmd)
-        if returncode == 0:
-            return True
-        elif ignore_error:
+        if returncode == 0 or ignore_error:
             return True
         else:
             return False
@@ -62,7 +60,7 @@ def run_cmd(cmd: list, description: str, ignore_error: bool = False, capture_out
 def orchestrate_refactor(dry_run: bool = False):
     """Execute the full /refactor workflow."""
     start_total = time.time()
-    
+
     print(f"\n{BOLD}{CYAN}{'=' * 60}{RESET}")
     print(f"{BOLD}{CYAN}  🏗️  ATHENA REFACTOR ORCHESTRATOR{RESET}")
     print(f"{CYAN}{'=' * 60}{RESET}")
@@ -81,7 +79,7 @@ def orchestrate_refactor(dry_run: bool = False):
     # Phase 4: ORPHAN DETECTION (Optimization Pass gate)
     print(f"\n{BOLD}Phase 4: Integrity Gate{RESET}")
     orphan_proc = subprocess.run(
-        [sys.executable, str(SCRIPTS_DIR / "orphan_detector.py")], 
+        [sys.executable, str(SCRIPTS_DIR / "orphan_detector.py")],
         capture_output=True, text=True
     )
     if "No orphan files found" in orphan_proc.stdout:
@@ -92,7 +90,7 @@ def orchestrate_refactor(dry_run: bool = False):
     # Phase 4.5: SESSION LOG ARCHIVE
     print(f"\n{BOLD}Phase 4.5: Session Log Archive{RESET}")
     # Note: compress_sessions.py uses internal logic for retention/quarantine.
-    run_cmd([sys.executable, str(SCRIPTS_DIR / "compress_sessions.py")], 
+    run_cmd([sys.executable, str(SCRIPTS_DIR / "compress_sessions.py")],
             "Archiving old session logs", ignore_error=True)
 
     # ... (Phase 5-7 lines 98-132 omitted for brevity in search, will remain via 'unchanged' lines if I target specific block or just replace the specific calls) ...
@@ -103,7 +101,7 @@ def orchestrate_refactor(dry_run: bool = False):
     if dry_run:
         print(f"  {DIM}(Skipped for dry run){RESET}")
     else:
-        run_cmd([sys.executable, str(SCRIPTS_DIR / "compress_memory.py")], 
+        run_cmd([sys.executable, str(SCRIPTS_DIR / "compress_memory.py")],
                 "Compressing memory", ignore_error=True)
         run_cmd([sys.executable, str(SCRIPTS_DIR / "supabase_sync.py")], "Syncing to Supabase Vectors")
 
@@ -118,7 +116,7 @@ def orchestrate_refactor(dry_run: bool = False):
     # Phase 6.5: INDEX REGENERATION
     print(f"\n{BOLD}Phase 6.5: Index Regeneration{RESET}")
     run_cmd([sys.executable, str(SCRIPTS_DIR / "generate_tag_index.py")], "Regenerating TAG_INDEX.md")
-    
+
     # Phase 6.6: REGRESSION TESTS
     print(f"\n{BOLD}Phase 6.6: Regression Test Validation{RESET}")
     run_cmd([sys.executable, str(SCRIPTS_DIR / "run_tests.py")], "Running regression tests", ignore_error=True)
@@ -138,11 +136,11 @@ def orchestrate_refactor(dry_run: bool = False):
         # 1. Log Telemetry (Legacy)
         with open(LOG_FILE, "a") as f:
             f.write(f"{time.strftime('%Y-%m-%d-%H:%M')},refactor,success\n")
-        
+
         # 2. Log Outcome (Scoreboard) - SCOPE: META (+0.5)
-        run_cmd([sys.executable, str(SCRIPTS_DIR / "outcome_logger.py"), "--event", "META", "--desc", "Full Workspace Refactor", "--scope", "medium"], 
+        run_cmd([sys.executable, str(SCRIPTS_DIR / "outcome_logger.py"), "--event", "META", "--desc", "Full Workspace Refactor", "--scope", "medium"],
                 "Logging Outcome Score", ignore_error=True)
-            
+
         print(f"{DIM}  Executing git commit...{RESET}")
         run_cmd([sys.executable, str(SCRIPTS_DIR / "git_commit.py")], "Committing changes via Bankai", capture_output=False)
 
@@ -156,5 +154,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run full Athena refactor workflow")
     parser.add_argument("--dry-run", action="store_true", help="Run diagnostics but skip commit/sync")
     args = parser.parse_args()
-    
+
     orchestrate_refactor(dry_run=args.dry_run)

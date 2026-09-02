@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 WORKFLOW_DIR = Path(".agent/workflows")

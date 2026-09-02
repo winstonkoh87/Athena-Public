@@ -39,18 +39,18 @@ def extract_code_entities() -> dict:
     """Extract code structure as GraphRAG entities."""
     entities = []
     relationships = []
-    
+
     # Get compressed overview
     compress_output = run_mu_command(["compress", "."])
-    
+
     if not compress_output:
         print("❌ No mu output - is mu installed?")
         return {"entities": [], "relationships": []}
-    
+
     # Parse mu output for modules/files
     for line in compress_output.split("\n"):
         line = line.strip()
-        
+
         # Module headers (## or ###)
         if line.startswith("##") or line.startswith("###"):
             name = line.lstrip("#").strip().rstrip("/")
@@ -58,21 +58,21 @@ def extract_code_entities() -> dict:
                 entities.append({
                     "name": f"[CODE] {name}",
                     "type": "code_module",
-                    "description": f"Code module from codebase",
+                    "description": "Code module from codebase",
                     "source_file": "_mu_bridge"
                 })
-        
+
         # Files (! prefix)
         elif line.startswith("!"):
             file_path = line[1:].strip()
             if file_path:
                 entities.append({
                     "name": f"[FILE] {Path(file_path).name}",
-                    "type": "code_file", 
+                    "type": "code_file",
                     "description": f"Source file: {file_path}",
                     "source_file": "_mu_bridge"
                 })
-    
+
     # Try to get function list if available
     query_output = run_mu_command(["query", "functions"])
     if query_output and "function" in query_output.lower():
@@ -84,7 +84,7 @@ def extract_code_entities() -> dict:
                     "description": "Function from codebase",
                     "source_file": "_mu_bridge"
                 })
-    
+
     return {"entities": entities, "relationships": relationships}
 
 
@@ -97,7 +97,7 @@ def merge_with_existing(new_data: dict) -> dict:
             existing = {"entities": [], "relationships": []}
     else:
         existing = {"entities": [], "relationships": []}
-    
+
     # Remove old mu-bridge entities
     existing["entities"] = [
         e for e in existing.get("entities", [])
@@ -107,15 +107,15 @@ def merge_with_existing(new_data: dict) -> dict:
         r for r in existing.get("relationships", [])
         if r.get("source_file") != "_mu_bridge"
     ]
-    
+
     # Add new
     existing["entities"].extend(new_data["entities"])
     existing["relationships"].extend(new_data["relationships"])
-    
+
     # Update stats
     existing["stats"] = existing.get("stats", {})
     existing["stats"]["code_entities"] = len(new_data["entities"])
-    
+
     return existing
 
 
@@ -123,32 +123,32 @@ def main():
     print("=" * 60)
     print("🔌 MU → GRAPHRAG BRIDGE")
     print("=" * 60)
-    
+
     # Check mu is installed
     if not MU_BINARY.exists():
         print(f"❌ mu not found at {MU_BINARY}")
         print("   Run: .agent/scripts/install_mu.sh")
         sys.exit(1)
-    
+
     # Refresh bootstrap if requested
     if "--refresh" in sys.argv:
         print("\n🔄 Refreshing mu index...")
         subprocess.run([str(MU_BINARY), "bootstrap", "."], cwd=str(ROOT_DIR))
-    
+
     # Extract entities
     print("\n📊 Extracting code structure...")
     code_entities = extract_code_entities()
     print(f"   Found {len(code_entities['entities'])} code entities")
-    
+
     # Merge with existing
     print("\n🔗 Merging with GraphRAG entities...")
     GRAPHRAG_DIR.mkdir(parents=True, exist_ok=True)
     merged = merge_with_existing(code_entities)
-    
+
     # Save
     ENTITIES_FILE.write_text(json.dumps(merged, indent=2))
     print(f"   Saved to {ENTITIES_FILE}")
-    
+
     print("\n" + "=" * 60)
     print("✅ MU BRIDGE COMPLETE")
     print(f"   Code entities added: {len(code_entities['entities'])}")

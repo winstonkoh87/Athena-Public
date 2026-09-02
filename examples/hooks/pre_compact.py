@@ -11,9 +11,9 @@ Usage:
   Can also be triggered manually: python3 .agent/hooks/pre_compact.py
 """
 
+import os
 import subprocess
 import sys
-import os
 from datetime import datetime
 
 PROJECT_ROOT = os.path.dirname(
@@ -56,7 +56,7 @@ def quicksave(summary: str):
             timeout=10,
         )
         if result.returncode == 0:
-            print(f"✅ Pre-compact quicksave complete")
+            print("✅ Pre-compact quicksave complete")
             return True
         else:
             print(f"⚠️  Quicksave returned non-zero: {result.stderr}")

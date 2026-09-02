@@ -7,9 +7,8 @@ Implements Protocol 101: Native Swarm.
 """
 
 import argparse
-import sys
-import os
 import subprocess
+import sys
 import time
 from pathlib import Path
 

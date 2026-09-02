@@ -4,7 +4,6 @@ repair_case_study_links.py
 Universal repair of case study links by suffix matching.
 """
 
-import os
 import re
 from pathlib import Path
 
@@ -58,7 +57,7 @@ def main():
                 re.findall(cs_ref_pattern, new_content)
             )  # This is an approximation
 
-    print(f"\nRepair complete.")
+    print("\nRepair complete.")
     print(f"Files corrected: {total_files_corrected}")
 
 

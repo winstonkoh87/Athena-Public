@@ -19,20 +19,18 @@ Usage:
     python3 .agent/scripts/structure_map.py --json       # JSON report for CI
 """
 
-import os
-import sys
 import json
 import shutil
+import sys
 import time
-from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
 
 # === Configuration ===
 ROOT_DIR = Path.cwd()
 ARCHIVE_DIR = ROOT_DIR / ".archive"
 IGNORE_DIRS = {
-    ".git", "__pycache__", ".DS_Store", "node_modules", "venv", ".venv", 
+    ".git", "__pycache__", ".DS_Store", "node_modules", "venv", ".venv",
     "env", ".idea", ".vscode", ".archive"
 }
 IGNORE_FILES = {".DS_Store"}
@@ -74,7 +72,7 @@ def get_size_and_count(path: Path) -> tuple[int, int]:
     return total_size, file_count
 
 
-def get_age_days(path: Path) -> Optional[float]:
+def get_age_days(path: Path) -> float | None:
     """Get file/dir age in days."""
     try:
         return (time.time() - path.stat().st_mtime) / (24 * 3600)
@@ -85,20 +83,20 @@ def get_age_days(path: Path) -> Optional[float]:
 def detect_anomalies(directory: Path) -> list[dict]:
     """Scan for all anomalies in workspace."""
     anomalies = []
-    
+
     def scan(path: Path):
         try:
             for entry in path.iterdir():
                 if entry.name in IGNORE_DIRS or entry.name in IGNORE_FILES:
                     continue
-                
+
                 rel_path = str(entry.relative_to(ROOT_DIR))
-                
+
                 if entry.is_dir():
                     size, count = get_size_and_count(entry)
                     size_mb = size / (1024 * 1024)
                     age = get_age_days(entry)
-                    
+
                     # Heavy directory
                     if size_mb > HEAVY_SIZE_MB:
                         anomalies.append({
@@ -108,7 +106,7 @@ def detect_anomalies(directory: Path) -> list[dict]:
                             "action": "compress_or_archive",
                             "severity": "warning" if size_mb < 20 else "critical"
                         })
-                    
+
                     # Empty directory
                     if count == EMPTY_DIR_THRESHOLD:
                         anomalies.append({
@@ -117,7 +115,7 @@ def detect_anomalies(directory: Path) -> list[dict]:
                             "action": "delete",
                             "severity": "info"
                         })
-                    
+
                     # Stale cluster (all children stale)
                     if age and age > VERY_STALE_DAYS:
                         anomalies.append({
@@ -127,13 +125,13 @@ def detect_anomalies(directory: Path) -> list[dict]:
                             "action": "archive",
                             "severity": "warning"
                         })
-                    
+
                     scan(entry)
-                    
+
                 else:  # File
                     age = get_age_days(entry)
                     size = entry.stat().st_size
-                    
+
                     # Very stale file
                     if age and age > VERY_STALE_DAYS:
                         anomalies.append({
@@ -143,7 +141,7 @@ def detect_anomalies(directory: Path) -> list[dict]:
                             "action": "review_or_archive",
                             "severity": "info"
                         })
-                    
+
                     # Large file
                     size_mb = size / (1024 * 1024)
                     if size_mb > HEAVY_SIZE_MB:
@@ -154,10 +152,10 @@ def detect_anomalies(directory: Path) -> list[dict]:
                             "action": "compress_or_gitignore",
                             "severity": "warning"
                         })
-                        
+
         except PermissionError:
             pass
-    
+
     scan(directory)
     return anomalies
 
@@ -170,11 +168,11 @@ def archive_path(path: Path, dry_run: bool = False) -> bool:
         ARCHIVE_DIR.mkdir(exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         dest = ARCHIVE_DIR / f"{path.name}_{timestamp}"
-        
+
         if dry_run:
             print(f"  [DRY RUN] Would archive: {path} → {dest}")
             return True
-        
+
         shutil.move(str(path), str(dest))
         print(f"  {GREEN}✓ Archived:{RESET} {path} → {dest}")
         return True
@@ -189,7 +187,7 @@ def delete_empty_dir(path: Path, dry_run: bool = False) -> bool:
         if dry_run:
             print(f"  [DRY RUN] Would delete empty: {path}")
             return True
-        
+
         path.rmdir()
         print(f"  {GREEN}✓ Deleted empty:{RESET} {path}")
         return True
@@ -201,19 +199,19 @@ def delete_empty_dir(path: Path, dry_run: bool = False) -> bool:
 def execute_fixes(anomalies: list[dict], dry_run: bool = False):
     """Execute safe auto-fixes for detected anomalies."""
     print(f"\n{BOLD}🔧 Executing Fixes{' (DRY RUN)' if dry_run else ''}{RESET}\n")
-    
+
     fixed = 0
     skipped = 0
-    
+
     for anomaly in anomalies:
         path = ROOT_DIR / anomaly["path"]
-        
+
         if anomaly["type"] == "empty":
             if delete_empty_dir(path, dry_run):
                 fixed += 1
             else:
                 skipped += 1
-                
+
         elif anomaly["type"] == "stale_cluster" and anomaly["age_days"] > VERY_STALE_DAYS:
             if archive_path(path, dry_run):
                 fixed += 1
@@ -222,7 +220,7 @@ def execute_fixes(anomalies: list[dict], dry_run: bool = False):
         else:
             # Other anomalies need manual review
             skipped += 1
-    
+
     print(f"\n{GREEN}Fixed: {fixed}{RESET}, {YELLOW}Skipped (needs review): {skipped}{RESET}")
 
 
@@ -256,7 +254,7 @@ def get_age_status(path: Path) -> str:
 def print_tree(directory: Path, prefix: str = ""):
     """Recursively print directory tree with annotations."""
     try:
-        entries = sorted([e for e in directory.iterdir() 
+        entries = sorted([e for e in directory.iterdir()
                          if e.name not in IGNORE_DIRS and e.name not in IGNORE_FILES],
                          key=lambda e: (e.is_file(), e.name.lower()))
     except PermissionError:
@@ -265,7 +263,7 @@ def print_tree(directory: Path, prefix: str = ""):
     for i, entry in enumerate(entries):
         is_last = (i == len(entries) - 1)
         connector = "└── " if is_last else "├── "
-        
+
         if entry.is_dir():
             size, count = get_size_and_count(entry)
             size_str = format_size(size)
@@ -287,36 +285,36 @@ def print_recommendations(anomalies: list[dict]):
     if not anomalies:
         print(f"\n{GREEN}✓ No anomalies detected. Workspace is clean.{RESET}\n")
         return
-    
+
     print(f"\n{BOLD}📋 Recommendations ({len(anomalies)} issues){RESET}\n")
-    
+
     # Group by severity
     critical = [a for a in anomalies if a["severity"] == "critical"]
     warnings = [a for a in anomalies if a["severity"] == "warning"]
     info = [a for a in anomalies if a["severity"] == "info"]
-    
+
     if critical:
         print(f"{RED}🔴 CRITICAL ({len(critical)}){RESET}")
         for a in critical[:5]:
             print(f"   • [{a['type']}] {a['path']} → {a['action']}")
-    
+
     if warnings:
         print(f"{YELLOW}🟡 WARNING ({len(warnings)}){RESET}")
         for a in warnings[:5]:
             detail = f"{a.get('size_mb', '')}MB" if 'size_mb' in a else f"{a.get('age_days', '')}d"
             print(f"   • [{a['type']}] {a['path']} ({detail}) → {a['action']}")
-    
+
     if info:
         print(f"{DIM}🔵 INFO ({len(info)}){RESET}")
         for a in info[:5]:
             print(f"   {DIM}• [{a['type']}] {a['path']} → {a['action']}{RESET}")
-    
+
     print(f"\n{DIM}Run with --fix to auto-remediate safe issues.{RESET}\n")
 
 
 def main():
     args = set(sys.argv[1:])
-    
+
     # JSON mode for CI
     if "--json" in args:
         anomalies = detect_anomalies(ROOT_DIR)
@@ -327,23 +325,23 @@ def main():
             "anomalies": anomalies
         }, indent=2))
         return
-    
+
     print(f"\n{BOLD}🗺️  Workspace Structure Actuator v2.0{RESET}")
     print(f"{DIM}Root: {ROOT_DIR}{RESET}")
-    
+
     # Detect anomalies
     anomalies = detect_anomalies(ROOT_DIR)
-    
+
     # Fix mode
     if "--fix" in args:
         execute_fixes(anomalies, dry_run=("--dry-run" in args))
         return
-    
+
     # Diagnose only mode
     if "--diagnose" in args:
         print_recommendations(anomalies)
         return
-    
+
     # Default: tree + recommendations
     print()
     print_tree(ROOT_DIR)

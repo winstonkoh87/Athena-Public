@@ -17,9 +17,9 @@ Fixes applied:
 - v3.0: Head/tail preservation + documented trigger thresholds.
 """
 
+import datetime
 import os
 import re
-import datetime
 import shutil
 from pathlib import Path
 

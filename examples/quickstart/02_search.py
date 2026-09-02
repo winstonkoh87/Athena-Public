@@ -18,7 +18,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from athena.core.models import SearchResult
-from athena.core.config import PROJECT_ROOT
 
 # ============================================
 # LOCAL STUB MODE
@@ -45,7 +44,7 @@ def mock_search(query: str) -> list:
         SearchResult(
             id="Session 2025-03-14: Risk Framework",
             content="Established position sizing rules and psychological safeguards.",
-            source="vector", 
+            source="vector",
             score=0.82,
             rrf_score=0.0312,
             metadata={"type": "session"}
@@ -58,14 +57,14 @@ def mock_search(query: str) -> list:
             rrf_score=0.0295,
         ),
     ]
-    
+
     # Filter by query (simple keyword match)
     keywords = query.lower().split()
     filtered = []
     for r in mock_data:
         if any(k in r.content.lower() or k in r.id.lower() for k in keywords):
             filtered.append(r)
-    
+
     return filtered if filtered else mock_data[:2]
 
 
@@ -75,13 +74,13 @@ def main():
         query = " ".join(sys.argv[1:])
     else:
         query = "position sizing rules"
-    
+
     print("=" * 60)
-    print(f"🔍 ATHENA SEARCH DEMO")
+    print("🔍 ATHENA SEARCH DEMO")
     print(f"   Query: \"{query}\"")
     print(f"   Mode: {'LOCAL STUB' if LOCAL_STUB_MODE else 'LIVE (Supabase)'}")
     print("=" * 60)
-    
+
     if LOCAL_STUB_MODE:
         results = mock_search(query)
     else:
@@ -93,9 +92,9 @@ def main():
             print(f"\n❌ Live search failed: {e}")
             print("   Tip: Set LOCAL_STUB_MODE = True or configure .env")
             return 1
-    
+
     print(f"\n🏆 TOP {len(results)} RESULTS:\n")
-    
+
     for i, result in enumerate(results, 1):
         # Confidence badge
         if result.rrf_score >= 0.03:
@@ -104,22 +103,22 @@ def main():
             badge = "[MED]"
         else:
             badge = "[LOW]"
-        
+
         print(f"  {i}. {badge} [RRF:{result.rrf_score:.4f}] {result.id}")
         print(f"     📄 {result.content[:80]}...")
         if result.metadata.get('path'):
             print(f"     📁 {result.metadata['path']}")
         print()
-    
+
     print("=" * 60)
     print("✅ Search complete")
-    
+
     if LOCAL_STUB_MODE:
         print("\n💡 To enable live search:")
         print("   1. Copy .env.example to .env")
         print("   2. Add your API keys")
         print("   3. Set LOCAL_STUB_MODE = False in this file")
-    
+
     return 0
 
 

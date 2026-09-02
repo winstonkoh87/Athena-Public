@@ -15,7 +15,6 @@ Output:
 """
 
 import json
-import os
 import re
 import sys
 from collections import Counter, defaultdict
@@ -216,7 +215,7 @@ def generate_report(total_refs: dict, sessions_analyzed: int) -> str:
         lines.append("")
 
     # Cold Skills
-    cold_skills = SKILL_NAMES - {k.replace('skill:', '') for k in skills.keys()}
+    cold_skills = SKILL_NAMES - {k.replace('skill:', '') for k in skills}
     if cold_skills and sessions_analyzed >= 10:
         lines.append("## 🧊 Cold Skills (0 references across sessions)")
         lines.append("")

@@ -4,11 +4,11 @@ Supabase Semantic Search for Project Athena
 Search sessions and case studies by meaning using pgvector.
 """
 
-import os
 import json
+import os
 import subprocess
-import time
-from lib.shared_utils import setup_paths, get_supabase_client, get_embedding
+
+from lib.shared_utils import get_embedding, get_supabase_client, setup_paths
 
 setup_paths()
 
@@ -396,7 +396,7 @@ def main():
 
             matches = []
             try:
-                with open(canonical_path, "r", encoding="utf-8") as f:
+                with open(canonical_path, encoding="utf-8") as f:
                     for line_num, line in enumerate(f, 1):
                         # Case-insensitive check for ANY keyword
                         if any(k.lower() in line.lower() for k in keywords):
@@ -414,7 +414,7 @@ def main():
                     for i, (ln, content) in enumerate(matches[:5], 1):  # Limit to top 5
                         print(f"  {i}. Line {ln}: {content}")
                 else:
-                    print(f"  No direct matches in CANONICAL.md.")
+                    print("  No direct matches in CANONICAL.md.")
             except Exception as e:
                 print(f"  ⚠️ Error reading CANONICAL.md: {e}")
         else:
@@ -642,7 +642,7 @@ def main():
             entities = [r for r in graphrag_results if r.get("type") == "entity"]
 
             if communities:
-                print(f"  [Communities]")
+                print("  [Communities]")
                 for i, comm in enumerate(communities[:3], 1):
                     print(
                         f"  {i}. Community {comm.get('community_id', '?')} ({comm.get('size', 0)} members)"
@@ -650,7 +650,7 @@ def main():
                     print(f"     📄 {comm.get('summary', '')[:150]}...")
 
             if entities:
-                print(f"  [Entities]")
+                print("  [Entities]")
                 for i, ent in enumerate(entities[:5], 1):
                     preview = ent.get("description", "")[:100]
                     print(
@@ -699,7 +699,7 @@ def main():
                     keywords = args.query.split()
 
                 matches = []
-                with open(tag_index_path, "r", encoding="utf-8") as f:
+                with open(tag_index_path, encoding="utf-8") as f:
                     for line_num, line in enumerate(f, 1):
                         # Case-insensitive check for ANY keyword
                         if any(k.lower() in line.lower() for k in keywords):

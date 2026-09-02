@@ -1,10 +1,7 @@
-import os
-import glob
-import time
 import datetime
+import os
+import time
 from pathlib import Path
-from typing import List, Dict, Tuple
-import json
 
 # Import GeminiClient for LLM operations
 # Assuming this script is run from project root, so we adjust path if needed or assume pythonpath
@@ -34,7 +31,7 @@ class DreamState:
             system_prompt="You are the Nocturnal Consolidation Engine. Your job is to organize memory, detect conflicts, and compress logs."
         )
 
-    def sweep_logs(self, hours: int = 24) -> List[Path]:
+    def sweep_logs(self, hours: int = 24) -> list[Path]:
         """Find session logs modified in the last N hours."""
         print(f"🧹 Sweeping session logs from last {hours} hours...")
         now = time.time()
@@ -49,7 +46,7 @@ class DreamState:
         print(f"   Found {len(recent_logs)} recent logs.")
         return recent_logs
 
-    def extract_and_check_conflicts(self, log_files: List[Path]) -> Dict:
+    def extract_and_check_conflicts(self, log_files: list[Path]) -> dict:
         """
         Reads logs and checks for conflicts against CANONICAL.md.
         Returns a dict of reports/findings.
@@ -115,7 +112,7 @@ class DreamState:
             print(f"❌ Error during conflict check: {e}")
             return {"error": str(e)}
 
-    def compress_episodes(self, log_files: List[Path]) -> List[str]:
+    def compress_episodes(self, log_files: list[Path]) -> list[str]:
         """
         Compresses verbose session logs into a dense episodic summary.
         """
@@ -150,7 +147,7 @@ class DreamState:
 
         return summaries
 
-    def generate_report(self, conflicts: Dict, compression_results: List[str]):
+    def generate_report(self, conflicts: dict, compression_results: list[str]):
         """Generates the Dream Report."""
         today = datetime.date.today()
         report_path = self.reports_dir / f"daily_dream_report_{today}.md"

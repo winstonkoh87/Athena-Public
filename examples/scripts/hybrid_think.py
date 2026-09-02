@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
+import glob
 import os
 import sys
-import glob
-import textwrap
-from google import genai
+
 from dotenv import load_dotenv
+from google import genai
 
 # --- Configuration ---
 MODEL_NAME = "gemini-3-flash-preview"  # SOTA Priority
@@ -29,7 +29,7 @@ def read_file(path, label="FILE"):
         return f"[{label} MISSING: {path}]"
 
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             content = f.read()
             return f"\n--- START {label}: {path} ---\n{content}\n--- END {label} ---\n"
     except Exception as e:

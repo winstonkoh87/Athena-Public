@@ -1,9 +1,7 @@
-import sqlite3
-import math
-import re
-from typing import List, Dict, Tuple
-from collections import Counter
 import argparse
+import re
+import sqlite3
+from collections import Counter
 
 
 class ExocortexClient:
@@ -19,7 +17,7 @@ class ExocortexClient:
             print(f"Error connecting to Exocortex: {e}")
             return None
 
-    def search(self, query: str, limit: int = 5) -> List[Dict]:
+    def search(self, query: str, limit: int = 5) -> list[dict]:
         """Basic FTS Search"""
         conn = self._get_connection()
         if not conn:
@@ -46,7 +44,7 @@ class ExocortexClient:
         finally:
             conn.close()
 
-    def get_jargon_injector(self, domain: str, limit: int = 50) -> List[str]:
+    def get_jargon_injector(self, domain: str, limit: int = 50) -> list[str]:
         """
         Extracts high-value vocabulary from a domain using TF-IDF logic (simplified).
         """

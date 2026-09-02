@@ -14,8 +14,8 @@ Usage:
 import json
 import secrets
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 PAIRING_DIR = Path.home() / ".athena" / "pairing"
 ALLOWLIST_FILE = PAIRING_DIR / "allowlist.json"

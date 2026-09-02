@@ -18,12 +18,12 @@ Output:
     - .agent/graphrag/communities.json
 """
 
-import os
 import json
+import os
 import pickle
-from pathlib import Path
-from collections import defaultdict
 import time
+from collections import defaultdict
+from pathlib import Path
 
 import networkx as nx
 
@@ -316,7 +316,7 @@ def main():
         print(f"   {comm['summary']}")
 
     print("\n" + "=" * 60)
-    print(f"✅ GRAPH BUILD COMPLETE")
+    print("✅ GRAPH BUILD COMPLETE")
     print("=" * 60)
 
 

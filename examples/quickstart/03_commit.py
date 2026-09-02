@@ -11,9 +11,8 @@ Usage:
 """
 
 import sys
-import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Add src to path for development mode
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
@@ -31,7 +30,7 @@ def generate_session_log(summary: str, decisions: list, artifacts: list = None):
     """
     now = datetime.now()
     session_id = now.strftime("%Y-%m-%d-session-XX")
-    
+
     # YAML frontmatter
     frontmatter = {
         "date": now.strftime("%Y-%m-%d"),
@@ -41,7 +40,7 @@ def generate_session_log(summary: str, decisions: list, artifacts: list = None):
         "decisions": decisions,
         "artifacts": artifacts or [],
     }
-    
+
     # Build markdown
     lines = ["---"]
     for key, value in frontmatter.items():
@@ -58,18 +57,18 @@ def generate_session_log(summary: str, decisions: list, artifacts: list = None):
     lines.append("## Summary")
     lines.append(summary)
     lines.append("")
-    
+
     if decisions:
         lines.append("## Key Decisions")
         for d in decisions:
             lines.append(f"- {d}")
         lines.append("")
-    
+
     if artifacts:
         lines.append("## Artifacts Created")
         for a in artifacts:
             lines.append(f"- `{a}`")
-    
+
     return "\n".join(lines)
 
 
@@ -77,7 +76,7 @@ def main():
     print("=" * 60)
     print("🔒 ATHENA SESSION COMMIT DEMO")
     print("=" * 60)
-    
+
     # Example session data
     summary = "Explored SDK architecture and tested hybrid search."
     decisions = [
@@ -89,13 +88,13 @@ def main():
         "protocols/trading/risk_limits.md",
         "session_logs/2025-12-30-session-04.md"
     ]
-    
+
     print("\n📝 Generating session log...")
     print("-" * 40)
-    
+
     log_content = generate_session_log(summary, decisions, artifacts)
     print(log_content)
-    
+
     print("-" * 40)
     print("\n✅ Session log generated")
     print("\n💡 In a real session, this would be:")
@@ -103,16 +102,16 @@ def main():
     print("   2. Embedded to Supabase pgvector")
     print("   3. Committed to git")
     print("   4. The /end workflow handles all of this automatically")
-    
+
     # Show where it would go
     log_path = PROJECT_ROOT / ".context" / "memories" / "session_logs"
     if log_path.exists():
         print(f"\n📂 Session logs directory: {log_path}")
     else:
-        print(f"\n📂 Default path would be: .context/memories/session_logs/")
-    
+        print("\n📂 Default path would be: .context/memories/session_logs/")
+
     print("\n" + "=" * 60)
-    
+
     return 0
 
 

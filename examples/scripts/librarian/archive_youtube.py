@@ -4,13 +4,12 @@ Athena Librarian - YouTube Archiver
 Fetches YouTube transcripts, summarizes them with AI, and saves to the Library.
 """
 
-import sys
-import os
-import re
-import json
 import datetime
+import json
+import re
+import sys
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 # Add parent directory to path to import gemini_client
 sys.path.append(str(Path(__file__).resolve().parent.parent))

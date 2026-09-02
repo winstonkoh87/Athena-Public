@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import json, sys
+import json
+import sys
 from pathlib import Path
 
 # Config: Sensitive file patterns to block
@@ -56,7 +57,7 @@ def block_secrets():
             )
             sys.exit(2)
 
-    except Exception as e:
+    except Exception:
         # Fail open or closed? Safe is closed, but for a script, maybe just log.
         # print(f"Hook Error: {e}", file=sys.stderr)
         sys.exit(0)

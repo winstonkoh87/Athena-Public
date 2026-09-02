@@ -4,10 +4,10 @@ Athena Codebase Q&A
 Ask natural language questions about your codebase using compressed context.
 Uses Gemini with automatic model fallback.
 """
-import os
-import sys
 import argparse
+import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Import our fallback client
@@ -42,7 +42,7 @@ def main():
         print(f"Error: Context file not found: {context_path}")
         print("Run: python3 .agent/scripts/compress_context.py --dir .agent/scripts --output .context/cache/scripts_compressed.md")
         sys.exit(1)
-    
+
     context = context_path.read_text(encoding="utf-8")
     print(f"📚 Loaded context: {len(context):,} chars from {context_path}")
 
@@ -65,7 +65,7 @@ def main():
 USER QUESTION: {question}
 
 ANSWER:"""
-        
+
         response = client.generate(prompt)
         return f"{response}\n\n_(Used model: {client.last_successful_model})_"
 
