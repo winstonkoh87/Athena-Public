@@ -25,7 +25,7 @@ Own the state. Rent the intelligence. Platforms forget. Athena doesn't.
 
 [Quickstart](#-quickstart) · [How It Works](#-how-it-works) · [Scheduled Tasks & Self-RSI](docs/SCHEDULED_TASKS.md) · [llms.txt](https://winstonkoh87.com/llms.txt) · [Docs](docs/GETTING_STARTED.md) · [FAQ](Athena-Public.wiki/FAQ.md) · [Safety](SAFETY.md) · [Contributing](CONTRIBUTING.md)
 
-*Last updated: 3 September 2026*
+*Last updated: 3 September 2026* <!-- 2026-09-03 -->
 
 </div>
 

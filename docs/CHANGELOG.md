@@ -1,6 +1,6 @@
 # Athena Changelog
 
-> **Last Updated**: 3 September 2026
+> **Last Updated**: 3 September 2026 <!-- 2026-09-03 -->
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
