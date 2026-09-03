@@ -1003,11 +1003,33 @@ def vector_sync_background():
 
 
 def safe_commit():
-    """Emergency commit if main orchestrator fails."""
+    """Emergency commit if main orchestrator fails.
+
+    Verifies HEAD actually moved after commit before printing success.
+    """
     print(f"\n{RED}{BOLD}🚨 EMERGENCY COMMIT TRIGGERED{RESET}")
     try:
-        _run_git(["add", "-A"])
-        _run_git(["commit", "-m", "emergency: save state on shutdown failure"])
+        head_before, _, _ = _run_git(["rev-parse", "HEAD"])
+
+        _, _, add_rc = _run_git(["add", "-A"])
+        if add_rc != 0:
+            print(f"{RED}❌ Emergency Save Failed: git add returned {add_rc}{RESET}")
+            return
+
+        _, stderr, commit_rc = _run_git(["commit", "-m", "emergency: save state on shutdown failure"])
+        if commit_rc != 0 and "nothing to commit" not in stderr:
+            print(f"{RED}❌ Emergency Save Failed: git commit returned {commit_rc} — {stderr}{RESET}")
+            return
+
+        head_after, _, _ = _run_git(["rev-parse", "HEAD"])
+
+        if head_before == head_after:
+            staged, _, _ = _run_git(["diff", "--cached", "--name-only"])
+            staged_list = staged.strip() if staged else "(none)"
+            print(f"{RED}❌ Emergency Save Failed: HEAD did not move ({head_before[:8]}). "
+                  f"Staged files: {staged_list}{RESET}")
+            return
+
         subprocess.Popen(
             ["git", "push"],
             stdout=subprocess.DEVNULL,
@@ -1015,7 +1037,7 @@ def safe_commit():
             cwd=str(PROJECT_ROOT),
             start_new_session=True,
         )
-        print(f"{GREEN}✅ Emergency Save Complete.{RESET}")
+        print(f"{GREEN}✅ Emergency Save Complete. HEAD: {head_before[:8]} → {head_after[:8]}{RESET}")
     except Exception as e:
         print(f"{RED}❌ Emergency Save Failed: {e}{RESET}")
 

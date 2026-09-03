@@ -1110,25 +1110,15 @@ def run_search(
                     if not json_output:
                         print(f"   ⚠️ {source} timed out (Tier 1 limit)", file=sys.stderr)
 
-                # 3. Adaptive Router: Determine if we can bypass vectors
-                word_count = len(query.split())
-                is_low_entropy = word_count < 5 and not any(
-                    x in query.lower()
-                    for x in ["protocol", "session", "case study", "cs-"]
-                )
-
-                # Check if we have high-confidence local hits (score >= 0.8)
-                has_local_hits = False
-                for source in ["canonical", "sqlite", "filename", "framework_docs"]:
-                    if any(doc.score >= 0.8 for doc in lists.get(source, [])):
-                        has_local_hits = True
-                        break
-
+                # 3. Vector channel: ALWAYS fire.
+                # The old "low entropy + local hits → skip vectors" heuristic was
+                # the #1 recall-killer: short conceptual queries ("Relational Proxy
+                # Fallacy") matched a keyword in PROJECTS.md, bypassed the only
+                # semantic channel, and missed the session log that coined the term.
+                # Vectors are the sole paraphrase/synonym channel — skipping them
+                # on short queries is skipping them on exactly the queries that need
+                # them most. Removed 2026-09-03 (S876, P0.3 strike).
                 needs_vector = True
-                if is_low_entropy and has_local_hits:
-                    needs_vector = False
-                    if not json_output:
-                        print("   ⚡ Low Entropy Query with Local Hits: Skipping deep vector retrieval")
 
                 if needs_vector or ("web_search" in collection_tasks):
                     futures = {}

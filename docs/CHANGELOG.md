@@ -1,10 +1,20 @@
 # Athena Changelog
 
-> **Last Updated**: 3 September 2026 <!-- 2026-09-03 -->
+> **Last Updated**: 4 September 2026 <!-- 2026-09-04 -->
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
+
+---
+
+## [9.9.9] — Feature Port & Synchronized Digital Portfolio Refresh (4 September 2026)
+
+- **Synchronized Digital Portfolio Update**: Complete synchronized refresh across all public surfaces (`Athena-Public`, `winstonkoh87` GitHub profile, `winstonkoh87.com` personal site, `sgassignmenthelper.com` commercial site) and `Athena-Public.wiki` to 4 September 2026 state.
+- **Vector Retrieval Bypass Fix**: Ported vector retrieval bypass removal (`src/athena/tools/search.py`) ensuring the vector channel always fires for semantic recall, eliminating false bypasses on low-entropy conceptual queries.
+- **Emergency Save Verification**: Ported `safe_commit()` HEAD advance verification to `scripts/shutdown.py` and `examples/scripts/shutdown.py` ensuring emergency commits verify git state changes before reporting success.
+- **Canonical Metrics Sync**: Updated `.agent/config/CAPS.json` and all public/internal documentation across the ecosystem (418 active protocols across 26 categories / 452 total, 43 active skills, 74 workflows, 269 scripts, 199 canonical entries, 4,509 memory files).
+- **IndexNow & Sitemap Re-index**: Discovered verification keys and submitted full re-indexing payload across production web properties.
 
 ---
 

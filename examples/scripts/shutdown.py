@@ -325,7 +325,7 @@ def extract_tags(content: str) -> list[str]:
     tags = set(re.findall(r"#([\w-]+)", content))
     tags.discard("session")
     tags.discard("...")
-    return sorted(list(tags))
+    return sorted(tags)
 
 
 def extract_threads(focus: str, tags: list[str], content: str) -> list[str]:
@@ -402,7 +402,7 @@ def propagate_system_learnings(learnings, session_id, dry_run=False) -> int:
         return 0
 
     today = datetime.now().strftime("%Y-%m-%d")
-    new_rows = [f"| {today} | {session_id} | {l} | ⏳ Pending |" for l in learnings]
+    new_rows = [f"| {today} | {session_id} | {row} | ⏳ Pending |" for row in learnings]
 
     if dry_run:
         print(f"{DIM}[DRY-RUN] Would append {len(new_rows)} system learnings{RESET}")
@@ -471,10 +471,7 @@ def validate_log_synthesis(content: str) -> bool:
         r"\*\*Insight\*\*:\s*\.\.\.",
         r"\| \.\.\. \| AI / User \| Pending \|",
     ]
-    for pattern in critical_patterns:
-        if re.search(pattern, content):
-            return False
-    return True
+    return all(not re.search(pattern, content) for pattern in critical_patterns)
 
 
 def finalize_session_log(dry_run: bool = False) -> bool:
@@ -762,11 +759,33 @@ def evaluator_background():
 
 
 def safe_commit():
-    """Emergency commit if main orchestrator fails."""
+    """Emergency commit if main orchestrator fails.
+
+    Verifies HEAD actually moved after commit before printing success.
+    """
     print(f"\n{RED}{BOLD}🚨 EMERGENCY COMMIT TRIGGERED{RESET}")
     try:
-        _run_git(["add", "-A"])
-        _run_git(["commit", "-m", "emergency: save state on shutdown failure"])
+        head_before, _, _ = _run_git(["rev-parse", "HEAD"])
+
+        _, _, add_rc = _run_git(["add", "-A"])
+        if add_rc != 0:
+            print(f"{RED}❌ Emergency Save Failed: git add returned {add_rc}{RESET}")
+            return
+
+        _, stderr, commit_rc = _run_git(["commit", "-m", "emergency: save state on shutdown failure"])
+        if commit_rc != 0 and "nothing to commit" not in stderr:
+            print(f"{RED}❌ Emergency Save Failed: git commit returned {commit_rc} — {stderr}{RESET}")
+            return
+
+        head_after, _, _ = _run_git(["rev-parse", "HEAD"])
+
+        if head_before == head_after:
+            staged, _, _ = _run_git(["diff", "--cached", "--name-only"])
+            staged_list = staged.strip() if staged else "(none)"
+            print(f"{RED}❌ Emergency Save Failed: HEAD did not move ({head_before[:8]}). "
+                  f"Staged files: {staged_list}{RESET}")
+            return
+
         subprocess.Popen(
             ["git", "push"],
             stdout=subprocess.DEVNULL,
@@ -774,7 +793,7 @@ def safe_commit():
             cwd=str(PROJECT_ROOT),
             start_new_session=True,
         )
-        print(f"{GREEN}✅ Emergency Save Complete.{RESET}")
+        print(f"{GREEN}✅ Emergency Save Complete. HEAD: {head_before[:8]} → {head_after[:8]}{RESET}")
     except Exception as e:
         print(f"{RED}❌ Emergency Save Failed: {e}{RESET}")
 
