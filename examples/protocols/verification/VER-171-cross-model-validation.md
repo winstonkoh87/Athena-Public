@@ -207,7 +207,7 @@ Quality = f(Primary Depth × Adversarial Diversity × Synthesis Discipline)
 
 ## Integration
 
-- Links to: [Protocol 159](../architecture/ARC-159-verification-before-claim.md) (Verification Before Claim)
+- Links to: **Protocol 159** (Verification Before Claim)
 - Links to: [Protocol 75](../decision/DEC-75-synthetic-parallel-reasoning.md) (Parallel Reasoning)
 - Used in: `/due-diligence`, `/ultrathink`
 

@@ -9,7 +9,7 @@ context_trigger: "review, red team, what did I miss, QA, bias check, critique, p
 
 # Red-Team Review (v4.3 — Strategic Matrix)
 
-> **Canonical Protocol**: [MTA-004-red-team-v4-3.md](./../skills/protocols/meta/MTA-004-red-team-v4-3.md)
+> **Canonical Protocol**: [MTA-004-red-team-v4-3.md](../../../protocols/meta/MTA-004-red-team-v4-3.md)
 > **Absorbs**: `bias-detector` (v4.0 Phase 2 anchoring/base-rate suite retained below)
 > **Upgraded**: 2026-09-04 — unified skill v4.0 + protocol v4.3 into single version
 > **Version History**: v4.0 (5-phase) → v4.1 → v4.2 → **v4.3 (Strategic Matrix, 7-phase)**
@@ -108,7 +108,7 @@ Rank top 3 recommendations using:
 - **Risk Factors**: Low = 1.0 | Med = 1.5 | High = 2.0
 - **Entropy Multipliers**: Stable = 1.0 | Decaying = 0.8 | Rotting = 0.5
 
-Invoke [Protocol 121 (MCDA/EEV/Pairwise)](./../skills/protocols/decision/DEC-121-mcda-eev-framework.md) for complex multi-criteria rankings.
+Invoke [Protocol 121 (MCDA/EEV/Pairwise)](../../../protocols/decision/DEC-121-mcda-eev-framework.md) for complex multi-criteria rankings.
 
 ### Phase 5: Blind Spot & Kill Switch
 
@@ -130,6 +130,6 @@ Invoke [Protocol 121 (MCDA/EEV/Pairwise)](./../skills/protocols/decision/DEC-121
 
 ## Reference Protocols
 
-- [MTA-004: Red-Team Review v4.3](./../skills/protocols/meta/MTA-004-red-team-v4-3.md) — canonical protocol (this skill wraps it)
-- [DEC-121: MCDA / EEV / Pairwise](./../skills/protocols/decision/DEC-121-mcda-eev-framework.md) — Phase 4 ranking engine
-- [DEC-500: GTO Problem Solver](./../skills/protocols/decision/DEC-500-gto-problem-solver.md) — capstone decision protocol
+- [MTA-004: Red-Team Review v4.3](../../../protocols/meta/MTA-004-red-team-v4-3.md) — canonical protocol (this skill wraps it)
+- [DEC-121: MCDA / EEV / Pairwise](../../../protocols/decision/DEC-121-mcda-eev-framework.md) — Phase 4 ranking engine
+- [DEC-500: GTO Problem Solver](../../../protocols/decision/DEC-500-gto-problem-solver.md) — capstone decision protocol
