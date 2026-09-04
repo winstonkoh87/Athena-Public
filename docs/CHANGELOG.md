@@ -1,10 +1,22 @@
 # Athena Changelog
 
-> **Last Updated**: 4 September 2026 <!-- 2026-09-04 -->
+> **Last Updated**: 5 September 2026 <!-- 2026-09-05 -->
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
+
+---
+
+## [9.9.9] — Feature Port & Synchronized Digital Portfolio Refresh (5 September 2026)
+
+- **Synchronized Digital Portfolio Update**: Complete synchronized refresh across all public surfaces (Athena-Public, winstonkoh87 GitHub profile, winstonkoh87.com personal site, sgassignmenthelper.com commercial site) and Athena-Public.wiki to 5 September 2026 state.
+- **Cross-Model Validation Runtime Verification Mandate**: Updated Protocol 171 (VER-171-cross-model-validation.md) replacing hardcoded historical model rankings with a mandatory runtime verification instruction against live SOTA leaderboards (LMArena) to eliminate stale model ranking drift.
+- **Red-Team Review v4.3**: Upgraded red-team-review skill and aligned MTA-004 to v4.3 Strategic Matrix architecture, unifying the 7-phase adversarial review framework and cognitive bias detection suite.
+- **Link Integrity Engine**: Ported link_integrity.py providing automated detection, reporting, and sanitization of broken markdown cross-references and internal filesystem links.
+- **Currency Integrity Guard**: Ported check_currency_integrity.py providing multi-pattern regex parsing and pre-commit verification against financial number corruption.
+- **Canonical Metrics Sync**: Updated .agent/config/CAPS.json and all public/internal documentation across the ecosystem (419 active protocols across 26 categories / 453 total, 43 active skills, 74 workflows, 273 scripts, 199 canonical entries, 4,527 memory files).
+- **IndexNow & Sitemap Re-index**: Discovered verification keys and submitted full re-indexing payload across production web properties.
 
 ---
 

@@ -25,7 +25,7 @@ Own the state. Rent the intelligence. Platforms forget. Athena doesn't.
 
 [Quickstart](#-quickstart) · [How It Works](#-how-it-works) · [Scheduled Tasks & Self-RSI](docs/SCHEDULED_TASKS.md) · [llms.txt](https://winstonkoh87.com/llms.txt) · [Docs](docs/GETTING_STARTED.md) · [FAQ](Athena-Public.wiki/FAQ.md) · [Safety](SAFETY.md) · [Contributing](CONTRIBUTING.md)
 
-*Last updated: 4 September 2026* <!-- 2026-09-04 -->
+*Last updated: 5 September 2026* <!-- 2026-09-05 -->
 
 </div>
 
@@ -605,6 +605,7 @@ Athena-Public/
 </details>
 
 <details>
+- **Full Synchronized Digital Portfolio Refresh** (5 September 2026): Synchronized portfolio update across all public surfaces. Ported runtime verification mandate for cross-model validation (Protocol 171), Red-Team Review v4.3 Strategic Matrix, link integrity engine, and currency integrity guard to public repo. Updated canonical CAPS counts (419 active protocols / 453 total across 26 categories, 43 active skills, 74 workflows, 273 scripts, 199 canonical entries, 4,527 memory files).
 - **Full Synchronized Digital Portfolio Refresh** (4 September 2026): Synchronized portfolio update across all public surfaces. Ported vector retrieval bypass fix (ensuring vector channel always fires for semantic recall) and safe_commit verification to public repo. Updated canonical CAPS counts (418 active protocols / 452 total across 26 categories, 43 active skills, 74 workflows, 269 scripts, 199 canonical entries, 4,509 memory files).
 - **Full Synchronized Digital Portfolio Refresh** (3 September 2026): Synchronized portfolio update across all public surfaces. Ported first-class web search grounding provider layer, intent classifier, and underspecified optimization detector. Updated canonical CAPS counts (418 active protocols / 452 total across 26 categories, 43 active skills, 74 workflows, 269 scripts, 199 canonical entries, 4,400 memory files).
 - **Full Synchronized Digital Portfolio Refresh** (2 September 2026): Synchronized portfolio update across all public surfaces. Updated canonical CAPS counts (418 active protocols / 452 total across 26 categories, 43 active skills, 74 workflows, 269 scripts, 199 canonical entries, 4,386 memory files).

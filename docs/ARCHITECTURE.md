@@ -1,6 +1,6 @@
 # Athena — Architecture Reference
 
-> **Last Updated**: 4 September 2026
+> **Last Updated**: 5 September 2026
 > **Version**: v9.9.9
 > **Canonical Counts**: See `.agent/config/CAPS.json` — if numbers in this file diverge, CAPS wins.
 > **Bionic Unit Spec**: `BIONIC_UNIT_SPEC.md` — the definitive human-AI augmentation mapping (private workspace)
@@ -13,11 +13,11 @@
 Athena/
 ├── .agent/                        # Agent configuration
 │   ├── skills/                    #   43 active skills (42 with context_trigger)
-│   │   └── protocols/             #   418 active + 34 archived = 452 total, 26 categories
+│   │   └── protocols/             #   419 active + 34 archived = 453 total, 26 categories
 │   │       └── archive/           #     34 deprecated protocols (read-only, see README)
 │   ├── workflows/                 #   55 root + 19 _domain = 74 slash-command workflows
 │   │   └── _domain/               #     Domain-scoped, conditionally activated
-│   ├── scripts/                   #   269 automation scripts
+│   ├── scripts/                   #   273 automation scripts
 │   ├── telemetry/                 #   Retrieval instrumentation logs + tier maps
 │   ├── config/                    #   Agent manifests + CAPS.json (canonical counts)
 │   ├── CLUSTER_INDEX.md           #   15 cognitive clusters (routing map)
@@ -27,7 +27,7 @@ Athena/
 │   └── archive_skills/            #   17 sunset skills (read-only, see README)
 │
 ├── .context/                      # Personal knowledge base
-│   ├── memories/                  #   4,509 memory files (session logs + case studies + profile)
+│   ├── memories/                  #   4,527 memory files (session logs + case studies + profile)
 │   │   ├── session_logs/          #     Dated session records
 │   │   ├── case_studies/          #     492 documented patterns (15 domains, 7 archived)
 │   │   ├── profile/               #     Core profile, psychology, voice DNA
@@ -170,7 +170,7 @@ Full cluster details: `CLUSTER_INDEX.md` (private workspace — see table above 
 | Cognitive Domains | 8 | Memory activation targets (priority-ordered for tie-breaking) |
 | Cognitive Clusters | 15 | Co-activating procedural memory bundles |
 | Skills | 43 active (17 archived) |
-| Protocols | 418 active (34 archived; 452 total) |
+| Protocols | 419 active (34 archived; 453 total) |
 | Workflows | 74 (55 root + 19 _domain/) |
 
 ---
