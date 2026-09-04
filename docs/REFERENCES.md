@@ -1,6 +1,6 @@
 ---
 created: 2026-02-12
-last_updated: 2026-09-04
+last_updated: 2026-09-05
 tags: #references #apa #academic #citations
 ---
 
@@ -295,6 +295,18 @@ Schwartz, R. C. (1995). *Internal family systems therapy*. Guilford Press.
 Young, J. E., Klosko, J. S., & Weishaar, M. E. (2003). *Schema therapy: A practitioner's guide*. Guilford Press.
 
 > **Note**: Schema Therapy's concept of "early maladaptive schemas" — stable, self-defeating patterns formed in childhood — grounds Athena's schema deconstruction skill. The 18-schema taxonomy provides the diagnostic vocabulary for Cluster #7's pattern detection.
+
+---
+
+## AI Benchmarks & Live Evaluation Infrastructure
+
+Arena Intelligence. (2026, September 2). *Agent Arena Leaderboard: Dynamic ranking of models on how well they orchestrate tools for real-world agentic tasks*. Arena AI. <https://arena.ai/leaderboard/agent>
+
+> **Note**: The Agent Arena leaderboard provides empirical, causal evaluation of frontier models based on over 2.18 million real-world agentic sessions across 58 models. It measures key operational dimensions: net task improvement, confirmed success rate (task outcome explicit confirmation), steerability (landing user pushback/corrections), bash error recovery steps, and tool hallucination rate. Serves as Athena's empirical benchmark and selection matrix for cross-model validation pairings in Protocol 171 (`VER-171-cross-model-validation.md`) and runtime multi-agent ensembling.
+
+LMSYS Org. (2026). *Chatbot Arena LLM Leaderboard*. Large Model Systems Organization. <https://lmarena.ai>
+
+> **Note**: Crowdsourced open evaluation platform evaluating general reasoning, coding, and instruction following via pairwise human preference (Elo rating) across 350+ models. Serves as secondary validation infrastructure for general model capabilities and cost-performance Pareto frontiers.
 
 ---
 

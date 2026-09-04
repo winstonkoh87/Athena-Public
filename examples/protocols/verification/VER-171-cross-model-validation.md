@@ -15,7 +15,7 @@ graphrag_extracted: true
 
 ## Purpose
 
-Reduce single-model blind spots by using multiple SOTA LLMs as adversarial peer reviewers. This protocol treats LMArena as free infrastructure for cross-validation.
+Reduce single-model blind spots by using multiple SOTA LLMs as adversarial peer reviewers. This protocol treats public agent benchmarks and arena infrastructure as empirical grounds for cross-validation.
 
 **Extended Pattern (v2.1)**: The **Tri-Lateral Iteration Engine** formalizes a structured dialectic where:
 
@@ -29,17 +29,23 @@ Reduce single-model blind spots by using multiple SOTA LLMs as adversarial peer 
 ## SOTA Model Reference
 
 > **⚠️ RUNTIME VERIFICATION MANDATE (2026-09-04)**: Do NOT hardcode a static SOTA model
-> table. LMArena leaderboards turn over every 2–3 months. A verification protocol
+> table. Leaderboards turn over rapidly. A verification protocol
 > that ships stale model rankings violates its own core rule.
 >
-> **At invocation time**: check [LMArena](https://lmarena.ai) or use `search_web`
-> for "LMArena leaderboard 2026" to get current rankings. Date-stamp the result.
+> **At invocation time**: check live agentic evaluation infrastructure ([Agent Arena Leaderboard](https://arena.ai/leaderboard/agent) or [LMArena](https://lmarena.ai)), or use `search_web`
+> for "Agent Arena leaderboard 2026" / "LMArena 2026". Date-stamp the result.
 > Select the top 2–3 models for adversarial peer review based on the live leaderboard.
 >
-> **Historical calibration reference (May 2026 snapshot)**: Claude Opus 4.8 (1503),
-> Claude Opus 4.6 (1502), Gemini 3.1 Pro (1492), GPT-5.5 High (1484), Grok 4.20 Beta (1480),
-> Gemini 3 Flash (1474).
-> *This snapshot is for calibration context only — do not use as current rankings.*
+> **Empirical Calibration Snapshot (2 September 2026 — [Arena AI Agent Leaderboard](https://arena.ai/leaderboard/agent))**:  
+> *Based on 2,188,416 real-world agentic sessions across 58 models, evaluating tool orchestration, steerability, bash recovery, and confirmed task completion.*
+>
+> | Tier | Models & Signals | Best Strategic Role in Athena |
+> |:---|:---|:---|
+> | **Tier 1: Frontier Agentic Orchestration** | • **Claude Opus 5 (High)** (#1, Net Impr: +13.74%, Steerability: 16.00%)<br>• **Claude Opus 5 (Max)** (#2, Net Impr: +11.69%, Bash Recovery: 15.50%)<br>• **Claude Fable 5 (High)** (#3, Net Impr: +10.61%)<br>• **GPT 5.6 Sol (xHigh)** (#4, Net Impr: +9.49%, Praise: 21.62%) | **Primary Synthesis & Execution Engine**: Deep structured reasoning, complex context management, resilient multi-step code generation. |
+> | **Tier 2: Adversarial Audit & Peer Review** | • **Claude Opus 4.8 (High)** (#5, Net Impr: +9.22%)<br>• **Kimi K3 (Max)** (#6, Net Impr: +8.71%, #1 Confirmed Success: 16.90%)<br>• **GPT 5.5 (xHigh)** (#7, Net Impr: +7.53%, Bash Recovery: 13.54%)<br>• **Claude Sonnet 5 (High)** (#8, Net Impr: +7.51%) | **Hostile Red-Team & Verification**: Adversarial audit, cognitive bias checks, and rigorous task outcome validation. |
+> | **Tier 3: Cost-Optimal & Rapid Counter-Audits** | • **GLM 5.2 (Max)** (#10, Net Impr: +6.23%, $0.48/task)<br>• **Grok 4.5** (#12, Net Impr: +6.17%)<br>• **Gemini 3.8 Flash (High)** (#15, Net Impr: +5.94%, $0.22/task, Praise: 14.78%)<br>• **DeepSeek V4 Pro (High)** (#16, Net Impr: +5.91%, $0.23/task) | **High-Frequency Pre-Flight & Fast Auditing**: High token velocity, cost-effective second-opinion passes, and sanity checks. |
+>
+> *This snapshot is for calibration context only — run live verification at execution time.*
 
 ---
 
@@ -58,14 +64,14 @@ Reduce single-model blind spots by using multiple SOTA LLMs as adversarial peer 
 
 ## Execution (The 3-Phase Loop)
 
-### Phase 1: Internal (Athena/Opus)
+### Phase 1: Internal (Primary Model)
 
 1. **Frame**: Build the context, hypothesis, and initial draft.
 2. **Route**: User (Layer 2) inspects. If "High Stakes" are detected -> **Go to Phase 2**.
 
 ### Phase 2: Outsource (3rd Party SOTA)
 
-1. **Select**: Choose top adversarial models from live LMArena leaderboard (e.g. **Gemini 3.1 Pro** or **GPT-5.5 (High)**).
+1. **Select**: Choose top adversarial models from live leaderboards (e.g., **Claude Opus 5 (High)** or **GPT 5.6 Sol (xHigh)** for architectural cross-checks; **Kimi K3 (Max)** for task outcome verification; **Gemini 3.8 Flash (High)** for rapid counter-audits).
 2. **Prompt**: *"Act as a hostile regulatory auditor and a pessimistic investor. Your goal is to kill this deal. List the top 3 existential risks the author ignored. Be ruthless."*
 3. **Execute**: Run blind or adversarial check.
 
@@ -100,7 +106,8 @@ Models validate *reasoning*, but many errors are **fact errors** (regulations, u
 ║  │  ┌──────────────┐                                                   │  ║
 ║  │  │ User Query   │──────►┌──────────────────┐                        │  ║
 ║  │  └──────────────┘       │  Primary Model   │                        │  ║
-║  │                         │  (Claude Opus)   │                        │  ║
+║  │                         │ (Claude Opus 5 / │                        │  ║
+║  │                         │   GPT 5.6 Sol)   │                        │  ║
 ║  │                         │  • Deep context  │                        │  ║
 ║  │                         │  • Full reasoning│                        │  ║
 ║  │                         └────────┬─────────┘                        │  ║
@@ -109,7 +116,8 @@ Models validate *reasoning*, but many errors are **fact errors** (regulations, u
 ║  ┌─────────────────────────────────────────────────────────────────────┐  ║
 ║  │  PHASE 2: ADVERSARIAL AUDIT                                         │  ║
 ║  │          ┌─────────────────┐     ┌─────────────────┐                │  ║
-║  │          │  Gemini 3.1 Pro │     │    GPT 5.5      │                │  ║
+║  │          │  Gemini 3.8 /   │     │   GPT 5.5 /     │                │  ║
+║  │          │   Kimi K3 Max   │     │  Claude Fable 5 │                │  ║
 ║  │          │ "Red team this" │     │ "What's wrong?" │                │  ║
 ║  │          └────────┬────────┘     └────────┬────────┘                │  ║
 ║  │                   └───────────┬───────────┘                         │  ║
@@ -158,13 +166,13 @@ Quality = f(Primary Depth × Adversarial Diversity × Synthesis Discipline)
 
 ### Case Study 1: BCM Due Diligence
 
-**Primary (Opus 4.8)**:
+**Primary (Opus 4.8 / Opus 5)**:
 
 - Failure probability: 15%
 - Best case probability: 20%
 - Expected NPV: +$9,600
 
-**After Cross-Validation (Gemini-3.1-Pro + Grok-4.20)**:
+**After Cross-Validation (Gemini-3.8-Flash + Grok-4.5 / GPT-5.5)**:
 
 - Failure probability: **40%** (+25%)
 - Best case probability: **5%** (-15%)
@@ -174,9 +182,9 @@ Quality = f(Primary Depth × Adversarial Diversity × Synthesis Discipline)
 
 ### Case Study 2: Child Aggression Response (28 Dec 2025)
 
-**Primary (Opus 4.8)**: Rated 9.5/10 response on behavioral psychology.
+**Primary (Opus 4.8 / Opus 5)**: Rated 9.5/10 response on behavioral psychology.
 
-**After Cross-Validation (Gemini 3.1 Pro + GPT 5.5)**:
+**After Cross-Validation (Gemini 3.8 Flash + GPT 5.5)**:
 
 | Issue | Original | Calibrated |
 |:---|:---|:---|
@@ -205,9 +213,10 @@ Quality = f(Primary Depth × Adversarial Diversity × Synthesis Discipline)
 - Links to: **Protocol 159** (Verification Before Claim)
 - Links to: [Protocol 75](../decision/DEC-75-synthetic-parallel-reasoning.md) (Parallel Reasoning)
 - Used in: `/due-diligence`, `/ultrathink`
+- Benchmark references: [docs/REFERENCES.md](../../../docs/REFERENCES.md)
 
 ---
 
 ## Tagging
 
-# cross-model-validation #tri-lateral-iteration #lmarena #verification #peer-review #adversarial-ensembling #gemini-3.1-pro #gpt-5.5 #grok-4.20 #opus-4.8 #sota-models #bias-correction #hitlo
+# cross-model-validation #tri-lateral-iteration #agent-arena #lmarena #verification #peer-review #adversarial-ensembling #opus-5 #gpt-5.6 #fable-5 #kimi-k3 #gemini-3.8-flash #sota-models #bias-correction #hitlo
