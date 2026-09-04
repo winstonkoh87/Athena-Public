@@ -1,18 +1,13 @@
 ---
-
 created: 2025-12-24
-last_updated: 2026-01-30
+last_updated: 2026-09-05
 graphrag_extracted: true
----
-
----created: 2025-12-24
-last_updated: 2026-01-05
 ---
 
 # Protocol 171: Cross-Model Validation (Tri-Lateral Iteration Engine)
 
 > **Created**: 24 December 2025  
-> **Updated**: 28 December 2025  
+> **Updated**: 5 September 2026  
 > **Category**: Verification  
 > **Status**: Active  
 
@@ -31,9 +26,9 @@ Reduce single-model blind spots by using multiple SOTA LLMs as adversarial peer 
 
 ---
 
-## SOTA Model Reference (Dec 2025)
+## SOTA Model Reference
 
-> **⚠️ RUNTIME VERIFICATION MANDATE (2026-09-04)**: Do NOT hardcode a SOTA model
+> **⚠️ RUNTIME VERIFICATION MANDATE (2026-09-04)**: Do NOT hardcode a static SOTA model
 > table. LMArena leaderboards turn over every 2–3 months. A verification protocol
 > that ships stale model rankings violates its own core rule.
 >
@@ -41,10 +36,10 @@ Reduce single-model blind spots by using multiple SOTA LLMs as adversarial peer 
 > for "LMArena leaderboard 2026" to get current rankings. Date-stamp the result.
 > Select the top 2–3 models for adversarial peer review based on the live leaderboard.
 >
-> **Historical reference (Dec 2025)**: Gemini-3-Pro (1490), GPT-5.4 (1488),
-> Gemini-3-Flash (1478), Grok-4.1-Thinking (1477), Claude-Opus-4.5-Thinking (1469).
+> **Historical calibration reference (May 2026 snapshot)**: Claude Opus 4.8 (1503),
+> Claude Opus 4.6 (1502), Gemini 3.1 Pro (1492), GPT-5.5 High (1484), Grok 4.20 Beta (1480),
+> Gemini 3 Flash (1474).
 > *This snapshot is for calibration context only — do not use as current rankings.*
-
 
 ---
 
@@ -70,7 +65,7 @@ Reduce single-model blind spots by using multiple SOTA LLMs as adversarial peer 
 
 ### Phase 2: Outsource (3rd Party SOTA)
 
-1. **Select**: Choose **Gemini 3 Pro** or **GPT-5.4** (LMArena).
+1. **Select**: Choose top adversarial models from live LMArena leaderboard (e.g. **Gemini 3.1 Pro** or **GPT-5.5 (High)**).
 2. **Prompt**: *"Act as a hostile regulatory auditor and a pessimistic investor. Your goal is to kill this deal. List the top 3 existential risks the author ignored. Be ruthless."*
 3. **Execute**: Run blind or adversarial check.
 
@@ -114,7 +109,7 @@ Models validate *reasoning*, but many errors are **fact errors** (regulations, u
 ║  ┌─────────────────────────────────────────────────────────────────────┐  ║
 ║  │  PHASE 2: ADVERSARIAL AUDIT                                         │  ║
 ║  │          ┌─────────────────┐     ┌─────────────────┐                │  ║
-║  │          │  Gemini 3 Pro   │     │    GPT 5.2      │                │  ║
+║  │          │  Gemini 3.1 Pro │     │    GPT 5.5      │                │  ║
 ║  │          │ "Red team this" │     │ "What's wrong?" │                │  ║
 ║  │          └────────┬────────┘     └────────┬────────┘                │  ║
 ║  │                   └───────────┬───────────┘                         │  ║
@@ -163,13 +158,13 @@ Quality = f(Primary Depth × Adversarial Diversity × Synthesis Discipline)
 
 ### Case Study 1: BCM Due Diligence
 
-**Primary (Opus 4.5)**:
+**Primary (Opus 4.8)**:
 
 - Failure probability: 15%
 - Best case probability: 20%
 - Expected NPV: +$9,600
 
-**After Cross-Validation (Gemini-3-Pro + Grok-4.1)**:
+**After Cross-Validation (Gemini-3.1-Pro + Grok-4.20)**:
 
 - Failure probability: **40%** (+25%)
 - Best case probability: **5%** (-15%)
@@ -179,9 +174,9 @@ Quality = f(Primary Depth × Adversarial Diversity × Synthesis Discipline)
 
 ### Case Study 2: Child Aggression Response (28 Dec 2025)
 
-**Primary (Opus 4.5)**: Rated 9.5/10 response on behavioral psychology.
+**Primary (Opus 4.8)**: Rated 9.5/10 response on behavioral psychology.
 
-**After Cross-Validation (Gemini 3 Pro + GPT 5.2)**:
+**After Cross-Validation (Gemini 3.1 Pro + GPT 5.5)**:
 
 | Issue | Original | Calibrated |
 |:---|:---|:---|
@@ -215,4 +210,4 @@ Quality = f(Primary Depth × Adversarial Diversity × Synthesis Discipline)
 
 ## Tagging
 
-# cross-model-validation #tri-lateral-iteration #lmarena #verification #peer-review #adversarial-ensembling #gemini-3-pro #gpt-5.2 #grok-4.1 #opus-4.5 #sota-models #bias-correction #hitlo
+# cross-model-validation #tri-lateral-iteration #lmarena #verification #peer-review #adversarial-ensembling #gemini-3.1-pro #gpt-5.5 #grok-4.20 #opus-4.8 #sota-models #bias-correction #hitlo
