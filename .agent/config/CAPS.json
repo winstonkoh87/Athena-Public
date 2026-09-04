@@ -1,14 +1,14 @@
 {
   "_comment": "Canonical inventory counts for Project Athena. Single source of truth for pre-commit caps, audit asserts, and AGENTS.md regeneration. Update via .agent/scripts/sync_agents_md.py (runs automatically: pre-commit Gate 4 + shutdown.py Phase 1.5), not by hand.",
-  "_generated": "2026-08-26",
+  "_generated": "2026-09-05",
   "_generator": "S411 sync_agents_md.py automation (TD-028)",
   "version": {
     "framework": "v8.2-stable",
     "system": "v9.9.9"
   },
   "protocols": {
-    "total": 448,
-    "active": 414,
+    "total": 453,
+    "active": 419,
     "archived": 34,
     "categories": 26,
     "cap": "uncapped",
@@ -22,8 +22,8 @@
   },
   "workflows": {
     "root": 55,
-    "domain": 18,
-    "total": 73,
+    "domain": 19,
+    "total": 74,
     "cap": "uncapped",
     "cap_policy": "Workflows are uncapped as of v9.8.0. Domain workflows are dormant by default (_domain/ tier) and only activate on query match. The constraint is attention budget, not inventory size. TD-017 is now structurally resolved."
   },
@@ -51,9 +51,9 @@
     "retrieval_audit_script": ".agent/scripts/retrieval_audit.py",
     "canonical_tier_analysis": ".agent/scripts/canonical_tier_analysis.py"
   },
-  "scripts": 264,
+  "scripts": 273,
   "memories": {
-    "total_files": 4342,
+    "total_files": 4527,
     "path": ".context/memories/"
   },
   "paths": {

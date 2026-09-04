@@ -22,7 +22,7 @@ This file provides persistent context to any AI coding agent working in this wor
 |.framework/v8.2-stable/protocols:{409_Parallel_Worktree_Orchestration.md,410_Agent_Status_Broadcasting.md,411_Dynamic_Skill_Injection.md,412_DM_Pairing_Gate.md,413_Multi_Agent_Coordination.md,414_IDE_Bridge_ACP_Adapter.md,415_Sandboxed_Execution_Modes.md,416_XML_Prompting.md}
 |.agent:{CONNECTORS.md}
 |.agent/workflows (55 root + 19 _domain = 74 total):{_shared.md,do.md,start.md,end.md,plan.md,audit.md,research.md,refactor.md,brief.md,ultrathink.md,steal.md,diagnose.md,416-agent-swarm.md,release-public.md,preset.md,...}
-|.agent/skills/protocols (418 active + 34 archived = 452 total, across 26 categories):{000-ultimate-auditor.md,137-graph-of-thoughts.md,139-decentralized-command.md,...,archive/README.md}
+|.agent/skills/protocols (419 active + 34 archived = 453 total, across 26 categories):{000-ultimate-auditor.md,137-graph-of-thoughts.md,139-decentralized-command.md,...,archive/README.md}
 |.agent/skills (43 active, 17 archived):{SKILL_INDEX.md, <40 with context_trigger>, red-team-review, semantic-search, data-analysis, skill-compiler, dashboard-builder, financial-ops, fitness-tracker, geo-arbitrage-ops, ...}
 |.agent/scripts:{scan_skill.py,...}
 |.agent/config:{CAPS.json,athena.agent.manifest.json,briefing_config.yaml,lint_rules.toml,orphan_exclusions.yaml,settings.json}

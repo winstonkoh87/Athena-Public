@@ -576,7 +576,7 @@ Most AI-agent READMEs state every claim in the same confident voice. This one do
 | **Memory** | Supabase + pgvector |
 | **Routing** | Risk-Proportional Triple-Lock — SNIPER / STANDARD / ULTRA |
 
-> ¹ Gemini 3.5 Pro is still in limited preview as of mid-July 2026 (reported GA target: 17 Jul, unconfirmed) — Gemini 3.1 Pro remains the GA fallback until then. Athena is model-agnostic by design; this row is just the current daily-driver lineup.
+> ¹ Athena is model-agnostic by design; this row is just the current daily-driver lineup as of September 2026. Any frontier model that supports structured tool-use and long context will work.
 
 <details>
 <summary><strong>📂 Repository Structure</strong></summary>
@@ -595,7 +595,7 @@ Athena-Public/
 ├── scripts/                 # Operational scripts (boot, shutdown, launch)
 ├── examples/
 │   ├── protocols/           # Protocol starter kit (21 categories)
-│   ├── scripts/             # 175 reference scripts
+│   ├── scripts/             # 173 reference scripts
 │   ├── skills/              # 38 domain-specialised skills (6 categories)
 │   └── templates/           # Starter templates (framework, memory bank)
 ├── docs/                    # Architecture, benchmarks, security, guides

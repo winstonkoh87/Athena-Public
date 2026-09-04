@@ -23,7 +23,7 @@
 
 - **Persistent Caching**: Embeddings cached to disk, delta sync on changed files
 - **Parallel Phase Execution**: Boot phases run concurrently where possible
-- **Canonical Memory**: Single materialized view replaces querying 1,900+ session logs
+- **Canonical Memory**: Single materialized view replaces querying 2,100+ session logs
 
 ---
 
@@ -66,7 +66,7 @@ Query → Adaptive Router → 5 parallel channels → RRF Fusion (k=60) → Cros
 
 ### Boot Payload Breakdown (Measured Feb 2026)
 
-The core boot payload is **~10K tokens** — always loaded on `/start`. The full enriched payload (with user profile and on-demand files) is **~14.5K tokens**, loaded adaptively. The Canonical Memory alone is ~4.3K tokens — a single materialized view that supersedes searching 1,900+ session logs.
+The core boot payload is **~10K tokens** — always loaded on `/start`. The full enriched payload (with user profile and on-demand files) is **~14.5K tokens**, loaded adaptively. The Canonical Memory alone is ~4.3K tokens — a single materialized view that supersedes searching 2,100+ session logs.
 
 | Component | Source File | Est. Tokens | Load Strategy |
 |-----------|-------------|:-----------:|:-------------:|
@@ -84,7 +84,7 @@ The core boot payload is **~10K tokens** — always loaded on `/start`. The full
 - **Document Sharding**: Large protocols split into retrievable chunks
 - **Summary Caching**: Session summaries pre-computed at `/end`
 - **Selective Context**: Only relevant protocols injected per query
-- **Canonical Memory**: Single materialized view supersedes searching 1,900+ session logs
+- **Canonical Memory**: Single materialized view supersedes searching 2,100+ session logs
 
 ---
 
