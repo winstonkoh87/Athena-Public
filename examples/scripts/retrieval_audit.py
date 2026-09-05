@@ -147,7 +147,6 @@ def report(entries: list[dict], top: int = 20, days: int = 14) -> None:
         if e.get("type") in ("smart_search", "context_gate", "agentic_search")
     ) + len(entries)
 
-    total_turns = len(invocations)
     violation_turns = sum(
         1 for e in invocations
         if e.get("type") == "quicksave" and "violation" in str(e.get("governance", "")).lower()

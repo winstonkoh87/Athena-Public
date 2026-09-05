@@ -46,6 +46,7 @@ def parse_ledger(path: Path) -> list[dict]:
             "rationale": r"\*\*Rationale\*\*:\s*(.+)",
             "outcome": r"\*\*Outcome\*\*:\s*(.+)",
             "resolved_date": r"\*\*Resolved\*\*:\s*(.+)",
+            "source_session": r"\*\*Source\*\*:\s*(.+)",
         }
 
         for key, pattern in patterns.items():
@@ -65,6 +66,87 @@ def parse_ledger(path: Path) -> list[dict]:
     return predictions
 
 
+def validate_pre_registration(predictions: list[dict]) -> list[str]:
+    """Validate pre-registration integrity: predictions must be logged before resolution.
+
+    Checks:
+    1. Every resolved prediction has a source_session field
+    2. source_session date (from session log filename) precedes resolved_date
+    3. Flags predictions without source_session as unverifiable
+    """
+    SESSION_LOG_DIR = PROJECT_ROOT / ".context" / "memories" / "session_logs"
+    warnings = []
+
+    for p in predictions:
+        if p.get("outcome") not in ("true", "false", "partial"):
+            continue  # Only check resolved predictions
+
+        cal_id = p["id"]
+        source = p.get("source_session", "")
+        resolved_raw = p.get("resolved_date", "")
+
+        # Extract date from resolved_date (format: "2026-07-29 — TRUE. ...")
+        resolved_date = None
+        date_match = re.search(r"(\d{4}-\d{2}-\d{2})", resolved_raw)
+        if date_match:
+            try:
+                resolved_date = datetime.strptime(date_match.group(1), "%Y-%m-%d")
+            except ValueError:
+                pass
+
+        if not source:
+            warnings.append(
+                f"  ⚠️ {cal_id}: No source_session — cannot verify pre-registration."
+            )
+            continue
+
+        # Extract session ID (e.g., "S661" from "S661" or "session 2026-06-18 (TD-046 close)")
+        session_match = re.search(r"S(\d+)", source)
+        source_date = None
+
+        if session_match:
+            # Try to find the session log file to extract its date
+            session_num = session_match.group(1)
+            for log_file in SESSION_LOG_DIR.glob(f"*session-{session_num}.md") if SESSION_LOG_DIR.exists() else []:
+                # Filename format: YYYY-MM-DD-session-NNN.md
+                fname_date = re.search(r"(\d{4}-\d{2}-\d{2})", log_file.name)
+                if fname_date:
+                    try:
+                        source_date = datetime.strptime(fname_date.group(1), "%Y-%m-%d")
+                    except ValueError:
+                        pass
+                    break
+        else:
+            # Try to extract date directly from source field
+            source_date_match = re.search(r"(\d{4}-\d{2}-\d{2})", source)
+            if source_date_match:
+                try:
+                    source_date = datetime.strptime(source_date_match.group(1), "%Y-%m-%d")
+                except ValueError:
+                    pass
+
+        if source_date and resolved_date:
+            if source_date > resolved_date:
+                warnings.append(
+                    f"  ❌ {cal_id}: PRE-REGISTRATION VIOLATION — source date "
+                    f"{source_date.strftime('%Y-%m-%d')} is AFTER resolution date "
+                    f"{resolved_date.strftime('%Y-%m-%d')}. Prediction may be retroactive."
+                )
+            elif source_date == resolved_date:
+                warnings.append(
+                    f"  ⚠️ {cal_id}: Same-day source and resolution — "
+                    f"pre-registration integrity ambiguous."
+                )
+        elif not source_date and resolved_date:
+            # Couldn't verify source date — just flag it
+            warnings.append(
+                f"  ℹ️ {cal_id}: Source '{source}' — session log not found, "
+                f"pre-registration not mechanically verified."
+            )
+
+    return warnings
+
+
 def compute_scores(predictions: list[dict]) -> dict:
     """Compute Brier score, log-loss, and calibration buckets."""
     resolved = [
@@ -72,11 +154,16 @@ def compute_scores(predictions: list[dict]) -> dict:
         if p.get("outcome") in ("true", "false", "partial")
     ]
 
+    # void = premise never materialized (cancelled bet); excluded from scoring AND from pending.
+    pending_n = len([p for p in predictions if p.get("outcome") == "pending"])
+    voided_n = len([p for p in predictions if p.get("outcome") == "void"])
+
     if not resolved:
         return {
             "total": len(predictions),
             "resolved": 0,
-            "pending": len(predictions),
+            "pending": pending_n,
+            "voided": voided_n,
             "brier": None,
             "log_loss": None,
             "calibration": {},
@@ -131,7 +218,8 @@ def compute_scores(predictions: list[dict]) -> dict:
     return {
         "total": len(predictions),
         "resolved": n,
-        "pending": len(predictions) - n,
+        "pending": pending_n,
+        "voided": voided_n,
         "brier": round(brier, 4),
         "log_loss": round(log_loss, 4),
         "calibration": calibration,
@@ -151,7 +239,7 @@ def domain_breakdown(predictions: list[dict]) -> dict:
     }
 
 
-def print_report(scores: dict, by_domain: dict, predictions: list[dict]):
+def print_report(scores: dict, by_domain: dict, predictions: list[dict], pre_reg_warnings: list[str] | None = None):
     """Print a formatted calibration report."""
     print("=" * 60)
     print("  ATHENA CALIBRATION REPORT")
@@ -161,6 +249,8 @@ def print_report(scores: dict, by_domain: dict, predictions: list[dict]):
     print(f"  Total predictions:  {scores['total']}")
     print(f"  Resolved:           {scores['resolved']}")
     print(f"  Pending:            {scores['pending']}")
+    if scores.get("voided"):
+        print(f"  Voided (excluded):  {scores['voided']}  (premise never materialized)")
     print()
 
     if scores["brier"] is not None:
@@ -205,14 +295,40 @@ def print_report(scores: dict, by_domain: dict, predictions: list[dict]):
     else:
         print("  No resolved predictions yet. Resolve some and re-run.")
 
-    # Pending predictions
+    # Pending predictions — split overdue (deadline passed, still unresolved) from upcoming.
+    # Overdue is the silent killer of the loop: deadlines pass, nobody resolves, the metric
+    # never computes. Surface them loudly so /end's Calibration Sweep can't skip them.
     pending = [p for p in predictions if p.get("outcome") == "pending"]
-    if pending:
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    def _due(p):
+        return str(p.get("deadline", "9999-12-31"))
+
+    overdue = sorted([p for p in pending if _due(p) < today], key=_due)
+    upcoming = sorted([p for p in pending if _due(p) >= today], key=_due)
+
+    if overdue:
         print()
-        print("  Pending Predictions:")
-        for p in pending:
-            deadline = p.get("deadline", "?")
-            print(f"    {p['id']}: {p.get('claim', '?')[:60]}... (due: {deadline})")
+        print(f"  ⚠️  OVERDUE — RESOLVE NOW ({len(overdue)}): deadline passed, still pending.")
+        print("      These block the metric from ever computing. Set outcome true/false/partial.")
+        for p in overdue:
+            print(f"    ❗ {p['id']}: {p.get('claim', '?')[:60]}... (due: {_due(p)})")
+
+    if upcoming:
+        print()
+        print("  Pending Predictions (upcoming):")
+        for p in upcoming:
+            print(f"    {p['id']}: {p.get('claim', '?')[:60]}... (due: {_due(p)})")
+
+    # Pre-registration integrity
+    if pre_reg_warnings:
+        print()
+        print("  🔒 PRE-REGISTRATION INTEGRITY:")
+        for w in pre_reg_warnings:
+            print(w)
+    elif scores["resolved"] and scores["resolved"] > 0:
+        print()
+        print("  🔒 Pre-registration: All resolved predictions verified.")
 
     print()
     print("=" * 60)
@@ -226,7 +342,8 @@ def main():
     predictions = parse_ledger(LEDGER_PATH)
     scores = compute_scores(predictions)
     by_domain = domain_breakdown(predictions)
-    print_report(scores, by_domain, predictions)
+    pre_reg_warnings = validate_pre_registration(predictions)
+    print_report(scores, by_domain, predictions, pre_reg_warnings)
 
     # Optional: append to ledger
     if "--update" in sys.argv and scores["brier"] is not None:

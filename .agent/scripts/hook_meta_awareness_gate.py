@@ -11,7 +11,7 @@ Trigger classes (structural, domain-agnostic):
     T1 INBOUND-NARRATIVE   received story/act with stakes ("why did they…")
     T2 OUTBOUND-COMMIT     audience-facing act about to be (or just) emitted
     T3 THIRD-PARTY-VERDICT forming/broadcasting judgment of someone else's act
-    T4 RESOURCE-COMMIT     novel money/time/reputation deployment (~S$100+)
+    T4 RESOURCE-COMMIT     novel money/time/reputation deployment (~$100+)
     T5 FELT-EVIDENCE       feeling offered as evidence ("feels like the market…")
 
 Why this exists (S545/S583/S601): `auto-invoke: true` frontmatter enforced
@@ -22,13 +22,18 @@ Module 3, content), never this file (mechanism).
 
 Epistemic status: code-enforced (harness runs it every prompt). KNOWN LIMITS:
       - Text-only: cannot fire on an act the user never narrates.
-      - Claude Code only: hook-less environments revert to agent-discretion.
-      - Regex tier is high-recall/low-precision by design; the injected kernel
-        instructs the model tier to classify structurally on anything Λ >= 10
-        the regex missed. Biased to over-fire (CS-125: false positive = one
-        cheap reminder; false negative = a Hummer driven off the lot).
+      - Claude Code only: hook-less environments revert to agent-discretion
+        UNLESS the agent calls context_gate (MCP), which now carries the
+        meta directive when gate_meta.classify() fires (v3.1 cross-harness
+        bridge — see mcp_server.py::context_gate).
+      - Regex tier is high-recall/low-precision by design. On a regex miss,
+        NO kernel enters context — the fallback is the context_gate MCP
+        bridge (v3.1) and AGENTS.md Substance Decode Lens (agent-discretion
+        prose). Biased to over-fire (CS-125: false positive = one cheap
+        reminder; false negative = a Hummer driven off the lot).
       - NEGATIVE guard: routine-ops prompts (reconciliation, test runs, doc
-        chores) suppress a T4-only fire to keep fire-rate in the 10-30% band.
+        chores) suppress a T4-only or T1-only fire to keep fire-rate in
+        the 10-30% band.
 
 Contract: NEVER blocks (always exit 0), <50ms, stdlib only. Anything printed to
     stdout is injected into model context by the UserPromptSubmit hook.
@@ -58,6 +63,26 @@ T1_INBOUND = [
     r"(ignoring|ignored) me",
     r"seen (but|and) (no|never)",
     r"do(es)? (he|she|they) (like|want|value|respect) me",
+    # T1b — BARE-NARRATION: institutional/relational act nouns + stakes
+    # context WITHOUT requiring an interrogative. Fires on the high-F register
+    # where the operator narrates acts without framing a question (S545 keyed
+    # blind-spot: the questioning organ is offline when hot).
+    r"\b(pip|retrench\w*|laid off|terminated|restructur\w*|severance)\b",
+    r"\b(HR|human resource)\b.{0,30}\b(call\w*|meet\w*|schedul\w*|chat|talk|letter|email)\b",
+    r"\bboss\b.{0,20}\b(says?|wants?|told|asked|call\w*|meet\w*|chat|talk)\b",
+    r"\b(landlord|tenant|agent)\b.{0,30}\b(says?|wants?|told|asked|renovat\w*|rais\w*|terminat\w*|evict\w*|notice)\b",
+    r"\blawyer\b.{0,20}\b(letter|call\w*|says?|sent|contact\w*)\b",
+    r"\b(notice period|performance review|contract (termination|renewal|end\w*))\b",
+    r"\bmeeting\b.{0,20}\b(no agenda|with (no|without) (context|details))\b",
+    # Present-tense verb conjugation fix (v3.1): "says" / "tells me" / etc.
+    r"(he|she|they|the \w+|my \w+|boss|hr|landlord|lawyer) (says?|tells? me|is asking|wants?|pushed? back|demanded|insisted|warned)",
+    # T1p — COUNTERPARTY-PROBE markers (the Nacho-$20 class, CS-221).
+    r"(came in|paid|payment).{0,15}\b(short|under)\b",
+    r"\bshorted me\b",
+    r"\bpushing back\b.{0,15}\b(on|about|hard)\b",
+    r"\bchanged the (terms|scope|price|deal|agreement)\b",
+    # Relational drift — bare narration without interrogative
+    r"(he|she|they|my \w+).{0,10}\b(been|being|is|are|was) (distant|cold|weird|off|different|avoidant|quiet|silent|strange)\b",
 ]
 
 # T2 — OUTBOUND-COMMIT: an audience-facing act about to be emitted (or
@@ -77,6 +102,12 @@ T2_OUTBOUND = [
     r"call(ing|ed)?[- ]?out\b|\bcall (him|her|them|\w+) out\b",
     r"\bpsa\b",
     r"\boptics\b",
+    # T2b — OPEN-VERB OUTBOUND: structural pattern for unstated-but-risky acts
+    r"(should i|thinking (of|about)|about to|gonna|planning to|going to|i want to|i need to) (ask(ing)? for|propos(e|ing)|renegotiat(e|ing)|confront(ing)?|rais(e|ing) it|bring(ing)? it up|approach(ing)?|tell(ing)? .{1,20} how i feel|break(ing)? up|end(ing)? it|quit(ting)?|resign(ing)?|walk(ing)? away|reject(ing)?)",
+    # Singlish outbound
+    r"\b(later|aftwards?)\b.{0,10}\b(i|we)\b.{0,10}\b(reply|text|send|tell|ask|msg)\b",
+    r"\breply (him|her|them)\b.{0,15}\b(or not|ok anot|better|should)\b",
+    r"\bjiak zua\b",
 ]
 
 # T3 — THIRD-PARTY-VERDICT: soliciting/forming a verdict on someone else's
@@ -91,7 +122,7 @@ T3_VERDICT = [
 ]
 
 # T4 — RESOURCE-COMMIT: novel deployment of money/time/reputation
-# (seed threshold ~S$100; capital/position decisions route to trading-risk-gate).
+# (seed threshold ~$100; capital/position decisions route to trading-risk-gate).
 T4_RESOURCE = [
     r"should i (buy|purchase|get|order|subscribe|upgrade|renew|book|deposit|top ?up|preorder|enroll|register)",
     r"(is it|is this|are they|is the \w+) worth",
@@ -111,6 +142,11 @@ T5_FELT = [
     r"my gut (says|tells|feeling)",
     r"vibes? (say|says|is|are|were)",
     r"(has|have) to (bounce|recover|come back|reverse|moon|pump)",
+    # T5b — FELT-EVIDENCE VARIANTS: "feels off/wrong/weird", "something's not right"
+    r"\bfeels? (off|wrong|weird|sketchy|sus|too good|dodgy)\b",
+    r"\bsomething('s| is) (not right|off|wrong|fishy|weird)\b",
+    r"\bbad vibes?\b",
+    r"\bsomething about (this|it|that|him|her|them) (doesn'?t|does not) (sit|feel|add up)\b",
 ]
 
 CLASSES = [
@@ -123,6 +159,8 @@ CLASSES = [
 
 # NEGATIVE — routine-ops context. If matched and the ONLY fired class is T4,
 # suppress (reconciliation/maintenance prompts must not gate; SNIPER stays fast).
+# v3.1: extended to also suppress T1-only fires on routine-ops use of
+# institutional noun anchors (HR policy docs, retrenchment stats, etc.).
 NEGATIVE = [
     r"\breconcil\w*",
     r"rebuild (the )?(excel|tracker|dashboard)",
@@ -132,6 +170,10 @@ NEGATIVE = [
     r"fix (the )?(test|lint|ci|typo)",
     r"update (the )?changelog",
     r"\bpytest\b",
+    # v3.1: routine-ops contexts for institutional nouns (prevent T1b false fires)
+    r"(update|compile|draft|write|edit|review) (the )?(HR|retrenchment|landlord|contract|performance) (policy|doc|report|stat|template|guide|form|page|section)",
+    r"(search|grep|find|list|index) .{0,20}(HR|retrench|landlord|contract|performance)",
+    r"(rename|refactor|move|delete|archive) .{0,20}(HR|retrench|landlord|contract|performance)",
 ]
 
 # Kernel reminder — question-framed ("ask don't tell" beats prohibition for
@@ -163,7 +205,8 @@ def classify(prompt: str) -> list:
     for name, patterns in CLASSES:
         if any(re.search(pat, p) for pat in patterns):
             fired.append(name)
-    if fired == ["T4-RESOURCE"] and any(re.search(pat, p) for pat in NEGATIVE):
+    # Suppress single-class fires on routine-ops context (T4-only or T1-only)
+    if fired in [["T4-RESOURCE"], ["T1-INBOUND"]] and any(re.search(pat, p) for pat in NEGATIVE):
         return []
     return fired
 

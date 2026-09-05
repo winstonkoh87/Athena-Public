@@ -1,10 +1,22 @@
 # Athena Changelog
 
-> **Last Updated**: 5 September 2026 <!-- 2026-09-05 -->
+> **Last Updated**: 6 September 2026 <!-- 2026-09-06 -->
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
+
+---
+
+## [9.9.9] — Feature Port & Synchronized Digital Portfolio Refresh (6 September 2026)
+
+- **Synchronized Digital Portfolio Update**: Complete synchronized refresh across all public surfaces (`Athena-Public`, `winstonkoh87` GitHub profile, `winstonkoh87.com` personal site, `sgassignmenthelper.com` commercial site) and `Athena-Public.wiki` to 6 September 2026 state.
+- **Meta-Awareness Gate v3.1 & Cross-Harness MCP Bridge**: Ported meta-awareness gate v3.1 recall hardening (15/15 green run) with bare-narration institutional anchors, counterparty probe markers, open-verb outbound, and integrated `context_gate` MCP bridge for deterministic meta evaluation across both hook and hookless agent harnesses.
+- **Search Channel Health Tracking**: Ported adaptive channel health tracking and status reporting (`src/athena/tools/search.py`) ensuring silent degradations across vector and tag search channels are monitored and surfaced.
+- **OWASP ASI06 Canonical Memory Security Gate**: Ported `canonical_gate.py` implementing memory integrity verification and provenance checks.
+- **Calibration Scoring & Retrieval Audit**: Ported `calibration_score.py` (Brier score & calibration tracker) and `retrieval_audit.py` (retrieval compliance monitoring).
+- **Canonical Metrics Sync**: Updated `.agent/config/CAPS.json` and all public/internal documentation across the ecosystem (419 active protocols across 26 categories / 453 total, 43 active skills, 74 workflows, 273 scripts, 199 canonical entries, 4,545 memory files).
+- **IndexNow & Sitemap Re-index**: Discovered verification keys and submitted full re-indexing payload across production web properties.
 
 ---
 

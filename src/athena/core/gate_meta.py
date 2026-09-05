@@ -1,6 +1,12 @@
 """
-gate_meta.py — Meta-awareness classification engine module.
+gate_meta.py — Meta-awareness classification engine module (v3.1).
 Exposes classify() and REMINDER_TEMPLATE for SDK-wide use.
+
+v3.1 (2026-09-05): Recall hardening from red-team audit. Added T1b
+bare-narration institutional anchors, present-tense verb conjugations,
+T1p counterparty-probe markers (Nacho-$20), T2b open-verb outbound,
+T5b felt-evidence variants, Singlish word order, and relational drift.
+Extended NEGATIVE guard for routine-ops institutional noun contexts.
 """
 
 import re
@@ -21,6 +27,23 @@ T1_INBOUND = [
     r"(ignoring|ignored) me",
     r"seen (but|and) (no|never)",
     r"do(es)? (he|she|they) (like|want|value|respect) me",
+    # T1b — BARE-NARRATION: institutional/relational act nouns + stakes
+    r"\b(pip|retrench\w*|laid off|terminated|restructur\w*|severance)\b",
+    r"\b(HR|human resource)\b.{0,30}\b(call\w*|meet\w*|schedul\w*|chat|talk|letter|email)\b",
+    r"\bboss\b.{0,20}\b(says?|wants?|told|asked|call\w*|meet\w*|chat|talk)\b",
+    r"\b(landlord|tenant|agent)\b.{0,30}\b(says?|wants?|told|asked|renovat\w*|rais\w*|terminat\w*|evict\w*|notice)\b",
+    r"\blawyer\b.{0,20}\b(letter|call\w*|says?|sent|contact\w*)\b",
+    r"\b(notice period|performance review|contract (termination|renewal|end\w*))\b",
+    r"\bmeeting\b.{0,20}\b(no agenda|with (no|without) (context|details))\b",
+    # Present-tense verb conjugation fix (v3.1)
+    r"(he|she|they|the \w+|my \w+|boss|hr|landlord|lawyer) (says?|tells? me|is asking|wants?|pushed? back|demanded|insisted|warned)",
+    # T1p — COUNTERPARTY-PROBE markers (Nacho-$20 class, CS-221)
+    r"(came in|paid|payment).{0,15}\b(short|under)\b",
+    r"\bshorted me\b",
+    r"\bpushing back\b.{0,15}\b(on|about|hard)\b",
+    r"\bchanged the (terms|scope|price|deal|agreement)\b",
+    # Relational drift — bare narration without interrogative
+    r"(he|she|they|my \w+).{0,10}\b(been|being|is|are|was) (distant|cold|weird|off|different|avoidant|quiet|silent|strange)\b",
 ]
 
 T2_OUTBOUND = [
@@ -38,6 +61,12 @@ T2_OUTBOUND = [
     r"call(ing|ed)?[- ]?out\b|\bcall (him|her|them|\w+) out\b",
     r"\bpsa\b",
     r"\boptics\b",
+    # T2b — OPEN-VERB OUTBOUND
+    r"(should i|thinking (of|about)|about to|gonna|planning to|going to|i want to|i need to) (ask(ing)? for|propos(e|ing)|renegotiat(e|ing)|confront(ing)?|rais(e|ing) it|bring(ing)? it up|approach(ing)?|tell(ing)? .{1,20} how i feel|break(ing)? up|end(ing)? it|quit(ting)?|resign(ing)?|walk(ing)? away|reject(ing)?)",
+    # Singlish outbound
+    r"\b(later|aftwards?)\b.{0,10}\b(i|we)\b.{0,10}\b(reply|text|send|tell|ask|msg)\b",
+    r"\breply (him|her|them)\b.{0,15}\b(or not|ok anot|better|should)\b",
+    r"\bjiak zua\b",
 ]
 
 T3_VERDICT = [
@@ -67,6 +96,11 @@ T5_FELT = [
     r"my gut (says|tells|feeling)",
     r"vibes? (say|says|is|are|were)",
     r"(has|have) to (bounce|recover|come back|reverse|moon|pump)",
+    # T5b — FELT-EVIDENCE VARIANTS
+    r"\bfeels? (off|wrong|weird|sketchy|sus|too good|dodgy)\b",
+    r"\bsomething('s| is) (not right|off|wrong|fishy|weird)\b",
+    r"\bbad vibes?\b",
+    r"\bsomething about (this|it|that|him|her|them) (doesn'?t|does not) (sit|feel|add up)\b",
 ]
 
 CLASSES = [
@@ -86,9 +120,13 @@ NEGATIVE = [
     r"fix (the )?(test|lint|ci|typo)",
     r"update (the )?changelog",
     r"\bpytest\b",
+    # v3.1: routine-ops contexts for institutional nouns
+    r"(update|compile|draft|write|edit|review) (the )?(HR|retrenchment|landlord|contract|performance) (policy|doc|report|stat|template|guide|form|page|section)",
+    r"(search|grep|find|list|index) .{0,20}(HR|retrench|landlord|contract|performance)",
+    r"(rename|refactor|move|delete|archive) .{0,20}(HR|retrench|landlord|contract|performance)",
 ]
 
-REMINDER_TEMPLATE = """<system-reminder>
+REMINDER_TEMPLATE = """\u003csystem-reminder>
 META-AWARENESS GATE (hook v3, code-enforced) — fired: {classes}
 Interpreter kernel — answer each question before responding (Prior -> Discriminators -> Payoff):
 1. ARENA: What container is this, and what is its IMPLICIT contract (not the stated one)?
@@ -100,10 +138,10 @@ Interpreter kernel — answer each question before responding (Prior -> Discrimi
    What is their worst plausible SELF-referential decode ("what does this say about ME?")?
 6. F != R: Is felt intensity being offered as evidence? It measures the feeler, not the world.
 7. PAYOFF: What does each misread cost? Act on the asymmetry, not the point estimate.
-8. AGENCY (anti-override): if ranking or advising, weight by the USER'S revealed preferences, not your model of what they should want — surface the weights, hand the choice back.
+8. AGENCY (anti-override): if ranking or advising, weight by the USER's revealed preferences, not your model of what they should want — surface the weights, hand the choice back.
 Guards: capital/position sizing -> trading-risk-gate owns the verdict. Keep the sincere read in the
 payoff table — cynical-by-default is the same decode failure. Load substance-decode for depth.
-</system-reminder>"""
+\u003c/system-reminder>"""
 
 def classify(prompt: str) -> list:
     p = prompt.lower()
@@ -111,6 +149,7 @@ def classify(prompt: str) -> list:
     for name, patterns in CLASSES:
         if any(re.search(pat, p) for pat in patterns):
             fired.append(name)
-    if fired == ["T4-RESOURCE"] and any(re.search(pat, p) for pat in NEGATIVE):
+    # Suppress single-class fires on routine-ops context (T4-only or T1-only)
+    if fired in [["T4-RESOURCE"], ["T1-INBOUND"]] and any(re.search(pat, p) for pat in NEGATIVE):
         return []
     return fired

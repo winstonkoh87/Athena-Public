@@ -14,9 +14,8 @@ import os
 import re
 import urllib.parse
 from datetime import datetime, timezone
-from pathlib import Path
 
-REPO_ROOT = os.environ.get("ATHENA_ROOT", str(Path(__file__).resolve().parent.parent.parent))
+REPO_ROOT = os.environ.get("ATHENA_ROOT", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 EXCLUDED_DIRS = {".git", ".claude", ".venv", "node_modules"}
 REPORT_DIR = os.path.join(REPO_ROOT, ".context", "audit")
 REPORT_PATH = os.path.join(REPORT_DIR, "link_report.json")

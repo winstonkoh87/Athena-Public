@@ -51,7 +51,7 @@ def _extract_keywords(query: str) -> list[str]:
 
 def run_grep_fallback(query: str, limit: int = 10) -> None:
     """Fast grep-based fallback when the full search engine is unavailable.
-    
+
     Splits multi-word queries into individual keywords and greps for each,
     then merges and deduplicates results.
     """

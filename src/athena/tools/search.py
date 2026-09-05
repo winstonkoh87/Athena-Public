@@ -14,6 +14,7 @@ import subprocess
 import sys
 from collections import defaultdict
 from concurrent.futures import ALL_COMPLETED, ThreadPoolExecutor, wait
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -216,6 +217,82 @@ SKIP_PATHS = [
 
 # GraphRAG paths — REMOVED (GTO fix 2026-06-06: stale since Feb 2025, dead channel)
 
+
+class _ChannelHealthDict(dict):
+    """Dictionary mapping channel names to health records, with singular/plural aliasing."""
+
+    _ALIASES = {
+        "vector": "vectors",
+        "vectors": "vector",
+        "filename": "filenames",
+        "filenames": "filename",
+        "tag": "tags",
+        "tags": "tag",
+    }
+
+    def __getitem__(self, key):
+        try:
+            return super().__getitem__(key)
+        except KeyError:
+            alias = self._ALIASES.get(key)
+            if alias and super().__contains__(alias):
+                return super().__getitem__(alias)
+            raise
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def __contains__(self, key):
+        if super().__contains__(key):
+            return True
+        alias = self._ALIASES.get(key)
+        return bool(alias and super().__contains__(alias))
+
+    def pop(self, key, *args):
+        if super().__contains__(key):
+            return super().pop(key)
+        alias = self._ALIASES.get(key)
+        if alias and super().__contains__(alias):
+            return super().pop(alias)
+        if args:
+            return args[0]
+        raise KeyError(key)
+
+    def copy(self):
+        return _ChannelHealthDict(super().copy())
+
+
+# Module-level channel health tracking (Fix for silent degradation TD-064)
+_channel_health: dict[str, dict] = _ChannelHealthDict()
+
+
+def _record_channel_health(
+    channel: str,
+    status: str,
+    error: str | None = None,
+) -> None:
+    """Record channel health state for degradation tracking."""
+    now = datetime.now(timezone.utc).isoformat()
+    record = {
+        "channel": channel,
+        "name": channel,
+        "status": status,
+        "error": error,
+        "error_message": error,
+        "timestamp": now,
+        "ts": now,
+    }
+    _channel_health[channel] = record
+
+
+def get_channel_health() -> dict[str, dict]:
+    """Return the current health status of all channels."""
+    return _channel_health.copy()
+
+
 # --- Collection Functions ---
 
 
@@ -291,6 +368,7 @@ def collect_tags(query: str) -> list[SearchResult]:
     if not any(p.exists() for p in index_paths) and TAG_INDEX_PATH.exists():
         index_paths = [TAG_INDEX_PATH]
 
+    errors = []
     for path in index_paths:
         if not path.exists():
             continue
@@ -316,8 +394,15 @@ def collect_tags(query: str) -> list[SearchResult]:
                             score=1.0 - (i * 0.05),
                         )
                     )
-        except Exception:
-            pass
+        except Exception as e:
+            errors.append(str(e))
+
+    if errors:
+        status = "degraded" if results else "failed"
+        _record_channel_health("tags", status, "; ".join(errors))
+    else:
+        _record_channel_health("tags", "ok")
+
     return results
 
 
@@ -442,8 +527,10 @@ def collect_vectors(
                 )
             )
 
+        _record_channel_health("vector", "ok")
     except Exception as e:
         print(f"   ⚠️ Unified vector search failed: {e}", file=sys.stderr)
+        _record_channel_health("vector", "failed", str(e))
 
     return results
 
@@ -459,6 +546,7 @@ def collect_filenames(query: str) -> list[SearchResult]:
     stopwords = {"the", "and", "for", "is", "in", "to", "of", "a", "an"}
     keywords = [w for w in query.split() if len(w) >= 2 and w.lower() not in stopwords]
     if not keywords:
+        _record_channel_health("filename", "ok")
         return []
 
     seen_paths = set()
@@ -536,8 +624,9 @@ def collect_filenames(query: str) -> list[SearchResult]:
                             metadata={"path": str(full_path)},
                         )
                     )
-    except Exception:
-        pass
+        _record_channel_health("filename", "ok")
+    except Exception as e:
+        _record_channel_health("filename", "failed", str(e))
 
     results.sort(key=lambda r: r.score, reverse=True)
     return results[:10]
@@ -739,7 +828,7 @@ def collect_web_search(query: str, limit: int = 5) -> list[SearchResult]:
     import html
     import re
     import urllib.parse
-    results = []
+    results: list[SearchResult] = []
     try:
         import requests
         url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(query)}"
@@ -789,7 +878,7 @@ def collect_web_search_v2(query: str, limit: int = 5) -> list[SearchResult]:
     try:
         from athena.tools.web_providers import web_search as provider_web_search
         results_raw, meta = provider_web_search(query, limit=limit)
-        results = []
+        results: list[SearchResult] = []
         for wr in results_raw:
             results.append(
                 SearchResult(
@@ -816,9 +905,9 @@ def collect_web_search_v2(query: str, limit: int = 5) -> list[SearchResult]:
 def weighted_rrf(
     ranked_lists: dict[str, list[SearchResult]], k: int = 60, intent: str = "GENERAL"
 ) -> list[SearchResult]:
-    fused_scores = defaultdict(float)
+    fused_scores: defaultdict[str, float] = defaultdict(float)
     doc_map = {}
-    doc_signals = defaultdict(dict)
+    doc_signals: defaultdict[str, dict[str, Any]] = defaultdict(dict)
     weights = get_intent_weights(intent)
 
     for source, docs in ranked_lists.items():
@@ -1117,7 +1206,7 @@ def run_search(
                 # semantic channel, and missed the session log that coined the term.
                 # Vectors are the sole paraphrase/synonym channel — skipping them
                 # on short queries is skipping them on exactly the queries that need
-                # them most. Removed 2026-09-03 (S876, P0.3 strike).
+                # them most.  Removed 2026-09-03 (S876, P0.3 strike).
                 needs_vector = True
 
                 if needs_vector or ("web_search" in collection_tasks):
@@ -1305,7 +1394,7 @@ def run_search(
             quality = "miss"
 
         # Source distribution — which retrieval channels contributed
-        source_counts = defaultdict(int)
+        source_counts: defaultdict[str, int] = defaultdict(int)
         for r in top_results:
             source_counts[r.source] += 1
 
