@@ -1,0 +1,92 @@
+SUBREDDIT: r/GeminiAI
+POST FLAIR: Ressource (or Discussion / AGY CLI)
+
+================================================================================
+TITLE OPTIONS (Pick one)
+================================================================================
+
+Option 1 (Recommended - Direct Pain Point):
+Gemini's 2M context window doesn't fix amnesia. How I gave Gemini 3.8 Flash High a local, persistent memory hard drive (Open Source)
+
+Option 2 (Harness / Developer Focus):
+Stop re-feeding your codebase to Gemini every morning. Here is the local-first memory OS I built over 1,900+ sessions (Athena v9.9.9)
+
+Option 3 (Antigravity / Architecture Angle):
+Why 2M tokens is just volatile RAM: Running a local-first hippocampus with Google Antigravity + Gemini 3.8 via MCP
+
+================================================================================
+POST BODY
+================================================================================
+
+Environment / Model: Gemini 3.8 Flash (High) & Gemini 3.1 Pro running via Google Antigravity (AGY) & local MCP.
+
+I've been watching several threads here this week about people hitting a wall with Gemini:
+- Developers complaining that Gemini is too "forgetful" and suggests deleting critical methods because it lost yesterday's context.
+- Threads debating agent harnesses (Claude Code, Grokbot, Codex, Hermes, OpenClaw).
+- Frustration when models rely on stale cutoffs or hallucinations instead of inspecting local files and project history.
+
+Here is the inconvenient reality about LLMs in 2026: A 2,000,000 token context window is NOT memory. It's just volatile RAM.
+
+When you close the chat tab, start a new session, or context-compact after a long debugging run, that RAM is wiped clean. You're back to copy-pasting your architecture docs, your coding preferences, and your project constraints like it's 2023. Worse, if you ever switch models or run multi-agent workflows, you start from scratch.
+
+Two years ago, I decided to stop relying on platform memory (ChatGPT memories, Gemini Gems, custom system prompts) and built Project Athena: a local-first memory, reasoning, and governance layer that lives on your local disk and mounts to whatever LLM you are running.
+
+I just pushed v9.9.9 to GitHub (100% free and MIT open-source). Here is how the architecture solves Gemini's amnesia problem without blowing up your token budget.
+
+--------------------------------------------------------------------------------
+1. The Architecture: Volatile RAM vs. Local Hard Drive
+--------------------------------------------------------------------------------
+
+Platforms treat memory as a cloud-hosted black box that gets silently pruned or forgotten. Athena treats your local filesystem as the durable source of truth:
+
+[ Your Machine: Plain Git-Versioned Markdown ]
+      ├── .context/CANONICAL.md    <-- Materialized rules, constraints, tech stack
+      ├── .context/memory_bank/    <-- activeContext.md & session checkpoints
+      ├── .agent/skills/           <-- Reusable execution protocols & tools
+      └── .agent/scripts/          <-- Local Python verification scripts & tests
+                  │
+          [ Hybrid RAG / MCP Bridge ]
+                  │
+        ┌─────────┴─────────┐
+        ▼                   ▼
+[ Gemini 3.8 Flash ]   [ Gemini 3.1 Pro ]
+(Fast Execution)       (Deep Synthesis)
+
+- Own the State, Rent the Intelligence: The model is just whoever is on shift today. If you're using Gemini 3.8 Flash High for lightning-fast coding or Gemini 3.1 Pro for deep research, they both plug into the exact same local memory bank. If a better model drops tomorrow, your project history, architectural decisions, and error logs don't vanish.
+- Ultra-Fast Surgical Boot (<2K tokens): You don't need to dump 500K tokens of history into every prompt. Athena uses a surgical boot workflow: `/start` reads the last session checkpoint from `activeContext.md` (~2K tokens), keeping 80% to 98% of Gemini's context window completely free for actual code and thinking tokens. Retrieval is just-in-time via local semantic embeddings and BM25 hybrid search.
+- Session Persistence (/start and /end): At the start of a session, Gemini automatically loads the exact unclosed state, active tasks, and recent architectural changes. At the end of a session, a distill script (`/end`) audits the session diff, records learnings, and commits the state to git. Session 1,900 is actually cleaner and faster than Session 50.
+
+--------------------------------------------------------------------------------
+2. Local MCP Server Integration
+--------------------------------------------------------------------------------
+
+Athena includes an out-of-the-box MCP server (`mcp-athena-server`) that gives Gemini native tool-calling access to:
+- smart_search: Semantic vector lookup across your local project memory and past sessions.
+- quicksave: One-shot atomic commits of verified facts during debugging.
+- context_gate: Deterministic verification gates before running high-stakes refactors.
+
+--------------------------------------------------------------------------------
+3. How Gemini Performs with a Persistent Substrate
+--------------------------------------------------------------------------------
+
+Running Gemini 3.8 Flash High with Athena mounted via Google Antigravity / MCP completely changes the experience:
+- Zero Hallucinated Refactors: When you ask it to fix a bug in module B, it checks the local dependency map and knows not to delete the helper function module A depends on.
+- Cross-Session Calibration: It knows what failed yesterday, what assumptions were tested, and what libraries broke on the last build.
+- Adversarial Guardrails: Most assistants agree with you to be polite. With constitutional rules codified in Markdown, Gemini will actually flag when a proposed change violates your own project contracts or creates regression risks.
+
+--------------------------------------------------------------------------------
+Try It (100% Free & Open Source)
+--------------------------------------------------------------------------------
+
+Everything is plain Markdown and Python. No external database required. No monthly subscription.
+
+git clone https://github.com/winstonkoh87/Athena-Public.git
+cd Athena-Public
+pip install -e .
+athena init .
+
+- GitHub Repo: https://github.com/winstonkoh87/Athena-Public
+- License: MIT
+- Compatibility: Works seamlessly with Google Antigravity, AGY CLI, Google AI Studio, Claude Code, Cursor, and any MCP-compatible environment.
+
+Curious how others here are managing persistent context across long multi-day projects with Gemini—are you relying on huge context dumps, custom Gems, or local tooling? Happy to answer any questions about the MCP setup or hybrid retrieval pipeline!
