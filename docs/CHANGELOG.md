@@ -1,10 +1,19 @@
 # Athena Changelog
 
-> **Last Updated**: 9 September 2026 <!-- 2026-09-09 -->
+> **Last Updated**: 10 September 2026 <!-- 2026-09-10 -->
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
+
+---
+
+## [9.9.9] — Feature Port & Synchronized Digital Portfolio Refresh (10 September 2026)
+
+### 2026-09-10 — Full Synchronized Digital Portfolio Refresh
+- Synchronized canonical CAPS metrics across all public surfaces, releases, wiki, and internal docs.
+- Quad-surface metadata and indexing refresh (Athena-Public, winstonkoh87 profile, winstonkoh87.com, sgassignmenthelp.com).
+- Verified zero privacy disclosures and updated canonical counts (419 active protocols / 453 total across 26 categories, 43 active skills, 74 workflows, 273 scripts, 199 canonical entries, 4,638 memories).
 
 ---
 
