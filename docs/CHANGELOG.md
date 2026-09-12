@@ -1,10 +1,20 @@
 # Athena Changelog
 
-> **Last Updated**: 12 September 2026 <!-- 2026-09-12 -->
+> **Last Updated**: 13 September 2026 <!-- 2026-09-13 -->
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
+
+---
+
+## [9.9.9] — Synchronized Digital Portfolio Refresh (13 September 2026)
+
+### 2026-09-13 — Full Synchronized Digital Portfolio Refresh
+- Synchronized canonical CAPS metrics across all public surfaces, releases, wiki, and internal docs.
+- Quad-surface metadata and indexing refresh (Athena-Public, winstonkoh87 profile, winstonkoh87.com, sgassignmenthelp.com).
+- Ported Epistemic Grounding Gate (`hook_epistemic_gate.py`), Reflexion Compiler router (`check_reflexion_compile.py`), intake authority and end-user capability triggers (T6/T7), and web provider telemetry.
+- Verified zero privacy disclosures and updated canonical counts (419 active protocols / 453 total across 26 categories, 43 active skills, 74 workflows, 275 scripts, 199 canonical entries, 502 case studies, 4,695 memories).
 
 ---
 

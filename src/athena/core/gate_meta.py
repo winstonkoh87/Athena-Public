@@ -103,12 +103,33 @@ T5_FELT = [
     r"\bsomething about (this|it|that|him|her|them) (doesn'?t|does not) (sit|feel|add up)\b",
 ]
 
+# T6 — INTAKE-AUTHORITY: prompt narrates a new project with a named authority
+# or open problem space. Mandates Brief Primacy over examiner CV.
+T6_INTAKE = [
+    r"\b(new|start(ing)?|take on|intake|quote) (a |the )?(capstone|assignment|coursework|dissertation|client project)\b",
+    r"\b(the )?(examiner|professor|lecturer|marker|instructor) (is|specializ\w*|teaches|has|wants)\b",
+    r"\b(capstone|assignment|coursework) (for|with) (an?|the) \w+( examiner| professor| lecturer)?\b",
+    r"\bwhat business (idea|plan|model)\b.{0,25}\b(capstone|assignment|coursework|module)\b",
+]
+
+# T7 — END-USER-CAPABILITY: prompt describes a deliverable + a non-expert
+# or anxious operator. Mandates Pilot-in-the-Cockpit & 5th-grader plain English.
+T7_CAPABILITY = [
+    r"\b(presenter|student|client) (is|will|has to) (present|deliver|defend|speak)\b",
+    r"\b(she|he|they|client|student) (doesn'?t know|doesn'?t understand|has no (background|clue|experience))\b",
+    r"\b(anxious|nervous|afraid|scared) (about |of )?(presenting|the presentation|the defense|speaking)\b",
+    r"\b(not so cheem|explain (it )?simply|plain english|in simple terms)\b",
+    r"\b(non-specialist|non-technical) (presenter|client|operator|candidate)\b",
+]
+
 CLASSES = [
     ("T1-INBOUND", T1_INBOUND),
     ("T2-OUTBOUND", T2_OUTBOUND),
     ("T3-VERDICT", T3_VERDICT),
     ("T4-RESOURCE", T4_RESOURCE),
     ("T5-FELT", T5_FELT),
+    ("T6-INTAKE-AUTHORITY", T6_INTAKE),
+    ("T7-END-USER-CAPABILITY", T7_CAPABILITY),
 ]
 
 NEGATIVE = [
@@ -126,7 +147,7 @@ NEGATIVE = [
     r"(rename|refactor|move|delete|archive) .{0,20}(HR|retrench|landlord|contract|performance)",
 ]
 
-REMINDER_TEMPLATE = """\u003csystem-reminder>
+REMINDER_TEMPLATE = """<system-reminder>
 META-AWARENESS GATE (hook v3, code-enforced) — fired: {classes}
 Interpreter kernel — answer each question before responding (Prior -> Discriminators -> Payoff):
 1. ARENA: What container is this, and what is its IMPLICIT contract (not the stated one)?
@@ -138,10 +159,11 @@ Interpreter kernel — answer each question before responding (Prior -> Discrimi
    What is their worst plausible SELF-referential decode ("what does this say about ME?")?
 6. F != R: Is felt intensity being offered as evidence? It measures the feeler, not the world.
 7. PAYOFF: What does each misread cost? Act on the asymmetry, not the point estimate.
-8. AGENCY (anti-override): if ranking or advising, weight by the USER's revealed preferences, not your model of what they should want — surface the weights, hand the choice back.
-Guards: capital/position sizing -> trading-risk-gate owns the verdict. Keep the sincere read in the
-payoff table — cynical-by-default is the same decode failure. Load substance-decode for depth.
-\u003c/system-reminder>"""
+8. INTAKE / OPERATOR (T6/T7): Does the brief mandate this sector, or are you over-indexing on a CV?
+   Will the actual presenter understand and comfortably defend every technical term in this script?
+9. AGENCY (anti-override): if ranking or advising, weight by the USER'S revealed preferences.
+Guards: capital/position sizing -> trading-risk-gate. Sincere read in payoff table.
+</system-reminder>"""
 
 def classify(prompt: str) -> list:
     p = prompt.lower()
@@ -149,7 +171,7 @@ def classify(prompt: str) -> list:
     for name, patterns in CLASSES:
         if any(re.search(pat, p) for pat in patterns):
             fired.append(name)
-    # Suppress single-class fires on routine-ops context (T4-only or T1-only)
-    if fired in [["T4-RESOURCE"], ["T1-INBOUND"]] and any(re.search(pat, p) for pat in NEGATIVE):
+    # Suppress single-class fires on routine-ops context (T4-only, T1-only, or T6-only)
+    if fired in [["T4-RESOURCE"], ["T1-INBOUND"], ["T6-INTAKE-AUTHORITY"]] and any(re.search(pat, p) for pat in NEGATIVE):
         return []
     return fired

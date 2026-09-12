@@ -120,6 +120,26 @@ TOOL_REGISTRY: dict[str, dict[str, Any]] = {
         "sensitivity": Sensitivity.PUBLIC,
         "description": "Show current permission state",
     },
+    "search_web": {
+        "permission": Permission.READ,
+        "sensitivity": Sensitivity.PUBLIC,
+        "description": "Live web search via multi-provider failover chain",
+    },
+    "context_gate": {
+        "permission": Permission.READ,
+        "sensitivity": Sensitivity.INTERNAL,
+        "description": "Pre-answer context assembly and grounding gate",
+    },
+    "classify_turn": {
+        "permission": Permission.READ,
+        "sensitivity": Sensitivity.PUBLIC,
+        "description": "Classify query complexity and risk tier",
+    },
+    "report_external_web_search": {
+        "permission": Permission.READ,
+        "sensitivity": Sensitivity.PUBLIC,
+        "description": "Report external web search compliance",
+    },
     # Future tools (pre-registered for when they're added)
     "clear_cache": {
         "permission": Permission.ADMIN,

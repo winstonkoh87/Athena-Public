@@ -313,9 +313,11 @@ def web_search(query: str, limit: int = 5) -> tuple[list[WebResult], dict[str, A
 
         try:
             results = provider.search(query, limit)
+            is_degraded = (provider != chain[0]) or bool(errors)
             metadata = {
                 "provider": provider.name,
-                "degraded": provider != chain[0],
+                "degraded": is_degraded,
+                "grounding_status": "degraded" if is_degraded else "ok",
                 "errors": errors,
                 "fetched_at": datetime.now(timezone.utc).isoformat()
             }
@@ -331,6 +333,7 @@ def web_search(query: str, limit: int = 5) -> tuple[list[WebResult], dict[str, A
     return [], {
         "provider": "none",
         "degraded": True,
+        "grounding_status": "tool_error",
         "errors": errors,
         "fetched_at": datetime.now(timezone.utc).isoformat()
     }
