@@ -25,7 +25,7 @@ Own the state. Rent the intelligence. Platforms forget. Athena doesn't.
 
 [Quickstart](#-quickstart) · [How It Works](#-how-it-works) · [Scheduled Tasks & Self-RSI](docs/SCHEDULED_TASKS.md) · [llms.txt](https://winstonkoh87.com/llms.txt) · [Docs](docs/GETTING_STARTED.md) · [FAQ](Athena-Public.wiki/FAQ.md) · [Safety](SAFETY.md) · [Contributing](CONTRIBUTING.md)
 
-*Last updated: 25 September 2026* <!-- 2026-09-25 -->
+*Last updated: 27 September 2026* <!-- 2026-09-27 -->
 
 </div>
 
@@ -605,6 +605,7 @@ Athena-Public/
 </details>
 
 <details>
+- **Full Synchronized Digital Portfolio Refresh** (2026-09-27): Synchronized portfolio update across all public surfaces. Updated canonical CAPS counts (422 active protocols / 456 total across 26 categories, 43 active skills, 75 workflows, 285 scripts, 199 canonical entries, 503 case studies, 5,015 memories).
 - **Full Synchronized Digital Portfolio Refresh** (2026-09-25): Synchronized portfolio update across all public surfaces. Updated canonical CAPS counts (421 active protocols / 455 total across 26 categories, 43 active skills, 74 workflows, 279 scripts, 199 canonical entries, 503 case studies, 4,960 memories).
 - **Full Synchronized Digital Portfolio Refresh** (2026-09-23): Synchronized portfolio update across all public surfaces. Updated canonical CAPS counts (421 active protocols / 455 total across 26 categories, 43 active skills, 74 workflows, 279 scripts, 199 canonical entries, 503 case studies, 4,948 memories).
 - **Full Synchronized Digital Portfolio Refresh** (2026-09-22): Synchronized portfolio update across all public surfaces. Updated canonical CAPS counts (421 active protocols / 455 total across 26 categories, 43 active skills, 74 workflows, 279 scripts, 199 canonical entries, 503 case studies, 4,897 memories).
