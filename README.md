@@ -100,14 +100,16 @@ pytest tests/ -v --tb=short
 python examples/scripts/evaluator.py --gold-set .agent/eval/gold_set.json
 ```
 
-| Metric | Value | How to verify |
-|:-------|:------|:--------------|
-| Tests | 558 passed, CI on every push | `pytest tests/` |
-| Lint | 0 ruff findings | `ruff check src/` |
-| Secrets | 0 leaked across 1,248 commits | Gitleaks in CI |
-| Coverage floor | 15% (ratcheting up) | `--cov-fail-under=15` in CI |
+| Metric | Value | Verification Command |
+|:-------|:------|:---------------------|
+| **Retrieval Hit@5 (Strict)** | **0.569** (37 / 65) | `python examples/scripts/evaluator.py` |
+| **Retrieval MRR@5 (Strict)** | **0.472** | `python examples/scripts/evaluator.py` |
+| *Retrieval Hit@5 (Lenient)* | *0.892 (deprecated)* | *Partial substring match (inflated)* |
+| **Unit & Integration Tests** | 558 passed (100%) | `pytest tests/` |
+| **Secret Leaks (1,248 commits)** | 0 detected | Gitleaks in CI |
+| **Code Quality & Lints** | 0 ruff findings | `ruff check src/` |
 
-> **On retrieval benchmarks**: our strict-match evaluator scores lower than the original fuzzy matcher. We publish the strict numbers because inflated benchmarks help nobody. See the [evaluator source](examples/scripts/evaluator.py) and [benchmark methodology](docs/BENCHMARKS.md).
+> **Anti-Goodhart Invariant**: Why did our reported Hit@5 shift from 0.89 to 0.57? Lenient substring matchers count partial word overlaps as "hits," inflating benchmark scores by ~36% without improving retrieval. We killed the lenient matcher because vanity metrics mask regressions. See the full breakdown: [Anti-Goodhart Benchmarking in RAG](docs/BENCHMARKS.md#the-anti-goodhart-shift-why-we-published-lower-numbers).
 
 ## Agent Compatibility
 
