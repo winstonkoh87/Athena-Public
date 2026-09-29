@@ -29,9 +29,11 @@ def resolves(src_md: str, target: str) -> bool:
     path = target.split("#")[0].split("?")[0]
     if not path:
         return True  # pure anchor
+    if path.startswith("/"):
+        from_root = os.path.normpath(os.path.join(ROOT, path.lstrip("/")))
+        return os.path.exists(from_root)
     from_dir = os.path.normpath(os.path.join(os.path.dirname(src_md), path))
-    from_root = os.path.normpath(os.path.join(ROOT, path))
-    return os.path.exists(from_dir) or os.path.exists(from_root)
+    return os.path.exists(from_dir)
 
 
 def main() -> int:

@@ -8,7 +8,7 @@ The more you use Athena on a real project, the more you learn about coding, soft
 
 **My approach:** I built a portfolio website showcasing everything I produced with Project Athena, and I keep iterating on it. Every session improves both the project *and* my skills. Find your equivalent and commit to it.
 
-> 👉 Need inspiration? See [PROJECT_IDEAS.md](docs/PROJECT_IDEAS.md) — 9 starter projects from web apps to YouTube channels, each mapped to the Athena capabilities you'll learn.
+> 👉 Need inspiration? See [PROJECT_IDEAS.md](PROJECT_IDEAS.md) — 9 starter projects from web apps to YouTube channels, each mapped to the Athena capabilities you'll learn.
 
 ## 🧩 One Session = One Feature
 

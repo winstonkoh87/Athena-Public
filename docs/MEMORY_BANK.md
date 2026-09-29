@@ -223,6 +223,6 @@ The system oscillates between ~10K and ~15K naturally as sessions accumulate and
 
 ## Further Reading
 
-- [Architecture](docs/ARCHITECTURE.md) — How Memory Bank fits into the full system
-- [Getting Started](docs/GETTING_STARTED.md) — Setup guide
-- [Semantic Search](docs/SEMANTIC_SEARCH.md) — Vector search companion
+- [Architecture](ARCHITECTURE.md) — How Memory Bank fits into the full system
+- [Getting Started](GETTING_STARTED.md) — Setup guide
+- [Semantic Search](SEMANTIC_SEARCH.md) — Vector search companion

@@ -63,7 +63,7 @@ These principles inform:
 
 ## References
 
-For full APA citations, see the [central reference list](docs/REFERENCES.md).
+For full APA citations, see the [central reference list](../REFERENCES.md).
 
 - Simon, H. A. (1956). Rational choice and the structure of the environment. *Psychological Review, 63*(2), 129–138. <https://doi.org/10.1037/h0042769>
 

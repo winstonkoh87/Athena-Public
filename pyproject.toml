@@ -49,7 +49,7 @@ athena = "athena.__main__:main"
 Homepage = "https://winstonkoh87.com/athena/"
 Repository = "https://github.com/winstonkoh87/Athena-Public"
 Documentation = "https://github.com/winstonkoh87/Athena-Public#readme"
-Changelog = "https://github.com/winstonkoh87/Athena-Public/blob/main/CHANGELOG.md"
+Changelog = "https://github.com/winstonkoh87/Athena-Public/blob/main/docs/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [

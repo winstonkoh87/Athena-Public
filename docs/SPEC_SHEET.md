@@ -196,7 +196,7 @@ Reranking runs default-on via a local quantized ONNX cross-encoder (~0.4s cold l
 | Quicksave overhead | < 500ms | **< 100ms** |
 | Session log write | < 1s | **< 500ms** |
 
-→ Full benchmarks: [BENCHMARKS.md](docs/BENCHMARKS.md)
+→ Full benchmarks: [BENCHMARKS.md](BENCHMARKS.md)
 
 ---
 
@@ -216,9 +216,9 @@ Reranking runs default-on via a local quantized ONNX cross-encoder (~0.4s cold l
 
 | Document | Purpose |
 |----------|---------|
-| [REQUIREMENTS.md](docs/REQUIREMENTS.md) | User stories, functional requirements, constraints |
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data flow, hub model |
-| [BENCHMARKS.md](docs/BENCHMARKS.md) | Quantitative performance data |
-| [FEATURES.md](docs/FEATURES.md) | User-facing feature descriptions |
-| [CAPABILITIES.md](docs/CAPABILITIES.md) | Full automation catalog |
-| [GLOSSARY.md](docs/GLOSSARY.md) | Term definitions |
+| [REQUIREMENTS.md](REQUIREMENTS.md) | User stories, functional requirements, constraints |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System design, data flow, hub model |
+| [BENCHMARKS.md](BENCHMARKS.md) | Quantitative performance data |
+| [FEATURES.md](FEATURES.md) | User-facing feature descriptions |
+| [CAPABILITIES.md](CAPABILITIES.md) | Full automation catalog |
+| [GLOSSARY.md](GLOSSARY.md) | Term definitions |

@@ -259,7 +259,7 @@ if __name__ == "__main__":
     except Exception as e:
         path = relay_error(
             e,
-            context={"table_name": "references", "file_path": "/Users/[AUTHOR]/Desktop/test.md"},
+            context={"table_name": "references", "file_path": "/Users/demo/Desktop/test.md"},
             module_name="sync.py",
         )
         if path:

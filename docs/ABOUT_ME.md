@@ -32,7 +32,7 @@
 | Capability | Evidence |
 |------------|----------|
 | **Systems Architecture** | Designed a 399-protocol knowledge framework ([Architecture](ARCHITECTURE.md)) |
-| **AI Engineering** | Built RAG pipelines ([VectorRAG](docs/VECTORRAG.md) + [Semantic Search](docs/SEMANTIC_SEARCH.md)) |
+| **AI Engineering** | Built RAG pipelines ([VectorRAG](VECTORRAG.md) + [Semantic Search](SEMANTIC_SEARCH.md)) |
 | **Technical Writing** | 1,900+ session logs, 492 case studies, zero fluff |
 | **Automation** | 247 Python scripts for system optimization |
 | **Strategic Thinking** | Spent 10 years navigating institutional politics and incentive structures |
@@ -71,7 +71,7 @@ I'm not looking for:
 
 ### Want to Build Together?
 >
-> See my [Engineering Depth](docs/ENGINEERING_DEPTH.md) or start with [Your First Agent](docs/YOUR_FIRST_AGENT.md).
+> See my [Engineering Depth](ENGINEERING_DEPTH.md) or start with [Your First Agent](YOUR_FIRST_AGENT.md).
 
 ---
 

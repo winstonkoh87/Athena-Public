@@ -106,9 +106,9 @@ This produces better memory, cleaner recall, and — critically — keeps you un
 
 ## Further Reading
 
-- [Your First Session](docs/YOUR_FIRST_SESSION.md) — Detailed walkthrough of your first `/start`
-- [Workflows](docs/WORKFLOWS.md) — All 49 slash commands
-- [Memory Bank](docs/MEMORY_BANK.md) — How Athena remembers across sessions
+- [Your First Session](YOUR_FIRST_SESSION.md) — Detailed walkthrough of your first `/start`
+- [Workflows](WORKFLOWS.md) — All 49 slash commands
+- [Memory Bank](MEMORY_BANK.md) — How Athena remembers across sessions
 
 ---
 

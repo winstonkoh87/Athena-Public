@@ -133,7 +133,7 @@ If you use multiple AI accounts or models:
 | **Use Secret Mode for demos** | `set_secret_mode(True)` redacts sensitive data |
 | **Review agent permissions** | Don't grant filesystem access to `~/.ssh` or credential stores |
 
-> 👉 Full security model: [SECURITY.md](docs/SECURITY.md)
+> 👉 Full security model: [SECURITY.md](SECURITY.md)
 
 ---
 
@@ -168,15 +168,15 @@ If you use multiple AI accounts or models:
 
 ## See Also
 
-- **[Tips](docs/TIPS.md)** — Getting the most out of Athena
-- **[Security](docs/SECURITY.md)** — Data residency and permissions
+- **[Tips](TIPS.md)** — Getting the most out of Athena
+- **[Security](SECURITY.md)** — Data residency and permissions
 - **[FAQ](FAQ.md)** — Common questions
-- **[Your First Session](docs/YOUR_FIRST_SESSION.md)** — Guided walkthrough
+- **[Your First Session](YOUR_FIRST_SESSION.md)** — Guided walkthrough
 
 ---
 
 <div align="center">
 
-**[Back to README](README.md)**
+**[Back to README](../README.md)**
 
 </div>

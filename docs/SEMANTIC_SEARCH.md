@@ -62,7 +62,7 @@ Athena employs **Triple-Path Retrieval** to ensure no relevant context is missed
 
 ## Path 1: Vector Semantic Search (VectorRAG)
 
-> **Full Documentation**: [VECTORRAG.md](docs/VECTORRAG.md)
+> **Full Documentation**: [VECTORRAG.md](VECTORRAG.md)
 
 ```bash
 # Reference: python3 scripts/supabase_search.py "<query>" --limit 5
@@ -181,7 +181,7 @@ Per Core Identity, **every query** triggers semantic context retrieval:
 
 ## Related Documentation
 
-- [VECTORRAG.md](docs/VECTORRAG.md) — Deep dive into vector embeddings
+- [VECTORRAG.md](VECTORRAG.md) — Deep dive into vector embeddings
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Overall system design
 
 ---
@@ -194,4 +194,4 @@ Per Core Identity, **every query** triggers semantic context retrieval:
 
 Built by **Winston Koh** — 10+ years in financial services, now building AI systems.
 
-→ **[About Me](docs/ABOUT_ME.md)** | **[GitHub](https://github.com/winstonkoh87)** | **[LinkedIn](https://www.linkedin.com/in/winstonkoh87/)**
+→ **[About Me](ABOUT_ME.md)** | **[GitHub](https://github.com/winstonkoh87)** | **[LinkedIn](https://www.linkedin.com/in/winstonkoh87/)**

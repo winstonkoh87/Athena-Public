@@ -376,4 +376,4 @@ src/athena/mcp_server.py (FastMCP v3.x, stdio transport)
 
 ## Metrics
 
-Live inventory counts are **not duplicated here** — a hand-maintained table only drifts. The single source of truth is **[`.agent/config/CAPS.json`](.agent/config/CAPS.json)**, kept current by the Gate-4 pre-commit hook (`core.hooksPath=.agent/hooks`), which also auto-syncs the Workspace Structure tree at the top of this file. Read counts from there.
+Live inventory counts are **not duplicated here** — a hand-maintained table only drifts. The single source of truth is **[`.agent/config/CAPS.json`](../.agent/config/CAPS.json)**, kept current by the Gate-4 pre-commit hook (`core.hooksPath=.agent/hooks`), which also auto-syncs the Workspace Structure tree at the top of this file. Read counts from there.

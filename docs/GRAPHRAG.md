@@ -145,9 +145,9 @@ This regenerates:
 
 ## Related Documentation
 
-- [VECTORRAG.md](docs/VECTORRAG.md) — Semantic vector search layer
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — Overall system design
-- [SEMANTIC_SEARCH.md](docs/SEMANTIC_SEARCH.md) — Hybrid RAG implementation
+- [VECTORRAG.md](VECTORRAG.md) — Semantic vector search layer
+- [ARCHITECTURE.md](ARCHITECTURE.md) — Overall system design
+- [SEMANTIC_SEARCH.md](SEMANTIC_SEARCH.md) — Hybrid RAG implementation
 
 ---
 
@@ -239,4 +239,4 @@ The only paid component (LLM inference) is replaced by **human bandwidth** — a
 
 Built by **Winston Koh** — 10+ years in financial services, now building AI systems.
 
-→ **[About Me](docs/ABOUT_ME.md)** | **[GitHub](https://github.com/winstonkoh87)** | **[LinkedIn](https://www.linkedin.com/in/winstonkoh87/)**
+→ **[About Me](ABOUT_ME.md)** | **[GitHub](https://github.com/winstonkoh87)** | **[LinkedIn](https://www.linkedin.com/in/winstonkoh87/)**

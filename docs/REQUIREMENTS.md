@@ -114,11 +114,11 @@ Derived from 662K+ Reddit views and 1,660+ comments across r/ChatGPT and r/Gemin
 
 | Requirement | Implementing Component | Documentation |
 |-------------|----------------------|---------------|
-| FR-1.x (Session) | `boot.py`, `shutdown.py`, `quicksave.py` | [ARCHITECTURE.md](docs/ARCHITECTURE.md) |
-| FR-2.x (Memory) | `smart_search.py`, `supabase_sync.py`, `tag_index.py` | [SEMANTIC_SEARCH.md](docs/SEMANTIC_SEARCH.md), [VECTORRAG.md](docs/VECTORRAG.md) |
-| FR-3.x (Autonomy) | `heartbeat.py`, `mcp_server.py`, `governance.py` | [MCP_SERVER.md](docs/MCP_SERVER.md) |
-| FR-4.x (Portability) | Markdown filesystem, `.env` config | [GETTING_STARTED.md](docs/GETTING_STARTED.md) |
-| NFR-1–6 | Benchmarked | [BENCHMARKS.md](docs/BENCHMARKS.md) |
+| FR-1.x (Session) | `boot.py`, `shutdown.py`, `quicksave.py` | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| FR-2.x (Memory) | `smart_search.py`, `supabase_sync.py`, `tag_index.py` | [SEMANTIC_SEARCH.md](SEMANTIC_SEARCH.md), [VECTORRAG.md](VECTORRAG.md) |
+| FR-3.x (Autonomy) | `heartbeat.py`, `mcp_server.py`, `governance.py` | [MCP_SERVER.md](MCP_SERVER.md) |
+| FR-4.x (Portability) | Markdown filesystem, `.env` config | [GETTING_STARTED.md](GETTING_STARTED.md) |
+| NFR-1–6 | Benchmarked | [BENCHMARKS.md](BENCHMARKS.md) |
 
 ---
 

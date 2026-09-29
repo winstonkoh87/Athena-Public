@@ -156,4 +156,4 @@ What you do with it after that is up to you.
 
 - [Architecture Overview](ARCHITECTURE.md) — System design
 - [The Exocortex Model](./ARCHITECTURE.md#the-exocortex-model) — Centralized HQ concept
-- [Top 10 Protocols](docs/TOP_10_PROTOCOLS.md) — MCDA-ranked essential protocols
+- [Top 10 Protocols](TOP_10_PROTOCOLS.md) — MCDA-ranked essential protocols

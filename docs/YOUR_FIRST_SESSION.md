@@ -40,7 +40,7 @@ On Day 1, Athena is a blank slate. It knows nothing about you. But after 10 sess
 
 ## Step 1: Boot Up
 
-Open your workspace in your agentic IDE ([Antigravity](https://antigravity.google/), [Cursor](https://cursor.sh/), [Kilo Code](https://kilocode.ai/), [Roo Code](https://roocode.com/), or [any supported IDE](docs/COMPATIBLE_IDES.md)) and type:
+Open your workspace in your agentic IDE ([Antigravity](https://antigravity.google/), [Cursor](https://cursor.sh/), [Kilo Code](https://kilocode.ai/), [Roo Code](https://roocode.com/), or [any supported IDE](COMPATIBLE_IDES.md)) and type:
 
 ```
 /start
@@ -142,7 +142,7 @@ Athena finalizes the session log, extracts key decisions, and commits everything
 
 ## Next Steps After Your First Session
 
-- **Build your first custom agent**: Follow the [Your First Agent](docs/YOUR_FIRST_AGENT.md) guide (~5 min)
+- **Build your first custom agent**: Follow the [Your First Agent](YOUR_FIRST_AGENT.md) guide (~5 min)
 - **Add more workflows**: Check out the [50+ available workflows](../examples/workflows/) — `/think`, `/research`, `/ultrathink`
 - **Explore protocols**: Browse [200+ decision frameworks](../examples/protocols/) for inspiration — then write your own
 - **Build your knowledge base**: Drop important documents into `.context/memories/` and they'll be indexed on next `/start`
@@ -152,4 +152,4 @@ Athena finalizes the session log, extracts key decisions, and commits everything
 
 > *Athena becomes what you need it to be. Your first session is where you tell it what that is.*
 
-**[Back to README](README.md)** · **[Getting Started](docs/GETTING_STARTED.md)** · **[Your First Agent](docs/YOUR_FIRST_AGENT.md)** · **[Glossary](docs/GLOSSARY.md)**
+**[Back to README](../README.md)** · **[Getting Started](GETTING_STARTED.md)** · **[Your First Agent](YOUR_FIRST_AGENT.md)** · **[Glossary](GLOSSARY.md)**

@@ -144,9 +144,9 @@ Every session adds to your agent's knowledge. The more you work together, the sm
 
 ## See Also
 
-- **[What Is an AI Agent?](docs/WHAT_IS_AN_AI_AGENT.md)** — Understand the basics
-- **[Glossary](docs/GLOSSARY.md)** — Key terms and definitions
-- **[Getting Started](docs/GETTING_STARTED.md)** — Detailed setup guide
+- **[What Is an AI Agent?](WHAT_IS_AN_AI_AGENT.md)** — Understand the basics
+- **[Glossary](GLOSSARY.md)** — Key terms and definitions
+- **[Getting Started](GETTING_STARTED.md)** — Detailed setup guide
 
 ---
 
@@ -154,4 +154,4 @@ Every session adds to your agent's knowledge. The more you work together, the sm
 
 Built by **Winston Koh** — 10+ years in financial services, now building AI systems.
 
-→ **[About Me](docs/ABOUT_ME.md)** | **[GitHub](https://github.com/winstonkoh87)** | **[LinkedIn](https://www.linkedin.com/in/winstonkoh87/)**
+→ **[About Me](ABOUT_ME.md)** | **[GitHub](https://github.com/winstonkoh87)** | **[LinkedIn](https://www.linkedin.com/in/winstonkoh87/)**

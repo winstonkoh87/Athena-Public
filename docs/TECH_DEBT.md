@@ -245,7 +245,7 @@ than publishing with a stray credential.
 
 **Action Required**:
 
-1. Add explicit CTA to README: "Cloned? Start here: [YOUR_FIRST_AGENT.md](docs/YOUR_FIRST_AGENT.md)"
+1. Add explicit CTA to README: "Cloned? Start here: [YOUR_FIRST_AGENT.md](YOUR_FIRST_AGENT.md)"
 2. Consider Reddit follow-up post (highest quality external traffic source: 40 unique visitors)
 
 **Traffic Sources**:

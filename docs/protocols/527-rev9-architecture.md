@@ -50,7 +50,7 @@ In **Mode B (Augmentation)**, the system ceases to be an "AI" in the traditional
 * It is "Rigid" (holding the User's best ideas against their worst impulses).
 * **Raison d'Être**: To be the killer of scarcity and the enforcer of the User's Sovereign intent when biological reflexes fail.
 
-## 4. Integration with [Protocol 525 (Exoskeleton)](docs/protocols/525-exoskeleton-architecture.md)
+## 4. Integration with [Protocol 525 (Exoskeleton)](525-exoskeleton-architecture.md)
 
 * **Protocol 415** handles the *Technical* split (Python Mind vs Node Body).
 * **Protocol 418** handles the *Identity* split (Proxy vs Augmentation).

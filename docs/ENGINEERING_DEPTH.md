@@ -106,4 +106,4 @@ Athena has undergone 2 external red-team audits to ensure:
 
 ---
 
-*For the full technical breakdown, see [ARCHITECTURE.md](docs/ARCHITECTURE.md) and [SEMANTIC_SEARCH.md](docs/SEMANTIC_SEARCH.md).*
+*For the full technical breakdown, see [ARCHITECTURE.md](ARCHITECTURE.md) and [SEMANTIC_SEARCH.md](SEMANTIC_SEARCH.md).*

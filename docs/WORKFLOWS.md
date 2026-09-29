@@ -10,19 +10,19 @@ Workflows are slash commands that trigger predefined sequences of actions. They'
 
 | Command | Purpose | Complexity |
 |---------|---------|------------|
-| [`/start`](examples/workflows/start.md) | Boot session, load identity | Low |
-| [`/end`](examples/workflows/end.md) | Close session, commit to memory | Low |
-| [`/tutorial`](examples/workflows/tutorial.md) | Guided first-session walkthrough | Low |
-| [`/save`](examples/workflows/save.md) | Mid-session checkpoint | Low |
-| [`/think`](examples/workflows/think.md) | Deep reasoning (all phases) | Medium |
-| [`/ultrathink`](examples/workflows/ultrathink.md) | Maximum depth (parallel orchestrator) | High |
-| [`/search`](examples/workflows/search.md) | Web search with citations | Medium |
-| [`/research`](examples/workflows/research.md) | Exhaustive multi-source investigation | High |
-| [`/plan`](examples/workflows/plan.md) | Structured planning with pre-mortem | Medium |
-| [`/brief`](examples/workflows/brief.md) | Pre-prompt clarification protocol | Medium |
-| [`/refactor`](examples/workflows/refactor.md) | Full workspace optimization | High |
-| [`/vibe`](examples/workflows/vibe.md) | Ship at 70%, iterate fast | Low |
-| [`/deploy`](examples/workflows/deploy.md) | Sanitized public repo sync | Medium |
+| [`/start`](../examples/workflows/start.md) | Boot session, load identity | Low |
+| [`/end`](../examples/workflows/end.md) | Close session, commit to memory | Low |
+| [`/tutorial`](../examples/workflows/tutorial.md) | Guided first-session walkthrough | Low |
+| [`/save`](../examples/workflows/save.md) | Mid-session checkpoint | Low |
+| [`/think`](../examples/workflows/think.md) | Deep reasoning (all phases) | Medium |
+| [`/ultrathink`](../examples/workflows/ultrathink.md) | Maximum depth (parallel orchestrator) | High |
+| [`/search`](../examples/workflows/search.md) | Web search with citations | Medium |
+| [`/research`](../examples/workflows/research.md) | Exhaustive multi-source investigation | High |
+| [`/plan`](../examples/workflows/plan.md) | Structured planning with pre-mortem | Medium |
+| [`/brief`](../examples/workflows/brief.md) | Pre-prompt clarification protocol | Medium |
+| [`/refactor`](../examples/workflows/refactor.md) | Full workspace optimization | High |
+| [`/vibe`](../examples/workflows/vibe.md) | Ship at 70%, iterate fast | Low |
+| [`/deploy`](../examples/workflows/deploy.md) | Sanitized public repo sync | Medium |
 
 ---
 
@@ -171,6 +171,6 @@ Step-by-step execution...
 
 ## Further Reading
 
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — System design
-- [GETTING_STARTED.md](docs/GETTING_STARTED.md) — Setup guide
+- [ARCHITECTURE.md](ARCHITECTURE.md) — System design
+- [GETTING_STARTED.md](GETTING_STARTED.md) — Setup guide
 - [examples/protocols/](../examples/protocols/) — Decision frameworks

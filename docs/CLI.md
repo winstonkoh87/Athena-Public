@@ -38,4 +38,4 @@ These commands are used inside your IDE during an active Athena session:
 | `/brief interview` | Run the initial profiling interview | — |
 | `/research` | Deep research loop | — |
 
-> 👉 Full list of all 69 workflows (51 root + 18 domain): [WORKFLOWS.md](docs/WORKFLOWS.md)
+> 👉 Full list of all 69 workflows (51 root + 18 domain): [WORKFLOWS.md](WORKFLOWS.md)

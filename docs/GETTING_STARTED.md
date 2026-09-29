@@ -88,7 +88,7 @@ flowchart LR
 5. Type `/end` when done
 
 > [!TIP]
-> **First time?** Follow the [Your First Session](docs/YOUR_FIRST_SESSION.md) guide for a hands-on walkthrough.
+> **First time?** Follow the [Your First Session](YOUR_FIRST_SESSION.md) guide for a hands-on walkthrough.
 
 Check `.context/memories/session_logs/` — you should see your session log!
 
@@ -173,9 +173,9 @@ For advanced automation, see the [examples/scripts/](../examples/scripts/) folde
 
 ## See Also
 
-- **[Your First Session](docs/YOUR_FIRST_SESSION.md)** — Guided first-run walkthrough
-- **[Your First Agent](docs/YOUR_FIRST_AGENT.md)** — Build a custom agent in 5 minutes
-- **[Glossary](docs/GLOSSARY.md)** — Key terms and definitions
+- **[Your First Session](YOUR_FIRST_SESSION.md)** — Guided first-run walkthrough
+- **[Your First Agent](YOUR_FIRST_AGENT.md)** — Build a custom agent in 5 minutes
+- **[Glossary](GLOSSARY.md)** — Key terms and definitions
 - **[Changelog](CHANGELOG.md)** — Version history and updates
 
 ---
@@ -184,6 +184,6 @@ For advanced automation, see the [examples/scripts/](../examples/scripts/) folde
 
 *You now have a self-improving AI assistant.*
 
-**[Back to README](README.md)**
+**[Back to README](../README.md)**
 
 </div>

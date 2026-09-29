@@ -128,7 +128,7 @@ Most users spend **< $5/month** on API calls.
 
 ### Is it safe to use for work?
 
-Yes, if you use **Local Mode**. For enterprise use, see [SECURITY.md](docs/SECURITY.md) for RLS policies and key management.
+Yes, if you use **Local Mode**. For enterprise use, see [SECURITY.md](SECURITY.md) for RLS policies and key management.
 
 ---
 
@@ -174,4 +174,4 @@ Athena auto-retrieves ~2K tokens of context. If you're hitting limits, your sess
 
 ---
 
-**[Back to README](README.md)**
+**[Back to README](../README.md)**

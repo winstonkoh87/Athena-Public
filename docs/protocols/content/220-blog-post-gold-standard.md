@@ -82,7 +82,7 @@ This protocol defines the quality bar for blog posts on the author's portfolio. 
 
 ### CSS
 
-- External `style.css` for global styles (Follow [Protocol 221](docs/protocols/content/221-high-performance-ux-design.md) for UI/UX standards)
+- External `style.css` for global styles (Follow [Protocol 221](221-high-performance-ux-design.md) for UI/UX standards)
 - Inline styles only for targeted overrides (ToC, table caption)
 - `prefers-reduced-motion` support for animations
 

@@ -145,9 +145,9 @@ Quick lookups, formatting  →  ⚡ Fast
 
 ## Further Reading
 
-- [TIPS.md](docs/TIPS.md) — General tips for getting the most out of Athena
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — How Athena's model-agnostic design works
-- [BENCHMARKS.md](docs/BENCHMARKS.md) — Token usage and performance data
+- [TIPS.md](TIPS.md) — General tips for getting the most out of Athena
+- [ARCHITECTURE.md](ARCHITECTURE.md) — How Athena's model-agnostic design works
+- [BENCHMARKS.md](BENCHMARKS.md) — Token usage and performance data
 
 ---
 

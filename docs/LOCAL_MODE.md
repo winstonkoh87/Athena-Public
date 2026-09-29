@@ -56,4 +56,4 @@ python -c "from athena.memory import LocalStore; LocalStore().init()"
 
 ---
 
-*See also: [Security Model](docs/SECURITY.md)*
+*See also: [Security Model](SECURITY.md)*
