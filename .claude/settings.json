@@ -23,6 +23,17 @@
             "statusMessage": "Secret protection gate"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.agent/scripts/security/block_ruin.py\"",
+            "timeout": 5,
+            "statusMessage": "Ruin protection gate (Law #1)"
+          }
+        ]
       }
     ],
     "Stop": [

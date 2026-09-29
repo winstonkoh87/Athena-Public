@@ -81,6 +81,25 @@ class StructuredRuinCheck:
         ):
             return False, ["data_exfiltration_risk"]
 
+        # 3b. Find destructive action detection (-delete, -exec rm)
+        if (
+            cmd_name == "find"
+            and (
+                any(t in ("-delete", "delete") for t in tokens)
+                or ("-exec" in tokens and any(rm in tokens for rm in ("rm", "unlink", "truncate")))
+            )
+            and any(p in command for p in (".context", ".agent", "CANONICAL", "PROJECTS"))
+        ):
+            return False, ["find_destructive_call_on_protected_path"]
+
+        # 3c. Moving/relocating protected memory directories
+        if cmd_name == "mv" and len(tokens) >= 3:
+            sources = tokens[1:-1]
+            for src in sources:
+                clean_src = src.strip("'\"").rstrip("/")
+                if clean_src in (".context", ".agent") or clean_src.startswith((".context/", ".agent/")):
+                    return False, ["moving_protected_memory_path"]
+
         # 4. Token-level destructive action detection
         destructive_verbs = {"rm", "unlink", "truncate", "shred", "dd"}
         if cmd_name in destructive_verbs or any(tok in ("rm", "delete", "truncate", "overwrite") for tok in tokens):

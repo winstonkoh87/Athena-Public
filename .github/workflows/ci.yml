@@ -81,5 +81,12 @@ jobs:
       - name: Check Harness Score & Parity
         run: python .agent/scripts/harness_score.py --check --min=35.0
 
+      - name: Prevent [AUTHOR] Redaction Leaks
+        run: |
+          if grep -rn '\[AUTHOR\]' src/; then
+            echo "::error::Found [AUTHOR] leak in src/ — scrubber regression detected!"
+            exit 1
+          fi
+
       - name: Run tests
         run: pytest tests/ -v --tb=short --cov=src/athena --cov-report=term-missing --cov-fail-under=15

@@ -343,6 +343,49 @@ Run `athena` to boot the session system, or manually read the latest session log
 | `/ultrathink` | Maximum depth + full context stack |
 """
 
+ACTIVE_CONTEXT_TEMPLATE = """# Active Context
+
+> **Last Updated**: {date}
+> **Session State**: S1 (Initial session)
+
+## Current Focus
+Workspace initialized. Ready for initial task.
+
+## Active Goals
+- [ ] Configure local workflow
+- [ ] Run first session (/start)
+
+## Recent Decisions
+- Initialized workspace via Athena CLI.
+"""
+
+USER_CONTEXT_TEMPLATE = """# User Context
+
+> **Created**: {date}
+
+## Profile
+- **Role**: Developer
+- **Preferences**: Modular, tested code; low token overhead.
+"""
+
+PRODUCT_CONTEXT_TEMPLATE = """# Product Context
+
+> **Created**: {date}
+
+## Philosophy
+Local-first context compounding. Rules enforced by hooks, not just prompts.
+"""
+
+SYSTEM_PATTERNS_TEMPLATE = """# System Patterns
+
+> **Created**: {date}
+
+## Architecture
+- Context lives in plain Markdown under `.context/`
+- Workflows live under `.agent/workflows/`
+- Laws and principles live under `.framework/`
+"""
+
 
 def init_workspace(target_dir: Path | None = None, ide: str | None = None) -> bool:
     """
@@ -370,6 +413,7 @@ def init_workspace(target_dir: Path | None = None, ide: str | None = None) -> bo
         ".agent/scripts",
         ".agent/skills/protocols",
         ".framework/modules",
+        ".context/memory_bank",
         ".context/memories/session_logs",
         ".context/data",
     ]
@@ -403,6 +447,22 @@ def init_workspace(target_dir: Path | None = None, ide: str | None = None) -> bo
             ".context/project_state.md",
             PROJECT_STATE_TEMPLATE.format(date=today),
         ),
+        (
+            ".context/memory_bank/activeContext.md",
+            ACTIVE_CONTEXT_TEMPLATE.format(date=today),
+        ),
+        (
+            ".context/memory_bank/userContext.md",
+            USER_CONTEXT_TEMPLATE.format(date=today),
+        ),
+        (
+            ".context/memory_bank/productContext.md",
+            PRODUCT_CONTEXT_TEMPLATE.format(date=today),
+        ),
+        (
+            ".context/memory_bank/systemPatterns.md",
+            SYSTEM_PATTERNS_TEMPLATE.format(date=today),
+        ),
     ]
 
     print("\n📝 Creating template files...")
@@ -413,6 +473,16 @@ def init_workspace(target_dir: Path | None = None, ide: str | None = None) -> bo
             print(f"   ✅ {file_path}")
         else:
             print(f"   ⏭️  {file_path} (already exists)")
+
+    # Ensure git repo is initialized for git health
+    import subprocess
+    try:
+        git_check = subprocess.run(["git", "rev-parse", "--git-dir"], cwd=root, capture_output=True, text=True)
+        if git_check.returncode != 0:
+            subprocess.run(["git", "init"], cwd=root, capture_output=True, text=True)
+            print("   ✅ Git repository initialized")
+    except Exception:
+        pass
 
     # IDE-specific configuration
     if ide:

@@ -17,6 +17,8 @@ RUINOUS_PATTERNS = [
     r"truncate -s 0 \.context",
     r"delete_file.*\.context",
     r"overwrite_file.*\.context.*empty=True",
+    r"find\s+.*\.context.*\-(?:delete|exec\s+rm)",
+    r"mv\s+.*\.context\b",
 ]
 
 def check_command(command: str) -> bool:

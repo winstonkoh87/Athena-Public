@@ -573,6 +573,14 @@ def collect_filenames(query: str) -> list[SearchResult]:
             "-prune",
             "-o",
             "-path",
+            "*/__pycache__",
+            "-prune",
+            "-o",
+            "-path",
+            "*/.ruff_cache",
+            "-prune",
+            "-o",
+            "-path",
             "./Athena-Public",
             "-prune",
             "-o",
@@ -608,6 +616,11 @@ def collect_filenames(query: str) -> list[SearchResult]:
             for line in lines:
                 # Never surface archived/frozen content (S527 pollution guard).
                 if "/archive" in line.replace("\\", "/"):
+                    continue
+                # Exclude byte-compiled, binary and lock files from lexical filename results
+                if any(line.endswith(ext) for ext in (".pyc", ".pyo", ".pyd", ".DS_Store", ".lock")):
+                    continue
+                if any(ign in line for ign in ("__pycache__", ".ruff_cache", ".mypy_cache")):
                     continue
                 if line.strip() and line not in seen_paths:
                     seen_paths.add(line)
@@ -1114,7 +1127,7 @@ def run_search(
 
             from athena.memory.vectors import get_embedding
 
-            # Timeout wrapper for get_embedding (Supabase cold start issues)
+            # Timeout wrapper for get_embedding (Gemini API rate limit or network timeout)
             def handler(signum, frame):
                 raise TimeoutError("Embedding fetch timed out")
 
@@ -1144,11 +1157,11 @@ def run_search(
             if "404" in str(e) or "GOOGLE_API_KEY" in str(e) or "timed out" in str(e):
                 if not json_output:
                     print(
-                        f"\n   {YELLOW}⚠️  FALLBACK: Vector search unavailable ({e}){RESET}",
+                        f"\n   {YELLOW}⚠️  FALLBACK [DEGRADED]: Vector search unavailable ({e}){RESET}",
                         file=sys.stderr,
                     )
                     print(
-                        f"   {DIM}Primary: TAG_INDEX & local channels active.{RESET}\n",
+                        f"   {DIM}Primary: TAG_INDEX & local channels active. [DEGRADED: vector channel failed — {e}]{RESET}\n",
                         file=sys.stderr,
                     )
                 query_embedding = None  # Proceed without vectors
@@ -1320,6 +1333,7 @@ def run_search(
                         "suppressed": suppressed_count,
                         "intent": detected_intent,
                         "degraded_recall": vector_failed,
+                        "quality": "degraded" if vector_failed else "miss",
                         "message": "No high-confidence results",
                     }
                 )
@@ -1342,9 +1356,10 @@ def run_search(
             else:
                 conf_badge = "[LOW]"
 
+            has_rerank = "reranker" in doc.signals and "score" in doc.signals["reranker"]
             score_display = (
-                f"Rerank:{doc.signals.get('reranker', {}).get('score', 0):.2f}"
-                if rerank
+                f"Rerank:{doc.signals['reranker']['score']:.2f}"
+                if (rerank and has_rerank)
                 else f"RRF:{doc.rrf_score:.4f}"
             )
             print(f"\n  {i}. {conf_badge} [{score_display}] {doc.id}")
@@ -1367,6 +1382,7 @@ def run_search(
             "suppressed": suppressed_count,
             "intent": detected_intent,
             "degraded_recall": vector_failed,  # FIX-03: Surface vector health to MCP consumers
+            "quality": "degraded" if vector_failed else "hit",
             "lambda": {
                 "score": lambda_info["score"],
                 "tier": lambda_info["tier"],
@@ -1416,7 +1432,9 @@ def run_search(
         low_count = sum(1 for r in top_results if r.rrf_score < CONFIDENCE_LOW)
 
         # Classify retrieval quality
-        if high_count >= 3:
+        if vector_failed:
+            quality = "degraded"
+        elif high_count >= 3:
             quality = "hit"
         elif high_count >= 1 or med_count >= 3:
             quality = "partial"
