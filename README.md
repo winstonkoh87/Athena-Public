@@ -14,10 +14,7 @@ hooks, not just prompts.
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/winstonkoh87/Athena-Public?style=flat-square&logo=github)](https://github.com/winstonkoh87/Athena-Public/stargazers)
 
-<!-- TODO: Replace with a real 20-second GIF of /start → work → /end.
-     Record it yourself in your IDE — it needs to show your actual session.
-     Script: `athena init . --ide claude && /start → ask a question → /end`
-     Save as docs/demo.gif (keep under 5 MB). -->
+![20-second demo: /start recalls last session → work → /end](docs/demo.gif)
 
 [Quickstart](#quickstart) · [How It Works](#how-it-works) · [Docs](docs/GETTING_STARTED.md) · [Why Athena?](docs/WHY_ATHENA.md) · [Safety](SAFETY.md)
 
