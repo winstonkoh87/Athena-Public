@@ -9,6 +9,7 @@ Antigravity, Cursor, Gemini CLI and VS Code — and the rules are enforced by
 hooks, not just prompts.
 
 [![CI](https://github.com/winstonkoh87/Athena-Public/actions/workflows/ci.yml/badge.svg)](https://github.com/winstonkoh87/Athena-Public/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/badge/v10.0.1-10b981?style=flat-square&label=Version)](docs/CHANGELOG.md)
 [![PyPI](https://img.shields.io/pypi/v/athena-agent?style=flat-square&color=10b981)](https://pypi.org/project/athena-agent/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/winstonkoh87/Athena-Public?style=flat-square&logo=github)](https://github.com/winstonkoh87/Athena-Public/stargazers)
