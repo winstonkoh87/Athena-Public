@@ -1,7 +1,7 @@
 # Knowledge Graph (Compressed Index)
 
 > This is a compressed representation of Athena's knowledge domain for quick retrieval.
-> **Last Updated**: 18 September 2026 <!-- 2026-09-18 --> | **Version**: v10.0.2
+> **Last Updated**: 18 September 2026 <!-- 2026-09-18 --> | **Version**: v10.0.3
 
 ## Core Concepts
 

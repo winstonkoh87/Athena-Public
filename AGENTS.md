@@ -249,7 +249,7 @@ To ensure Game-Theory Optimal (GTO) operations, apply these core engineering dir
 ## Version
 
 - **Framework**: v8.2-stable (frozen as of 2026-02-01 — reference-only, not runtime-loaded)
-- **System**: v10.0.2
+- **System**: v10.0.3
 - **Last Updated**: 2026-07-22
 - **Canonical Counts**: `.agent/config/CAPS.json` (single source of truth; regenerate via commands in CAPS.json `recount_rules`)
 - **Pattern Source**: Vercel "AGENTS.md vs Skills" Research + OpenClaw Multi-Agent Safety Rules + Claude Code Source Steal (instructkr/claude-code, 2026-03-31) + santifer/career-ops Steal (DATA_CONTRACT, _shared.md, /do router, 2026-04-12) + GTO consolidation pass (2026-04-18: index drift fix, broken-ref repair, _domain + conditional-skills surfacing) + Hermes Agent Steal (NousResearch/hermes-agent, 2026-05-11: skill-compiler, curator lifecycle model) + Anthropic Steal (anthropics/knowledge-work-plugins, 2026-05-24: CONNECTORS.md, glossary.md, dashboard-builder, scan_skill.py, interview-mode, checkpoint-pause, argument-hint) + Athena-Public Privacy Remediation + Architecture Model Sync (2026-05-30) + Karpathy CLAUDE.md Steal (r/ClaudeCode, 2026-06-01: Ask-Don't-Assume, Flag-Uncertainty, Codebase-Documentation-Sync)
