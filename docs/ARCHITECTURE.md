@@ -12,10 +12,10 @@
 ```
 Athena/
 ├── .agent/                        # Agent configuration
-│   ├── skills/                    #   43 active skills (42 with context_trigger)
-│   │   └── protocols/             #   425 active + 34 archived = 459 total, 26 categories
+│   ├── skills/                    #   44 active skills (43 with context_trigger)
+│   │   └── protocols/             #   426 active + 34 archived = 460 total, 26 categories
 │   │       └── archive/           #     34 deprecated protocols (read-only, see README)
-│   ├── workflows/                 #   55 root + 20 _domain = 75 slash-command workflows
+│   ├── workflows/                 #   56 root + 20 _domain = 76 slash-command workflows
 │   │   └── _domain/               #     Domain-scoped, conditionally activated
 │   ├── scripts/                   #   290 automation scripts
 │   ├── telemetry/                 #   Retrieval instrumentation logs + tier maps

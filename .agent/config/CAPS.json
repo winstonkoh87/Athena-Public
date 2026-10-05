@@ -1,29 +1,29 @@
 {
   "_comment": "Canonical inventory counts for Project Athena. Single source of truth for pre-commit caps, audit asserts, and AGENTS.md regeneration. Update via .agent/scripts/sync_agents_md.py (runs automatically: pre-commit Gate 4 + shutdown.py Phase 1.5), not by hand.",
-  "_generated": "2026-10-04",
+  "_generated": "2026-10-06",
   "_generator": "S411 sync_agents_md.py automation (TD-028)",
   "version": {
     "framework": "v8.2-stable",
-    "system": "v10.0.2"
+    "system": "v10.0.3"
   },
   "protocols": {
-    "total": 459,
-    "active": 425,
+    "total": 460,
+    "active": 426,
     "archived": 34,
     "categories": 26,
     "cap": "uncapped",
     "cap_policy": "Protocols are uncapped as of v9.8.0. The constraint is on BOOT LOAD (attention budget), not on total count. Protocol 530 (Conditional Skill Loading) + Progressive Disclosure ensure only relevant protocols enter context per session. Archived protocols don't affect boot. TD-019 is now structurally resolved."
   },
   "skills": {
-    "active": 43,
+    "active": 44,
     "archived": 17,
-    "conditional_count": 42,
+    "conditional_count": 43,
     "always_on_count": 10
   },
   "workflows": {
-    "root": 55,
+    "root": 56,
     "domain": 20,
-    "total": 75,
+    "total": 76,
     "cap": "uncapped",
     "cap_policy": "Workflows are uncapped as of v9.8.0. Domain workflows are dormant by default (_domain/ tier) and only activate on query match. The constraint is attention budget, not inventory size. TD-017 is now structurally resolved."
   },

@@ -1,10 +1,23 @@
 # Athena Changelog
 
-> **Last Updated**: 30 September 2026 <!-- 2026-09-30 -->
+> **Last Updated**: 6 October 2026 <!-- 2026-10-06 -->
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
+
+---
+
+## [10.0.3] — Operational OSINT, Counterparty Risk Inversion, & Decision Receipts Gate (6 October 2026)
+
+### Counterparty Reconnaissance & Due Diligence
+- **Operational OSINT Engine (`operational-osint` Skill)**: Added 5-layer counterparty intelligence stack for commercial entity vetting, paid-up capital vs senior floating charges forensics, review sentiment haircuts, and protective OPSEC audits.
+- **Protocol 580 (`RSC-580`)**: Codified 100-point counterparty risk audit across statutory standing, review integrity, financial posture, litigation cause books, and physical permanence with contract risk inversion mechanics.
+- **`/osint` Workflow**: Added 3-tier cognitive intake funnel (Public Reality -> Exocortex Precedents -> Game-Theoretic Contract Terms) for counterparty screening.
+
+### Governance & Verification Gates
+- **GTO Decision Receipts Gate**: Integrated `check_decision_receipts` in `.agent/scripts/hook_stop_verify.py` and `scripts/hook_stop_verify.py` to intercept and verify model engine claims against `.athena/decision_receipts.jsonl`.
+- **Formatting & Lint Standards**: Resolved nested conditional checks (SIM102) and redundant sorting allocations (C414) in hook verification scripts.
 
 ---
 

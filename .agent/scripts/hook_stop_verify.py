@@ -75,13 +75,62 @@ def check_crisis_referral(payload: dict | None) -> list[str]:
     if not assistant_reply:
         assistant_reply = payload.get("text") or payload.get("reply") or ""
 
-    if user_prompt and detect_crisis_signal(user_prompt):
-        if "1-767" not in assistant_reply:
+    if user_prompt and detect_crisis_signal(user_prompt) and "1-767" not in assistant_reply:
+        return [
+            "Protocol 509 Crisis Referral Mandate: User communicates acute distress/crisis signal, "
+            "but your reply lacks the mandatory Samaritans of Singapore crisis hotline ('1-767'). "
+            "You MUST include the emergency referral (SOS: 1-767 / IMH: 6389 2222 / 995) at the very start of your message."
+        ]
+
+    return []
+
+
+def check_decision_receipts(payload: dict | None) -> list[str]:
+    """Check that assistant output does not contain unreceipted GTO engine claims."""
+    if not payload or not isinstance(payload, dict):
+        return []
+
+    assistant_reply = ""
+    transcript_path = payload.get("transcript_path")
+    if transcript_path and os.path.exists(transcript_path):
+        try:
+            with open(transcript_path, encoding="utf-8") as tf:
+                lines = tf.readlines()[-30:]
+                for line in reversed(lines):
+                    try:
+                        rec = json.loads(line)
+                        msg = rec.get("message", {})
+                        if msg.get("role") == "assistant":
+                            content = msg.get("content", "")
+                            if isinstance(content, list):
+                                assistant_reply = " ".join(c.get("text", "") for c in content if isinstance(c, dict))
+                            elif isinstance(content, str):
+                                assistant_reply = content
+                            if assistant_reply:
+                                break
+                    except Exception:
+                        continue
+        except Exception:
+            pass
+
+    if not assistant_reply:
+        assistant_reply = payload.get("text") or payload.get("reply") or ""
+
+    if not assistant_reply:
+        return []
+
+    try:
+        from athena.intelligence.gto_engine import find_unreceipted_engine_claims
+
+        receipts_path = REPO_ROOT / ".athena" / "decision_receipts.jsonl"
+        unreceipted = find_unreceipted_engine_claims(assistant_reply, receipts_path=receipts_path)
+        if unreceipted:
             return [
-                "Protocol 509 Crisis Referral Mandate: User communicates acute distress/crisis signal, "
-                "but your reply lacks the mandatory Samaritans of Singapore crisis hotline ('1-767'). "
-                "You MUST include the emergency referral (SOS: 1-767 / IMH: 6389 2222 / 995) at the very start of your message."
+                f"Decision Receipt Gate: Unreceipted GTO engine claims detected: {unreceipted}. "
+                "Obtain a valid receipt (GTO-xxxxxxxx) or tag with [agent-estimate]."
             ]
+    except Exception:
+        pass
 
     return []
 
@@ -129,7 +178,7 @@ def get_changed_files() -> list[str]:
                     changed.add(line.strip())
     except Exception:
         pass
-    return sorted(list(changed))
+    return sorted(changed)
 
 
 def check_latex_leaks(changed_files: list[str]) -> list[str]:
@@ -267,6 +316,11 @@ def main():
         crisis_errors = check_crisis_referral(stdin_payload)
         if crisis_errors:
             errors.extend(crisis_errors)
+
+        # 0b. Decision receipt gate
+        receipt_errors = check_decision_receipts(stdin_payload)
+        if receipt_errors:
+            errors.extend(receipt_errors)
 
     changed_files = get_changed_files()
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "athena-agent"
-version = "10.0.2"
+version = "10.0.3"
 description = "A compounding context layer for AI agents — persistent memory, structured reasoning, and governed AI agents that work across any LLM. Own the state. Rent the intelligence."
 readme = "README.md"
 requires-python = ">=3.10"

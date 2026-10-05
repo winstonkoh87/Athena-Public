@@ -15,13 +15,124 @@ Contract:
 """
 
 import json
+import os
 import re
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+try:
+    from athena.core.lambda_scorer import detect_crisis_signal
+except ImportError:
+    def detect_crisis_signal(text: str) -> bool:
+        return False
+
+
+def check_crisis_referral(payload: dict | None) -> list[str]:
+    """Check that if user prompt triggered crisis signal, assistant response contains 1-767."""
+    if not payload or not isinstance(payload, dict):
+        return []
+
+    # Honour stop_hook_active to avoid loop
+    if payload.get("stop_hook_active"):
+        return []
+
+    user_prompt = ""
+    assistant_reply = ""
+
+    transcript_path = payload.get("transcript_path")
+    if transcript_path and os.path.exists(transcript_path):
+        try:
+            with open(transcript_path, encoding="utf-8") as tf:
+                lines = tf.readlines()[-30:]
+                for line in reversed(lines):
+                    try:
+                        rec = json.loads(line)
+                        msg = rec.get("message", {})
+                        role = msg.get("role")
+                        content = msg.get("content", "")
+                        if isinstance(content, list):
+                            content = " ".join(c.get("text", "") for c in content if isinstance(c, dict))
+                        if role == "assistant" and not assistant_reply:
+                            assistant_reply = content
+                        elif role == "user" and not user_prompt:
+                            user_prompt = content
+                        if user_prompt and assistant_reply:
+                            break
+                    except Exception:
+                        continue
+        except Exception:
+            pass
+
+    if not user_prompt:
+        user_prompt = payload.get("prompt") or payload.get("user_prompt") or ""
+    if not assistant_reply:
+        assistant_reply = payload.get("text") or payload.get("reply") or ""
+
+    if user_prompt and detect_crisis_signal(user_prompt) and "1-767" not in assistant_reply:
+        return [
+            "Protocol 509 Crisis Referral Mandate: User communicates acute distress/crisis signal, "
+            "but your reply lacks the mandatory Samaritans of Singapore crisis hotline ('1-767'). "
+            "You MUST include the emergency referral (SOS: 1-767 / IMH: 6389 2222 / 995) at the very start of your message."
+        ]
+
+    return []
+
+
+def check_decision_receipts(payload: dict | None) -> list[str]:
+    """Check that assistant output does not contain unreceipted GTO engine claims."""
+    if not payload or not isinstance(payload, dict):
+        return []
+
+    assistant_reply = ""
+    transcript_path = payload.get("transcript_path")
+    if transcript_path and os.path.exists(transcript_path):
+        try:
+            with open(transcript_path, encoding="utf-8") as tf:
+                lines = tf.readlines()[-30:]
+                for line in reversed(lines):
+                    try:
+                        rec = json.loads(line)
+                        msg = rec.get("message", {})
+                        if msg.get("role") == "assistant":
+                            content = msg.get("content", "")
+                            if isinstance(content, list):
+                                assistant_reply = " ".join(c.get("text", "") for c in content if isinstance(c, dict))
+                            elif isinstance(content, str):
+                                assistant_reply = content
+                            if assistant_reply:
+                                break
+                    except Exception:
+                        continue
+        except Exception:
+            pass
+
+    if not assistant_reply:
+        assistant_reply = payload.get("text") or payload.get("reply") or ""
+
+    if not assistant_reply:
+        return []
+
+    try:
+        from athena.intelligence.gto_engine import find_unreceipted_engine_claims
+
+        receipts_path = REPO_ROOT / ".athena" / "decision_receipts.jsonl"
+        unreceipted = find_unreceipted_engine_claims(assistant_reply, receipts_path=receipts_path)
+        if unreceipted:
+            return [
+                f"Decision Receipt Gate: Unreceipted GTO engine claims detected: {unreceipted}. "
+                "Obtain a valid receipt (GTO-xxxxxxxx) or tag with [agent-estimate]."
+            ]
+    except Exception:
+        pass
+
+    return []
 
 
 def get_changed_files() -> list[str]:
@@ -94,6 +205,41 @@ def check_latex_leaks(changed_files: list[str]) -> list[str]:
     return []
 
 
+def check_currency_leaks(changed_files: list[str]) -> list[str]:
+    # Exclude files that *describe* corruption (audit reports, red-team reviews)
+    # rather than *exhibiting* it. These contain illustrative examples like
+    # "S$1,181.03 -> S,181.03" which are not actual data corruption.
+    AUDIT_EXCLUSIONS = [
+        "currency_corruption_report",
+        "REDTEAM_REVIEW",
+        "IMPLEMENTATION_PLAN",
+    ]
+    md_files = [
+        f for f in changed_files
+        if f.endswith(".md") and not any(exc in f for exc in AUDIT_EXCLUSIONS)
+    ]
+    if not md_files:
+        return []
+
+    script = REPO_ROOT / ".agent" / "scripts" / "check_currency_integrity.py"
+    if not script.exists():
+        return []
+
+    try:
+        r = subprocess.run(
+            [sys.executable, str(script)] + md_files,
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+        if r.returncode != 0:
+            return [line for line in r.stdout.splitlines() if line.strip() and "❌" not in line and "Remediation" not in line and "✓" not in line]
+    except Exception as e:
+        return [f"Currency integrity check error: {e}"]
+    return []
+
+
 def _file_matches_pattern(file_path: Path, pattern: str) -> bool:
     """Check if file contains a regex pattern. Returns bool only.
 
@@ -152,28 +298,52 @@ def check_python_syntax(changed_files: list[str]) -> list[str]:
 
 def main():
     start_time = time.time()
-    changed_files = get_changed_files()
 
-    if not changed_files:
-        print(json.dumps({"decision": "allow", "latency_ms": round((time.time() - start_time) * 1000, 1)}))
-        sys.exit(0)
+    # Read stdin if available (Claude Code Stop event payload)
+    stdin_payload = None
+    if not sys.stdin.isatty():
+        try:
+            raw_stdin = sys.stdin.read()
+            if raw_stdin.strip():
+                stdin_payload = json.loads(raw_stdin)
+        except Exception:
+            pass
 
     errors = []
 
-    # 1. LaTeX leaks
-    latex_errors = check_latex_leaks(changed_files)
-    if latex_errors:
-        errors.extend(latex_errors)
+    # 0. Protocol 509 crisis referral check (runs even on zero file changes)
+    if stdin_payload:
+        crisis_errors = check_crisis_referral(stdin_payload)
+        if crisis_errors:
+            errors.extend(crisis_errors)
 
-    # 2. Restricted signature check
-    sig_errors = check_restricted_signatures(changed_files)
-    if sig_errors:
-        errors.extend(sig_errors)
+        # 0b. Decision receipt gate
+        receipt_errors = check_decision_receipts(stdin_payload)
+        if receipt_errors:
+            errors.extend(receipt_errors)
 
-    # 3. Python syntax
-    py_errors = check_python_syntax(changed_files)
-    if py_errors:
-        errors.extend(py_errors)
+    changed_files = get_changed_files()
+
+    if changed_files:
+        # 1. LaTeX leaks
+        latex_errors = check_latex_leaks(changed_files)
+        if latex_errors:
+            errors.extend(latex_errors)
+
+        # 2. Restricted signature check
+        sig_errors = check_restricted_signatures(changed_files)
+        if sig_errors:
+            errors.extend(sig_errors)
+
+        # 3. Python syntax
+        py_errors = check_python_syntax(changed_files)
+        if py_errors:
+            errors.extend(py_errors)
+
+        # 4. Currency integrity
+        curr_errors = check_currency_leaks(changed_files)
+        if curr_errors:
+            errors.extend(curr_errors)
 
     elapsed_ms = round((time.time() - start_time) * 1000, 1)
 
