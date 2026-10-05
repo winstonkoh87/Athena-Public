@@ -4,7 +4,7 @@
   "_generator": "S411 sync_agents_md.py automation (TD-028)",
   "version": {
     "framework": "v8.2-stable",
-    "system": "v10.0.3"
+    "system": "v10.0.4"
   },
   "protocols": {
     "total": 460,

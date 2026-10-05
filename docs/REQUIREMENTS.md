@@ -1,7 +1,7 @@
 # Athena Requirements Document (Reverse-Engineered)
 
 > **Date**: 6 June 2026
-> **Version**: v10.0.3
+> **Version**: v10.0.4
 > **Methodology**: Reverse SDLC — requirements derived from 1,900+ sessions of production use, not written upfront.
 
 > [!NOTE]

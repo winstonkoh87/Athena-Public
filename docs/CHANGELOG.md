@@ -8,6 +8,18 @@ This document provides detailed release notes. For the brief summary, see the RE
 
 ---
 
+## [10.0.4] — Local KV Cache Scaling Harness & Version Gate Synchronization (6 October 2026)
+
+### Local Inference & Cache Benchmarking
+- **KV Cache Scaling Harness (`benchmark_kv_cache.py`)**: Added reproducible benchmark harness measuring TTFT, generation throughput (tok/s), and VRAM scaling from 2K to 32K context on local Ollama / llama.cpp engines.
+- **Unit & Contract Tests**: Added `tests/test_benchmark_kv_cache.py` verifying CLI contracts, table generation, and zero-mutation guarantees.
+- **Inference Scaling Matrix**: Documented empirical ~35x–50x TTFT speedups at 2K zero-touch boot depths across README and docs.
+
+### Build & Release Verification
+- **Release Gate Hardening**: Purged stale static version badge in README and synchronized all declared surfaces to pass automated version sync gates.
+
+---
+
 ## [10.0.3] — Operational OSINT, Counterparty Risk Inversion, & Decision Receipts Gate (6 October 2026)
 
 ### Counterparty Reconnaissance & Due Diligence
