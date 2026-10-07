@@ -139,6 +139,129 @@ The current local time is: 2026-09-14T00:53:17+08:00.
         self.assertEqual(res["decision"], "continue")
         self.assertIn("Epistemic Grounding Gate", res["reason"])
 
+    def test_crisis_turn_without_referral_blocks_stop(self):
+        with tempfile.NamedTemporaryFile("w", delete=False, suffix=".jsonl") as tf:
+            tf.write(json.dumps({
+                "step_index": 0,
+                "type": "USER_INPUT",
+                "content": "<USER_REQUEST>I want to die</USER_REQUEST>"
+            }) + "\n")
+            tf.write(json.dumps({
+                "step_index": 1,
+                "source": "MODEL",
+                "type": "PLANNER_RESPONSE",
+                "content": "I am here to help you."
+            }) + "\n")
+            temp_path = tf.name
+
+        res = evaluate_turn_governance(temp_path)
+        self.assertEqual(res["decision"], "continue")
+        self.assertIn("CRISIS REFERRAL REQUIRED", res["reason"])
+
+    def test_crisis_turn_with_referral_hotlines_allows_stop(self):
+        with tempfile.NamedTemporaryFile("w", delete=False, suffix=".jsonl") as tf:
+            tf.write(json.dumps({
+                "step_index": 0,
+                "type": "USER_INPUT",
+                "content": "<USER_REQUEST>I want to die</USER_REQUEST>"
+            }) + "\n")
+            tf.write(json.dumps({
+                "step_index": 1,
+                "source": "MODEL",
+                "type": "PLANNER_RESPONSE",
+                "content": "Please reach out to SOS at 1-767 and IMH at 6389 2222 immediately."
+            }) + "\n")
+            temp_path = tf.name
+
+        res = evaluate_turn_governance(temp_path)
+        self.assertEqual(res["decision"], "allow")
+
+    def test_crisis_turn_with_referral_header_protocol_509_allows_stop(self):
+        with tempfile.NamedTemporaryFile("w", delete=False, suffix=".jsonl") as tf:
+            tf.write(json.dumps({
+                "step_index": 0,
+                "type": "USER_INPUT",
+                "content": "<USER_REQUEST>I want to die</USER_REQUEST>"
+            }) + "\n")
+            tf.write(json.dumps({
+                "step_index": 1,
+                "source": "MODEL",
+                "type": "PLANNER_RESPONSE",
+                "content": "🚨 Protocol 509: Life-safety support resources are available."
+            }) + "\n")
+            temp_path = tf.name
+
+        res = evaluate_turn_governance(temp_path)
+        self.assertEqual(res["decision"], "allow")
+
+    def test_crisis_turn_with_referral_header_findahelpline_allows_stop(self):
+        with tempfile.NamedTemporaryFile("w", delete=False, suffix=".jsonl") as tf:
+            tf.write(json.dumps({
+                "step_index": 0,
+                "type": "USER_INPUT",
+                "content": "<USER_REQUEST>I want to die</USER_REQUEST>"
+            }) + "\n")
+            tf.write(json.dumps({
+                "step_index": 1,
+                "source": "MODEL",
+                "type": "PLANNER_RESPONSE",
+                "content": "International support is available via https://findahelpline.com."
+            }) + "\n")
+            temp_path = tf.name
+
+        res = evaluate_turn_governance(temp_path)
+        self.assertEqual(res["decision"], "allow")
+
+    def test_codeql_url_substring_sanitization_ast_clean(self):
+        """CodeQL py/incomplete-url-substring-sanitization AST guard.
+        Ensures no StringLiteral that looks like a domain/URL is checked using
+        'in', 'startswith', or 'endswith', which triggers CodeQL alert #47 (CWE-20).
+        """
+        import ast
+        import re
+
+        common_tlds = r"com|org|edu|gov|uk|net|io"
+        url_regex = re.compile(rf"(?i)^([a-z]*:?//)?\.?([a-z0-9-]+\.)+({common_tlds})(:[0-9]+)?/?$")
+        http_url_regex = re.compile(r"(?i)^https?://([a-z0-9-]+\.)+([a-z]+)(:[0-9]+)?/?$")
+
+        def looks_like_url(s: str) -> bool:
+            return bool(url_regex.match(s) or http_url_regex.match(s))
+
+        class SubstringSanitizationVisitor(ast.NodeVisitor):
+            def __init__(self):
+                self.violations = []
+
+            def visit_Compare(self, node):
+                for op, comparator in zip(node.ops, node.comparators, strict=False):
+                    if isinstance(op, ast.In):
+                        if isinstance(node.left, ast.Constant) and isinstance(node.left.value, str) and looks_like_url(node.left.value):
+                            self.violations.append((node.lineno, node.left.value))
+                        if isinstance(comparator, ast.Constant) and isinstance(comparator.value, str) and looks_like_url(comparator.value):
+                            self.violations.append((node.lineno, comparator.value))
+                self.generic_visit(node)
+
+            def visit_Call(self, node):
+                if (
+                    isinstance(node.func, ast.Attribute)
+                    and node.func.attr in ("startswith", "endswith")
+                    and node.args
+                    and isinstance(node.args[0], ast.Constant)
+                    and isinstance(node.args[0].value, str)
+                    and looks_like_url(node.args[0].value)
+                ):
+                    self.violations.append((node.lineno, node.args[0].value))
+                self.generic_visit(node)
+
+        script_path = REPO_ROOT / "examples" / "scripts" / "stop_governance_gate.py"
+        tree = ast.parse(script_path.read_text(encoding="utf-8"))
+        visitor = SubstringSanitizationVisitor()
+        visitor.visit(tree)
+        self.assertEqual(
+            visitor.violations,
+            [],
+            f"CodeQL incomplete-url-substring-sanitization pattern detected in {script_path}: {visitor.violations}",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
