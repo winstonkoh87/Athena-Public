@@ -5,6 +5,7 @@ Unit tests for the Antigravity Stop Lifecycle Governance Gate.
 """
 
 import json
+import shutil
 import sys
 import tempfile
 import unittest
@@ -12,7 +13,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / ".agent" / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "examples" / "scripts"))
 
+import stop_governance_gate
 from stop_governance_gate import (
     clean_prompt_content,
     evaluate_turn_governance,
@@ -21,6 +24,24 @@ from stop_governance_gate import (
 
 
 class TestStopGovernanceGate(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = Path(tempfile.mkdtemp(prefix="athena_gate_tests_"))
+        self._orig_gate_decisions_path = getattr(stop_governance_gate, "GATE_DECISIONS_PATH", None)
+        self._orig_loop_guard_path = getattr(stop_governance_gate, "LOOP_GUARD_PATH", None)
+        self._orig_receipts_path = getattr(stop_governance_gate, "RETRIEVAL_RECEIPTS_PATH", None)
+        stop_governance_gate.GATE_DECISIONS_PATH = self.tmp_dir / "gate_decisions.jsonl"
+        stop_governance_gate.LOOP_GUARD_PATH = self.tmp_dir / "gate_loop_guard.json"
+        stop_governance_gate.RETRIEVAL_RECEIPTS_PATH = self.tmp_dir / "retrieval_receipts.jsonl"
+
+    def tearDown(self):
+        if self._orig_gate_decisions_path:
+            stop_governance_gate.GATE_DECISIONS_PATH = self._orig_gate_decisions_path
+        if self._orig_loop_guard_path:
+            stop_governance_gate.LOOP_GUARD_PATH = self._orig_loop_guard_path
+        if self._orig_receipts_path:
+            stop_governance_gate.RETRIEVAL_RECEIPTS_PATH = self._orig_receipts_path
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
     def test_is_trivial_query(self):
         self.assertTrue(is_trivial_query("hi"))
         self.assertTrue(is_trivial_query("thanks"))

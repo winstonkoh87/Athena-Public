@@ -787,20 +787,36 @@ def collect_fts_bm25(query: str, limit: int = 20) -> list[SearchResult]:
         hits = fts.search(query, limit=limit)
 
         results: list[SearchResult] = []
-        for hit in hits:
-            results.append(
-                SearchResult(
-                    id=f"FTS:{hit.get('file_path', '')}",
-                    content=hit.get("snippet", ""),
-                    source="fts_bm25",
-                    score=abs(hit.get("bm25_score", 0.0)),
-                    rrf_score=0.0,
-                    metadata={
-                        "path": hit.get("file_path", ""),
-                        "title": hit.get("title", ""),
-                    },
+        if hits:
+            # BM25 in SQLite FTS5 is negative (lower = better match, e.g. -25.0 is better than -3.0).
+            # Normalize BM25 scores across returned hits into [0.2, 1.0] to respect the
+            # contract in weighted_rrf (score_mod in [0.5, 1.5]).
+            bm25_vals = [h.get("bm25_score", 0.0) for h in hits]
+            min_bm = min(bm25_vals)
+            max_bm = max(bm25_vals)
+            spread = max_bm - min_bm
+
+            for hit in hits:
+                raw_bm = hit.get("bm25_score", 0.0)
+                if spread > 1e-6:
+                    norm_score = 0.2 + 0.8 * ((max_bm - raw_bm) / spread)
+                else:
+                    norm_score = 1.0
+                file_p = hit.get("file_path", "")
+                results.append(
+                    SearchResult(
+                        id=f"FTS:{file_p}",
+                        content=hit.get("snippet", ""),
+                        source="fts_bm25",
+                        score=round(norm_score, 4),
+                        rrf_score=0.0,
+                        metadata={
+                            "path": file_p,
+                            "title": hit.get("title", ""),
+                            "raw_bm25": raw_bm,
+                        },
+                    )
                 )
-            )
         return results
     except Exception as e:
         print(f"   ⚠️ FTS/BM25 search failed: {e}", file=sys.stderr)
@@ -886,18 +902,57 @@ def collect_web_search_v2(query: str, limit: int = 5) -> list[SearchResult]:
 # --- Fusion Logic ---
 
 
+def _normalize_rrf_key(doc: SearchResult) -> str:
+    """Extract a canonical identity key for a SearchResult so cross-channel
+    results (e.g. FTS + Vector hitting the same file) fuse properly in RRF."""
+    if doc.source == "canonical":
+        return doc.id
+    if doc.source == "tags":
+        return doc.id
+
+    path_val = (doc.metadata.get("path") if doc.metadata else None) or doc.path
+    if path_val:
+        p_str = str(path_val).strip()
+        if p_str.startswith("http://") or p_str.startswith("https://"):
+            return f"url:{p_str.rstrip('/')}"
+        try:
+            from pathlib import Path
+            p = Path(p_str)
+            if p.is_absolute():
+                try:
+                    rel = p.relative_to(PROJECT_ROOT)
+                    return f"file:{str(rel)}"
+                except ValueError:
+                    return f"file:{str(p)}"
+            clean_rel = p_str.lstrip("./")
+            return f"file:{clean_rel}"
+        except Exception:
+            return f"file:{p_str}"
+
+    return doc.id
+
+
 def weighted_rrf(
     ranked_lists: dict[str, list[SearchResult]], k: int = 60, intent: str = "GENERAL"
 ) -> list[SearchResult]:
     fused_scores: defaultdict[str, float] = defaultdict(float)
     doc_map = {}
     doc_signals: defaultdict[str, dict[str, Any]] = defaultdict(dict)
+    seen_sources_per_key: defaultdict[str, set[str]] = defaultdict(set)
     weights = get_intent_weights(intent)
 
     for source, docs in ranked_lists.items():
         weight = weights.get(source, 1.0)
         for rank, doc in enumerate(docs, start=1):
-            score_mod = 0.5 + doc.score  # Dynamic: range 0.5 to 1.5
+            key = _normalize_rrf_key(doc)
+
+            # Avoid double-counting within the same source channel
+            if source in seen_sources_per_key[key]:
+                continue
+            seen_sources_per_key[key].add(source)
+
+            # Dynamic score modifier: strictly bounded to [0.5, 1.5]
+            score_mod = 0.5 + min(max(doc.score, 0.0), 1.0)
 
             # GTO Temporal Decay Modifier (Recency Weighting):
             # Apply ONLY to time-series sources (session, case_study) with bounded path/id match.
@@ -931,18 +986,26 @@ def weighted_rrf(
                         temporal_mod = 0.85  # Unknown age, slight penalty
 
             contrib = weight * score_mod * temporal_mod * (1.0 / (k + rank))
-            fused_scores[doc.id] += contrib
+            fused_scores[key] += contrib
 
-            if doc.id not in doc_map:
-                doc_map[doc.id] = doc
+            if key not in doc_map:
+                doc_map[key] = doc
+            else:
+                # Merge: prefer the richer content (vector chunks often have richer markdown context than 64-token FTS snippets)
+                existing = doc_map[key]
+                if len(doc.content or "") > len(existing.content or ""):
+                    doc_map[key] = doc
 
-            doc_signals[doc.id][source] = {"rank": rank, "contrib": round(contrib, 5)}
+            doc_signals[key][source] = {"rank": rank, "contrib": round(contrib, 5)}
 
     final_list = []
-    for doc_id, score in fused_scores.items():
-        doc = doc_map[doc_id]
+    for key, score in fused_scores.items():
+        doc = doc_map[key]
         doc.rrf_score = score
-        doc.signals = doc_signals[doc_id]
+        doc.signals = doc_signals[key]
+        if len(doc_signals[key]) > 1:
+            doc.metadata["multi_channel"] = True
+            doc.signals["channels"] = list(doc_signals[key].keys())
         final_list.append(doc)
 
     scored = sorted(final_list, key=lambda x: x.rrf_score, reverse=True)
@@ -1064,6 +1127,7 @@ def run_search(
     privacy_mode: bool = False,
     intent: str | None = None,
     web: bool | None = None,  # None = auto via needs_web(); True/False = explicit override
+    print_output: bool = True,  # When False, suppresses printing to stdout and returns payload directly
 ):
     import time
     t0 = time.time()
@@ -1296,6 +1360,10 @@ def run_search(
 
             fused_results = weighted_rrf(lists, intent=detected_intent)
 
+        # Sync vector failure with module channel health tracker (C-2 fix)
+        if _channel_health.get("vector", {}).get("status") in ("failed", "degraded"):
+            vector_failed = True
+
         # 3. Rerank
         if rerank and fused_results:
             # 50-candidate pool (was 25): the reranker can't rescue what fusion
@@ -1308,8 +1376,9 @@ def run_search(
             fused_results = rerank_results(query, candidates, top_k=limit)
 
         # Cache the result (Exact + Semantic) with explicit scope isolation
-        # Do not cache degraded results (vector channel failed) or if cache disabled
-        if fused_results and not vector_failed and search_cache_enabled:
+        # Do not cache degraded results (vector channel failed or any channel degraded)
+        channel_failures = [k for k, v in _channel_health.items() if v.get("status") in ("failed", "degraded")]
+        if fused_results and not vector_failed and not channel_failures and search_cache_enabled:
             if query_embedding:
                 cache.set(
                     query,
@@ -1433,12 +1502,14 @@ def run_search(
             except Exception:
                 pass  # Graceful degradation if personalisation module unavailable
 
-        print(json.dumps(json_payload))
+        if print_output:
+            print(json.dumps(json_payload))
 
     # Retrieval Telemetry — A7 Instrumentation (MCDA Rank #1)
     # Logs every search invocation to enable data-driven pruning.
     with contextlib.suppress(Exception):
         import datetime
+        import hashlib
 
         from athena.core.config import PROJECT_ROOT
 
@@ -1485,6 +1556,8 @@ def run_search(
             "rerank": rerank,
             "total_results": len(fused_results),
             "quality": quality,
+            "degraded_recall": vector_failed,
+            "channel_health": dict(_channel_health),
             "confidence": {"high": high_count, "med": med_count, "low": low_count},
             "sources": dict(source_counts),
             "top_rrf": round(top_results[0].rrf_score, 5) if top_results else 0,
@@ -1522,6 +1595,27 @@ def run_search(
         }
         with open(invocations_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(inv_entry, separators=(",", ":")) + "\n")
+
+        # WS2.1: Write structured retrieval receipt for Stop Gate verification
+        receipts_path = PROJECT_ROOT / ".athena" / "retrieval_receipts.jsonl"
+        receipts_path.parent.mkdir(parents=True, exist_ok=True)
+        receipt = {
+            "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "session_id": session_id,
+            "query": query,
+            "query_hash": hashlib.sha256(query.encode("utf-8")).hexdigest()[:16],
+            "intent": detected_intent,
+            "tier": lambda_info["tier"] if lambda_info else "STANDARD",
+            "channels_ok": [k for k, v in _channel_health.items() if v.get("status") == "ok"],
+            "channels_failed": [k for k, v in _channel_health.items() if v.get("status") in ("failed", "degraded")],
+            "result_count": len(fused_results),
+            "quality": quality,
+        }
+        with open(receipts_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(receipt) + "\n")
+
+    return json_payload if json_output else fused_results[:limit]
+
 
 
 if __name__ == "__main__":

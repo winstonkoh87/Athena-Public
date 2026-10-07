@@ -1,10 +1,25 @@
 # Athena Changelog
 
-> **Last Updated**: 6 October 2026 <!-- 2026-10-06 -->
+> **Last Updated**: 8 October 2026 <!-- 2026-10-08 -->
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
 > **Note**: Versions v1.0–v1.6 predate the v8.x versioning scheme adopted in January 2026. The version jump reflects a complete architectural rewrite, not skipped releases.
+
+---
+
+## [10.0.5] — FTS5 Query Resilience, Multi-Channel RRF Unification, & IPC Modernization (8 October 2026)
+
+### Memory & Retrieval Substrate
+- **FTS5 Query Compiler & Syntax Resilience (`fts_search.py`)**: Implemented `compile_fts_query()` to sanitize search queries, quote hyphenated alphanumeric codes (`"CS-101"`), strip syntax-critical operators (`:`, `?`, `*`), and add resilient fallback on `sqlite3.OperationalError`.
+- **RRF Multi-Channel Identity Unification (`search.py`)**: Added `_normalize_rrf_key()` to unify document identity keys across FTS and vector channels to repo-relative paths (`file:...`), normalized raw BM25 scores to [0.2, 1.0], bounded dynamic score modifiers strictly to [0.5, 1.5], and eliminated intra-channel duplicate counting.
+- **SearchResult Deserialization Resilience (`models.py`)**: Added explicit `path` attribute and dynamic `**extra` kwargs absorption to `SearchResult` dataclass, preventing deserialization errors during cross-module payload passing.
+
+### Governance & Protocol Integration
+- **MCP IPC Modernization (`mcp_server.py`)**: Eliminated `sys.stdout` buffer hijacking in search and context tools via direct `print_output=False` payload returns; integrated `decision_screen` tool for GTO numerical calculation evaluations.
+- **Stop Governance Gate Hardening (`stop_governance_gate.py`)**: Purged non-retrieval commands from Law #6 verification, tightened Protocol 509 crisis regex against numeric collisions, added hermetic loop guard tracking, and integrated retrieval receipt verification.
+- **Canon Citation Shift Tolerance (`verify_canon_citations.py`)**: Added +-10 line shift window tolerance in citation verifier to eliminate false-positive warnings during documentation updates.
+- **Gemini 3.8 Model Cascade (`gemini_client.py`)**: Updated model fallback cascade to support `gemini-3.8-flash`.
 
 ---
 

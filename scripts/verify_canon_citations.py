@@ -157,17 +157,48 @@ def check_text_citations(
                     ref_str = f" ({', '.join(ref_parts)})" if ref_parts else ""
 
                     if not shared_words:
-                        msg = f"{filename}:{i}  §{cited_line_num} → MISMATCH: line {cited_line_num} is '{name}'{ref_str}, citing line does not match title"
-                        findings.append({
-                            "file": filename,
-                            "line": i,
-                            "cited_line": cited_line_num,
-                            "status": "MISMATCH",
-                            "name": name,
-                            "session": session,
-                            "fp": fp,
-                            "message": msg,
-                        })
+                        # Check if the title matches an entry within a ±10 line shift window (line numbers drift on edits)
+                        shifted_entry = None
+                        start_win = max(1, cited_line_num - 10)
+                        end_win = min(max_line, cited_line_num + 10)
+                        for win_line_num in range(start_win, end_win + 1):
+                            if win_line_num == cited_line_num:
+                                continue
+                            win_line = canonical_lines[win_line_num]
+                            cand_entry = parse_canonical_entry(win_line)
+                            if cand_entry:
+                                cand_words = extract_distinctive_words(cand_entry["name"])
+                                # Check cand_words and full raw title cell for formerly-named entries
+                                raw_title = win_line.split("|")[1] if "|" in win_line else cand_entry["name"]
+                                cand_full_words = extract_distinctive_words(raw_title)
+                                if (cand_words | cand_full_words) & line_words:
+                                    shifted_entry = (win_line_num, cand_entry)
+                                    break
+                        if shifted_entry:
+                            win_line_num, cand_entry = shifted_entry
+                            msg = f"{filename}:{i}  §{cited_line_num} → VALID (shifted to line {win_line_num}): '{cand_entry['name']}'"
+                            findings.append({
+                                "file": filename,
+                                "line": i,
+                                "cited_line": cited_line_num,
+                                "status": "VALID",
+                                "name": cand_entry["name"],
+                                "session": cand_entry["session"],
+                                "fp": cand_entry["fp"],
+                                "message": msg,
+                            })
+                        else:
+                            msg = f"{filename}:{i}  §{cited_line_num} → MISMATCH: line {cited_line_num} is '{name}'{ref_str}, citing line does not match title"
+                            findings.append({
+                                "file": filename,
+                                "line": i,
+                                "cited_line": cited_line_num,
+                                "status": "MISMATCH",
+                                "name": name,
+                                "session": session,
+                                "fp": fp,
+                                "message": msg,
+                            })
                     else:
                         msg = f"{filename}:{i}  §{cited_line_num} → VALID: '{name}'{ref_str}"
                         findings.append({

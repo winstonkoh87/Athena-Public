@@ -19,12 +19,13 @@ class TestContextGateLatentExpansion(unittest.TestCase):
 
     @patch("athena.tools.search.run_search")
     def test_context_gate_latent_projection_triggers(self, mock_run_search):
-        # Configure mock_run_search to print dummy JSON into stdout buffer
         def mock_search_impl(q, *args, **kwargs):
             if "MP-18" in q or "MP-7" in q:
-                print(json.dumps({"results": [{"id": "CS-596.md", "content": "Diagnostic gap analysis"}]}))
+                payload = {"results": [{"id": "CS-596.md", "content": "Diagnostic gap analysis"}]}
             else:
-                print(json.dumps({"results": [{"id": "car_arbitrage.md", "content": "Used car inspection"}]}))
+                payload = {"results": [{"id": "car_arbitrage.md", "content": "Used car inspection"}]}
+            print(json.dumps(payload))
+            return payload
 
         mock_run_search.side_effect = mock_search_impl
 

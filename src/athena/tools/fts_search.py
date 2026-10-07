@@ -3,6 +3,7 @@ Offline Local FTS5/BM25 Search Engine for Athena's Exocortex memory.
 """
 
 import os
+import re
 import sqlite3
 import sys
 import time
@@ -13,6 +14,66 @@ SDK_PATH = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(SDK_PATH))
 
 import athena.core.config as config
+
+
+def compile_fts_query(query: str) -> str:
+    """
+    Compiles and sanitizes an arbitrary user query string into valid SQLite FTS5 MATCH syntax.
+
+    Protects against:
+    - Hyphens treated as unary NOT or column operators (e.g. 'CS-101' -> '"CS-101"')
+    - Question marks and punctuation causing FTS5 syntax errors (e.g. 'DOC-123?' -> 'DOC-123')
+    - Colons interpreted as nonexistent column filters (e.g. 'DOC-123: what was decided?' -> 'DOC-123 what was decided')
+    - Unbalanced quotes
+    - Stray boolean operators (AND, OR, NOT) at edges or isolated
+    - Preserves intentional prefix search (e.g. 'Autocomp*' or '"Autocomp" *')
+    """
+    if not query or not query.strip():
+        return ""
+
+    raw = query.strip()
+    quoted_matches = re.findall(r'"([^"]+)"(\s*\*?)', raw)
+    remainder = re.sub(r'"[^"]*"\s*\*?', " ", raw)
+
+    # Protect hyphenated alphanumeric terms as quoted tokens
+    hyphenated = re.findall(r"\b[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+\b", remainder)
+    for h in hyphenated:
+        quoted_matches.append((h, ""))
+    remainder = re.sub(r"\b[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+\b", " ", remainder)
+
+    # Strip syntax-critical operators while allowing word-internal or trailing *
+    cleaned_remainder = re.sub(r"[:\?\^\~\(\)\{\}\[\]\+\=\<\>\/\\\;\,\|\!\@\#\$\%\&]", " ", remainder)
+    words = cleaned_remainder.split()
+
+    operators = {"AND", "OR", "NOT"}
+    tokens: list[str] = []
+
+    for phrase, star in quoted_matches:
+        clean_p = phrase.replace('"', "").strip()
+        if clean_p:
+            if star:
+                tokens.append(f'"{clean_p}" *')
+            else:
+                tokens.append(f'"{clean_p}"')
+
+    for w in words:
+        has_star = w.endswith("*") and len(w) > 1 and w[:-1].isalnum()
+        clean_w = w.rstrip("*").strip('"-._')
+        if not clean_w:
+            continue
+        if clean_w in operators:
+            tokens.append(f'"{clean_w}"')
+        else:
+            if has_star:
+                tokens.append(f"{clean_w}*")
+            else:
+                tokens.append(clean_w)
+
+    if not tokens:
+        fallback_words = re.findall(r"\w+", raw)
+        return " ".join(f'"{w}"' for w in fallback_words if w)
+
+    return " ".join(tokens)
 
 
 class ExocortexFTS:
@@ -160,6 +221,11 @@ class ExocortexFTS:
             except Exception:
                 pass
 
+        compiled_query = compile_fts_query(query)
+        if not compiled_query:
+            return []
+
+        conn = None
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
@@ -176,13 +242,23 @@ class ExocortexFTS:
                 LIMIT ?
             '''
 
-            cursor.execute(sql, (query, limit))
-            rows = cursor.fetchall()
-            return self._format_results(rows)
-        except sqlite3.OperationalError:
+            try:
+                cursor.execute(sql, (compiled_query, limit))
+                rows = cursor.fetchall()
+                return self._format_results(rows)
+            except sqlite3.OperationalError:
+                # Resilient fallback: extract purely alphanumeric tokens
+                tokens = re.findall(r"\w+", query)
+                if not tokens:
+                    return []
+                fallback_query = " ".join(f'"{t}"' for t in tokens if t)
+                cursor.execute(sql, (fallback_query, limit))
+                rows = cursor.fetchall()
+                return self._format_results(rows)
+        except Exception:
             return []
         finally:
-            if 'conn' in locals():
+            if conn is not None:
                 conn.close()
 
     def stats(self) -> dict[str, Any]:

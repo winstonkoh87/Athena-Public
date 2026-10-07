@@ -40,10 +40,9 @@ class GeminiClient:
         self.system_prompt = system_prompt or ""
         self.history = []
 
-        # Configure generation config with system instruction and thinking budget
+        # Configure generation config with system instruction
         self.config = types.GenerateContentConfig(
             system_instruction=self.system_prompt if self.system_prompt else None,
-            temperature=1.0,  # Enable creative thinking
             max_output_tokens=8192,  # Allow longer responses
         )
         self.chat_session = self.client.chats.create(
@@ -52,8 +51,9 @@ class GeminiClient:
 
     def _generate_with_fallback(self, mode, *args, **kwargs):
         """Execute a generation function with model fallback cascade + retry."""
-        # Expanded cascade: Strictly Gemini 3 Flash (User Decree 2026-02-01)
+        # Expanded cascade: Gemini 3.8 Flash & Gemini 3 Flash Preview
         cascade_models = [
+            "gemini-3.8-flash",
             "gemini-3-flash-preview",
         ]
 
@@ -142,7 +142,6 @@ class GeminiClient:
         # Update generation config for JSON output
         config = types.GenerateContentConfig(
             system_instruction=self.system_prompt if self.system_prompt else None,
-            temperature=1.0,
             max_output_tokens=8192,
             response_mime_type="application/json",
             response_schema=schema if schema else None,
@@ -159,7 +158,7 @@ class GeminiClient:
             match = re.search(r"\{.*\}", response_text, re.DOTALL)
             if match:
                 return json.loads(match.group(0))
-            raise ValueError(f"Failed to parse structured response: {response_text}")
+            raise ValueError(f"Failed to parse structured response: {response_text}") from None
 
     def clear_history(self):
         """Reset conversation history."""

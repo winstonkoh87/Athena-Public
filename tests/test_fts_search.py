@@ -276,3 +276,34 @@ class TestCollectFtsBm25:
         assert len(search_results) >= 1
         assert search_results[0]["title"] == "Roundtrip"
 
+    def test_compile_fts_query_syntax_safety(self):
+        """compile_fts_query properly preserves hyphenated terms and strips syntax crash triggers."""
+        from athena.tools.fts_search import compile_fts_query
+
+        assert compile_fts_query("CS-101") == '"CS-101"'
+        assert compile_fts_query("what did I decide about Project42?") == "what did I decide about Project42"
+        assert compile_fts_query("Project42: what was decided?") == "Project42 what was decided"
+        assert '"AND"' in compile_fts_query("AND OR NOT")
+        assert compile_fts_query('stray * and ? test') == "stray and test"
+
+    def test_search_hyphen_and_punctuation_recall(self, temp_project):
+        """search() handles hyphenated codes and question marks without syntax errors or dropping recall."""
+        create_md(temp_project, ".context/cs101.md", "# Case Study CS-101\nDistributed consensus protocol and replication mechanics.")
+        create_md(temp_project, ".context/doc123.md", "# Module DOC-123 Specification\nHere is what I did decide about DOC-123 architecture.")
+        db_path = temp_project / ".athena" / "resilient.db"
+        fts = ExocortexFTS(db_path=db_path)
+
+        def mock_get_md_files(self):
+            return [temp_project / ".context/cs101.md", temp_project / ".context/doc123.md"]
+        fts._get_md_files = mock_get_md_files.__get__(fts, ExocortexFTS)
+
+        fts.build()
+        hits_hyphen = fts.search("CS-101 distributed consensus")
+        assert len(hits_hyphen) == 1
+        assert "cs101.md" in hits_hyphen[0]["file_path"].lower()
+
+        hits_question = fts.search("what did I decide about DOC-123?")
+        assert len(hits_question) == 1
+        assert "doc123.md" in hits_question[0]["file_path"].lower()
+
+

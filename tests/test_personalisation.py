@@ -229,3 +229,41 @@ class TestGoldenBenchmark:
             assert actual_intent == expected_intent, f"Benchmark failure on {case['id']}: '{query}' -> got '{actual_intent}', expected '{expected_intent}'"
 
 
+class TestSearchResultAndContextGateWiring:
+    """Validate SearchResult deserialization and context_gate personalisation frame."""
+
+    def test_search_result_to_dict_and_kwargs_roundtrip(self):
+        from athena.core.models import SearchResult
+
+        sr = SearchResult(
+            id="test-1",
+            content="Sample text",
+            source="fts_bm25",
+            metadata={"path": "foo/bar.md"},
+            score=0.9,
+            rrf_score=0.05,
+        )
+        d = sr.to_dict()
+        assert d["path"] == "foo/bar.md"
+
+        # Roundtrip via **d must succeed without TypeError on unexpected kwarg 'path'
+        reconstructed = SearchResult(**d)
+        assert reconstructed.id == "test-1"
+        assert reconstructed.path == "foo/bar.md"
+        assert reconstructed.metadata["path"] == "foo/bar.md"
+
+    def test_context_gate_personalisation_resolution(self):
+        from athena.core.permissions import get_permissions
+        from athena.mcp_server import context_gate
+
+        perms = get_permissions()
+        perms.set_secret_mode(False)
+        res = context_gate("What consulting rate should I quote for this project?", limit=3)
+        assert res.get("intent") == "PERSONALISED_DECISION"
+        assert res.get("personalisation") is not None
+        assert "OPERATOR STATE & CONSTRAINTS" in res["personalisation"]
+        assert res.get("user_state") is not None
+        assert "rate_floor" in res["user_state"]
+
+
+

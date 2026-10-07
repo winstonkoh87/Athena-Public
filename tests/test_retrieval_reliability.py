@@ -211,3 +211,78 @@ def test_temporal_decay_preserves_timeless_protocols():
     assert fused[0].id == "Protocol:2024-governance-audit.md"
     assert fused[1].id == "Protocol:001-law-of-ruin.md"
 
+
+def test_weighted_rrf_cross_channel_fusion():
+    """When FTS and Vector collectors hit the same file, RRF must fuse their reciprocal ranks."""
+    from athena.tools.search import weighted_rrf
+
+    doc_vector = SearchResult(
+        id="Case Study: CS-101-distributed-consensus.md (Chunk 0)",
+        content="Deep semantic chunk on distributed consensus and quorum sizing.",
+        source="case_study",
+        score=0.92,
+        metadata={"path": ".context/memories/case_studies/CS-101-distributed-consensus.md"},
+    )
+    doc_fts = SearchResult(
+        id="FTS:.context/memories/case_studies/CS-101-distributed-consensus.md",
+        content="Lexical match on CS-101 quorum.",
+        source="fts_bm25",
+        score=0.85,
+        metadata={"path": ".context/memories/case_studies/CS-101-distributed-consensus.md"},
+    )
+    doc_other = SearchResult(
+        id="FTS:.context/memories/session_logs/other.md",
+        content="Single channel hit.",
+        source="fts_bm25",
+        score=0.50,
+        metadata={"path": ".context/memories/session_logs/other.md"},
+    )
+
+    ranked_lists = {
+        "case_study": [doc_vector],
+        "fts_bm25": [doc_fts, doc_other],
+    }
+
+    fused = weighted_rrf(ranked_lists, k=60)
+    assert len(fused) == 2
+
+    # The multi-channel fused doc must rank #1
+    top = fused[0]
+    assert "CS-101" in top.id
+    assert top.metadata.get("multi_channel") is True
+    assert "case_study" in top.signals
+    assert "fts_bm25" in top.signals
+    # RRF score must equal sum of both channel contributions
+    expected_score = top.signals["case_study"]["contrib"] + top.signals["fts_bm25"]["contrib"]
+    assert abs(top.rrf_score - expected_score) < 1e-4
+
+
+def test_weighted_rrf_score_mod_bounds():
+    """doc.score must never allow score_mod to exceed [0.5, 1.5] even with extreme scores."""
+    from athena.tools.search import weighted_rrf
+
+    doc_extreme = SearchResult(
+        id="Extreme",
+        content="Content",
+        source="fts_bm25",
+        score=100.0,  # Unbounded score should be clipped to 1.0 (score_mod = 1.5)
+    )
+    doc_negative = SearchResult(
+        id="Negative",
+        content="Content",
+        source="fts_bm25",
+        score=-10.0,  # Negative score should be clipped to 0.0 (score_mod = 0.5)
+    )
+
+    ranked_lists = {
+        "fts_bm25": [doc_extreme, doc_negative],
+    }
+
+    fused = weighted_rrf(ranked_lists, k=60)
+    assert len(fused) == 2
+    # Extreme contrib: weight(1.5) * score_mod(1.5) * temporal(1.0) * (1 / 61) = 0.03689
+    assert abs(fused[0].rrf_score - (1.5 * 1.5 / 61.0)) < 1e-4
+    # Negative contrib: weight(1.5) * score_mod(0.5) * temporal(1.0) * (1 / 62) = 0.01210
+    assert abs(fused[1].rrf_score - (1.5 * 0.5 / 62.0)) < 1e-4
+
+

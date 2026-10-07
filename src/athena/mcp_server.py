@@ -37,7 +37,6 @@ else:
 
 import json
 import logging
-import sys
 from datetime import datetime, timezone
 
 from fastmcp import FastMCP
@@ -105,30 +104,18 @@ def smart_search(
     # Governance: Mark search as performed
     get_governance().mark_search_performed(query)
 
-    # Capture results via json_output mode
-    import io
-
-    old_stdout = sys.stdout
-    sys.stdout = buffer = io.StringIO()
-
-    try:
-        run_search(
-            query=query,
-            limit=limit,
-            strict=strict,
-            rerank=rerank,
-            json_output=True,
-            web=web,
-        )
-        output = buffer.getvalue()
-    finally:
-        sys.stdout = old_stdout
-
-    # Parse the JSON output
-    try:
-        results = json.loads(output)
-    except json.JSONDecodeError:
-        results = {"raw_output": output}
+    # Execute search directly without stdout hijacking (WS3.1 / M-1 fix)
+    results = run_search(
+        query=query,
+        limit=limit,
+        strict=strict,
+        rerank=rerank,
+        json_output=True,
+        web=web,
+        print_output=False,
+    )
+    if not isinstance(results, dict):
+        results = {"results": [], "error": "Search returned invalid payload"}
 
     return {
         "results": results if isinstance(results, list) else results,
@@ -966,6 +953,68 @@ def frame_status() -> dict:
 
 
 @mcp.tool(
+    tags={"governance", "decision", "gto"},
+)
+def decision_screen(
+    action: str,
+    payload_json: str,
+    real: bool = False,
+    review_date: str = "",
+    prediction: str = "",
+) -> dict:
+    """Execute a strategic decision evaluation via the GTO numerical engine.
+
+    Computes decision metrics (EEV, Kelly sizing, Ruin probability, MCDA ranking,
+    Decision Monte Carlo, or Scenario-Matrix Robustness) and appends a verified
+    decision receipt to .athena/decision_receipts.jsonl.
+
+    Args:
+        action: Calculation action to execute ('eev', 'kelly', 'ruin', 'monte-carlo',
+            'mcda', 'decision-mc', 'robustness', 'barbell', 'devaluation', 'borrow-audit').
+        payload_json: JSON string containing action parameters.
+        real: True if this evaluation backs a consequential real-world decision.
+        review_date: Calibration review date (YYYY-MM-DD) for real decisions.
+        prediction: Anticipated outcome / hypothesis for calibration tracking.
+
+    Returns:
+        dict containing receipt_id, action, verdict, top, ascii_table, and result data.
+    """
+    from dataclasses import asdict
+
+    from athena.intelligence.gto_engine import (
+        _serialize_for_json,
+        execute_decision_action,
+    )
+
+    perms = get_permissions()
+    perms.gate("decision_screen")
+
+    payload = json.loads(payload_json) if isinstance(payload_json, str) else payload_json
+    res, receipt = execute_decision_action(
+        action=action,
+        payload=payload,
+        real=real,
+        review_date=review_date or None,
+        prediction=prediction or None,
+    )
+
+    result_dict = _serialize_for_json(asdict(res)) if hasattr(res, "__dataclass_fields__") else {"result": res}
+    receipt_id = receipt["receipt_id"] if receipt else "N/A"
+    ascii_table = res.to_ascii_table() if hasattr(res, "to_ascii_table") else str(res)
+    if receipt:
+        ascii_table += f"\nreceipt: {receipt_id}"
+
+    return {
+        "receipt_id": receipt_id,
+        "action": action,
+        "verdict": receipt["verdict"] if receipt else getattr(res, "verdict", "N/A"),
+        "top": receipt["top"] if receipt else getattr(res, "top_candidate", "N/A"),
+        "ascii_table": ascii_table,
+        "result": result_dict,
+    }
+
+
+@mcp.tool(
     tags={"read", "memory", "governance", "context"},
 )
 def context_gate(
@@ -992,8 +1041,6 @@ def context_gate(
         dict with context bundle, web metadata, governance state,
         missing requirements, and a directive for the answering model.
     """
-    import io
-    import json as _json
 
     from athena.core.governance import RiskLevel, get_governance
 
@@ -1065,28 +1112,18 @@ def context_gate(
     except ImportError:
         pass
 
-    old_stdout = sys.stdout
-    sys.stdout = buffer = io.StringIO()
-    try:
-        run_search(
-            query,
-            limit=limit,
-            json_output=True,
-            include_personal=True,
-            web=effective_web,
-            intent=intent,
-        )
-    finally:
-        sys.stdout = old_stdout
-
-    raw_output = buffer.getvalue().strip()
-
-    # Parse search results
-    search_results = {}
-    try:
-        search_results = _json.loads(raw_output)
-    except (ValueError, _json.JSONDecodeError):
-        search_results = {"results": [], "error": "Failed to parse search output"}
+    # Execute search directly without stdout hijacking (WS3.1 / M-1 fix)
+    search_results = run_search(
+        query,
+        limit=limit,
+        json_output=True,
+        include_personal=True,
+        web=effective_web,
+        intent=intent,
+        print_output=False,
+    )
+    if not isinstance(search_results, dict):
+        search_results = {"results": [], "error": "Failed to obtain search output"}
 
     # Secondary multi-hop retrieval for matched Meta-Patterns
     if latent_patterns:
@@ -1094,26 +1131,20 @@ def context_gate(
             r.get("id") for r in search_results.get("results", []) if isinstance(r, dict)
         }
         for mp in latent_patterns:
-            mp_buffer = io.StringIO()
-            old_stdout = sys.stdout
-            sys.stdout = mp_buffer
             try:
-                run_search(
+                mp_results = run_search(
                     mp["search_terms"],
                     limit=2,
                     json_output=True,
                     include_personal=False,
                     web=False,
                     intent="SYSTEM_KNOWLEDGE",
+                    print_output=False,
                 )
             except Exception:
-                pass
-            finally:
-                sys.stdout = old_stdout
-            mp_raw = mp_buffer.getvalue().strip()
-            try:
-                mp_parsed = _json.loads(mp_raw)
-                for item in mp_parsed.get("results", []):
+                mp_results = {}
+            if isinstance(mp_results, dict):
+                for item in mp_results.get("results", []):
                     if isinstance(item, dict) and item.get("id") not in existing_ids:
                         item["meta_pattern_projection"] = {
                             "id": mp["id"],
@@ -1122,8 +1153,6 @@ def context_gate(
                         }
                         search_results.setdefault("results", []).append(item)
                         existing_ids.add(item.get("id"))
-            except Exception:
-                pass
 
     # 4. Build personalisation frame (when relevant)
     personalisation = None
@@ -1142,8 +1171,9 @@ def context_gate(
             ]
             personalisation = build_personalisation_prompt(query, sr_objects)
             user_state = build_user_state_snapshot()
-        except Exception:
-            pass
+        except Exception as e:
+            import sys
+            print(f"   ⚠️ Personalisation frame construction failed: {e}", file=sys.stderr)
 
     # 5. Check for strong local hit (threshold must be reachable under RRF normalization)
     local_first = False
@@ -1157,13 +1187,41 @@ def context_gate(
         if top_score >= 0.03:
             local_first = True
 
-    # 6. Determine missing requirements
+    # 6. Determine missing requirements and degradation status
     missing = []
+    has_parse_error = bool(search_results.get("error"))
+    is_degraded = bool(
+        search_results.get("degraded_recall")
+        or search_results.get("quality") == "degraded"
+        or has_parse_error
+    )
+    if has_parse_error:
+        missing.append("retrieval_parse")
+        local_first = False
+    elif is_degraded:
+        missing.append("semantic")
+        local_first = False
+
     if risk_level == RiskLevel.ULTRA and not effective_web and web_required:
         missing.append("web")
 
     # 7. Build directive
     directive_parts = []
+    if has_parse_error:
+        directive_parts.append(
+            f"ERROR [RETRIEVAL PARSE FAILURE]: {search_results.get('error')}. "
+            "Context bundle is incomplete; do not rely on local search results."
+        )
+    elif is_degraded:
+        directive_parts.append(
+            "WARNING [DEGRADED RETRIEVAL]: Semantic vector search channel failed. "
+            "Results are lexical-only. Do not treat absence of memory as proof of non-existence."
+        )
+    elif local_first:
+        directive_parts.append(
+            "Strong local hit found. Prefer local knowledge; web supplements."
+        )
+
     if effective_web and any(
         isinstance(r, dict) and r.get("source") == "web_search"
         for r in (results_list if isinstance(results_list, list) else [])
@@ -1185,11 +1243,6 @@ def context_gate(
                     f"Web results fetched at {fetched_at}. Cite fetched_at in answer; "
                     "re-verify if the answer pivots on a time-sensitive fact."
                 )
-
-    if local_first:
-        directive_parts.append(
-            "Strong local hit found. Prefer local knowledge; web supplements."
-        )
 
     if missing:
         directive_parts.append(
@@ -1294,8 +1347,13 @@ def context_gate(
     if not evidence_checklist:
         evidence_checklist.append("Ground substantive claims in retrieved Exocortex session logs or live web results.")
 
-    # Calculate preliminary retrieval sufficiency ratio
-    sufficiency = 1.0 if (local_first or len(results_list) >= 3 or web_count > 0) else 0.75
+    # Calculate preliminary retrieval sufficiency ratio (C-2 / H-5 fix)
+    if is_degraded:
+        sufficiency = 0.4
+    elif missing:
+        sufficiency = 0.6
+    else:
+        sufficiency = 1.0 if (local_first or (len(results_list) >= 3 and not is_degraded) or web_count > 0) else 0.75
 
     return {
         "context": search_results,
