@@ -1,8 +1,8 @@
 # ⚡ Workflow Reference
 
-Athena uses a "Slash Command" interface to trigger complex agentic behaviors. These commands are defined in `.agent/workflows/`. There are **74 workflows** (55 root + 19 domain) available.
+Athena uses a "Slash Command" interface to trigger complex agentic behaviors. These commands are defined in `.agent/workflows/`. There are **76 workflows** (56 root + 20 domain) available.
 
-*Last Updated: 2026-09-22 · v9.9.9*
+*Last Updated: 2026-10-09 · v10.0.5*
 
 ---
 
@@ -20,7 +20,7 @@ athena doctor --fix           # Auto-repair fixable issues
 athena doctor --json          # Machine-readable output
 athena save "summary"         # Quicksave checkpoint
 athena --end                  # Close session and save
-athena --version              # Show version (v9.9.9)
+athena --version              # Show version (v10.0.5)
 ```
 
 ---
@@ -112,20 +112,21 @@ athena --version              # Show version (v9.9.9)
 | `/refactor` | Workspace cleanup and audit |
 | `/brief interview` | Initial user profiling session |
 | `/save` | Quick checkpoint during session |
+| `/osint` | Counterparty due diligence & public footprint recon |
 
-> See [WORKFLOWS.md](../docs/WORKFLOWS.md) in the repo for the full list of all 74 commands.
+> See [WORKFLOWS.md](../docs/WORKFLOWS.md) in the repo for the full list of all 76 commands.
 
 ---
 
 ## 🛡️ Protocol Usage
 
-Protocols are reusable decision frameworks — "Standard Operating Procedures" for the AI. There are **455 protocols (421 active)** across 26 categories.
+Protocols are reusable decision frameworks — "Standard Operating Procedures" for the AI. There are **460 protocols (426 active)** across 26 categories.
 
 | Category | Examples |
 |:---------|:---------|
 | **Decision** | Graph of Thoughts, Skeptic Gate, Base Rate Audit |
 | **Safety** | Risk of Ruin (Law #1), Constraints Master |
-| **Research** | Cyborg Methodology, Deep Research Loop |
+| **Research** | Cyborg Methodology, Deep Research Loop, Operational OSINT (P580) |
 | **Strategy** | Min-Max Optimization, Red Team v4 |
 | **Meta** | Ultimate Auditor, Silent Validator |
 

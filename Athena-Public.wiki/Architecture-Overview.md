@@ -1,23 +1,23 @@
 # 🏗️ Architecture Overview
 
-Athena is the **Operating System for AI Agents** — a Hybrid RAG system that keeps your data locally (Markdown) and optionally syncs to the cloud (Supabase) for fast semantic retrieval.
+Athena is the **open-source compounding context layer for AI coding agents**, portable across IDEs. It provides persistent memory, structured reasoning, and governed execution across any LLM while keeping 100% of your data locally in plain Markdown on disk.
 
-*Last Updated: 2026-09-22 · v9.9.9*
+*Last Updated: 2026-10-09 · v10.0.5*
 
 ---
 
-## 🧠 The OS Analogy
+## 🧠 The Compounding Context Layer
 
-> **Athena is not a coding assistant. It is the infrastructure that gives AI agents state, structured reasoning, and governed autonomy.**
+> **Athena is not an isolated coding assistant. It is the persistent cognitive substrate that gives AI models longitudinal memory, structured reasoning protocols, and governed autonomy.**
 
-| OS Layer | Linux | Athena |
-|----------|-------|--------|
-| **Kernel** | Hardware abstraction | Memory persistence + retrieval (Hybrid RAG, Supabase) |
-| **File System** | ext4, NTFS | Markdown files, session logs, tag index |
-| **Scheduler** | cron, systemd | Heartbeat daemon, auto-indexing |
-| **Shell** | bash, zsh | MCP Tool Server, `/start`, `/end`, `/think` |
-| **Permissions** | chmod, users/groups | 4-level capability tokens + Secret Mode |
-| **Package Manager** | apt, yum | Protocols, skills, workflows |
+| Architecture Layer | Core Function | Implementation Mechanics |
+|:---|:---|:---|
+| **Memory & State** | Longitudinal context persistence | Local Markdown files (`.context/`), session logs, active context checkpoints, SQLite FTS5 |
+| **Retrieval Engine** | Chunk-level hybrid RAG | BM25 keyword + Supabase pgvector + RRF rank fusion + Cross-Encoder reranking |
+| **Cognitive Protocols** | Executable reasoning frameworks | 426 active protocols across 26 domains (decision, risk, engineering, research) |
+| **Agentic Skills** | Dynamic capability units | 44 active skills with path- and topic-triggered conditional activation |
+| **Governance & Safety** | Ruin prevention & execution gates | Law #1 (No Irreversible Ruin), Stop Governance Gate, deterministic receipt tracking |
+| **Interface & Bridge** | Cross-IDE portability | Native support for Claude Code, Antigravity, Cursor, Gemini CLI, and VS Code |
 
 ---
 
@@ -54,9 +54,9 @@ graph TD
 
 | Component | Role |
 |-----------|------|
-| **Athena** | The OS — memory, scheduling, governance |
-| **External Folders** | The Body — client projects, side projects |
-| **Agentic IDE** | The Nervous System — compute & interface |
+| **Athena** | The Compounding Layer — persistent memory, governance, reasoning protocols |
+| **Project Workspace** | The Domain Context — codebases, client repos, research artifacts |
+| **Agentic IDE** | The Execution Engine — Claude Code, Antigravity, Cursor, Gemini CLI |
 
 ### Workspace Modes
 
@@ -120,74 +120,64 @@ graph TD
 
 ---
 
-## 🔌 MCP Server
+## 🔌 MCP Server & Direct IPC
+ 
+ *As of v10.0.5.* Tools & resources exposed via [Model Context Protocol](https://modelcontextprotocol.io/) with modernized direct-payload IPC (eliminating stdout buffer hijacking):
+ 
+ | Tool | Permission | Description |
+ |------|-----------|-------------|
+ | `smart_search` | read | Hybrid RAG with multi-channel RRF rank fusion |
+ | `agentic_search` | read | Multi-query decomposition + cosine validation |
+ | `quicksave` | write | Save atomic checkpoint to session log |
+ | `health_check` | read | System health and substrate audit |
+ | `recall_session` | read | Read historical session log content |
+ | `governance_status` | read | Triple-Lock compliance state |
+ | `list_memory_paths` | read | Memory directory inventory |
+ | `meta_awareness_check` | read | Structural act classification (T1–T5) + kernel injection |
+ | `decision_screen` | read | GTO numerical calculation evaluations & risk screening |
+ | `set_secret_mode` | admin | Toggle demo mode / redacting private state |
+ | `permission_status` | read | Show access state & tool manifest |
 
-*As of v9.9.9.* 10 tools + 2 resources via [Model Context Protocol](https://modelcontextprotocol.io/). Dual transport (stdio + SSE).
-
-| Tool | Permission | Description |
-|------|-----------|-------------|
-| `smart_search` | read | Hybrid RAG with RRF fusion |
-| `agentic_search` | read | Multi-query decomposition + validation |
-| `quicksave` | write | Save checkpoint to session log |
-| `health_check` | read | System health audit |
-| `recall_session` | read | Read session log content |
-| `governance_status` | read | Triple-Lock compliance state |
-| `list_memory_paths` | read | Memory directory inventory |
-| `meta_awareness_check` | read | Structural act classification (T1–T5) + kernel injection |
-| `set_secret_mode` | admin | Toggle demo mode |
-| `permission_status` | read | Show access state & tool manifest |
-
-> This table said "9 tools" and omitted `meta_awareness_check` until 2026-07-25.
-> The tool had in fact been *defined twice* in `mcp_server.py`, and the later
-> definition silently shadowed the earlier, permission-gated one — so the count
-> was wrong in one direction and the governance behaviour wrong in the other.
-> Both fixed in v9.9.9.
-
-### 🚪 AgentGate (v9.9.9+)
-
-A model-agnostic interception layer, so governance does not depend on any one
-IDE's hook system. Two entry points:
-
-| Call | What it does |
-|:-----|:-------------|
-| `AgentGate.intercept_prompt(prompt)` | Classifies the act (T1 inbound-narrative, T2 outbound-commit, T3 third-party-verdict, T4 resource-commitment, T5 felt-evidence) and returns a system-reminder to inject, or `None` |
-| `AgentGate.intercept_tool(name, args)` | Runs `StructuredRuinCheck` over the proposed call and vetoes destructive ones — `rm -rf` against `.context`, `.agent/config`, or `/` |
-
-`StructuredRuinCheck` returns a `(allowed, flags)` pair rather than a bare
-boolean, so a refusal names *which* rule fired (`targets_context_memory`,
-`targets_agent_config`, `targets_root_directory`) instead of failing opaquely.
-
----
-
-## ⚡ The Retrieval Pipeline (Hybrid RAG)
-
-Five live channels fused via Reciprocal Rank Fusion (RRF) — **Vector is the only semantic channel**; the rest are lexical (filename/keyword-based):
-
-1. **Canonical Search**: Keyword match against `CANONICAL.md` (materialized decisions/frameworks).
-2. **Vector Search** *(semantic)*: Chunk-level embeddings (`gemini-embedding-001`, 3072-dim) via Supabase pgvector, cosine similarity.
-3. **SQLite Search**: Local file + tag index.
-4. **Filename Search**: Project-root keyword matching.
-5. **Framework Docs Search**: `.framework/` + memory-bank + `.context/` lookup.
-
-Results are reranked using a **CrossEncoder** (`cross-encoder/ms-marco-MiniLM-L6-v2`) and scored by an **Adaptive Router** (query-complexity-based channel weighting).
-
-> **Result**: Athena finds the *meaning*, not just the word — though semantic recall is currently bounded by what's embedded in Supabase (see [SEMANTIC_SEARCH.md](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/SEMANTIC_SEARCH.md) for the honest breakdown).
->
-> *Two channels — a Tags index and a GraphRAG knowledge-graph pass — were retired in June 2026 as dead weight (zero functional contribution). This page previously described them as active; corrected here.*
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology | Purpose |
-|:------|:----------|:--------|
-| **SDK** | `athena` Python package (v9.9.9) | Core search, reranking, memory |
-| **Reasoning** | Gemini 3.5 Pro (High) / Claude Fable 5 (High) / GPT-5.6 Sol (Max) | Multi-model reasoning |
-| **Reranking** | Cross-Encoder (`cross-encoder/ms-marco-MiniLM-L6-v2`) | Second-stage reranking after RRF fusion |
-| **IDE / Agent** | Antigravity, Cursor, Claude Code, Gemini CLI, VS Code | Agentic development environment |
-| **Embeddings** | `gemini-embedding-001` (3072-dim) | Google embedding model |
-| **Memory** | Supabase + pgvector (chunk-level, exact-scan) | Vector database |
-| **Routing** | Risk-Proportional Triple-Lock (SNIPER / STANDARD / ULTRA) | Adaptive latency by query complexity |
-| **File Watcher** | Watchdog (event-driven) | Auto-index on file change |
-
-> *GraphRAG (NetworkX + Leiden + ChromaDB) was formally removed in June 2026 — dead 16 months, zero functional contribution. Removed from this table; previously listed here as active.*
+### 🚪 AgentGate (v10.0.5)
+ 
+ A model-agnostic interception layer, so governance does not depend on any one
+ IDE's hook system. Two entry points:
+ 
+ | Call | What it does |
+ |:-----|:-------------|
+ | `AgentGate.intercept_prompt(prompt)` | Classifies the act (T1 inbound-narrative, T2 outbound-commit, T3 third-party-verdict, T4 resource-commitment, T5 felt-evidence) and returns a system-reminder to inject, or `None` |
+ | `AgentGate.intercept_tool(name, args)` | Runs `StructuredRuinCheck` over the proposed call and vetoes destructive ones — `rm -rf` against `.context`, `.agent/config`, or `/` |
+ 
+ `StructuredRuinCheck` returns a `(allowed, flags)` pair rather than a bare
+ boolean, so a refusal names *which* rule fired (`targets_context_memory`,
+ `targets_agent_config`, `targets_root_directory`) instead of failing opaquely.
+ 
+ ---
+ 
+ ## ⚡ The Retrieval Pipeline (Hybrid RAG)
+ 
+ Multiple live channels fused via Reciprocal Rank Fusion (RRF) with normalized document identity keys (`file:...`):
+ 
+ 1. **Canonical Search**: Keyword match against `CANONICAL.md` (materialized decisions/frameworks).
+ 2. **Vector Search** *(semantic)*: Chunk-level embeddings (`gemini-embedding-001`, 3072-dim) via Supabase pgvector, cosine similarity with halfvec HNSW indexing.
+ 3. **SQLite FTS5 Search**: Local markdown file indexing with query sanitization via `compile_fts_query()`.
+ 4. **Filename Search**: Project-root keyword matching.
+ 5. **Framework Docs Search**: `.framework/` + memory-bank + `.context/` lookup.
+ 
+ Results are reranked using a **CrossEncoder** (`cross-encoder/ms-marco-MiniLM-L6-v2`) and scored by an **Adaptive Router** (query-complexity-based channel weighting).
+ 
+ ---
+ 
+ ## 🛠️ Tech Stack
+ 
+ | Layer | Technology | Purpose |
+ |:------|:----------|:--------|
+ | **SDK** | `athena` Python package (v10.0.5) | Core search, reranking, memory, and governance gates |
+ | **Reasoning** | Gemini 3.8 Flash / Claude 3.5 Sonnet / GPT-4o | Multi-model reasoning and fallback cascade |
+ | **Reranking** | Cross-Encoder (`cross-encoder/ms-marco-MiniLM-L6-v2`) | Second-stage reranking after RRF fusion |
+ | **IDE / Agent** | Claude Code, Antigravity, Cursor, Gemini CLI, VS Code | Portable agentic development environment |
+ | **Embeddings** | `gemini-embedding-001` (3072-dim) | High-dimensional embedding model |
+ | **Memory** | Supabase + pgvector (`halfvec(3072)` HNSW indexing) | Vector database with millisecond latency |
+ | **Local Index** | SQLite FTS5 with custom syntax sanitizer | Local lexical search engine |
+ | **Routing** | Risk-Proportional Triple-Lock (SNIPER / STANDARD / ULTRA) | Adaptive latency by query complexity |
+ | **File Watcher** | Watchdog (event-driven) | Auto-index on file change |

@@ -1,6 +1,6 @@
 # ❓ Frequently Asked Questions
 
-*Last Updated: 2026-09-22 · v9.9.9*
+*Last Updated: 2026-10-09 · v10.0.5*
 
 ---
 
@@ -51,7 +51,7 @@ See the [Getting Started](Getting-Started) page for full details.
 
 ### 🧠 Can I use other models (OpenAI, Llama)?
 
-Athena is model-agnostic by design. It's optimized for **Gemini 3.5 Pro** and **Claude Fable 5** because of their large context windows, but the memory layer works with any LLM. That's the point — *own the state, rent the intelligence*.
+Athena is model-agnostic by design. It's optimized for **Gemini 3.8 Flash** and **Claude 3.5 Sonnet** because of their large context windows and fast tool invocation, but the memory layer works with any LLM. That's the point — *own the state, rent the intelligence*.
 
 ### 📉 Does it hallucinate?
 

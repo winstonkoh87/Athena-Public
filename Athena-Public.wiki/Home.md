@@ -1,27 +1,22 @@
 # 🏛️ Welcome to Project Athena
 
-> **AI-native personal knowledge management for your AI agents**
-> A local-first memory, reasoning, and governance layer · Open Source · Sovereign · Model-Agnostic
+> **The open-source compounding context layer for AI coding agents, portable across IDEs.**
+> Persistent memory, structured reasoning, and governed execution · Own the state, rent the intelligence · MIT Licensed
 
-*Last Updated: 2026-09-22 · v9.9.9*
+*Last Updated: 2026-10-09 · v10.0.5*
 
-Athena is not an AI Agent. It is the **persistent layer** they run on.
+Athena gives any LLM persistent memory and your lived context across coding sessions. It is the **persistent compounding layer** that operates seamlessly across Claude Code, Antigravity, Cursor, Gemini CLI, and VS Code.
 
-By loose analogy with an operating system — Linux provides the kernel, file system, and permissions for applications — Athena provides **persistent memory, scheduling, governance, and self-optimization** for AI models (Claude, Gemini, GPT, Llama) to operate as continuous agents. It is a workspace convention plus scripts, not literally an OS — the analogy describes which job each part does.
-
-| OS Layer | Linux | Athena |
-|----------|-------|--------|
-| **Kernel** | Hardware abstraction | Memory persistence + retrieval (VectorRAG, Supabase) |
-| **File System** | ext4, NTFS | Markdown files, session logs, tag index |
-| **Scheduler** | cron, systemd | Heartbeat daemon, daily briefing, auto-indexing |
-| **Shell** | bash, zsh | MCP Tool Server, `/start`, `/end`, `/think` |
-| **Permissions** | chmod, users/groups | 4-level capability tokens + Secret Mode |
-| **Package Manager** | apt, yum | Protocols, skills, workflows |
-
-**You own the data** (Markdown files on your machine, git-versioned). You only **rent the intelligence** (LLM API calls). Switch models tomorrow and your memory stays exactly where it is.
+| Core Principle | What It Means | Engineering Implementation |
+|:---|:---|:---|
+| **Own the State** | Complete data sovereignty | Plain Markdown on your machine, git-versioned. No vendor lock-in. |
+| **Rent the Intelligence** | Model-agnostic reasoning | Swap models anytime (Gemini 3.8, Claude, GPT). Your memory stays. |
+| **Compounding Memory** | Longitudinal context accretion | Chunk-level hybrid RAG (BM25 + vector + RRF + cross-encoder rerank). |
+| **Governed Autonomy** | Structural ruin prevention | Law #1 (No Irreversible Ruin), Stop Governance Gate, deterministic receipts. |
+| **Zero Infrastructure Cost** | High-performance sovereignty | Local SQLite FTS5 + pgvector on Supabase free tier ($0/month). |
 
 > [!TIP]
-> **Before you begin, ask yourself**: *"How do I want Athena to best help me in my daily life?"* — This is the guiding principle. Everything else exists to serve your answer. See [Your First Session](../docs/YOUR_FIRST_SESSION.md) for the full guide.
+> **Before you begin, ask yourself**: *"How do I want Athena to best help me in my daily life and work?"* — This is the guiding principle. Everything else exists to serve your answer. See [Your First Session](../docs/YOUR_FIRST_SESSION.md) for the full onboarding guide.
 
 ---
 
@@ -62,7 +57,7 @@ Or use [GitHub Codespaces](https://codespaces.new/winstonkoh87/Athena-Public) fo
 | **🚀 [Getting Started](Getting-Started)** | Installation, first boot, workspace modes, CLI commands |
 | **📖 [Your First Session](../docs/YOUR_FIRST_SESSION.md)** | The intent-first onboarding guide |
 | **🏗️ [Architecture](Architecture-Overview)** | OS layers, Hybrid RAG, MCP Server, Tech Stack |
-| **⚡ [Workflows](Workflow-Reference)** | `/start`, `/end`, `/think`, `/refactor` and 74 commands |
+| **⚡ [Workflows](Workflow-Reference)** | `/start`, `/end`, `/do`, `/osint`, `/gto` and 76 commands |
 | **🎯 [Use Cases](Use-Cases)** | Decision-making, research, planning, meta-thinking |
 | **📈 [The Compounding Effect](The-Compounding-Effect)** | Why Athena gets smarter over time |
 | **🧠 [Philosophy](Philosophy)** | Own the state. Rent the intelligence. |
@@ -70,8 +65,8 @@ Or use [GitHub Codespaces](https://codespaces.new/winstonkoh87/Athena-Public) fo
 
 ---
 
-## 📊 Community
+## 📊 Community & Scale
 
 - **1M+** Reddit Views · **#1 All-Time** on r/ChatGPT · **#2 All-Time** on r/GeminiAI
-- **455** Protocols (**421** active) · **279** Scripts · **74** Slash Workflows
-- **MIT Licensed** · [Main Repository](https://github.com/winstonkoh87/Athena-Public)
+- **460** Protocols (**426** active across 26 categories) · **291** Scripts · **76** Slash Workflows · **44** Skills
+- **2,100+** Sessions Logged · **MIT Licensed** · [Main Repository](https://github.com/winstonkoh87/Athena-Public)

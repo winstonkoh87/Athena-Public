@@ -1,8 +1,8 @@
 # 🚀 Getting Started
 
-Boot your own AI Operating System in 5 minutes.
+Deploy your own compounding context layer in 5 minutes.
 
-*Last Updated: 2026-09-22 · v9.9.9*
+*Last Updated: 2026-10-09 · v10.0.5*
 
 ---
 
@@ -77,7 +77,7 @@ athena doctor                 # Full 15-check system diagnostics
 athena doctor --fix           # Auto-repair fixable issues
 athena save "summary"         # Quicksave checkpoint
 athena --end                  # Close session and save
-athena --version              # Show version (v9.9.9)
+athena --version              # Show version (v10.0.5)
 ```
 
 ---
