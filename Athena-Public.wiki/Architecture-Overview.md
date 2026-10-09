@@ -2,7 +2,7 @@
 
 Athena is the **open-source compounding context layer for AI coding agents**, portable across IDEs. It provides persistent memory, structured reasoning, and governed execution across any LLM while keeping 100% of your data locally in plain Markdown on disk.
 
-*Last Updated: 2026-10-09 · v10.0.5*
+*Last Updated: 2026-10-10 · v10.0.5*
 
 ---
 

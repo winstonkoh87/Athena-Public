@@ -1,10 +1,10 @@
 # Workflows in Project Athena
 
-> **Last Updated**: 20 August 2026
+> **Last Updated**: 10 October 2026
 
 Workflows are slash commands that trigger predefined sequences of actions. They're the backbone of Athena's session management and deep reasoning capabilities.
 
-> **Total**: 72 workflows (54 root + 18 domain-specific in `.agent/workflows/_domain/`)
+> **Total**: 77 workflows (56 root + 21 domain-specific in `.agent/workflows/_domain/`)
 
 ## Quick Reference
 

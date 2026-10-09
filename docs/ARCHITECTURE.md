@@ -1,6 +1,6 @@
 # Athena — Architecture Reference
 
-> **Last Updated**: 08 October 2026 <!-- 2026-10-08 -->
+> **Last Updated**: 10 October 2026 <!-- 2026-10-10 -->
 > **Version**: v10.0.5
 > **Canonical Counts**: See `.agent/config/CAPS.json` — if numbers in this file diverge, CAPS wins.
 > **Bionic Unit Spec**: `BIONIC_UNIT_SPEC.md` — the definitive human-AI augmentation mapping (private workspace)
@@ -15,9 +15,9 @@ Athena/
 │   ├── skills/                    #   44 active skills (43 with context_trigger)
 │   │   └── protocols/             #   426 active + 34 archived = 460 total, 26 categories
 │   │       └── archive/           #     34 deprecated protocols (read-only, see README)
-│   ├── workflows/                 #   56 root + 20 _domain = 76 slash-command workflows
+│   ├── workflows/                 #   56 root + 21 _domain = 77 slash-command workflows
 │   │   └── _domain/               #     Domain-scoped, conditionally activated
-│   ├── scripts/                   #   290 automation scripts
+│   ├── scripts/                   #   291 automation scripts
 │   ├── telemetry/                 #   Retrieval instrumentation logs + tier maps
 │   ├── config/                    #   Agent manifests + CAPS.json (canonical counts)
 │   ├── CLUSTER_INDEX.md           #   15 cognitive clusters (routing map)
@@ -27,7 +27,7 @@ Athena/
 │   └── archive_skills/            #   17 sunset skills (read-only, see README)
 │
 ├── .context/                      # Personal knowledge base
-│   ├── memories/                  #   5,103 memory files (session logs + case studies + profile)
+│   ├── memories/                  #   5,329 memory files (session logs + case studies + profile)
 │   │   ├── session_logs/          #     Dated session records
 │   │   ├── case_studies/          #     561 documented patterns (14 domains)
 │   │   ├── profile/               #     Core profile, psychology, voice DNA
