@@ -1,7 +1,7 @@
 # Knowledge Graph (Compressed Index)
 
 > This is a compressed representation of Athena's knowledge domain for quick retrieval.
-> **Last Updated**: 10 October 2026 <!-- 2026-10-10 --> | **Version**: v10.0.5
+> **Last Updated**: 11 October 2026 <!-- 2026-10-11 --> | **Version**: v10.0.5
 
 ## Core Concepts
 
@@ -13,7 +13,7 @@
 │   └── Committee: {Strategist, Guardian, Operator, Architect, Skeptic}
 │
 ├── Architecture
-│   ├── Memory: {Session Logs, Context Files, Supabase Sync, 5,329 Memory Files}
+│   ├── Memory: {Session Logs, Context Files, Supabase Sync, 5,365 Memory Files}
 │   ├── Retrieval: {Semantic Search, VectorRAG, Tag Index, Canonical Lookup}
 │   └── Execution: {Workflows, Skills, Protocols}
 │

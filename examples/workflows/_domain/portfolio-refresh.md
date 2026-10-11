@@ -76,7 +76,7 @@ Run `.github/scripts/privacy_scan.py --all` before staging or committing any pub
 4. Pull active engineering focus from `.context/memory_bank/activeContext.md`.
 5. **Pre-pull all repos** to prevent merge conflicts (Protocol 413):
    ```bash
-   for repo in ~/Athena-Public ~/Athena-Public/Athena-Public.wiki ~/winstonkoh87 ~/winstonkoh87.github.io ~/sg-assignment-helper; do
+   for repo in ~/Athena-Public ~/Athena-Public.wiki ~/winstonkoh87 ~/winstonkoh87.github.io ~/sg-assignment-helper; do
      [ -d "$repo/.git" ] && git -C "$repo" pull --rebase --quiet 2>/dev/null
    done
    ```
@@ -195,7 +195,7 @@ For each approved file:
 - Create a new release tag and release notes ONLY when a new version is declared (e.g. patch/minor/major release with ported features).
 - NEVER edit release notes just to bump dates without feature additions.
 
-**Wiki** (`~/Athena-Public/Athena-Public.wiki`):
+**Wiki** (`~/Athena-Public.wiki`):
 - Update wiki pages ONLY when canonical metrics, architecture, or workflow documentation change.
 
 **Inline Privacy Gate (before commit)**:

@@ -1,6 +1,6 @@
 # Workflows in Project Athena
 
-> **Last Updated**: 10 October 2026
+> **Last Updated**: 11 October 2026
 
 Workflows are slash commands that trigger predefined sequences of actions. They're the backbone of Athena's session management and deep reasoning capabilities.
 

@@ -2,7 +2,7 @@
 
 Deploy your own compounding context layer in 5 minutes.
 
-*Last Updated: 2026-10-09 · v10.0.5*
+*Last Updated: 2026-10-11 · v10.0.5*
 
 ---
 
@@ -122,7 +122,7 @@ After importing, run `athena check` to verify files are detected.
 ## Next Steps
 
 - Try the **[Workflow Reference](Workflow-Reference)** for advanced commands.
-- Read the **[Architecture Overview](Architecture-Overview)** to understand the OS layers.
+- Read the **[Architecture Overview](Architecture-Overview)** to understand the architecture and substrate layers.
 - **Customize your AI's identity** — edit `.framework/v8.2-stable/modules/Core_Identity.md` to set your own laws and rules.
 - Explore the **[Use Cases](Use-Cases)** to see what Athena can do.
 - Check the **[FAQ](FAQ)** for common questions.
