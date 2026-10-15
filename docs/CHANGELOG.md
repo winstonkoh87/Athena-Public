@@ -1,6 +1,6 @@
 # Athena Changelog
 
-> **Last Updated**: 15 October 2026 <!-- 2026-10-15 -->
+> **Last Updated**: 16 October 2026 <!-- 2026-10-16 -->
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
@@ -8,9 +8,10 @@ This document provides detailed release notes. For the brief summary, see the RE
 
 ---
 
-## [10.0.5] — FTS5 Query Resilience, Multi-Channel RRF Unification, & IPC Modernization (15 October 2026)
+## [10.0.5] — FTS5 Query Resilience, Multi-Channel RRF Unification, & IPC Modernization (16 October 2026)
 
 ### Memory & Retrieval Substrate
+- **Canonical Document-Level RRF Grouping & Lexical Stem Path Pruning (`search.py`)**: Implemented regex-based document identity extraction in `_doc_prefix()` to eliminate false prefix deduplication across distinct documents in the RRF diversity pass. Enriched `collect_filenames()` with module header extraction (first 300 chars) to prevent cross-encoder logit penalties on code paths, added canonical root/stem boosts, and isolated cache under schema `2026-10-15.1`.
 - **FTS5 Query Compiler & Syntax Resilience (`fts_search.py`)**: Implemented `compile_fts_query()` to sanitize search queries, quote hyphenated alphanumeric codes (`"CS-101"`), strip syntax-critical operators (`:`, `?`, `*`), and add resilient fallback on `sqlite3.OperationalError`.
 - **Corpus Hygiene & Path Exclusion Pruning (`fts_search.py`)**: Pruned noise directories (`raw_data`, `cache`, `self_optimization`, `archive`, `node_modules`, `.venv`, `.git`, `.worktrees`), hidden dotfiles, and large compilation blobs (`graphrag_source_blob.md`, `scripts_compressed.md`) in-place during directory walking, eliminating index noise.
 - **RRF Multi-Channel Identity Unification (`search.py`)**: Added `_normalize_rrf_key()` to unify document identity keys across FTS and vector channels to repo-relative paths (`file:...`), normalized raw BM25 scores to [0.2, 1.0], bounded dynamic score modifiers strictly to [0.5, 1.5], and eliminated intra-channel duplicate counting.
@@ -23,7 +24,7 @@ This document provides detailed release notes. For the brief summary, see the RE
 - **CodeQL Security Remediation**: Resolved GitHub CodeQL CWE-20 (alert #47) incomplete URL substring sanitization in stop governance gate with comprehensive AST regression and unit test suite.
 - **Canon Citation Shift Tolerance (`verify_canon_citations.py`)**: Added +-10 line shift window tolerance in citation verifier to eliminate false-positive warnings during documentation updates.
 - **Gemini 3.8 Model Cascade (`gemini_client.py`)**: Updated model fallback cascade to support `gemini-3.8-flash`.
-- **Canonical Metrics Synchronization**: Reconciled all documentation and reference metrics with CAPS.json (426 active protocols / 460 total across 26 categories, 77 workflows [56 root + 21 domain], 44 active skills, 292 scripts, 5,365 memories, 644 test suite passes).
+- **Canonical Metrics Synchronization**: Reconciled all documentation and reference metrics with CAPS.json (426 active protocols / 460 total across 26 categories, 77 workflows [56 root + 21 domain], 44 active skills, 292 scripts, 5,445 memories, 646 test suite passes).
 
 ---
 

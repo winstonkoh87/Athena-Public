@@ -108,7 +108,7 @@ python examples/scripts/evaluator.py --gold-set .agent/eval/gold_set.json
 | **Retrieval Hit@5 (Strict)** | **0.569** (37 / 65) | `python examples/scripts/evaluator.py` |
 | **Retrieval MRR@5 (Strict)** | **0.472** | `python examples/scripts/evaluator.py` |
 | *Retrieval Hit@5 (Lenient)* | *0.892 (deprecated)* | *Partial substring match (inflated)* |
-| **Unit & Integration Tests** | 644 passed (100%) | `pytest tests/` |
+| **Unit & Integration Tests** | 646 passed (100%) | `pytest tests/` |
 | **Secret Leaks (1,248 commits)** | 0 detected | Gitleaks in CI |
 | **Code Quality & Lints** | 0 ruff findings | `ruff check src/` |
 

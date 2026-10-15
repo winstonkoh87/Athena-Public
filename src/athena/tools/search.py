@@ -47,7 +47,7 @@ RESET = "\033[0m"
 GOD_MODE = True
 
 # Schema version for cache isolation — bump on any ranking/fusion change
-SEARCH_SCHEMA_VERSION = "2026-09-30.1"
+SEARCH_SCHEMA_VERSION = "2026-10-15.1"
 
 # Config
 # NOTE: Vector subtypes (case_study, session, protocol, etc.) each get their own
@@ -569,27 +569,51 @@ def collect_filenames(query: str) -> list[SearchResult]:
             "-prune",
             "-o",
             "-path",
-            "./.venv",
+            "./.venv*",
             "-prune",
             "-o",
             "-path",
-            "./.pytest_cache",
+            "./.pytest_cache*",
             "-prune",
             "-o",
             "-path",
-            "*/__pycache__",
+            "*/__pycache__*",
             "-prune",
             "-o",
             "-path",
-            "*/.ruff_cache",
+            "*/.ruff_cache*",
             "-prune",
             "-o",
             "-path",
-            "./Athena-Public",
+            "./Athena-Public*",
             "-prune",
             "-o",
             "-path",
-            "./.context/knowledge",  # Skip large binary/db dumps if present
+            "./.claude*",
+            "-prune",
+            "-o",
+            "-path",
+            "./.worktrees*",
+            "-prune",
+            "-o",
+            "-path",
+            "*/archive*",
+            "-prune",
+            "-o",
+            "-path",
+            "./.archive*",
+            "-prune",
+            "-o",
+            "-path",
+            "./.context/memories/session_logs*",
+            "-prune",
+            "-o",
+            "-path",
+            "./.context/cache*",
+            "-prune",
+            "-o",
+            "-path",
+            "./.context/knowledge*",  # Skip large binary/db dumps if present
             "-prune",
             "-o",
             "-type",
@@ -614,9 +638,8 @@ def collect_filenames(query: str) -> list[SearchResult]:
         )
 
         if process.stdout:
-            lines = process.stdout.strip().split("\n")[
-                :20
-            ]  # Take a few more candidates, filter later
+            lines = [raw_line for raw_line in process.stdout.strip().split("\n") if raw_line.strip()][:300]
+            candidates = []
             for line in lines:
                 # Never surface archived/frozen content (S527 pollution guard).
                 if "/archive" in line.replace("\\", "/"):
@@ -629,18 +652,55 @@ def collect_filenames(query: str) -> list[SearchResult]:
                 if line.strip() and line not in seen_paths:
                     seen_paths.add(line)
                     full_path = PROJECT_ROOT / line
-                    # Score by how many query keywords appear in the filename
                     fname_lower = full_path.name.lower()
+                    stem_lower = full_path.stem.lower()
                     keyword_hits = sum(1 for k in keywords if k.lower() in fname_lower)
-                    results.append(
-                        SearchResult(
-                            id=f"File: {full_path.name}",
-                            content=f"Path: {line}",
-                            source="filename",
-                            score=keyword_hits / len(keywords),
-                            metadata={"path": str(full_path)},
+                    if keyword_hits == 0:
+                        continue
+                    # Boost canonical source code files over ambient docs
+                    norm_path = line.replace("\\", "/")
+                    if norm_path.startswith("./"):
+                        norm_path = norm_path[2:]
+                    root_boost = (
+                        0.25
+                        if (
+                            norm_path.startswith("src/athena/")
+                            or norm_path.startswith(".agent/scripts/")
+                            or norm_path.startswith("examples/scripts/")
+                            or norm_path.startswith("scripts/")
+                        )
+                        else 0.0
+                    )
+                    stem_match = any(
+                        k.lower() == stem_lower
+                        or k.lower() == fname_lower
+                        or (k.lower() + "s") == stem_lower
+                        or k.lower() == (stem_lower + "s")
+                        for k in keywords
+                    )
+                    exact_boost = 0.35 if stem_match else 0.0
+                    score = min(1.0, (keyword_hits / len(keywords)) + root_boost + exact_boost)
+                    header = ""
+                    try:
+                        with open(full_path, encoding="utf-8", errors="ignore") as f:
+                            header = f.read(300).strip()
+                    except Exception:
+                        pass
+                    file_content = f"File: {full_path.name}\nPath: {line}\n{header}" if header else f"File: {full_path.name}\nPath: {line}"
+                    candidates.append(
+                        (
+                            score,
+                            SearchResult(
+                                id=f"File: {full_path.name}",
+                                content=file_content,
+                                source="filename",
+                                score=score,
+                                metadata={"path": str(full_path)},
+                            ),
                         )
                     )
+            candidates.sort(key=lambda x: x[0], reverse=True)
+            results.extend(item[1] for item in candidates[:20])
         _record_channel_health("filename", "ok")
     except Exception as e:
         _record_channel_health("filename", "failed", str(e))
@@ -1026,22 +1086,51 @@ def weighted_rrf(
     # This groups chunks from the same logical document together.
     MAX_PER_DOC_PREFIX = 3  # allow up to 3 chunks from any single prefix
 
-    def _doc_prefix(doc_id: str) -> str:
-        """Extract the document-level prefix from a result ID."""
-        # Colon-separated IDs: "Canonical:L75" → "Canonical"
-        if ":" in doc_id:
-            return doc_id.split(":")[0].strip()
-        # Parenthetical chunk IDs: "SKILL.md (Chunk 0)" → "SKILL.md"
-        if " (" in doc_id:
-            return doc_id.split(" (")[0].strip()
-        return doc_id.strip()
+    def _doc_prefix(doc_id: str, metadata: dict | None = None) -> str:
+        """Extract the logical document identity from a result ID or metadata."""
+        if metadata and metadata.get("path"):
+            raw_path = str(metadata["path"]).strip()
+            if raw_path and not raw_path.startswith("http"):
+                return Path(raw_path).name.lower()
+
+        clean_id = doc_id.strip()
+        clean_id = re.sub(r"\s*\([Cc]hunk\s*[^)]*\)$", "", clean_id).strip()
+
+        # Handle Protocol prefix variants
+        proto_match = re.match(r"^Protocol(?:\s+[\w\-]+)?:?\s*(.*)$", clean_id, re.IGNORECASE)
+        if proto_match and proto_match.group(1):
+            return proto_match.group(1).strip().lower()
+
+        # Handle known channel labels
+        for p in ("Case Study:", "Framework:", "MemoryBank:", "ContextDoc:", "File:", "Web:", "FTS:", "session:"):
+            if clean_id.lower().startswith(p.lower()):
+                rest = clean_id[len(p):].strip()
+                if rest:
+                    return Path(rest).name.lower() if ("/" in rest or "\\" in rest) else rest.lower()
+
+        if clean_id.lower().startswith("canonical:"):
+            return "canonical"
+
+        session_match = re.match(r"^Session\s+\d{4}-\d{2}-\d{2}:?\s*(.*)$", clean_id, re.IGNORECASE)
+        if session_match and session_match.group(1):
+            rest = session_match.group(1).strip()
+            return Path(rest).name.lower() if ("/" in rest or "\\" in rest) else rest.lower()
+
+        if ":" in clean_id:
+            parts = clean_id.split(":", 1)
+            after = parts[1].strip()
+            if after:
+                return Path(after).name.lower() if ("/" in after or "\\" in after) else after.lower()
+            return parts[0].strip().lower()
+
+        return clean_id.lower()
 
     prefix_counts: dict[str, int] = {}
     diversified: list[SearchResult] = []
     overflow: list[SearchResult] = []
 
     for doc in scored:
-        prefix = _doc_prefix(doc.id)
+        prefix = _doc_prefix(doc.id, getattr(doc, "metadata", None))
         count = prefix_counts.get(prefix, 0)
         if count < MAX_PER_DOC_PREFIX:
             diversified.append(doc)

@@ -286,3 +286,29 @@ def test_weighted_rrf_score_mod_bounds():
     assert abs(fused[1].rrf_score - (1.5 * 0.5 / 62.0)) < 1e-4
 
 
+def test_weighted_rrf_document_level_grouping():
+    """Different protocols must not share the 'Protocol' prefix bucket in RRF diversity pass."""
+    from athena.tools.search import weighted_rrf
+
+    d1, d2, d3, d4 = [
+        SearchResult(id=f"Protocol: P{i}.md (Chunk 0)", content="", source="protocol", score=1.0 - i * 0.1)
+        for i in range(1, 5)
+    ]
+    s = SearchResult(id="session: s.md", content="", source="session", score=0.1)
+    res = weighted_rrf({"protocol": [d1, d2, d3, d4], "session": [s]})
+    assert res[3].id == "Protocol: P4.md (Chunk 0)"
+    assert res[4].id == "session: s.md"
+
+
+def test_collect_filenames_root_and_stem_boost():
+    """collect_filenames must prune noise paths and prioritize exact stem match in canonical tools."""
+    from athena.tools.search import collect_filenames
+
+    files = collect_filenames("quicksave checkpoint session log")
+    assert any(f.id == "File: quicksave.py" for f in files)
+    top_file = next(f for f in files if f.id == "File: quicksave.py")
+    assert top_file.score >= 0.70
+    assert "quicksave.py" in top_file.metadata.get("path", "")
+
+
+
