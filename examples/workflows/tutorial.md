@@ -45,7 +45,7 @@ You are the pilot. Athena is your co-pilot. This tutorial walks you through ever
 
 Welcome to Project Athena.
 
-You've just cloned an operating system for AI agents. Here's what's
+You've just cloned an agentic tool to compound your context over time, portable across IDEs. Here's what's
 already installed and ready to use:
 
   🧠 Core Identity     — A constitution with 6 operating laws

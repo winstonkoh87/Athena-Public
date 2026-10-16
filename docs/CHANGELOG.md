@@ -1,6 +1,6 @@
 # Athena Changelog
 
-> **Last Updated**: 16 October 2026 <!-- 2026-10-16 -->
+> **Last Updated**: 17 October 2026 <!-- 2026-10-17 -->
 
 This document provides detailed release notes. For the brief summary, see the README changelog.
 
@@ -24,7 +24,7 @@ This document provides detailed release notes. For the brief summary, see the RE
 - **CodeQL Security Remediation**: Resolved GitHub CodeQL CWE-20 (alert #47) incomplete URL substring sanitization in stop governance gate with comprehensive AST regression and unit test suite.
 - **Canon Citation Shift Tolerance (`verify_canon_citations.py`)**: Added +-10 line shift window tolerance in citation verifier to eliminate false-positive warnings during documentation updates.
 - **Gemini 3.8 Model Cascade (`gemini_client.py`)**: Updated model fallback cascade to support `gemini-3.8-flash`.
-- **Canonical Metrics Synchronization**: Reconciled all documentation and reference metrics with CAPS.json (426 active protocols / 460 total across 26 categories, 77 workflows [56 root + 21 domain], 44 active skills, 292 scripts, 5,445 memories, 646 test suite passes).
+- **Canonical Metrics Synchronization**: Reconciled all documentation and reference metrics with CAPS.json (426 active protocols / 460 total across 26 categories, 77 workflows [56 root + 21 domain], 44 active skills, 294 scripts, 5,466 memories, 646 test suite passes).
 
 ---
 

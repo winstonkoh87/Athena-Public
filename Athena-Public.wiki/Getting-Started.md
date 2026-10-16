@@ -2,7 +2,7 @@
 
 Deploy your own compounding context layer in 5 minutes.
 
-*Last Updated: 2026-10-15 · v10.0.5*
+*Last Updated: 2026-10-17 · v10.0.5*
 
 ---
 

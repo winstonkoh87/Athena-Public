@@ -1,19 +1,19 @@
 # Athena Spec Sheet
 
 > **Version**: v10.0.5
-> **Date**: 6 June 2026
+> **Date**: 17 October 2026
 > **Architect**: Winston Koh
-> **Status**: Production (1,900+ sessions)
+> **Status**: Production (2,100+ sessions)
 
 ---
 
 ## 1. System Overview
 
-**Athena** is a local operating system for AI agents. It provides persistent memory, bounded autonomy, and time-awareness to any LLM.
+**Athena** is an agentic tool to compound your context over time, portable across IDEs. It provides persistent memory, structured reasoning, and governed execution across any LLM.
 
 | Attribute | Value |
 |-----------|-------|
-| **Type** | Local-first AI agent OS |
+| **Type** | Compounding context layer / agentic tool |
 | **License** | MIT |
 | **Runtime** | Python 3.13+ |
 | **Primary Storage** | Markdown files (Git-versioned) |
