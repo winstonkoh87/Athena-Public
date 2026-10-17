@@ -13,7 +13,8 @@ name: athena
 version: 10.0.6
 description: >
   Local-first memory, decision engine, and governance harness for AI agents —
-  portable across IDEs. Own the state. Rent the intelligence.
+  portable across IDEs. Persistent memory, structured reasoning, and governed AI
+  agents that work across any LLM. Own the state. Rent the intelligence.
 
 # ---------------------------------------------------------------------------
 # Model Configuration

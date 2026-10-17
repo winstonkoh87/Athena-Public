@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "athena-agent"
 version = "10.0.6"
-description = "Local-first memory, decision engine, and governance harness for AI agents — portable across IDEs. Own the state. Rent the intelligence."
+description = "Local-first memory, decision engine, and governance harness for AI agents — portable across IDEs. Persistent memory, structured reasoning, and governed AI agents that work across any LLM. Own the state. Rent the intelligence."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
