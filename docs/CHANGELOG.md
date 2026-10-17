@@ -8,6 +8,21 @@ This document provides detailed release notes. For the brief summary, see the RE
 
 ---
 
+## [10.0.6] — Problem-Solving Control Plane, Two-Loop State Machine, & 4-Pillar Positioning Sync (17 October 2026)
+
+### Decision Engine & Frame Ledger Control Plane
+- **Ruin Pre-Filter Before VOI Fast-Path (`frame_ledger.py`)**: Wired `max_candidate_ruin_prob` and `reversibility_score` into `validate_frame()` so `VOI == 0` fast-pathing to `ACT` is blocked whenever `max_candidate_ruin_prob > 0.05` (Law #1 hard floor) or `reversibility_score >= 4`.
+- **Typed Two-Loop State Machine (`frame_ledger.py`)**: Added `CandidateCluster`, `CommitmentGate` (requiring `kill_criteria` before execution and preserving a typed `fallback_cluster_id` for Loop 2 -> Loop 1 pivot), and `LoopState` (`EXPLORING`, `COMMITTED`, `EXECUTING`, `ITERATING`, `PIVOTING`, `CLOSED`, `ABANDONED`) with a bounded `max_iterations` budget.
+- **Multidimensional Risk Vector (`gto_engine.py`)**: Added `RiskDimension` (`FINANCIAL`, `REPUTATIONAL`, `LEGAL`, `RELATIONAL`, `HEALTH`, `OPERATIONAL`, `EPISTEMIC`, `MIXED`, `UNKNOWN`) and `RiskVector` (`composite_ruin_prob`, `dominant_dimension`, `is_acceptable`) to `Option` and `DecisionContext`, replacing single-scalar financial ruin assumptions across heterogeneous domains.
+- **RBAC Registration (`permissions.py`)**: Registered `decision_screen` (`read` capability) in `TOOL_CAPABILITIES` and `READ_ONLY_SAFE` allowlists.
+
+### Canonical Positioning & Architecture Documentation
+- **4-Pillar Positioning**: Updated canonical identity across all declared surfaces to: *"Local-first memory, decision engine, and governance harness for AI agents — portable across IDEs. Own the state. Rent the intelligence."*
+- **4-Pillar Bionic Architecture & SDK Surface (`README.md`)**: Added the 4-Pillar architecture diagram (Pillar 1 Memory & Retrieval, Pillar 2 Decision & Frame Engine, Pillar 3 Governance & Safety Harness, Pillar 4 Portable Control Plane), the "What Ships in the SDK (`src/athena/`)" MCP tool table, and the 3-tier epistemic status table (`code-enforced`, `code-available`, `agent-discretion`).
+- **Canonical Metrics Synchronization (`v10.0.6`)**: Reconciled all surfaces (`README.md`, `SPEC_SHEET.md`, `CAPABILITIES.md`, `llms.txt`, `CAPS.json`) to `2,100+` sessions, `587` case studies, `460` protocols (`426` active + `34` archived across `26` categories), `44` active skills, `77` workflows (`56` root + `21` domain), `294` scripts, and `5,466` indexed memory files.
+
+---
+
 ## [10.0.5] — FTS5 Query Resilience, Multi-Channel RRF Unification, & IPC Modernization (16 October 2026)
 
 ### Memory & Retrieval Substrate

@@ -155,6 +155,11 @@ TOOL_REGISTRY: dict[str, dict[str, Any]] = {
         "sensitivity": Sensitivity.INTERNAL,
         "description": "Frame quality + protocol adoption telemetry",
     },
+    "decision_screen": {
+        "permission": Permission.READ,
+        "sensitivity": Sensitivity.INTERNAL,
+        "description": "Execute strategic decision evaluation and append decision receipt",
+    },
     "report_external_web_search": {
         "permission": Permission.READ,
         "sensitivity": Sensitivity.PUBLIC,

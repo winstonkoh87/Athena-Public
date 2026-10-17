@@ -1,8 +1,8 @@
 # Athena
 
-> A local-first agentic PKM that helps you make better decisions with your own context — persistent memory, structured reasoning, and governed AI agents that work across any LLM. Capture what you learn, retrieve it when relevant, carry your context between models. Own the state. Rent the intelligence. MIT Licensed.
+> Local-first memory, decision engine, and governance harness for AI agents — portable across IDEs. Capture what you learn, retrieve it when relevant, evaluate decisions against numeric ruin gates, and carry your context between models. Own the state. Rent the intelligence. MIT Licensed.
 
-Athena is a local-first cognitive augmentation framework that gives any AI model (Gemini, Claude, GPT) permanent memory, 440+ reusable decision protocols (187 published as examples), and bounded autonomy — all stored as plain Markdown files on the user's machine. Session 1,800 recalls patterns from session 5.
+Athena is a local-first memory, decision engine, and governance harness that gives any AI model (Gemini, Claude, GPT) permanent memory, 460 reusable decision protocols (426 active + 34 archived across 26 categories; 187 published as examples), 587 case studies, and bounded autonomy — all stored as plain Markdown files on the user's machine. Session 2,100 recalls patterns from session 5.
 
 ## Core Documentation
 
@@ -23,7 +23,7 @@ Athena is a local-first cognitive augmentation framework that gives any AI model
 ## Guides
 
 - [Compatible IDEs](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/COMPATIBLE_IDES.md): 7 supported editors (VS Code, Cursor, Windsurf, Zoo Code, Cline, Augment, Trae)
-- [Workflows](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/WORKFLOWS.md): 68 slash commands (/start, /end, /plan, /research, /ultrathink, etc.)
+- [Workflows](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/WORKFLOWS.md): 77 slash commands (56 root + 21 domain: /start, /end, /plan, /research, /ultrathink, etc.)
 - [Best Practices](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/BEST_PRACTICES.md): How to get the most out of Athena
 - [Multi-Model Strategy](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/MULTI_MODEL_STRATEGY.md): Using Gemini, Claude, and GPT together
 - [FAQ](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/FAQ.md): Frequently asked questions

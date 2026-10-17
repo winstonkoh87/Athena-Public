@@ -282,6 +282,12 @@ class FrameRecord:
     info_cost: float = 0.0
     cost_of_delay_per_day: float = 0.0
     baseline_counterfactual: str = ""
+    origin: str = "user"  # user | audit
+    surviving_branches: list[dict[str, Any]] = field(default_factory=list)
+    loop_budget: dict[str, Any] = field(default_factory=dict)
+    reversibility: int = 3  # 1 (irreversible) .. 5 (trivial to undo)
+    ruin_receipt: str = ""
+    outcome_band: dict[str, float] = field(default_factory=dict)
     status: str = "open"  # open | locked | resolved | abandoned
     resolution: dict[str, Any] = field(default_factory=dict)
 
@@ -302,6 +308,11 @@ class FrameRecord:
         # `_`-prefixed keys are human metadata/comments in the seed files.
         for key in [k for k in payload if k.startswith("_")]:
             payload.pop(key)
+        if "origin" not in payload:
+            blob = " ".join(
+                str(payload.get(k, "")) for k in ("session", "literal_request", "candidate_reframe")
+            ).lower()
+            payload["origin"] = "audit" if ("redteam" in blob or "red-team" in blob) else "user"
         known = set(cls.__dataclass_fields__)  # type: ignore[attr-defined]
         unknown = set(payload) - known
         if unknown:
@@ -664,6 +675,81 @@ def validate_frame(frame: FrameRecord) -> ValidationResult:
             )
         )
 
+    # R11 - loop budget present for Loop 2 iteration discipline (2026-10-17 Plan T3.1 / A3)
+    lb = frame.loop_budget if isinstance(frame.loop_budget, dict) else {}
+    has_cap = float(lb.get("max_rounds", 0) or 0) > 0 or float(lb.get("max_hours", 0) or 0) > 0
+    has_signal = bool(str(lb.get("success_signal", "")).strip())
+    if not (has_cap and has_signal):
+        v.append(
+            Violation(
+                "R11",
+                "no valid loop_budget (requires max_rounds or max_hours > 0 plus non-empty "
+                "success_signal). Loop 2 cannot start without an iteration budget.",
+                "BLOCK",
+            )
+        )
+
+    # R12 - at least 2 surviving branches including 1 contingency with revive_trigger (T3.1 / A4)
+    branches = frame.surviving_branches if isinstance(frame.surviving_branches, list) else []
+    has_contingency = any(
+        isinstance(b, dict)
+        and bool(b.get("contingency"))
+        and bool(str(b.get("revive_trigger", "")).strip())
+        for b in branches
+    )
+    if len(branches) < 2 or not has_contingency:
+        v.append(
+            Violation(
+                "R12",
+                "surviving_branches must declare >= 2 branches including >= 1 contingency branch "
+                "with a non-empty revive_trigger (RSN-505:85 / RSN-506:76).",
+                "BLOCK",
+            )
+        )
+
+    # R13 - reversibility 1-5; score <= 2 requires verified GTO receipt ID or [agent-estimate] (T3.1 / A1)
+    rev = int(frame.reversibility) if isinstance(frame.reversibility, int) else 0
+    if not (1 <= rev <= 5):
+        v.append(
+            Violation(
+                "R13",
+                f"reversibility must be between 1 and 5 (got {frame.reversibility}).",
+                "BLOCK",
+            )
+        )
+    elif rev <= 2:
+        rec_str = frame.ruin_receipt.strip()
+        is_agent_est = (
+            "[agent-estimate]" in rec_str.lower()
+            and len(rec_str.lower().replace("[agent-estimate]", "").strip()) >= 5
+        )
+        is_verified_receipt = False
+        if rec_str and not is_agent_est:
+            from athena.intelligence.gto_engine import get_receipts_path
+
+            rpath = get_receipts_path()
+            if rpath.exists():
+                for rline in rpath.read_text(encoding="utf-8").splitlines():
+                    rline = rline.strip()
+                    if not rline:
+                        continue
+                    try:
+                        robj = json.loads(rline)
+                        if robj.get("receipt_id") == rec_str:
+                            is_verified_receipt = True
+                            break
+                    except json.JSONDecodeError:
+                        continue
+        if not (is_agent_est or is_verified_receipt):
+            v.append(
+                Violation(
+                    "R13",
+                    f"reversibility={rev} (<=2) requires a verified receipt_id in "
+                    f"decision_receipts.jsonl or '[agent-estimate] <basis>' (got '{rec_str}').",
+                    "BLOCK",
+                )
+            )
+
     return ValidationResult(frame_id=frame.id, violations=v)
 
 
@@ -778,6 +864,8 @@ class FrameLedger:
         regret: float | None = None,
         note: str = "",
         decided_action: str = "",
+        classification: str = "",
+        observed_value: float | None = None,
     ) -> dict[str, Any]:
         """Record the observed outcome. Never edits the original frame."""
         rec = self.get(frame_id)
@@ -791,6 +879,21 @@ class FrameLedger:
             raise ValidationError(f"unknown hypothesis ids: {sorted(unknown)}")
         if not supported_set and not killed_set:
             raise ValidationError("resolution must mark at least one hypothesis supported or killed")
+
+        norm_class = classification.strip().upper() if classification else ""
+        if norm_class == "LUCK":
+            band = rec.outcome_band if isinstance(rec.outcome_band, dict) else {}
+            if "min" not in band or "max" not in band or observed_value is None:
+                raise ValidationError(
+                    "LUCK classification rejected: requires a pre-registered outcome_band "
+                    "{'min', 'max'} on the frame and an observed_value at resolution (T3.2 / A7)."
+                )
+            lo, hi = float(band["min"]), float(band["max"])
+            if not (lo <= float(observed_value) <= hi):
+                raise ValidationError(
+                    f"LUCK classification rejected: observed_value {observed_value} is outside "
+                    f"pre-registered outcome_band [{lo}, {hi}]. Default to PROCESS or INFORMATION."
+                )
 
         scored: dict[str, int] = {}
         for h in rec.hypotheses:
@@ -814,6 +917,8 @@ class FrameLedger:
             "regret": regret,
             "note": note,
             "decided_action": decided_action,
+            "classification": norm_class,
+            "observed_value": observed_value,
         }
         self._append({"kind": "resolution", "id": frame_id, "resolution": resolution})
         return resolution
@@ -828,6 +933,8 @@ def score_frames(frames: list[FrameRecord]) -> dict[str, Any]:
     """Aggregate the frame-quality metrics that the pipeline previously lacked."""
     resolved = [f for f in frames if f.resolution]
     opened = len(frames)
+    user_opened = sum(1 for f in frames if f.origin == "user")
+    audit_opened = sum(1 for f in frames if f.origin != "user")
     briers = [f.resolution["brier"] for f in resolved if "brier" in f.resolution]
     hits = [bool(f.resolution.get("frame_hit")) for f in resolved]
 
@@ -847,8 +954,9 @@ def score_frames(frames: list[FrameRecord]) -> dict[str, Any]:
     kill_switch: str
     if len(resolved) < THESIS_MIN_N:
         kill_switch = (
-            f"INSUFFICIENT DATA ({len(resolved)}/{THESIS_MIN_N} resolved frames). The thesis's own "
-            "kill switch cannot be evaluated yet - keep collecting, do not claim efficacy."
+            f"INSUFFICIENT DATA ({len(resolved)}/{THESIS_MIN_N} resolved frames; "
+            f"user_frames_opened={user_opened}, audit_frames_opened={audit_opened}). "
+            "The thesis's own kill switch cannot be evaluated yet - keep collecting, do not claim efficacy."
         )
     elif skill is not None and skill < THESIS_MIN_SKILL:
         kill_switch = (
@@ -861,6 +969,8 @@ def score_frames(frames: list[FrameRecord]) -> dict[str, Any]:
 
     return {
         "frames_opened": opened,
+        "user_frames_opened": user_opened,
+        "audit_frames_opened": audit_opened,
         "frames_resolved": len(resolved),
         "pending_rot": opened - len(resolved),
         "frame_hit_rate": round(sum(hits) / len(hits), 4) if hits else None,

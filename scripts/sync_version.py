@@ -56,6 +56,8 @@ SURFACES: list[tuple[str, str, str]] = [
     ("AGENTS.md", r"\*\*System\*\*:\s*v([0-9][0-9A-Za-z.\-]*)", "agent-context system version"),
     ("CLAUDE.md", r"\*\*System\*\*:\s*v([0-9][0-9A-Za-z.\-]*)", "agent-context system version"),
     (".agent/config/CAPS.json", r'"system":\s*"v?([0-9][0-9A-Za-z.\-]*)"', "CAPS system version"),
+    ("athena.yaml", r"^version:\s*v?([0-9][0-9A-Za-z.\-]*)", "agent manifest version"),
+    ("src/athena/tools/citation_verifier.py", r'USER_AGENT\s*=\s*"Athena-Academic-Verifier/([^" ]+)', "Crossref User-Agent version"),
 ]
 
 # ── Exemptions ───────────────────────────────────────────────────────────────

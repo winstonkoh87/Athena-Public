@@ -16,6 +16,13 @@ from athena.intelligence.gto_engine import (
 )
 
 
+@pytest.fixture(autouse=True)
+def _isolate_gto_receipts(tmp_path, monkeypatch):
+    """T3.4: Prevent unit tests from appending to tracked .athena/*.jsonl files."""
+    monkeypatch.setenv("ATHENA_RECEIPTS_PATH", str(tmp_path / "decision_receipts.jsonl"))
+    monkeypatch.setenv("ATHENA_CAL_LEDGER_PATH", str(tmp_path / "CALIBRATION_LEDGER.md"))
+
+
 def test_compute_eev_positive_asymmetry():
     res = compute_eev(mev=1000.0, eu=200.0, eo=100.0, skeptic_discount=0.15)
     # raw_ev = 1000 - 300 = 700

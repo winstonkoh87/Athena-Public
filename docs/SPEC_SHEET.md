@@ -1,6 +1,6 @@
 # Athena Spec Sheet
 
-> **Version**: v10.0.5
+> **Version**: v10.0.6
 > **Date**: 17 October 2026
 > **Architect**: Winston Koh
 > **Status**: Production (2,100+ sessions)
@@ -9,17 +9,17 @@
 
 ## 1. System Overview
 
-**Athena** is an agentic tool to compound your context over time, portable across IDEs. It provides persistent memory, structured reasoning, and governed execution across any LLM.
+**Athena** is a local-first memory, decision engine, and governance harness for AI agents — portable across IDEs. Own the state. Rent the intelligence.
 
 | Attribute | Value |
 |-----------|-------|
-| **Type** | Compounding context layer / agentic tool |
+| **Type** | Local-first memory, decision engine, and governance harness for AI agents |
 | **License** | MIT |
 | **Runtime** | Python 3.13+ |
 | **Primary Storage** | Markdown files (Git-versioned) |
 | **Secondary Storage** | Supabase + pgvector (cloud backup + semantic search) |
-| **Fallback Storage** | SQLite / LanceDB (offline mode) |
-| **Interface** | Any MCP-compatible IDE (Antigravity, Cursor, VS Code) |
+| **Fallback Storage** | SQLite FTS5 / LanceDB (offline mode) |
+| **Interface** | Any MCP-compatible IDE (Antigravity, Claude Code, Cursor, VS Code, Gemini CLI) |
 
 ---
 
@@ -95,7 +95,7 @@ tags: [memory, search, mcp]
 |--------|------|-------------|
 | `id` | UUID | Primary key |
 | `content` | TEXT | Raw text chunk |
-| `embedding` | VECTOR(768) | text-embedding-004 |
+| `embedding` | VECTOR(3072) | gemini-embedding-001 |
 | `metadata` | JSONB | Source file, tags, timestamp |
 
 ### Tag Index (Markdown)
@@ -111,7 +111,7 @@ Total: 8,079 tags
 
 ## 5. API Surface (MCP Server)
 
-9 tools + 2 resources via Model Context Protocol.
+18 tools + 2 resources via Model Context Protocol (`src/athena/mcp_server.py`).
 
 | Tool | Permission | Latency |
 |------|-----------|---------|
@@ -124,6 +124,15 @@ Total: 8,079 tags
 | `list_memory_paths` | read | < 100ms |
 | `set_secret_mode` | admin | instant |
 | `permission_status` | read | instant |
+| `frame_open` | write | < 50ms |
+| `frame_validate` | read | < 50ms |
+| `frame_resolve` | write | < 50ms |
+| `frame_status` | read | < 50ms |
+| `decision_screen` | read | < 50ms |
+| `context_gate` | read | < 50ms |
+| `meta_awareness_check` | read | < 50ms |
+| `classify_turn` | read | instant |
+| `search_web` / `report_external_web_search` | read | < 1s |
 
 **Transport**: stdio (IDE integration) or SSE (remote access, port 8765).
 
@@ -132,28 +141,17 @@ Total: 8,079 tags
 ## 6. Search Architecture
 
 ```text
- Query
-   │
-   ├── Canonical      (materialized-view keyword match)   · lexical
-   ├── Vector         (Supabase pgvector, cosine)         · semantic
-   ├── SQLite         (local file + tag index)            · lexical
-   ├── Filename       (path/name keyword match)           · lexical
-   ├── Framework Docs (docs + memory-bank grep)           · lexical
-   │
-   ▼
- Adaptive Router → RRF Fusion (k=60) → Cross-Encoder Reranker → Results
+Query → [Keyword Search (Tag Index)] ──┐
+                                        ├── RRF Fusion → Reranker → Results
+Query → [Semantic Search (pgvector)] ──┘
 ```
-
-Reranking runs default-on via a local quantized ONNX cross-encoder (~0.4s cold load) with a `sentence_transformers` fallback; it degrades to raw RRF order only if both are unavailable.
 
 | Metric | Value |
 |--------|-------|
-| **MRR@5** | 0.796 |
-| **Hit@5** | 0.908 |
-| **Coverage** | 0.639 |
-| **Fusion Method** | Reciprocal Rank Fusion (RRF, k=60) with score-modulated weights |
-
-> Retrieval metrics measured 18 Jul 2026 on the reference deployment (operator corpus: 4,000+ memory files, 2,000+ session logs) against a 65-query gold set. Your numbers will vary with corpus size and quality.
+| **Search MRR** | 0.44 (vs 0.21 baseline, +105%) |
+| **Latency** | < 200ms (p95) |
+| **Index Size** | 8,079 tags, 78MB vectors |
+| **Fusion Method** | Reciprocal Rank Fusion (RRF) with score-modulated weights |
 
 ---
 
@@ -162,7 +160,7 @@ Reranking runs default-on via a local quantized ONNX cross-encoder (~0.4s cold l
 | Layer | Technology |
 |-------|-----------|
 | **Language** | Python 3.13 |
-| **Embeddings** | Google text-embedding-004 (768d) |
+| **Embeddings** | Google gemini-embedding-001 (3072d) |
 | **Vector DB** | Supabase + pgvector (IVFFlat index) |
 | **Graph** | ~~Microsoft GraphRAG~~ — REMOVED in S435 (6 June 2026) |
 | **Packaging** | pyproject.toml (PEP 621) |
@@ -196,7 +194,7 @@ Reranking runs default-on via a local quantized ONNX cross-encoder (~0.4s cold l
 | Quicksave overhead | < 500ms | **< 100ms** |
 | Session log write | < 1s | **< 500ms** |
 
-→ Full benchmarks: [BENCHMARKS.md](BENCHMARKS.md)
+→ Full benchmarks: [BENCHMARKS.md](./BENCHMARKS.md)
 
 ---
 
@@ -216,9 +214,9 @@ Reranking runs default-on via a local quantized ONNX cross-encoder (~0.4s cold l
 
 | Document | Purpose |
 |----------|---------|
-| [REQUIREMENTS.md](REQUIREMENTS.md) | User stories, functional requirements, constraints |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System design, data flow, hub model |
-| [BENCHMARKS.md](BENCHMARKS.md) | Quantitative performance data |
-| [FEATURES.md](FEATURES.md) | User-facing feature descriptions |
-| [CAPABILITIES.md](CAPABILITIES.md) | Full automation catalog |
-| [GLOSSARY.md](GLOSSARY.md) | Term definitions |
+| [REQUIREMENTS.md](./REQUIREMENTS.md) | User stories, functional requirements, constraints |
+| [ARCHITECTURE.md](../ARCHITECTURE.md) | System design, data flow, hub model |
+| [BENCHMARKS.md](./BENCHMARKS.md) | Quantitative performance data |
+| [FEATURES.md](./FEATURES.md) | User-facing feature descriptions |
+| [CAPABILITIES.md](./CAPABILITIES.md) | Full automation catalog |
+| [GLOSSARY.md](./GLOSSARY.md) | Term definitions |

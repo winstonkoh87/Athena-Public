@@ -109,6 +109,22 @@ def valid_payload(**overrides) -> dict:
             "Generic LLM: recommend a Pomodoro/2-minute-rule schedule. Predicted outcome: no "
             "change in external shipments within 30 days."
         ),
+        "origin": "user",
+        "surviving_branches": [
+            {"id": "B1", "name": "Anonymous draft probe (H1)", "contingency": False},
+            {
+                "id": "B2",
+                "name": "3-step scope probe (H2)",
+                "contingency": True,
+                "revive_trigger": "Anonymous draft fails to reduce start latency within 5 days",
+            },
+        ],
+        "loop_budget": {
+            "max_rounds": 3,
+            "max_hours": 6,
+            "success_signal": "Median start latency <= 24h across 2 external shipments",
+        },
+        "reversibility": 4,
     }
     payload.update(overrides)
     return payload
@@ -470,6 +486,9 @@ SEEDED_DEFECTS = [
     ("R7b", {"evidence_against": ""}),
     ("R8", {"baseline_counterfactual": ""}),
     ("R10", {"discriminating_test": ""}),
+    ("R11", {"loop_budget": None}),
+    ("R12", {"surviving_branches": [{"id": "B1", "contingency_trigger": "only one"}]}),
+    ("R13", {"reversibility": 1, "ruin_receipt": ""}),
 ]
 
 
@@ -573,3 +592,118 @@ def test_cluster15_protocol_links_resolve(protocol):
         if not (path.parent / link).resolve().exists():
             dead.append(link)
     assert dead == [], f"{protocol} has dead links: {dead}"
+
+
+# ---------------------------------------------------------------------------
+# Phase 3 (2026-10-17 Plan T3.1-T3.3): Commitment gate, Luck gate, user origin
+# ---------------------------------------------------------------------------
+
+
+def test_r11_missing_loop_budget_rejected():
+    """T3.1: A frame with no loop_budget is BLOCKED by R11, and passes once added."""
+    blocked = frame_from(loop_budget={})
+    assert "R11" in codes(blocked)
+    passed = frame_from(
+        loop_budget={"max_rounds": 3, "success_signal": "Rubric score >= 75/100"}
+    )
+    assert "R11" not in codes(passed)
+
+
+def test_r12_requires_two_surviving_branches_with_contingency():
+    """T3.1: R12 blocks single-branch lock ('kill all other options') and passes with contingency."""
+    single = frame_from(
+        surviving_branches=[{"id": "B1", "name": "Primary", "contingency": False}]
+    )
+    assert "R12" in codes(single)
+    no_trigger = frame_from(
+        surviving_branches=[
+            {"id": "B1", "name": "Primary", "contingency": False},
+            {"id": "B2", "name": "Backup", "contingency": True, "revive_trigger": ""},
+        ]
+    )
+    assert "R12" in codes(no_trigger)
+    valid = frame_from(
+        surviving_branches=[
+            {"id": "B1", "name": "Primary", "contingency": False},
+            {
+                "id": "B2",
+                "name": "Backup",
+                "contingency": True,
+                "revive_trigger": "Primary fails regulatory bailment check within 7 days",
+            },
+        ]
+    )
+    assert "R12" not in codes(valid)
+
+
+def test_r13_irreversible_requires_verified_ruin_receipt_or_agent_estimate(
+    tmp_path: Path, monkeypatch
+):
+    """T3.1: Reversibility <= 2 requires a real receipt ID in decision_receipts.jsonl or [agent-estimate]."""
+    receipts_file = tmp_path / "decision_receipts.jsonl"
+    receipts_file.write_text(
+        json.dumps({"receipt_id": "GTO-real9999", "action": "mcda", "verdict": "PASS"}) + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("ATHENA_RECEIPTS_PATH", str(receipts_file))
+
+    fake = frame_from(reversibility=2, ruin_receipt="GTO-madeup00")
+    assert "R13" in codes(fake)
+
+    real = frame_from(reversibility=2, ruin_receipt="GTO-real9999")
+    assert "R13" not in codes(real)
+
+    est = frame_from(
+        reversibility=2,
+        ruin_receipt="[agent-estimate] p_ruin=0.02 based on capped S$1,500 deposit",
+    )
+    assert "R13" not in codes(est)
+
+
+def test_t32_luck_classification_requires_outcome_within_registered_band(tmp_path: Path):
+    """T3.2: LUCK classification is accepted only if observed_value is inside outcome_band."""
+    ledger = FrameLedger(tmp_path / "frames.jsonl")
+    frame = frame_from(outcome_band={"min": -200.0, "max": 500.0})
+    assert ledger.open(frame, lock=True).ok
+
+    # Outside band -> rejected
+    with pytest.raises(ValidationError, match="LUCK|band"):
+        ledger.resolve(
+            frame.id,
+            supported=["H2"],
+            killed=["H1", "H3"],
+            classification="LUCK",
+            observed_value=-450.0,
+        )
+
+    # Inside band -> accepted
+    res = ledger.resolve(
+        frame.id,
+        supported=["H2"],
+        killed=["H1", "H3"],
+        classification="LUCK",
+        observed_value=-120.0,
+    )
+    assert res["classification"] == "LUCK"
+    assert res["observed_value"] == -120.0
+
+
+def test_t33_calibrate_counts_only_user_origin_frames(tmp_path: Path):
+    """T3.3: Audit frames count as 0 user frames toward the adoption kill criterion."""
+    ledger = FrameLedger(tmp_path / "frames.jsonl")
+    audit1 = frame_from(id="FRM-20260923-001", origin="audit", session="cluster15-redteam-2026-09-23")
+    audit2 = frame_from(id="FRM-20260929-001", origin="audit", session="audit-2026-09-29")
+    assert ledger.open(audit1).ok
+    assert ledger.open(audit2).ok
+    stats = score_frames(ledger.frames())
+    assert stats["frames_opened"] == 2
+    assert stats["user_frames_opened"] == 0
+    assert stats["audit_frames_opened"] == 2
+
+    private_ledger = PROJECT_ROOT / ".context" / "ledger" / "frames.jsonl"
+    if private_ledger.exists():
+        existing = FrameLedger(private_ledger).frames()
+        pstats = score_frames(existing)
+        assert pstats["frames_opened"] == 2
+        assert pstats["user_frames_opened"] == 0
+        assert pstats["audit_frames_opened"] == 2

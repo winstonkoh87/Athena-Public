@@ -1445,7 +1445,12 @@ def compute_robustness(
         raise ValueError(f"cvar_alpha must be in (0.0, 1.0], got {cvar_alpha}")
     if tail_factor < 1.0 or math.isnan(tail_factor) or math.isinf(tail_factor):
         raise ValueError(f"tail_factor must be >= 1.0, got {tail_factor}")
-    if wealth is not None and (not isinstance(wealth, (int, float)) or wealth <= 0.0 or math.isnan(wealth) or math.isinf(wealth)):
+    if wealth is not None and (
+        not isinstance(wealth, (int, float))
+        or wealth <= 0.0
+        or math.isnan(wealth)
+        or math.isinf(wealth)
+    ):
         raise ValueError(f"wealth must be a positive finite number, got {wealth}")
     if barrier < 0.0 or math.isnan(barrier) or math.isinf(barrier):
         raise ValueError(f"barrier cannot be lowered below 0.0, got {barrier}")

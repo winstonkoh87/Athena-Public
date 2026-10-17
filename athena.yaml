@@ -10,11 +10,10 @@
 
 spec_version: "1.0.0"
 name: athena
-version: 9.9.9
+version: 10.0.6
 description: >
-  A local-first agentic PKM that helps you make better decisions with your
-  own context — persistent memory, structured reasoning, and governed AI
-  agents that work across any LLM. Own the state. Rent the intelligence.
+  Local-first memory, decision engine, and governance harness for AI agents —
+  portable across IDEs. Own the state. Rent the intelligence.
 
 # ---------------------------------------------------------------------------
 # Model Configuration

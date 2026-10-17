@@ -1,7 +1,7 @@
 # Athena — Architecture Reference
 
 > **Last Updated**: 17 October 2026 <!-- 2026-10-17 -->
-> **Version**: v10.0.5
+> **Version**: v10.0.6
 > **Canonical Counts**: See `.agent/config/CAPS.json` — if numbers in this file diverge, CAPS wins.
 > **Bionic Unit Spec**: `BIONIC_UNIT_SPEC.md` — the definitive human-AI augmentation mapping (private workspace)
 
@@ -29,7 +29,7 @@ Athena/
 ├── .context/                      # Personal knowledge base
 │   ├── memories/                  #   5,466 memory files (session logs + case studies + profile)
 │   │   ├── session_logs/          #     Dated session records
-│   │   ├── case_studies/          #     561 documented patterns (14 domains)
+│   │   ├── case_studies/          #     587 documented patterns (14 domains)
 │   │   ├── profile/               #     Core profile, psychology, voice DNA
 │   │   └── observations/          #     Session insights
 │   ├── memory_bank/               #   10 boot files (activeContext, userContext,

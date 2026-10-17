@@ -9,17 +9,17 @@
 
 | Metric | Count |
 |--------|-------|
-| **Automation Scripts** | 247 |
-| **Decision Protocols** | 431 (399 active + 32 archived, 23 categories) |
-| **Orchestration Workflows** | 69 (51 root + 18 domain) |
-| **Skills** | 40 active (40 with context_trigger), 17 archived |
-| **Case Studies** | 492 (15 domains) |
-| **Total Sessions** | 1,900+ |
-| **Memory Files** | 3,658 |
+| **Automation Scripts** | 294 |
+| **Decision Protocols** | 460 (426 active + 34 archived, 26 categories) |
+| **Orchestration Workflows** | 77 (56 root + 21 domain) |
+| **Skills** | 44 active (40 with context_trigger), 17 archived |
+| **Case Studies** | 587 (15 domains) |
+| **Total Sessions** | 2,100+ |
+| **Memory Files** | 5,466 |
 
 ---
 
-## 🔧 Automation Scripts (247)
+## 🔧 Automation Scripts (294)
 
 ### Session Management
 
@@ -37,7 +37,7 @@
 | `supabase_sync.py` | Full memory sync to pgvector with chunking and deduplication |
 | `supabase_search.py` | Hybrid RAG search (semantic + keyword + reranking) |
 | `smart_search.py` | Weighted RRF orchestration with cross-encoder rerank |
-| `upload_to_supabase.py` | Bulk embedding upload with rate limiting |
+| `upload_to_supabase.py` | Supabase **Storage** bucket CLI — upload/download/list files, create buckets (not embeddings; those go through `supabase_sync.py`) |
 
 ### Knowledge Graph (DEPRECATED — Removed S435, 6 June 2026)
 
@@ -99,7 +99,7 @@
 
 ---
 
-## 📜 Decision Protocols (431 total: 399 active + 32 archived, 23 categories)
+## 📜 Decision Protocols (460 total: 426 active + 34 archived, 26 categories)
 
 ### Architecture (29)
 
@@ -168,7 +168,7 @@
 
 ---
 
-## ⚙️ Orchestration Workflows (69: 51 root + 18 domain)
+## ⚙️ Orchestration Workflows (77: 56 root + 21 domain)
 
 | Workflow | Description |
 |----------|-------------|
@@ -195,24 +195,30 @@
 ```
 athena/
 ├── core/
-│   ├── config.py      # Centralized paths, marker-based root discovery
-│   ├── models.py      # Data models for sessions, protocols, entities
-│   └── __init__.py
+│   ├── config.py          # Centralized paths, marker-based root discovery
+│   ├── governance.py      # Triple-Lock and doom-loop circuit breaker
+│   ├── permissions.py     # Capability RBAC and secret-mode gating
+│   └── models.py          # Data models for sessions, protocols, entities
+├── intelligence/
+│   ├── frame_ledger.py    # Frame validation, VOI gate, Two-Loop state machine
+│   ├── gto_engine.py      # EEV dominance, ruin ceiling, Paths A-E screen
+│   ├── meta_awareness.py  # Inbound/outbound substance decode (PAT-574)
+│   ├── calibration.py     # Brier scoring and calibration curve tracking
+│   └── sentinel.py        # Adaptive latency / complexity classification
 ├── memory/
-│   ├── cache.py       # TTL-based LRU cache for search
-│   ├── vectors.py     # Embedding generation and retrieval
-│   └── __init__.py
+│   ├── cache.py           # TTL-based LRU cache for search
+│   └── vectors.py         # Embedding generation and retrieval
 ├── tools/
-│   ├── latency.py     # Λ complexity indicator
-│   ├── search.py      # Hybrid RAG orchestrator
-│   ├── reranker.py    # Cross-encoder reranking
-│   └── __init__.py
-└── __init__.py
+│   ├── latency.py         # Λ complexity indicator
+│   ├── search.py          # Hybrid RAG orchestrator (RRF + FTS5 + pgvector)
+│   ├── fts_search.py      # Local SQLite FTS5 BM25 lexical search
+│   └── reranker.py        # Cross-encoder reranking
+└── mcp_server.py          # 18-tool FastMCP server
 ```
 
 ---
 
-## 📖 Case Study Categories (492 across 15 domains)
+## 📖 Case Study Categories (587 across 15 domains)
 
 | Category | Examples |
 |----------|----------|
@@ -230,8 +236,8 @@ athena/
 |-------|------------|
 | **Language** | Python 3.x |
 | **Vector DB** | Supabase (pgvector) |
-| **Embeddings** | Google text-embedding-004 |
-| **LLM** | Gemini 3.5 Pro (preview) / Claude Fable 5 |
+| **Embeddings** | Google gemini-embedding-001 |
+| **LLM** | Gemini 3.1 Pro / Claude Opus 4.6 |
 | **Hosting** | GitHub Pages / Cloudflare |
 
 ---
