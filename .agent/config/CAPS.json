@@ -7,8 +7,8 @@
     "system": "v10.0.6"
   },
   "protocols": {
-    "total": 460,
-    "active": 426,
+    "total": 461,
+    "active": 427,
     "archived": 34,
     "categories": 26,
     "cap": "uncapped",
@@ -53,7 +53,7 @@
   },
   "scripts": 294,
   "memories": {
-    "total_files": 5466,
+    "total_files": 5475,
     "path": ".context/memories/"
   },
   "paths": {

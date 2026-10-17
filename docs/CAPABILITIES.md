@@ -10,7 +10,7 @@
 | Metric | Count |
 |--------|-------|
 | **Automation Scripts** | 294 |
-| **Decision Protocols** | 460 (426 active + 34 archived, 26 categories) |
+| **Decision Protocols** | 461 (427 active + 34 archived, 26 categories) |
 | **Orchestration Workflows** | 77 (56 root + 21 domain) |
 | **Skills** | 44 active (40 with context_trigger), 17 archived |
 | **Case Studies** | 587 (15 domains) |
@@ -99,7 +99,7 @@
 
 ---
 
-## 📜 Decision Protocols (460 total: 426 active + 34 archived, 26 categories)
+## 📜 Decision Protocols (461 total: 427 active + 34 archived, 26 categories)
 
 ### Architecture (29)
 

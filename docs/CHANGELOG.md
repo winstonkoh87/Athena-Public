@@ -19,7 +19,7 @@ This document provides detailed release notes. For the brief summary, see the RE
 ### Canonical Positioning & Architecture Documentation
 - **4-Pillar Positioning**: Updated canonical identity across all declared surfaces to: *"Local-first memory, decision engine, and governance harness for AI agents — portable across IDEs. Own the state. Rent the intelligence."*
 - **4-Pillar Bionic Architecture & SDK Surface (`README.md`)**: Added the 4-Pillar architecture diagram (Pillar 1 Memory & Retrieval, Pillar 2 Decision & Frame Engine, Pillar 3 Governance & Safety Harness, Pillar 4 Portable Control Plane), the "What Ships in the SDK (`src/athena/`)" MCP tool table, and the 3-tier epistemic status table (`code-enforced`, `code-available`, `agent-discretion`).
-- **Canonical Metrics Synchronization (`v10.0.6`)**: Reconciled all surfaces (`README.md`, `SPEC_SHEET.md`, `CAPABILITIES.md`, `llms.txt`, `CAPS.json`) to `2,100+` sessions, `587` case studies, `460` protocols (`426` active + `34` archived across `26` categories), `44` active skills, `77` workflows (`56` root + `21` domain), `294` scripts, and `5,466` indexed memory files.
+- **Canonical Metrics Synchronization (`v10.0.6`)**: Reconciled all surfaces (`README.md`, `SPEC_SHEET.md`, `CAPABILITIES.md`, `llms.txt`, `CAPS.json`) to `2,100+` sessions, `587` case studies, `461` protocols (`427` active + `34` archived across `26` categories), `44` active skills, `77` workflows (`56` root + `21` domain), `294` scripts, and `5,475` indexed memory files.
 
 ---
 
