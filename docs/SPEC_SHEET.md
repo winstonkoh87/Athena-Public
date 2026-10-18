@@ -215,7 +215,7 @@ Query → [Semantic Search (pgvector)] ──┘
 | Document | Purpose |
 |----------|---------|
 | [REQUIREMENTS.md](./REQUIREMENTS.md) | User stories, functional requirements, constraints |
-| [ARCHITECTURE.md](../ARCHITECTURE.md) | System design, data flow, hub model |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | System design, data flow, hub model |
 | [BENCHMARKS.md](./BENCHMARKS.md) | Quantitative performance data |
 | [FEATURES.md](./FEATURES.md) | User-facing feature descriptions |
 | [CAPABILITIES.md](./CAPABILITIES.md) | Full automation catalog |
