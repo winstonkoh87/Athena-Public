@@ -2,7 +2,7 @@
 
 Deploy your own compounding context layer in 5 minutes.
 
-*Last Updated: 2026-10-17 · v10.0.5*
+*Last Updated: 2026-10-18 · v10.0.6*
 
 ---
 
@@ -77,7 +77,7 @@ athena doctor                 # Full 15-check system diagnostics
 athena doctor --fix           # Auto-repair fixable issues
 athena save "summary"         # Quicksave checkpoint
 athena --end                  # Close session and save
-athena --version              # Show version (v10.0.5)
+athena --version              # Show version (v10.0.6)
 ```
 
 ---

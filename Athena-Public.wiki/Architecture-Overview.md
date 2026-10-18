@@ -2,7 +2,7 @@
 
 Athena is the **open-source compounding context layer for AI coding agents**, portable across IDEs. It provides persistent memory, structured reasoning, and governed execution across any LLM while keeping 100% of your data locally in plain Markdown on disk.
 
-*Last Updated: 2026-10-17 · v10.0.5*
+*Last Updated: 2026-10-18 · v10.0.6*
 
 ---
 
@@ -14,7 +14,7 @@ Athena is the **open-source compounding context layer for AI coding agents**, po
 |:---|:---|:---|
 | **Memory & State** | Longitudinal context persistence | Local Markdown files (`.context/`), session logs, active context checkpoints, SQLite FTS5 |
 | **Retrieval Engine** | Chunk-level hybrid RAG | BM25 keyword + Supabase pgvector + RRF rank fusion + Cross-Encoder reranking |
-| **Cognitive Protocols** | Executable reasoning frameworks | 426 active protocols across 26 domains (decision, risk, engineering, research) |
+| **Cognitive Protocols** | Executable reasoning frameworks | 427 active protocols across 26 domains (decision, risk, engineering, research) |
 | **Agentic Skills** | Dynamic capability units | 44 active skills with path- and topic-triggered conditional activation |
 | **Governance & Safety** | Ruin prevention & execution gates | Law #1 (No Irreversible Ruin), Stop Governance Gate, deterministic receipt tracking |
 | **Interface & Bridge** | Cross-IDE portability | Native support for Claude Code, Antigravity, Cursor, Gemini CLI, and VS Code |
@@ -122,7 +122,7 @@ graph TD
 
 ## 🔌 MCP Server & Direct IPC
  
- *As of v10.0.5.* Tools & resources exposed via [Model Context Protocol](https://modelcontextprotocol.io/) with modernized direct-payload IPC (eliminating stdout buffer hijacking):
+ *As of v10.0.6.* Tools & resources exposed via [Model Context Protocol](https://modelcontextprotocol.io/) with modernized direct-payload IPC (eliminating stdout buffer hijacking):
  
  | Tool | Permission | Description |
  |------|-----------|-------------|
@@ -138,7 +138,7 @@ graph TD
  | `set_secret_mode` | admin | Toggle demo mode / redacting private state |
  | `permission_status` | read | Show access state & tool manifest |
 
-### 🚪 AgentGate (v10.0.5)
+### 🚪 AgentGate (v10.0.6)
  
  A model-agnostic interception layer, so governance does not depend on any one
  IDE's hook system. Two entry points:
@@ -172,7 +172,7 @@ graph TD
  
  | Layer | Technology | Purpose |
  |:------|:----------|:--------|
- | **SDK** | `athena` Python package (v10.0.5) | Core search, reranking, memory, and governance gates |
+ | **SDK** | `athena` Python package (v10.0.6) | Core search, reranking, memory, and governance gates |
  | **Reasoning** | Gemini 3.8 Flash / Claude 3.5 Sonnet / GPT-4o | Multi-model reasoning and fallback cascade |
  | **Reranking** | Cross-Encoder (`cross-encoder/ms-marco-MiniLM-L6-v2`) | Second-stage reranking after RRF fusion |
  | **IDE / Agent** | Claude Code, Antigravity, Cursor, Gemini CLI, VS Code | Portable agentic development environment |

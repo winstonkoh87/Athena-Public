@@ -173,9 +173,9 @@ Full cluster details: `CLUSTER_INDEX.md` (private workspace — see table above 
 |:------|------:|:------------|
 | Cognitive Domains | 8 | Memory activation targets (priority-ordered for tie-breaking) |
 | Cognitive Clusters | 15 | Co-activating procedural memory bundles |
-| Skills | 40 active (17 archived) |
-| Protocols | 399 active (32 archived; 431 total) |
-| Workflows | 69 (51 root + 18 _domain/) |
+| Skills | 44 active (17 archived) |
+| Protocols | 427 active (34 archived; 461 total) |
+| Workflows | 77 (56 root + 21 _domain/) |
 
 ---
 
