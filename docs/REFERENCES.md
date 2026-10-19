@@ -1,6 +1,6 @@
 ---
 created: 2026-02-12
-last_updated: 2026-10-04
+last_updated: 2026-10-20
 tags: #references #apa #academic #citations
 ---
 
@@ -10,7 +10,7 @@ tags: #references #apa #academic #citations
 >
 > **Why this exists**: Athena synthesizes concepts from cognitive psychology, microeconomics, game theory, AI/ML research, and decision science. This reference list ensures every claim is traceable to its source — not opinion.
 >
-> **Verification policy**: AI-assembled citations are a known fabrication risk. Every DOI in this file was programmatically verified against the Crossref API and every arXiv ID against the arXiv export API on **4 October 2026** — **32/32 DOIs and 28/28 arXiv IDs resolved to the cited works, 0 failures** (the hooks doc's arXiv:2602.23971 was verified in the same sweep). New citations are not added without passing the same check.
+> **Verification policy**: AI-assembled citations are a known fabrication risk. Every DOI in this file was programmatically verified against the Crossref API and every arXiv ID against the arXiv export API on **20 October 2026** — **35/35 DOIs and 28/28 arXiv IDs resolved to the cited works, 0 failures** (the hooks doc's arXiv:2602.23971 was verified in the same sweep). New citations are not added without passing the same check.
 
 ---
 
@@ -226,6 +226,10 @@ Nogueira, R., & Cho, K. (2020). Passage re-ranking with BERT. *arXiv preprint ar
 
 Reimers, N., & Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. *Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP)*. <https://arxiv.org/abs/1908.10084>
 
+Robertson, S. E., & Zaragoza, H. (2009). The probabilistic relevance framework: BM25 and beyond. *Foundations and Trends in Information Retrieval, 3*(4), 333–389. <https://doi.org/10.1561/1500000019>
+
+> **Note**: The definitive formalization of Okapi BM25 and the probabilistic relevance framework. Grounds the lexical retrieval channel in Athena's Hybrid RAG stack (SQLite FTS5 BM25 + pgvector dense embeddings), fused via Reciprocal Rank Fusion (Cormack et al., 2009).
+
 ---
 
 ## Prompt Engineering & Context Window Management
@@ -253,6 +257,10 @@ Pearson, T. (2015). *The end of jobs: Money, meaning and freedom without the 9-t
 Pearson, T. (2018, June 6). The ultimate guide to apprenticeships. *Mission.org*. <https://medium.com/the-mission/the-ultimate-guide-to-apprenticeships-54fc932683a2>
 
 Ries, E. (2011). *The lean startup: How today's entrepreneurs use continuous innovation to create radically successful businesses*. Crown Business.
+
+Snowden, D. J., & Boone, M. E. (2007). A leader's framework for decision making. *Harvard Business Review, 85*(11), 68–76.
+
+> **Note**: Introduced the Cynefin sensemaking framework (Clear, Complicated, Complex, Chaotic, Confusion). Directly grounds Protocol 525's progressive domain reclassification and cross-domain weighting matrix.
 
 Taleb, N. N. (2004). *Fooled by randomness: The hidden role of chance in life and in the markets* (2nd ed.). Random House.
 
@@ -326,6 +334,10 @@ von Bertalanffy, L. (1968). *General system theory: Foundations, development, ap
 
 > **Note**: von Bertalanffy's General Systems Theory provides the formal foundation for Athena's Biological Stack Architecture. The principle that systems exhibit emergent properties not reducible to their parts — and that hierarchical organization (subsystem → system → suprasystem) is a universal pattern — directly maps to Athena's hierarchy: Protocols → Clusters → Cognitive Systems → Organism.
 
+Meadows, D. H. (2008). *Thinking in systems: A primer* (D. Wright, Ed.). Chelsea Green Publishing.
+
+> **Note**: Meadows' principles of system dynamics (feedback loops, delays, leverage points, and structure driving behavior) provide the conceptual foundation for Athena's Meta-Pattern Engine (MP-1 through MP-14) and the Iceberg Model detailed in `docs/concepts/Systems_Thinking.md`.
+
 Minsky, M. (1986). *The society of mind*. Simon & Schuster.
 
 > **Note**: Minsky's "Society of Mind" theory — that intelligence emerges from the interaction of many small, unintelligent agents — is the conceptual ancestor of Athena's multi-protocol architecture. Each protocol is a "mindless agent"; intelligence emerges from their orchestrated interaction via clusters and cognitive systems.
@@ -337,6 +349,14 @@ Newell, A. (1990). *Unified theories of cognition*. Harvard University Press.
 ---
 
 ## Problem Framing & Wicked Problems
+
+Brier, G. W. (1950). Verification of forecasts expressed in terms of probability. *Monthly Weather Review, 78*(1), 1–3. <https://doi.org/10.1175/1520-0493(1950)078%3C0001:VOFEIT%3E2.0.CO;2>
+
+> **Note**: Brier introduced the canonical strictly proper scoring rule for probability forecasts. Implemented in `frame_ledger.py` (`compute_brier_score`) to measure calibration across pre-registered hypotheses against the 0.25 random coin-flip baseline.
+
+Howard, R. A. (1966). Information value theory. *IEEE Transactions on Systems Science and Cybernetics, 2*(1), 22–26. <https://doi.org/10.1109/TSSC.1966.300074>
+
+> **Note**: Howard formalized the concepts of Value of Information (VOI) and Expected Value of Information (EVI). Grounds the anti-rumination stop rule in `frame_ledger.py` (Rule R8): computational deliberation is terminated when the expected value of further analysis falls below the cost of a cheap empirical probe.
 
 Rittel, H. W. J., & Webber, M. M. (1973). Dilemmas in a general theory of planning. *Policy Sciences, 4*(2), 155–169. <https://doi.org/10.1007/BF01405730>
 
@@ -390,4 +410,4 @@ For AI/ML papers, arXiv links are provided alongside formal publication details 
 
 ---
 
-*Last verified: 4 October 2026 — added the "Game Theory, Open Games & Strategic Decision Science" section grounding Protocol 500, Protocol 422, and gto_engine in formal decision science under uncertainty (Blackwell 1956, Schelling 1960, Harsanyi 1967, Maynard Smith & Price 1973, Fudenberg & Tirole 1985, Fudenberg & Maskin 1986, Gilboa & Schmeidler 1989, Wu & Axelrod 1995, Brandenburger & Nalebuff 1996, Myerson 1998, Savage 1951, Heifetz et al. 2006, Halpern & Rego 2014, Taleb 2007). **Full re-verification sweep this date: 32/32 DOIs (Crossref API) + 28/28 arXiv IDs (arXiv export API), 0 failures.** Previous fact-checks: 5 September 2026 (AI Benchmarks); 23 July 2026; 22 July 2026; 5 July 2026; 6 June 2026 (S437).*
+*Last verified: 20 October 2026 — added foundational citations for Value of Information (Howard, 1966), probability forecast verification (Brier, 1950), Okapi BM25 probabilistic retrieval (Robertson & Zaragoza, 2009), systems thinking (Meadows, 2008), and Cynefin sensemaking (Snowden & Boone, 2007), directly grounding frame_ledger.py, hybrid RAG lexical FTS, and Systems_Thinking.md. **Full re-verification sweep this date: 35/35 DOIs (Crossref API) + 28/28 arXiv IDs (arXiv export API), 0 failures.** Previous fact-checks: 4 October 2026; 5 September 2026; 23 July 2026; 22 July 2026; 5 July 2026; 6 June 2026 (S437).*
