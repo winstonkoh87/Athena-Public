@@ -121,8 +121,8 @@ When executing **any** workflow (slash command):
 
 `.agent/workflows/` has two tiers:
 
-- **Root tier** (51 files): always loadable. Examples: `/do`, `/start`, `/end`, `/plan`, `/audit`, `/gto`, `/ultrathink`.
-- **Domain tier** (`.agent/workflows/_domain/`, 18 files): dormant by default, activated only when the query implies a specific domain. Examples: `ads.md`, `brand-generator.md`, `ugc-factory.md`, `deploy-website.md`, `ui-ux-pro-max.md`, `archive.md` (URL → library archiver), `archive-client.md` (client handoff), `foresight.md` (SOTA predictive positioning).
+- **Root tier** (56 files): always loadable. Examples: `/do`, `/start`, `/end`, `/plan`, `/audit`, `/gto`, `/ultrathink`.
+- **Domain tier** (`.agent/workflows/_domain/`, 21 files): dormant by default, activated only when the query implies a specific domain. Examples: `ads.md`, `brand-generator.md`, `ugc-factory.md`, `deploy-website.md`, `ui-ux-pro-max.md`, `archive.md` (URL → library archiver), `archive-client.md` (client handoff), `foresight.md` (SOTA predictive positioning).
 
 **Activation rule** for domain workflows: `/do` resolves a domain command only when (a) the active project in `PROJECTS.md` matches the domain prefix, (b) the query contains domain-specific nouns (e.g., "ads", "ugc", "client handoff"), or (c) the user prefixes explicitly (e.g., `/archive https://...`). If unclear, `/do` asks before routing.
 

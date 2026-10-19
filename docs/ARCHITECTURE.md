@@ -27,9 +27,9 @@ Athena/
 │   └── archive_skills/            #   17 sunset skills (read-only, see README)
 │
 ├── .context/                      # Personal knowledge base
-│   ├── memories/                  #   5,466 memory files (session logs + case studies + profile)
+│   ├── memories/                  #   5,512 memory files (session logs + case studies + profile)
 │   │   ├── session_logs/          #     Dated session records
-│   │   ├── case_studies/          #     587 documented patterns (14 domains)
+│   │   ├── case_studies/          #     592 documented patterns (14 domains)
 │   │   ├── profile/               #     Core profile, psychology, voice DNA
 │   │   └── observations/          #     Session insights
 │   ├── memory_bank/               #   10 boot files (activeContext, userContext,
@@ -296,7 +296,7 @@ src/athena/tools/search.py (12s God Mode timeout + grep fallback)
 | Index | Size | Purpose |
 |:------|-----:|:--------|
 | `CLUSTER_INDEX.md` | 18KB | Routing map (15 clusters → 26 skills) |
-| `WORKFLOW_INDEX.md` | 6KB | Workflow registry (66 workflows) |
+| `WORKFLOW_INDEX.md` | 6KB | Workflow registry (77 workflows) |
 | `PROTOCOL_SUMMARIES.md` | 24KB | All-protocol quick-lookup |
 | `KNOWLEDGE_GRAPH.md` | 15KB | Concept relationships |
 
