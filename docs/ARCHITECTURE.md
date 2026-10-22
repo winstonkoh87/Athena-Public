@@ -27,9 +27,9 @@ Athena/
 │   └── archive_skills/            #   17 sunset skills (read-only, see README)
 │
 ├── .context/                      # Personal knowledge base
-│   ├── memories/                  #   5,553 memory files (session logs + case studies + profile)
+│   ├── memories/                  #   5,568 memory files (session logs + case studies + profile)
 │   │   ├── session_logs/          #     Dated session records
-│   │   ├── case_studies/          #     596 documented patterns (14 domains)
+│   │   ├── case_studies/          #     599 documented patterns (14 domains)
 │   │   ├── profile/               #     Core profile, psychology, voice DNA
 │   │   └── observations/          #     Session insights
 │   ├── memory_bank/               #   10 boot files (activeContext, userContext,
