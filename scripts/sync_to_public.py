@@ -14,10 +14,10 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import os
-from pathlib import Path
 import shutil
 import sys
+from pathlib import Path
+
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -38,7 +38,7 @@ def load_manifest(manifest_path: Path) -> dict:
         sys.stderr.write(f"FATAL: Manifest not found at {manifest_path}\n")
         sys.exit(2)
     try:
-        with open(manifest_path, "r", encoding="utf-8") as f:
+        with open(manifest_path, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
     except Exception as e:
         sys.stderr.write(f"FATAL: Failed to parse manifest YAML: {e}\n")
@@ -112,7 +112,7 @@ def verify_blocklist_gate(blocklist_path: Path) -> None:
         )
         sys.exit(2)
 
-    with open(blocklist_path, "r", encoding="utf-8") as f:
+    with open(blocklist_path, encoding="utf-8") as f:
         lines = [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
     if not lines:
@@ -143,7 +143,7 @@ def main() -> int:
         sys.exit(2)
 
     print(f"Manifest validated successfully: {len(resolved_files)} files resolved.")
-    
+
     # Display files with SHA256 in dry-run mode
     for p in sorted(resolved_files):
         rel_path = p.relative_to(REPO_ROOT)

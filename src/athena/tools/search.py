@@ -646,7 +646,11 @@ def collect_filenames(query: str) -> list[SearchResult]:
         )
 
         if process.stdout:
-            lines = [l for l in process.stdout.strip().split("\n") if l.strip()][:300]
+            lines = [
+                line_text
+                for line_text in process.stdout.strip().split("\n")
+                if line_text.strip()
+            ][:300]
             candidates = []
             for line in lines:
                 # Never surface archived/frozen content (S527 pollution guard).
@@ -669,7 +673,16 @@ def collect_filenames(query: str) -> list[SearchResult]:
                     norm_path = line.replace("\\", "/")
                     if norm_path.startswith("./"):
                         norm_path = norm_path[2:]
-                    root_boost = 0.25 if (norm_path.startswith("src/athena/") or norm_path.startswith(".agent/scripts/")) else 0.0
+                    root_boost = (
+                        0.25
+                        if (
+                            norm_path.startswith("src/athena/")
+                            or norm_path.startswith(".agent/scripts/")
+                            or norm_path.startswith("examples/scripts/")
+                            or norm_path.startswith("scripts/")
+                        )
+                        else 0.0
+                    )
                     stem_match = any(
                         k.lower() == stem_lower
                         or k.lower() == fname_lower
@@ -681,7 +694,7 @@ def collect_filenames(query: str) -> list[SearchResult]:
                     score = min(1.0, (keyword_hits / len(keywords)) + root_boost + exact_boost)
                     header = ""
                     try:
-                        with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                        with open(full_path, encoding="utf-8", errors="ignore") as f:
                             header = f.read(300).strip()
                     except Exception:
                         pass

@@ -135,3 +135,8 @@ Athena-Public.LEGACY-DO-NOT-PUSH/
 recovered_notes.txt
 *_notes_recovered*
 
+
+.context/telemetry/
+
+.athena/
+

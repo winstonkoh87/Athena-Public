@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -216,8 +215,8 @@ def calculate_lot_size(
     symbol: str,
     stop_loss_pips: float,
     risk_amount_quote: float,
-    min_lot: Optional[float] = None,
-    lot_step: Optional[float] = None,
+    min_lot: float | None = None,
+    lot_step: float | None = None,
     round_down: bool = True,
 ) -> float:
     """

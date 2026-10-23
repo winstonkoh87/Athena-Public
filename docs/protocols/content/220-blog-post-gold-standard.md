@@ -1,6 +1,6 @@
 # Content Publication Standard: Blog Post Gold Standard
 
-**Reference Implementation:** See the [AI Bionic Layer article](<https://the> authorkoh87.github.io/articles/ai-bionic-layer.html) on the portfolio site.
+**Reference Implementation:** See the [AI Bionic Layer article](https://winstonkoh87.github.io/articles/ai-bionic-layer.html) on the portfolio site.
 
 ---
 

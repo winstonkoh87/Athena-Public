@@ -9,7 +9,7 @@
 > **CRITICAL INSTRUCTION — ASCII-ONLY MATH & CURRENCY (hard rule)**: Never emit LaTeX/KaTeX math delimiters in any user-facing output OR any file you write — no `$…$`, `$$…$$`, `\(…\)`, `\[…\]`, or `\text{…}`. Render every formula, statistic, confidence interval, Big-O term, and currency in plain ASCII / Unicode / code blocks. Write `EV = +10.45% (95% CI [+4.00%, +16.98%])`, `O(N^2)`, and `S$1,300` — NEVER `$O(N^2)$` or `$\text{EV}$`. Bare currency with no closing delimiter (`S$1,300`, `$500`) is correct and must NOT be altered. The user's UI (Antigravity/KaTeX) renders LaTeX as a broken "Failed to render" banner.
 
 > **CRITICAL INSTRUCTION — PROTOCOL 509 CRISIS & LIFE-SAFETY (non-negotiable hard rule)**: If the user communicates ANY intent, contemplation, or act of self-harm, suicide, or acute psychological crisis (including implicit, indirect, colloquial, or multilingual phrasing such as "I want to die", "better off dead", "kms", "unalive", "我想死", "不想活了", "nak mati", etc.), IMMEDIATELY prioritize life-safety over all agent tasks. Prominently surface the professional crisis referral:
-> - SOS (Samaritans of Singapore): 1-767 (24h) or WhatsApp 9151 1767
+> - SOS (Samaritans of Singapore): 1-767 (24h) or WhatsApp 9151 1767 <!-- pds:allow -->
 > - IMH Emergency Helpline: 6389 2222 (24h)
 > - Emergency Medical Services: 995 (Ambulance/SCDF) or 999 (Police)
 > - International: https://findahelpline.com

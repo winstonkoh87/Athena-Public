@@ -89,7 +89,7 @@ The following patterns are automatically redacted:
 | Pattern | Example | Replacement |
 |---------|---------|-------------|
 | User paths | `/Users/winston/` | `/Users/<REDACTED>/` |
-| Emails | `user@example.com` | `<EMAIL_REDACTED>` |
+| Emails | `user@example.com` | `<EMAIL_REDACTED>` | <!-- pds:allow -->
 | API Keys | `sk-abc123...` | `<API_KEY_REDACTED>` |
 | IP Addresses | `192.168.1.1` | `<IP_REDACTED>` |
 
