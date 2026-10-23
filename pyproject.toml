@@ -55,6 +55,7 @@ Changelog = "https://github.com/winstonkoh87/Athena-Public/blob/main/docs/CHANGE
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "pytest-cov",
     "black",
     "ruff",
     "pipreqs",
@@ -115,3 +116,27 @@ known-first-party = ["athena"]
 [tool.black]
 line-length = 88
 target-version = ["py310"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+# Start permissive, tighten over time. Each flag below is a ratchet —
+# once enabled, never disable without a Red Run proving the guard worked.
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+no_implicit_optional = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--tb=short -q"
+
+[tool.coverage.run]
+source = ["src/athena"]
+omit = ["src/athena/__pycache__/*", "src/athena/templates/*"]
+
+[tool.coverage.report]
+show_missing = true
+# 15% is the starting floor. Ratchet upward as coverage improves.
+fail_under = 15
+
