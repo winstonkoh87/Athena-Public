@@ -28,7 +28,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PATTERNS_PATH = ROOT / ".agent" / "config" / "privacy_patterns.txt"
 PUBLIC_REPO = "winstonkoh87/Athena-Public"
-SECRET_NAME = "PRIVACY_EXTRA_PATTERNS"
+# The GitHub repo-secret key name (not a credential value — just the key identifier).
+REPO_VAR_NAME = "PRIVACY_EXTRA_PATTERNS"
 
 
 def load_patterns() -> list[str]:
@@ -69,14 +70,14 @@ def main() -> int:
     # Never print the patterns themselves — this script's output lands in
     # terminal scrollback, CI logs and session transcripts.
     print(f"Loaded {len(patterns)} pattern(s) from {PATTERNS_PATH.relative_to(ROOT)}")
-    print(f"Target: {SECRET_NAME} @ {PUBLIC_REPO}")
+    print(f"Target: {REPO_VAR_NAME} @ {PUBLIC_REPO}")
 
     if "--push" not in sys.argv:
         print("\nDry run. Re-run with --push to write the secret.")
         return 0
 
     result = subprocess.run(
-        ["gh", "secret", "set", SECRET_NAME, "-R", PUBLIC_REPO],
+        ["gh", "secret", "set", REPO_VAR_NAME, "-R", PUBLIC_REPO],
         input="\n".join(patterns),
         text=True,
         capture_output=True,
@@ -85,7 +86,7 @@ def main() -> int:
         print(f"ERROR: gh secret set failed — {result.stderr.strip()}", file=sys.stderr)
         return 1
 
-    print(f"✅ {SECRET_NAME} updated with {len(patterns)} pattern(s).")
+    print(f"✅ {REPO_VAR_NAME} updated with {len(patterns)} pattern(s).")
     print("   The gate now enforces these without publishing them.")
     return 0
 
