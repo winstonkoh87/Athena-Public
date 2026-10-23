@@ -202,6 +202,7 @@ athena/
 ├── intelligence/
 │   ├── frame_ledger.py    # Frame validation, VOI gate, Two-Loop state machine
 │   ├── gto_engine.py      # EEV dominance, ruin ceiling, Paths A-E screen
+│   ├── wargame.py         # 2-turn sequential game trees & trough ruin check
 │   ├── meta_awareness.py  # Inbound/outbound substance decode (PAT-574)
 │   ├── calibration.py     # Brier scoring and calibration curve tracking
 │   └── sentinel.py        # Adaptive latency / complexity classification

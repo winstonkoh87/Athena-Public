@@ -54,7 +54,7 @@ Then type `/start` in your IDE's AI chat panel. Work normally. Type `/end` to sa
 │  Athena SDK (src/athena/)                                         │
 │  ├── 1. Memory & RAG: /start (~2K boot), hybrid search + reranker │
 │  ├── 2. Problem Framing: VOI calculator, falsifier & R1-R13 gates │
-│  ├── 3. Decision Engine: EEV, 1/3 Kelly, Ruin, MCDA, Monte Carlo  │
+│  ├── 3. Decision & Wargaming: EEV, 1/3 Kelly, Ruin, MCDA, Wargame  │
 │  └── 4. Governance: Lambda risk router, ruin blocker, secret scan │
 └───────────────────────────────┬───────────────────────────────────┘
                                 │
@@ -82,6 +82,7 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 | **Hybrid RAG & Context Gate** | `mcp_server.py` (`smart_search`, `context_gate`) | Document-level RRF fusion across BM25 FTS5 + pgvector + filename headers + ONNX cross-encoder rerank; Lambda risk-tier routing (`SNIPER` / `STANDARD` / `ULTRA`) |
 | **Problem Framing & VOI Ledger** | `intelligence/frame_ledger.py` (`frame_open`, `frame_validate`, `frame_resolve`, `frame_status`) | Value of Information (`EVI`) stop-rule, falsifiable hypothesis pre-registration, `R1–R13` commitment gates (loop budget, surviving contingency branch, irreversible ruin check), `LUCK` outcome-band gate, and Brier calibration scoring |
 | **Quantitative Decision Engine** | `intelligence/gto_engine.py` (`decision_screen`) | Deterministic evaluators for Expected Economic Value (`eev`), One-Third Kelly (`kelly`), Absorbing-Barrier Ruin (`ruin`), MCDA with ruin vetoes (`mcda`), Decision Monte Carlo (`decision-mc`), Scenario Robustness (`robustness`), Barbell (`barbell`), and SHA-256 receipts (`.athena/decision_receipts.jsonl`) |
+| **Adversarial Wargaming Engine** | `intelligence/wargame.py` (`athena-wargame`) | Two-turn sequential Blue vs. Red game trees with intra-turn path-dependent trough ruin, Red best-response optimization, and tamper-evident run receipts (`.athena/wargame_runs.jsonl`) |
 | **Local Analytical SQL** | `duckdb_mcp_server.py` (`query`, `profile`, `list_tables`, `export_result`) | Zero-dependency DuckDB engine for profiling and querying large CSV, JSON, and Parquet datasets without exhausting LLM context windows |
 | **Runtime Governance & Safety** | `core/governance.py`, `core/permissions.py`, `.agent/scripts/hook_*.py` | Capability permission gates, Protocol 509 crisis safety screen, 14/16 destructive command blocker, secret egress scanner, and Doom-Loop circuit breaker |
 
@@ -93,7 +94,7 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 |:------|:-------|:---------|
 | **Storage & hybrid retrieval** — memories stored and surfaced when relevant | ✅ Shipped (`code-enforced`) | Hybrid RAG with document-level RRF + cross-encoder rerank, hardened through [logged regressions](docs/CHANGELOG.md) |
 | **Portability** — Markdown and JSONL on your disk, movable across models | ✅ Shipped (`structural`) | Plain files on disk — inspect the repo |
-| **Quantitative decision screening** — EEV, 1/3 Kelly, Ruin, MCDA, Monte Carlo | ✅ Shipped (`code-available`) | [`gto_engine.py`](src/athena/intelligence/gto_engine.py) emits SHA-256 receipts (`107` tests); Stop hook blocks unreceipted numeric engine claims |
+| **Quantitative decision screening & wargaming** — EEV, 1/3 Kelly, Ruin, MCDA, 2-turn game trees | ✅ Shipped (`code-available`) | [`gto_engine.py`](src/athena/intelligence/gto_engine.py) & [`wargame.py`](src/athena/intelligence/wargame.py) emit SHA-256 receipts (`107` tests); Stop hook blocks unreceipted numeric engine claims |
 | **Pre-registered problem framing** — VOI stop-rule, `R1–R13` commitment & falsifier gates | ✅ Shipped (`code-available`) | [`frame_ledger.py`](src/athena/intelligence/frame_ledger.py) validates falsifiers, loop budgets, and Brier calibration (`57` tests) |
 | **Governed autonomy** — hooks block destructive commands, ungrounded claims, and secrets | ✅ Shipped (partial) | Ruin check blocks 14/16 destructive commands; 2 shell bypasses are [known and tracked](docs/TECH_DEBT.md) |
 | **Compounding personalization** — session 2,000 recalls session 5 | 🟡 N=1 evidence | 2,100+ sessions, 427 active protocols, and 592 case studies by the author; no multi-user study |
@@ -109,6 +110,9 @@ pytest tests/ -v --tb=short
 
 # Screen a decision quantitatively (EEV / 1/3 Kelly / Ruin / MCDA / Monte Carlo)
 python -m athena.intelligence.gto_engine --action mcda --help
+
+# Adjudicate a 2-turn adversarial wargame with path-dependent trough ruin screening
+python -m athena.intelligence.wargame --help
 
 # Validate a pre-registered problem frame against R1-R13 commitment gates
 python -m athena.intelligence.frame_ledger calibrate
