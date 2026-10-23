@@ -2,7 +2,7 @@
 
 > Local-first memory, decision engine, and governance harness for AI agents — portable across IDEs. Persistent memory, structured reasoning, and governed AI agents that work across any LLM. Capture what you learn, retrieve it when relevant, evaluate decisions against numeric ruin gates, and carry your context between models. Own the state. Rent the intelligence. MIT Licensed.
 
-Athena is a local-first memory, decision engine, and governance harness that gives any AI model (Gemini, Claude, GPT) permanent memory, 461 reusable decision protocols (427 active + 34 archived across 26 categories; 187 published as examples), 599 case studies, and bounded autonomy — all stored as plain Markdown files on the user's machine. Session 2,100 recalls patterns from session 5.
+Athena is a local-first memory, decision engine, and governance harness that gives any AI model (Gemini, Claude, GPT) permanent memory, 461 reusable decision protocols (427 active + 34 archived across 26 categories; 187 published as examples), 600 case studies, and bounded autonomy — all stored as plain Markdown files on the user's machine. Session 2,100 recalls patterns from session 5.
 
 ## Core Documentation
 

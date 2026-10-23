@@ -96,7 +96,7 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 | **Quantitative decision screening** — EEV, 1/3 Kelly, Ruin, MCDA, Monte Carlo | ✅ Shipped (`code-available`) | [`gto_engine.py`](src/athena/intelligence/gto_engine.py) emits SHA-256 receipts (`107` tests); Stop hook blocks unreceipted numeric engine claims |
 | **Pre-registered problem framing** — VOI stop-rule, `R1–R13` commitment & falsifier gates | ✅ Shipped (`code-available`) | [`frame_ledger.py`](src/athena/intelligence/frame_ledger.py) validates falsifiers, loop budgets, and Brier calibration (`57` tests) |
 | **Governed autonomy** — hooks block destructive commands, ungrounded claims, and secrets | ✅ Shipped (partial) | Ruin check blocks 14/16 destructive commands; 2 shell bypasses are [known and tracked](docs/TECH_DEBT.md) |
-| **Compounding personalization** — session 2,000 recalls session 5 | 🟡 N=1 evidence | 2,100+ sessions, 427 active protocols, and 599 case studies by the author; no multi-user study |
+| **Compounding personalization** — session 2,000 recalls session 5 | 🟡 N=1 evidence | 2,100+ sessions, 427 active protocols, and 600 case studies by the author; no multi-user study |
 | **Anti-sycophancy** — personalization doesn't silently increase agreement | 🟡 Partial mitigation | Code-enforced meta-awareness gate (Claude Code hook); agent-discretion in hookless IDEs — see [honest limits](docs/ENGINEERING_DEPTH.md) |
 
 > **Why publish this table?** Because the failure mode of this product category is self-mythologizing — describing aspirations in the present tense. Athena's own convention ([Epistemic Status](examples/workflows/_shared.md#epistemic-status-convention-anti-self-mythologizing)) requires labeling every mechanism as `code-enforced`, `code-available`, `agent-discretion`, or `aspirational`. This table is that convention applied to the README.
@@ -126,7 +126,7 @@ python examples/scripts/evaluator.py --gold-set .agent/eval/gold_set.json
 | **Retrieval Hit@5 (Strict)** | **0.569** (37 / 65) | `python examples/scripts/evaluator.py` |
 | **Retrieval MRR@5 (Strict)** | **0.472** | `python examples/scripts/evaluator.py` |
 | *Retrieval Hit@5 (Lenient)* | *0.892 (deprecated)* | *Partial substring match (inflated)* |
-| **Unit & Red-Team Tests** | **710+ passed (100%)** | `pytest tests/` |
+| **Unit & Red-Team Tests** | **700+ passed (100%)** | `pytest tests/` |
 | **Secret Leaks (1,248+ commits)** | **0 detected** | Gitleaks + `privacy_scan.py` in CI |
 | **Code Quality & Lints** | **0 ruff findings** | `ruff check src/` |
 
