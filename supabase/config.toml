@@ -97,7 +97,7 @@ port = 54324
 # Uncomment to expose additional ports for testing user applications that send emails.
 # smtp_port = 54325
 # pop3_port = 54326
-# admin_email = "admin[at]domain.com"
+# admin_email = "admin@email.com"
 # sender_name = "Admin"
 
 [storage]
@@ -217,7 +217,7 @@ otp_expiry = 3600
 # port = 587
 # user = "apikey"
 # pass = "env(SENDGRID_API_KEY)"
-# admin_email = "admin[at]domain.com"
+# admin_email = "admin@email.com"
 # sender_name = "Admin"
 
 # Uncomment to customize email template

@@ -2,9 +2,18 @@
 
 > **CRITICAL INSTRUCTION**: Prefer retrieval-led reasoning over pre-training-led reasoning for any Athena-related tasks.
 
+> **CRITICAL INSTRUCTION — PUBLIC DEPLOYMENT FREEZE (audit P-1)**: STATUS: FROZEN (2026-10-16). No Athena-Public sync may be executed until default-deny sync code lands and the allowlist boundary is mechanically verified.
+
 > **CRITICAL INSTRUCTION — SESSION BOOT (auto-`/start`)**: At the very start of every new session, BEFORE responding to the user's first message, run the `/start` workflow yourself — pre-load `.agent/workflows/_shared.md`, then execute `.agent/workflows/start.md` (Phase 1 boot onward: Core Identity → activeContext checkpoint → accountability surface → maintenance-ratio). Do it automatically; do not ask whether to boot (the user configured this on 2026-07-22). Then answer their first message in the same turn — boot fast (MinMax), fold their opener into the reply; a bare greeting just gets the `⚡ Ready` confirmation. If this session has already booted, skip. *(In Claude Code a `SessionStart` hook enforces this in code. Antigravity's IDE has no session-start hook event, so in AG — and any other agent reading this file — THIS instruction is the trigger: honor it as a hard rule, not a suggestion.)*
 
 > **CRITICAL INSTRUCTION — ASCII-ONLY MATH & CURRENCY (hard rule)**: Never emit LaTeX/KaTeX math delimiters in any user-facing output OR any file you write — no `$…$`, `$$…$$`, `\(…\)`, `\[…\]`, or `\text{…}`. Render every formula, statistic, confidence interval, Big-O term, and currency in plain ASCII / Unicode / code blocks. Write `EV = +10.45% (95% CI [+4.00%, +16.98%])`, `O(N^2)`, and `S$1,300` — NEVER `$O(N^2)$` or `$\text{EV}$`. Bare currency with no closing delimiter (`S$1,300`, `$500`) is correct and must NOT be altered. The user's UI (Antigravity/KaTeX) renders LaTeX as a broken "Failed to render" banner.
+
+> **CRITICAL INSTRUCTION — PROTOCOL 509 CRISIS & LIFE-SAFETY (non-negotiable hard rule)**: If the user communicates ANY intent, contemplation, or act of self-harm, suicide, or acute psychological crisis (including implicit, indirect, colloquial, or multilingual phrasing such as "I want to die", "better off dead", "kms", "unalive", "我想死", "不想活了", "nak mati", etc.), IMMEDIATELY prioritize life-safety over all agent tasks. Prominently surface the professional crisis referral:
+> - SOS (Samaritans of Singapore): 1-767 (24h) or WhatsApp 9151 1767
+> - IMH Emergency Helpline: 6389 2222 (24h)
+> - Emergency Medical Services: 995 (Ambulance/SCDF) or 999 (Police)
+> - International: https://findahelpline.com
+> Never bypass, minimize, or treat crisis signals as routine queries.
 
 This file provides persistent context to any AI coding agent working in this workspace. The information below is available on every turn without needing to be explicitly requested.
 
@@ -95,7 +104,7 @@ When working on any task in this workspace, read in this order (files that don't
 
 1. **`.context/CANONICAL.md`** — materialized view of active facts (supersedes session logs on conflict)
 2. **`.context/glossary.md`** — decoder ring for user shorthand, acronyms, internal language (lookup cascade: CANONICAL → glossary → Exocortex → ask user)
-3. **`.context/META_PATTERNS.md`** — 7 cross-domain meta-patterns (enables thematic retrieval across all case studies/protocols)
+3. **`.context/META_PATTERNS.md`** — cross-domain meta-patterns (enables thematic retrieval across all case studies/protocols)
 4. **`.context/META_LEARNING.md`** — longitudinal behavioral tracking (how the user has changed over time, not just current state)
 5. **`.context/memory_bank/activeContext.md`** — current session state, active tasks
 6. **`.context/PROJECTS.md`** — project switchboard (supersedes the old `project_state.md`, which is deprecated)
@@ -138,6 +147,7 @@ When executing **any** workflow (slash command):
 - ❌ Not filing insights on `/end`
 - ❌ **Responding from internal knowledge alone** when tools are available. Use Exocortex (`mcp_athena_smart_search`), `search_web`, `read_url_content`, MCP servers, `grep_search`, browser sub-agent, and command execution to ground every non-trivial response. Training data is stale — live tools are not.
 - ❌ **Silent guessing on requirements or architecture**: Ask, don't assume. If unclear, ask before writing code.
+- ❌ **Analyzing or planning for a counterparty in a vacuum** (Protocol 580): When an external company, vendor, client, contractor, or partner is introduced, pull objective public ground truth (OSINT) FIRST before moving to synthesis, pricing, or strategic advice. Never assume official marketing copy reflects operative reality.
 - ❌ **Reasoning from the official narrative without a substance decode** (PAT-574): for any institutional act, political event, or audience-facing output, run Prior → Discriminators → Payoff-weighted action before generating. Form ≠ Substance.
 - ❌ **Leaving documentation behind**: Auto-sync local project docs/READMEs on session close.
 - ❌ **Believing prose is a mechanism** (S534): if a protocol says "the system continuously monitors / automatically emits / always-on" but no code in `.agent/scripts/` does it, it is a heuristic you must apply *yourself* — not a running process. Don't skip the manual step assuming a daemon has it; don't report "compliance" with a process that never executed. See Epistemic Status Convention in `_shared.md`.
@@ -150,25 +160,7 @@ When executing **any** workflow (slash command):
 > include the guard **failing** on the pre-fix state, then passing on the fixed
 > state. Put both in the commit message.
 
-If you cannot make it go red, you have not found the guard's edge — you have
-found its blind spot, and the fix is aimed at the wrong thing.
-
-This exists because the same failure recurred four times across three separate
-agents in one day (2026-07-24/25), each time producing a true-but-misleading
-green:
-
-| Guard | Went green by | What it still could not catch |
-|:---|:---|:---|
-| `sync_version.py` in CI | running the **writer**, which exits 0 always | any version drift |
-| `sync_version.py --check` | covering **3 files that already agreed** | drift in 11 other surfaces |
-| `test_verify_chunk_integrity` | `assert isinstance(res, bool)` | integrity being broken |
-| `test_golden_cases_fire` | `assert len(fired(p)) > 0` | any change in *which* class fires |
-| `privacy_scan.py` blocklist | the file **excluding itself** from the scan | 25 disclosures in its own config |
-
-The shared shape: **optimizing the indicator instead of the property.** Green CI,
-closed alert, "all consistent", N passed — each statement true, each misleading.
-The red run is the cheapest available proof that the indicator is still wired to
-the property.
+If you cannot make it go red, you have not found the guard's edge — you have found its blind spot. Never optimize the indicator over the property (e.g. running a writer instead of a checker, assertions checking types instead of invariants, or scanners excluding themselves). The red run proves the indicator is wired to the invariant.
 
 Corollaries:
 
@@ -207,16 +199,13 @@ Upon delivery or completion claims (`walkthrough.md` or concluding response), ex
 
 ### External Verification Mandate
 
-> **MANDATORY (ALL sessions)**: Every non-trivial response MUST invoke at least ONE external tool before generating output. "External" = anything outside the model's weights (Exocortex, web search, file reads, MCP, grep, commands).
+> **MANDATORY**: Every non-trivial response MUST invoke at least ONE external tool before generating output (Exocortex, web search, file reads, MCP, grep, commands).
 >
-> The Exocortex indexes **1800+ sessions** of lived experience. Web search provides real-time facts. Responding without consulting these when they could enrich or verify the answer is equivalent to ignoring the user's own history and the current state of the world.
+> - **SNIPER (Λ < 10)**: Exempt. Direct answer allowed.
+> - **STANDARD (Λ 10-30)**: Call `context_gate(query)`; satisfy any `missing` requirements.
+> - **ULTRA (Λ > 30)**: Call `context_gate(query)`; requires semantic AND (web OR page-read).
 >
-> **Minimum retrieval by complexity**:
-> - SNIPER (Λ < 10): Exempt. Direct answer allowed.
-> - STANDARD (Λ 10-30): Call `context_gate(query)` before answering; honour its `directive`; if `missing` is non-empty, satisfy it before answering.
-> - ULTRA (Λ > 30): Call `context_gate(query)` before answering; requires semantic AND (web OR page-read).
->
-> **Epistemic status**: `code-enforced` (tool surface — `context_gate` exists and computes the bundle; invocation is mechanically enforced in Antigravity via `.agents/hooks.json` Stop lifecycle gate `stop_governance_gate.py` which blocks completion if unverified).
+> **Epistemic status**: `code-enforced` via `.agents/hooks.json` Stop lifecycle gate `stop_governance_gate.py`.
 
 ---
 
@@ -252,4 +241,4 @@ To ensure Game-Theory Optimal (GTO) operations, apply these core engineering dir
 - **System**: v10.0.6
 - **Last Updated**: 2026-07-22
 - **Canonical Counts**: `.agent/config/CAPS.json` (single source of truth; regenerate via commands in CAPS.json `recount_rules`)
-- **Pattern Source**: Vercel "AGENTS.md vs Skills" Research + OpenClaw Multi-Agent Safety Rules + Claude Code Source Steal (instructkr/claude-code, 2026-03-31) + santifer/career-ops Steal (DATA_CONTRACT, _shared.md, /do router, 2026-04-12) + GTO consolidation pass (2026-04-18: index drift fix, broken-ref repair, _domain + conditional-skills surfacing) + Hermes Agent Steal (NousResearch/hermes-agent, 2026-05-11: skill-compiler, curator lifecycle model) + Anthropic Steal (anthropics/knowledge-work-plugins, 2026-05-24: CONNECTORS.md, glossary.md, dashboard-builder, scan_skill.py, interview-mode, checkpoint-pause, argument-hint) + Athena-Public Privacy Remediation + Architecture Model Sync (2026-05-30) + Karpathy CLAUDE.md Steal (r/ClaudeCode, 2026-06-01: Ask-Don't-Assume, Flag-Uncertainty, Codebase-Documentation-Sync)
+- **Pattern Source**: Synthesized from Vercel, OpenClaw, Claude Code, Career-Ops, Hermes Agent, Anthropic plugins, and Karpathy CLAUDE.md best practices (canonical index in CAPS.json / CANONICAL.md).

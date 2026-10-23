@@ -725,21 +725,12 @@ def validate_frame(frame: FrameRecord) -> ValidationResult:
         )
         is_verified_receipt = False
         if rec_str and not is_agent_est:
-            from athena.intelligence.gto_engine import get_receipts_path
+            from athena.intelligence.gto_engine import get_receipts_path, iter_receipts
 
             rpath = get_receipts_path()
             if rpath.exists():
-                for rline in rpath.read_text(encoding="utf-8").splitlines():
-                    rline = rline.strip()
-                    if not rline:
-                        continue
-                    try:
-                        robj = json.loads(rline)
-                        if robj.get("receipt_id") == rec_str:
-                            is_verified_receipt = True
-                            break
-                    except json.JSONDecodeError:
-                        continue
+                valid_receipts = iter_receipts(receipts_path=rpath, include_void=False)
+                is_verified_receipt = any(str(r.get("receipt_id")) == rec_str for r in valid_receipts)
         if not (is_agent_est or is_verified_receipt):
             v.append(
                 Violation(

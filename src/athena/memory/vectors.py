@@ -14,6 +14,7 @@ import random
 import sqlite3
 import sys
 import threading
+import time
 from typing import Any
 
 # This module's stdout belongs to callers that parse it. run_search(json_output=
@@ -47,6 +48,32 @@ _consecutive_429_lock = threading.Lock()
 class EmbeddingQuotaExhausted(RuntimeError):
     """Raised when consecutive HTTP 429 rate limit errors exceed the safety threshold."""
     pass
+
+
+def emit_api_alert(status_code: int) -> None:
+    """Surface prominent terminal banner when Google Gemini API credits or quota are exhausted (TD-081)."""
+    if status_code == 402:
+        banner = (
+            "\n" + "=" * 60 + "\n"
+            "🚨 [ACTION REQUIRED: GOOGLE API CREDITS DEPLETED]\n"
+            "   Google API returned HTTP 402 (Payment Required).\n"
+            "   Your Google AI Studio prepay balance on Project Athena is USD 0.00.\n"
+            "   Please top up USD 20 at: https://aistudio.google.com\n"
+            + "=" * 60 + "\n"
+        )
+    elif status_code == 429:
+        banner = (
+            "\n" + "=" * 60 + "\n"
+            "🚨 [ACTION REQUIRED: GOOGLE API QUOTA EXHAUSTED / RATE LIMITED]\n"
+            "   Google API returned HTTP 429 (Resource Exhausted / Rate Limit).\n"
+            "   Your Google AI Studio rate limit or daily quota on Project Athena is saturated.\n"
+            "   Please check quota or upgrade Tier at: https://aistudio.google.com\n"
+            + "=" * 60 + "\n"
+        )
+    else:
+        return
+    print(banner, file=sys.stderr)
+
 
 
 def get_embedding_cache():
@@ -141,6 +168,15 @@ class PersistentEmbeddingCache:
         except Exception as e:
             print(f"  ⚠️  Legacy cache migration deferred ({e}); JSON kept for retry.", flush=True)
 
+    def _reconnect(self):
+        """Attempt to re-establish the SQLite connection if dropped or stale."""
+        with contextlib.suppress(Exception):
+            if hasattr(self, "_conn") and self._conn:
+                self._conn.close()
+        self._conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+        self._conn.execute("PRAGMA journal_mode=WAL")
+        self._conn.execute("PRAGMA synchronous=NORMAL")
+
     def _archive_legacy(self):
         with contextlib.suppress(Exception):
             self.legacy_json.rename(
@@ -148,35 +184,78 @@ class PersistentEmbeddingCache:
             )
 
     def get(self, text_hash: str) -> list[float] | None:
-        with self.lock:
-            row = self._conn.execute(
-                "SELECT vec FROM embeddings WHERE hash = ?", (text_hash,)
-            ).fetchone()
-        if row is None:
-            return None
         try:
-            return json.loads(row[0])
+            with self.lock:
+                row = self._conn.execute(
+                    "SELECT vec FROM embeddings WHERE hash = ?", (text_hash,)
+                ).fetchone()
+            if row is None:
+                return None
+            try:
+                return json.loads(row[0])
+            except Exception:
+                return None
+        except (sqlite3.DatabaseError, sqlite3.OperationalError):
+            # Reconnect attempt for stale connection/locks, otherwise graceful cache miss
+            try:
+                with self.lock:
+                    self._reconnect()
+                    row = self._conn.execute(
+                        "SELECT vec FROM embeddings WHERE hash = ?", (text_hash,)
+                    ).fetchone()
+                if row is not None:
+                    return json.loads(row[0])
+            except Exception:
+                pass
+            return None
         except Exception:
             return None
 
     def set(self, text_hash: str, embedding: list[float]):
-        with self.lock:
-            self._conn.execute(
-                "INSERT OR REPLACE INTO embeddings (hash, vec) VALUES (?, ?)",
-                (text_hash, json.dumps(embedding)),
-            )
-            self._conn.commit()
+        try:
+            with self.lock:
+                self._conn.execute(
+                    "INSERT OR REPLACE INTO embeddings (hash, vec) VALUES (?, ?)",
+                    (text_hash, json.dumps(embedding)),
+                )
+                self._conn.commit()
+        except (sqlite3.DatabaseError, sqlite3.OperationalError):
+            try:
+                with self.lock:
+                    self._reconnect()
+                    self._conn.execute(
+                        "INSERT OR REPLACE INTO embeddings (hash, vec) VALUES (?, ?)",
+                        (text_hash, json.dumps(embedding)),
+                    )
+                    self._conn.commit()
+            except Exception:
+                pass
+        except Exception:
+            pass
 
     def set_many(self, items: "dict[str, list[float]]"):
         """Bulk insert in one transaction — O(1) per row, no full-file rewrite."""
         if not items:
             return
         rows = [(h, json.dumps(v)) for h, v in items.items()]
-        with self.lock:
-            self._conn.executemany(
-                "INSERT OR REPLACE INTO embeddings (hash, vec) VALUES (?, ?)", rows
-            )
-            self._conn.commit()
+        try:
+            with self.lock:
+                self._conn.executemany(
+                    "INSERT OR REPLACE INTO embeddings (hash, vec) VALUES (?, ?)", rows
+                )
+                self._conn.commit()
+        except (sqlite3.DatabaseError, sqlite3.OperationalError):
+            try:
+                with self.lock:
+                    self._reconnect()
+                    self._conn.executemany(
+                        "INSERT OR REPLACE INTO embeddings (hash, vec) VALUES (?, ?)", rows
+                    )
+                    self._conn.commit()
+            except Exception:
+                pass
+        except Exception:
+            pass
 
 
 def _hash_text(text: str) -> str:
@@ -226,15 +305,7 @@ def get_embedding(text: str, max_retries: int = 7) -> list[float]:
                 # If client error that is not 429, do not retry! It is non-retriable.
                 if response.status_code >= 400 and response.status_code < 500 and response.status_code != 429:
                     if response.status_code == 402:
-                        print(
-                            "\n" + "=" * 60 + "\n"
-                            "🚨 [ACTION REQUIRED: GOOGLE API CREDITS DEPLETED]\n"
-                            "   Google API returned HTTP 402 (Payment Required).\n"
-                            "   Your Google AI Studio prepay balance on Project Athena is USD 0.00.\n"
-                            "   Please top up USD 20 at: https://aistudio.google.com\n"
-                            + "=" * 60 + "\n",
-                            file=sys.stderr,
-                        )
+                        emit_api_alert(402)
                     print(f"  ❌ Client error {response.status_code} in get_embedding: {response.text[:200]}")
                     response.raise_for_status()
 
@@ -251,6 +322,7 @@ def get_embedding(text: str, max_retries: int = 7) -> list[float]:
                             global _consecutive_429_count
                             _consecutive_429_count += 1
                             if _consecutive_429_count >= 5:
+                                emit_api_alert(429)
                                 raise EmbeddingQuotaExhausted(
                                     f"Aborting: {_consecutive_429_count} consecutive HTTP 429 errors. "
                                     "Gemini API quota exhausted — retry later."
@@ -260,6 +332,8 @@ def get_embedding(text: str, max_retries: int = 7) -> list[float]:
                         time.sleep(wait)
                         continue
                     else:
+                        if response.status_code == 429:
+                            emit_api_alert(429)
                         response.raise_for_status()
 
                 response.raise_for_status()
@@ -268,7 +342,6 @@ def get_embedding(text: str, max_retries: int = 7) -> list[float]:
                     _consecutive_429_count = 0
                 cache.set(text_hash, embedding)
                 # Floor delay: prevent burst even on success (free-tier courtesy)
-                import time
                 time.sleep(1)
                 return embedding
 
@@ -308,8 +381,6 @@ def get_embeddings_batch(
     Side effect: populates the on-disk embedding cache, so a subsequent per-file
     get_embedding(text) for the same text is an instant cache hit.
     """
-    import time
-
     cache = get_embedding_cache()
     results: list[list[float] | None] = [None] * len(texts)
     misses = []  # list of (index, text, hash)
@@ -365,15 +436,7 @@ def get_embeddings_batch(
                     # Fail immediately on non-retriable client errors
                     if resp.status_code >= 400 and resp.status_code < 500 and resp.status_code != 429:
                         if resp.status_code == 402:
-                            print(
-                                "\n" + "=" * 60 + "\n"
-                                "🚨 [ACTION REQUIRED: GOOGLE API CREDITS DEPLETED]\n"
-                                "   Google API returned HTTP 402 (Payment Required).\n"
-                                "   Your Google AI Studio prepay balance on Project Athena is USD 0.00.\n"
-                                "   Please top up USD 20 at: https://aistudio.google.com\n"
-                                + "=" * 60 + "\n",
-                                file=sys.stderr,
-                            )
+                            emit_api_alert(402)
                         print(f"  ❌ Client error {resp.status_code} in batch query: {resp.text[:200]}")
                         resp.raise_for_status()
 
@@ -390,6 +453,7 @@ def get_embeddings_batch(
                                 global _consecutive_429_count
                                 _consecutive_429_count += 1
                                 if _consecutive_429_count >= 5:
+                                    emit_api_alert(429)
                                     raise EmbeddingQuotaExhausted(
                                         f"Aborting: {_consecutive_429_count} consecutive HTTP 429 errors. "
                                         "Gemini API quota exhausted — retry later."
@@ -397,6 +461,8 @@ def get_embeddings_batch(
                         if attempt < max_retries - 1:
                             time.sleep(wait)
                             continue
+                        if resp.status_code == 429:
+                            emit_api_alert(429)
                         resp.raise_for_status()
 
                     resp.raise_for_status()

@@ -52,9 +52,46 @@ __all__ = [
     "execute_decision_action",
     "find_unreceipted_engine_claims",
     "get_receipts_path",
+    "iter_receipts",
+    "adjudicate_wargame",
 ]
 
 CAPABILITY_MANIFEST: dict[str, dict[str, Any]] = {
+    "adjudicate_wargame": {
+        "computes": "Two-turn adversarial wargame adjudication with path-dependent trough ruin and Red best-response",
+        "typed_inputs": [
+            "policies",
+            "red_responses",
+            "cells",
+            "baseline_policy",
+            "wealth",
+            "barrier",
+            "counterparty_writes_rules",
+            "shock_payoffs",
+            "independence_record",
+            "tail_factor",
+        ],
+        "defaults": {
+            "wealth": None,
+            "barrier": 0.0,
+            "counterparty_writes_rules": False,
+            "shock_payoffs": None,
+            "independence_record": None,
+            "tail_factor": 3.0,
+        },
+        "does_not": [
+            "equilibrium solving",
+            "intra-turn paths beyond t1_worst",
+            "responses Red wasn't asked to generate",
+            "calibrated probabilities",
+        ],
+    },
+    "iter_receipts": {
+        "computes": "Read decision receipts from JSONL log with optional void-record filtering",
+        "typed_inputs": ["receipts_path", "include_void"],
+        "defaults": {"receipts_path": None, "include_void": False},
+        "does_not": ["mutate receipt records", "network receipt discovery"],
+    },
     "decision_screen": {
         "computes": "Unified strategic decision evaluation with verified decision receipt logging",
         "typed_inputs": ["action", "payload", "real", "review_date", "prediction"],
@@ -2388,6 +2425,34 @@ def get_receipts_path() -> Path:
     return cwd / ".athena" / "decision_receipts.jsonl"
 
 
+def iter_receipts(
+    receipts_path: Path | None = None,
+    *,
+    include_void: bool = False,
+) -> list[dict[str, Any]]:
+    """Iterate through decision receipts, filtering out voided records by default."""
+    path = receipts_path or get_receipts_path()
+    if not path.exists():
+        return []
+    raw_entries: list[dict[str, Any]] = []
+    void_ids: set[str] = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+            if "void_receipt_id" in entry:
+                void_ids.add(str(entry["void_receipt_id"]))
+            elif "receipt_id" in entry:
+                raw_entries.append(entry)
+        except json.JSONDecodeError:
+            continue
+    if include_void:
+        return raw_entries
+    return [r for r in raw_entries if str(r.get("receipt_id")) not in void_ids]
+
+
 def _get_cal_ledger_path() -> Path:
     """Discover the calibration ledger path with environment override."""
     env_cal = os.environ.get("ATHENA_CAL_LEDGER_PATH")
@@ -2666,6 +2731,21 @@ def execute_decision_action(
             upstream_spec_complete=payload.get("upstream_spec_complete", not payload.get("upstream_spec_incomplete", False)),
             currency=payload.get("currency", "S$"),
         )
+    elif action == "wargame":
+        from athena.intelligence.wargame import adjudicate_wargame
+
+        res = adjudicate_wargame(
+            policies=payload["policies"],
+            red_responses=payload["red_responses"],
+            cells=payload["cells"],
+            baseline_policy=payload["baseline_policy"],
+            wealth=float(payload["wealth"]) if payload.get("wealth") is not None else None,
+            barrier=float(payload.get("barrier", 0.0)),
+            counterparty_writes_rules=bool(payload.get("counterparty_writes_rules", False)),
+            shock_payoffs=payload.get("shock_payoffs"),
+            independence_record=payload.get("independence_record"),
+            tail_factor=float(payload.get("tail_factor", 3.0)),
+        )
     else:
         raise ValueError(f"Unknown action: {action}")
 
@@ -2718,20 +2798,11 @@ def find_unreceipted_engine_claims(
 
     if path.exists():
         try:
-            with open(path, encoding="utf-8") as f:
-                lines = f.readlines()[-500:]
-                for line in lines:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    try:
-                        entry = json.loads(line)
-                        if "receipt_id" in entry:
-                            valid_receipt_ids.add(entry["receipt_id"])
-                    except json.JSONDecodeError:
-                        m = re.search(r'"receipt_id":\s*"(GTO-[0-9a-fA-F]{8})"', line)
-                        if m:
-                            valid_receipt_ids.add(m.group(1))
+            valid_receipt_ids = {
+                str(r["receipt_id"])
+                for r in iter_receipts(receipts_path=path, include_void=False)
+                if "receipt_id" in r
+            }
         except Exception:
             pass
 
@@ -2775,6 +2846,7 @@ def main(argv: list[str] | None = None) -> int:
             "barbell",
             "devaluation",
             "borrow-audit",
+            "wargame",
         ],
         required=False,
         help="Calculation action to execute",
@@ -2968,6 +3040,16 @@ def main(argv: list[str] | None = None) -> int:
                 "upstream_spec_incomplete": args.upstream_spec_incomplete,
                 "currency": args.currency,
             }
+        elif args.action == "wargame":
+            input_val = args.input
+            if not input_val:
+                print("Error: --action wargame requires --input <payload.json>", file=sys.stderr)
+                return 2
+            if os.path.exists(input_val):
+                with open(input_val, encoding="utf-8") as f:
+                    payload = json.load(f)
+            else:
+                payload = json.loads(input_val)
         else:
             raise ValueError(f"Unknown action: {args.action}")
 
@@ -2999,4 +3081,8 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+# Expose adjudicate_wargame in module namespace for __all__ and external importers
+from athena.intelligence.wargame import adjudicate_wargame  # noqa: E402
+
 

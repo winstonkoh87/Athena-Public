@@ -533,8 +533,16 @@ def collect_vectors(
 
         _record_channel_health("vector", "ok")
     except Exception as e:
-        print(f"   ⚠️ Unified vector search failed: {e}", file=sys.stderr)
-        _record_channel_health("vector", "failed", str(e))
+        err_str = str(e)
+        if "QuotaExhausted" in type(e).__name__ or "429" in err_str:
+            print("   🚨 Unified vector search halted: Gemini API quota exhausted (HTTP 429)", file=sys.stderr)
+            _record_channel_health("vector", "depleted", "Gemini API quota exhausted (HTTP 429)")
+        elif "402" in err_str or "Payment" in err_str:
+            print("   🚨 Unified vector search halted: Google API credits depleted (HTTP 402)", file=sys.stderr)
+            _record_channel_health("vector", "depleted", "Google API credits depleted (HTTP 402)")
+        else:
+            print(f"   ⚠️ Unified vector search failed: {e}", file=sys.stderr)
+            _record_channel_health("vector", "failed", err_str)
 
     return results
 
@@ -638,7 +646,7 @@ def collect_filenames(query: str) -> list[SearchResult]:
         )
 
         if process.stdout:
-            lines = [raw_line for raw_line in process.stdout.strip().split("\n") if raw_line.strip()][:300]
+            lines = [l for l in process.stdout.strip().split("\n") if l.strip()][:300]
             candidates = []
             for line in lines:
                 # Never surface archived/frozen content (S527 pollution guard).
@@ -661,16 +669,7 @@ def collect_filenames(query: str) -> list[SearchResult]:
                     norm_path = line.replace("\\", "/")
                     if norm_path.startswith("./"):
                         norm_path = norm_path[2:]
-                    root_boost = (
-                        0.25
-                        if (
-                            norm_path.startswith("src/athena/")
-                            or norm_path.startswith(".agent/scripts/")
-                            or norm_path.startswith("examples/scripts/")
-                            or norm_path.startswith("scripts/")
-                        )
-                        else 0.0
-                    )
+                    root_boost = 0.25 if (norm_path.startswith("src/athena/") or norm_path.startswith(".agent/scripts/")) else 0.0
                     stem_match = any(
                         k.lower() == stem_lower
                         or k.lower() == fname_lower
@@ -682,7 +681,7 @@ def collect_filenames(query: str) -> list[SearchResult]:
                     score = min(1.0, (keyword_hits / len(keywords)) + root_boost + exact_boost)
                     header = ""
                     try:
-                        with open(full_path, encoding="utf-8", errors="ignore") as f:
+                        with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
                             header = f.read(300).strip()
                     except Exception:
                         pass

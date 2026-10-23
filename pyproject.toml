@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "athena-agent"
 version = "10.0.6"
-description = "Local-first memory, decision engine, and governance harness for AI agents — portable across IDEs. Persistent memory, structured reasoning, and governed AI agents that work across any LLM. Own the state. Rent the intelligence."
+description = "Local-first memory, decision engine, and governance harness for AI agents — persistent memory, structured reasoning, and governed AI agents that work across any LLM. Own the state. Rent the intelligence."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -40,6 +40,7 @@ dependencies = [
     "fastmcp>=2.0.0",
     "pyyaml>=6.0",
     "onnxruntime>=1.16.0",
+    "python-docx>=1.1.0",
 ]
 
 [project.scripts]
@@ -54,7 +55,6 @@ Changelog = "https://github.com/winstonkoh87/Athena-Public/blob/main/docs/CHANGE
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "pytest-cov",
     "black",
     "ruff",
     "pipreqs",
@@ -63,9 +63,6 @@ dev = [
 local = [
     "flashrank>=0.2.9",
     "diskcache>=5.6.3"
-]
-duckdb = [
-    "duckdb>=0.9.0"
 ]
 cloud = [
     "supabase>=2.0.0",
@@ -118,27 +115,3 @@ known-first-party = ["athena"]
 [tool.black]
 line-length = 88
 target-version = ["py310"]
-
-[tool.mypy]
-python_version = "3.10"
-ignore_missing_imports = true
-# Start permissive, tighten over time. Each flag below is a ratchet —
-# once enabled, never disable without a Red Run proving the guard worked.
-warn_unused_configs = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-no_implicit_optional = true
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "--tb=short -q"
-
-[tool.coverage.run]
-source = ["src/athena"]
-omit = ["src/athena/__pycache__/*", "src/athena/templates/*"]
-
-[tool.coverage.report]
-show_missing = true
-# 15% is the starting floor. Ratchet upward as coverage improves.
-fail_under = 15
-

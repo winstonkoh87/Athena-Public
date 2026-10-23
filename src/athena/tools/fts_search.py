@@ -21,9 +21,9 @@ def compile_fts_query(query: str) -> str:
     Compiles and sanitizes an arbitrary user query string into valid SQLite FTS5 MATCH syntax.
 
     Protects against:
-    - Hyphens treated as unary NOT or column operators (e.g. 'CS-101' -> '"CS-101"')
-    - Question marks and punctuation causing FTS5 syntax errors (e.g. 'DOC-123?' -> 'DOC-123')
-    - Colons interpreted as nonexistent column filters (e.g. 'DOC-123: what was decided?' -> 'DOC-123 what was decided')
+    - Hyphens treated as unary NOT or column operators (e.g. 'CS-686' -> '"CS-686"')
+    - Question marks and punctuation causing FTS5 syntax errors (e.g. 'A79?' -> 'A79')
+    - Colons interpreted as nonexistent column filters (e.g. 'A79: what was decided?' -> 'A79 what was decided')
     - Unbalanced quotes
     - Stray boolean operators (AND, OR, NOT) at edges or isolated
     - Preserves intentional prefix search (e.g. 'Autocomp*' or '"Autocomp" *')

@@ -86,6 +86,34 @@ class SessionService:
         except Exception:
             pass
 
+    def get_next_sequence_id(self, date_str: str | None = None) -> str:
+        """Find the next session ID, prioritizing global SNNNN format if present."""
+        target_date = date_str or datetime.now().strftime("%Y-%m-%d")
+        if not self.sessions_dir.exists():
+            return f"{target_date}-session-01"
+
+        # Check for global SNNNN sequence
+        s_pattern = re.compile(r"session-S(\d+)", re.IGNORECASE)
+        max_s = 0
+        for file in self.sessions_dir.glob("*.md"):
+            m = s_pattern.search(file.name)
+            if m:
+                max_s = max(max_s, int(m.group(1)))
+
+        archive_dir = self.sessions_dir / "archive"
+        if archive_dir.exists():
+            for file in archive_dir.glob("*.md"):
+                m = s_pattern.search(file.name)
+                if m:
+                    max_s = max(max_s, int(m.group(1)))
+
+        if max_s > 0:
+            return f"{target_date}-session-S{max_s + 1}"
+
+        # Fallback to daily numbering
+        session_num = self.get_next_session_number(target_date)
+        return f"{target_date}-session-{session_num:02d}"
+
     def create_session(
         self,
         focus: str | None = None,
@@ -98,9 +126,7 @@ class SessionService:
         today = now.strftime("%Y-%m-%d")
         time_iso = now.astimezone().isoformat()
         time_display = now.strftime("%H:%M")
-        session_num = self.get_next_session_number(today)
-
-        session_id = f"{today}-session-{session_num:02d}"
+        session_id = self.get_next_sequence_id(today)
         filename = f"{session_id}.md"
         filepath = self.sessions_dir / filename
 
@@ -110,6 +136,7 @@ class SessionService:
 
         tags_list = tags or ["session"]
         tags_yaml = json.dumps(tags_list)
+        display_session = session_id.split("-session-")[-1]
 
         template = f"""---
 session_id: {session_id}
@@ -131,7 +158,7 @@ lambda_coverage_n:
 lambda_coverage_d:
 ---
 
-# Session Log: {today} (Session {session_num:02d})
+# Session Log: {today} (Session {display_session})
 
 **Date**: {today}
 **Time**: {time_display} - ...
@@ -239,6 +266,10 @@ lambda_coverage_d:
         target_path = log_path or self.get_current_session()
         if not target_path or not target_path.exists():
             raise FileNotFoundError(f"Active session log not found at {target_path}")
+
+        session_content = target_path.read_text(encoding="utf-8")
+        if re.search(r"^status:\s*closed\b", session_content, re.MULTILINE):
+            raise ValueError(f"Cannot append checkpoint to closed session log: {target_path.name}")
 
         timestamp = datetime.now().strftime("%H:%M")
         block = f"\n### [{timestamp} SGT] Checkpoint\n\n**Summary**: {summary}\n"

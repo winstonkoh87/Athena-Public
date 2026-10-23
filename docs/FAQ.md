@@ -61,7 +61,7 @@ For full power features (vector search, semantic retrieval), budget 30-60 minute
 **Full setup** (recommended):
 
 - `ANTHROPIC_API_KEY` — For Claude reasoning
-- `GOOGLE_API_KEY` — For embeddings (text-embedding-004)
+- `GOOGLE_API_KEY` — For embeddings (gemini-embedding-001)
 - `SUPABASE_URL` + `SUPABASE_ANON_KEY` — For vector database (optional)
 
 ### Does it work with Cursor? Windsurf?
@@ -128,7 +128,7 @@ Most users spend **< $5/month** on API calls.
 
 ### Is it safe to use for work?
 
-Yes, if you use **Local Mode**. For enterprise use, see [SECURITY.md](SECURITY.md) for RLS policies and key management.
+Yes, if you use **Local Mode**. For enterprise use, see [SECURITY.md](./SECURITY.md) for RLS policies and key management.
 
 ---
 

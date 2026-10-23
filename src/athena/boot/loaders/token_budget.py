@@ -11,7 +11,10 @@ Operating Band:
   10K (post-compact target) ←→ 15K (hard cap, triggers compact)
 """
 
+import logging
 import sys
+
+logger = logging.getLogger("athena.boot.token_budget")
 
 from athena.boot.constants import (
     BOLD,
@@ -152,7 +155,7 @@ def auto_compact_if_needed(token_counts: dict | None = None) -> dict:
     try:
         from athena.core.config import PROJECT_ROOT
         sys.path.insert(0, str(PROJECT_ROOT / ".agent" / "scripts"))
-        from compact_context import compact_active_context
+        from compact_context import archive_session_blocks, compact_active_context
     except ImportError as e:
         print(f"   {RED}❌ Cannot import compact_context: {e}{RESET}")
         return token_counts
@@ -165,6 +168,10 @@ def auto_compact_if_needed(token_counts: dict | None = None) -> dict:
         )
 
         aggressive = attempt > 1  # first pass normal, subsequent passes aggressive
+        try:
+            archive_session_blocks(keep=2 if aggressive else 3)
+        except Exception as e:
+            logger.warning("archive_session_blocks error: %s", e)
         compact_active_context(aggressive=aggressive)
 
         # Re-measure

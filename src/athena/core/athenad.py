@@ -1,7 +1,7 @@
 """
 Athena Daemon (athenad)
 =======================
-Role: The Active Background Daemon.
+Role: The Active OS Kernel.
 Responsibilities:
   1.  File System Watcher (Polling) -> Updates SQLite Metadata
   2.  Health Monitor -> Self-healing

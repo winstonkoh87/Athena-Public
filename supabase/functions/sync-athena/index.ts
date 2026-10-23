@@ -258,9 +258,8 @@ serve(async (req: Request) => {
     });
   } catch (error) {
     console.error("Sync error:", error);
-    // Sanitize error response to prevent stack trace information exposure (CWE-209 / CodeQL #12)
     return new Response(
-      JSON.stringify({ success: false, error: "Internal Server Error" }),
+      JSON.stringify({ success: false, error: String(error) }),
       {
         headers: { "Content-Type": "application/json" },
         status: 500,

@@ -25,7 +25,7 @@ BOOT_FILES = {
 
 # Configuration
 BOOT_TIMEOUT_SECONDS = 90
-EXPECTED_CORE_HASH = "8f2e6f9e248951a84aa48e24e9bfd8239f76c6c8bffd44ee7c9cd854861a8820caed733aafa3b333e8851f372c854d4a"
+EXPECTED_CORE_HASH = "45b94d296c6d623203aafad440514a37ac58a7dfa137aac12b0f89af5b82929187aedc913e99aa0d2d9ee4b5f4b2cfbd"
 
 # Colors (centralized) — re-exported for boot loaders/tests that import from here.
 from athena.core.colors import (  # noqa: F401  (intentional re-export)

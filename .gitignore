@@ -114,7 +114,11 @@ search_results.txt
 
 # Daemon-written runtime telemetry — never track (jams pushes)
 .agent/telemetry/retrieval_log.jsonl
-.athena/
+.athena/invocations.jsonl
+.athena/retrieval_receipts.jsonl
+.athena/receipts/
+.agent/eval/results/
+.agent/state/gate_loop_guard.json
 
 # SQLite databases (too large for GitHub file size limits)
 **/*.db
@@ -123,4 +127,11 @@ search_results.txt
 
 # Daemon-written telemetry (S501 fix class — tracked+live-written files jam every pull)
 .agent/telemetry/vector_sync.log
-.context/telemetry/
+.agent/telemetry/vector_sync.pid
+.agent/telemetry/vector_sync_status.json
+Athena-Public.LEGACY-DO-NOT-PUSH/
+
+# Credential and recovered notes dumps (NEVER TRACK)
+recovered_notes.txt
+*_notes_recovered*
+

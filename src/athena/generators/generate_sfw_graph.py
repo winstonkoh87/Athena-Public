@@ -5,16 +5,17 @@ Filters out sensitive entity names before generating the HTML.
 """
 
 import json
-import os
 from pathlib import Path
 
-# Sensitive keywords to filter out (loaded from environment to avoid publishing
-# the actual terms in a public repo — a blocklist of sensitive words is itself
-# a disclosure).  Fallback: a minimal set of structural category tokens.
-_env_nsfw = os.environ.get("ATHENA_SFW_BLOCKLIST", "")
-NSFW_KEYWORDS = [w.strip() for w in _env_nsfw.split(",") if w.strip()] or [
-    # Structural categories only — real names/terms stay in the env variable
-    "shadow-hotel", "locker-room", "dating-app", "hookup",
+# Sensitive keywords to filter out
+NSFW_KEYWORDS = [
+    'virgin', 'seduction', 'threesome', 'escort', 'sexual', 'sex',
+    'bdsm', 'erotic', 'fetish', 'porn', 'nude', 'naked',
+    'shadow-hotel', 'locker-room', 'dating-app', 'hookup',
+    'abuse', 'trauma', 'cptsd', 'rape', 'predator',
+    'yap-weng-wah', 'mermaid-girl',
+    # Personal identifiers
+    'winston', 'jun-kai', 'jj',
 ]
 
 # SFW categories to keep

@@ -217,18 +217,18 @@ def test_weighted_rrf_cross_channel_fusion():
     from athena.tools.search import weighted_rrf
 
     doc_vector = SearchResult(
-        id="Case Study: CS-101-distributed-consensus.md (Chunk 0)",
-        content="Deep semantic chunk on distributed consensus and quorum sizing.",
+        id="Case Study: CS-367-high-wr-supremacy.md (Chunk 0)",
+        content="Deep semantic chunk on high win-rate supremacy and Kelly sizing.",
         source="case_study",
         score=0.92,
-        metadata={"path": ".context/memories/case_studies/CS-101-distributed-consensus.md"},
+        metadata={"path": ".context/memories/case_studies/CS-367-high-wr-supremacy.md"},
     )
     doc_fts = SearchResult(
-        id="FTS:.context/memories/case_studies/CS-101-distributed-consensus.md",
-        content="Lexical match on CS-101 quorum.",
+        id="FTS:.context/memories/case_studies/CS-367-high-wr-supremacy.md",
+        content="Lexical match on CS-367 win-rate.",
         source="fts_bm25",
         score=0.85,
-        metadata={"path": ".context/memories/case_studies/CS-101-distributed-consensus.md"},
+        metadata={"path": ".context/memories/case_studies/CS-367-high-wr-supremacy.md"},
     )
     doc_other = SearchResult(
         id="FTS:.context/memories/session_logs/other.md",
@@ -248,7 +248,7 @@ def test_weighted_rrf_cross_channel_fusion():
 
     # The multi-channel fused doc must rank #1
     top = fused[0]
-    assert "CS-101" in top.id
+    assert "CS-367" in top.id
     assert top.metadata.get("multi_channel") is True
     assert "case_study" in top.signals
     assert "fts_bm25" in top.signals

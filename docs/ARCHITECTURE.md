@@ -1,9 +1,9 @@
 # Athena — Architecture Reference
 
-> **Last Updated**: 24 October 2026 <!-- 2026-10-24 -->
+> **Last Updated**: 24 September 2026
 > **Version**: v10.0.6
 > **Canonical Counts**: See `.agent/config/CAPS.json` — if numbers in this file diverge, CAPS wins.
-> **Bionic Unit Spec**: `BIONIC_UNIT_SPEC.md` — the definitive human-AI augmentation mapping (private workspace)
+> **Bionic Unit Spec**: [BIONIC_UNIT_SPEC.md](../.context/specs/BIONIC_UNIT_SPEC.md) — the definitive human-AI augmentation mapping
 
 ---
 
@@ -12,12 +12,12 @@
 ```
 Athena/
 ├── .agent/                        # Agent configuration
-│   ├── skills/                    #   44 active skills (43 with context_trigger)
-│   │   └── protocols/             #   427 active + 34 archived = 461 total, 26 categories
+│   ├── skills/                    #   43 active skills (42 with context_trigger)
+│   │   └── protocols/             #   421 active + 34 archived = 455 total, 26 categories
 │   │       └── archive/           #     34 deprecated protocols (read-only, see README)
-│   ├── workflows/                 #   56 root + 21 _domain = 77 slash-command workflows
+│   ├── workflows/                 #   55 root + 19 _domain = 74 slash-command workflows
 │   │   └── _domain/               #     Domain-scoped, conditionally activated
-│   ├── scripts/                   #   300 automation scripts
+│   ├── scripts/                   #   279 automation scripts
 │   ├── telemetry/                 #   Retrieval instrumentation logs + tier maps
 │   ├── config/                    #   Agent manifests + CAPS.json (canonical counts)
 │   ├── CLUSTER_INDEX.md           #   15 cognitive clusters (routing map)
@@ -27,9 +27,9 @@ Athena/
 │   └── archive_skills/            #   17 sunset skills (read-only, see README)
 │
 ├── .context/                      # Personal knowledge base
-│   ├── memories/                  #   5,591 memory files (session logs + case studies + profile)
+│   ├── memories/                  #   4,939 memory files (session logs + case studies + profile)
 │   │   ├── session_logs/          #     Dated session records
-│   │   ├── case_studies/          #     600 documented patterns (15 domains)
+│   │   ├── case_studies/          #     503 documented patterns (14 domains)
 │   │   ├── profile/               #     Core profile, psychology, voice DNA
 │   │   └── observations/          #     Session insights
 │   ├── memory_bank/               #   10 boot files (activeContext, userContext,
@@ -165,7 +165,7 @@ Clusters represent bundles of procedural knowledge that co-activate. When the at
 | 14 | Sovereign Safety | `circuit-breaker` + `context-compactor` | Safety |
 | 15 | Problem-Solving Engine | P504 + P115 + P505 + P506 + `red-team-review` | Reasoning |
 
-Full cluster details: `CLUSTER_INDEX.md` (private workspace — see table above for summary)
+Full cluster details: [CLUSTER_INDEX.md](../.agent/CLUSTER_INDEX.md)
 
 ### Inventory
 
@@ -173,9 +173,9 @@ Full cluster details: `CLUSTER_INDEX.md` (private workspace — see table above 
 |:------|------:|:------------|
 | Cognitive Domains | 8 | Memory activation targets (priority-ordered for tie-breaking) |
 | Cognitive Clusters | 15 | Co-activating procedural memory bundles |
-| Skills | 44 active (17 archived) |
-| Protocols | 427 active (34 archived; 461 total) |
-| Workflows | 77 (56 root + 21 _domain/) |
+| Skills | 40 active (17 archived) |
+| Protocols | 399 active (32 archived; 431 total) |
+| Workflows | 69 (51 root + 18 _domain/) |
 
 ---
 
@@ -296,7 +296,7 @@ src/athena/tools/search.py (12s God Mode timeout + grep fallback)
 | Index | Size | Purpose |
 |:------|-----:|:--------|
 | `CLUSTER_INDEX.md` | 18KB | Routing map (15 clusters → 26 skills) |
-| `WORKFLOW_INDEX.md` | 6KB | Workflow registry (77 workflows) |
+| `WORKFLOW_INDEX.md` | 6KB | Workflow registry (66 workflows) |
 | `PROTOCOL_SUMMARIES.md` | 24KB | All-protocol quick-lookup |
 | `KNOWLEDGE_GRAPH.md` | 15KB | Concept relationships |
 
@@ -372,6 +372,23 @@ src/athena/mcp_server.py (FastMCP v3.x, stdio transport)
 
 ---
 
-## Metrics
+## Metrics (6 Jun 2026)
 
-Live inventory counts are **not duplicated here** — a hand-maintained table only drifts. The single source of truth is **[`.agent/config/CAPS.json`](../.agent/config/CAPS.json)**, kept current by the Gate-4 pre-commit hook (`core.hooksPath=.agent/hooks`), which also auto-syncs the Workspace Structure tree at the top of this file. Read counts from there.
+| Metric | Count |
+|:-------|------:|
+| Protocols (active) | 399 |
+| Protocols (archived) | 32 |
+| Skills (active) | 40 (40 conditional) |
+| Cognitive Clusters | 15 |
+| Cognitive Systems | 8 |
+| Workflows | 69 (51 root + 18 _domain/) |
+| Automation Scripts | 247 |
+| Case Studies | 492 (15 domains, 7 archived) |
+| Session Logs | 1,888 |
+| Total Memory Files | 3,658 |
+| Source Files (SDK) | 72 |
+| Test Files | 13 |
+| Documentation Files | 76 |
+| Active Indexes | 4 (63KB) |
+| CANONICAL Entries | ~400 (29 Tier 1, 140 Tier 2, 3 Tier 3) |
+| Cap Policy | Uncapped (attention budget constraint via Protocol 530) |

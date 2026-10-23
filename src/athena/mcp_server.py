@@ -978,12 +978,12 @@ def decision_screen(
     """Execute a strategic decision evaluation via the GTO numerical engine.
 
     Computes decision metrics (EEV, Kelly sizing, Ruin probability, MCDA ranking,
-    Decision Monte Carlo, or Scenario-Matrix Robustness) and appends a verified
-    decision receipt to .athena/decision_receipts.jsonl.
+    Decision Monte Carlo, Scenario-Matrix Robustness, or Adversarial Wargaming Adjudication)
+    and appends a verified decision receipt to .athena/decision_receipts.jsonl.
 
     Args:
         action: Calculation action to execute ('eev', 'kelly', 'ruin', 'monte-carlo',
-            'mcda', 'decision-mc', 'robustness', 'barbell', 'devaluation', 'borrow-audit').
+            'mcda', 'decision-mc', 'robustness', 'barbell', 'devaluation', 'borrow-audit', 'wargame').
         payload_json: JSON string containing action parameters.
         real: True if this evaluation backs a consequential real-world decision.
         review_date: Calibration review date (YYYY-MM-DD) for real decisions.

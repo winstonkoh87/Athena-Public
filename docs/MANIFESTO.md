@@ -175,8 +175,8 @@ Ready to build your own? See [examples/framework/Core_Identity.md](../.framework
 
 ## See Also
 
-- **[Glossary](GLOSSARY.md)** — Key terms and definitions
-- **[Your First Agent](YOUR_FIRST_AGENT.md)** — 5-minute quickstart guide
+- **[Glossary](./GLOSSARY.md)** — Key terms and definitions
+- **[Your First Agent](./YOUR_FIRST_AGENT.md)** — 5-minute quickstart guide
 
 ---
 
@@ -184,4 +184,4 @@ Ready to build your own? See [examples/framework/Core_Identity.md](../.framework
 
 Built by **Winston Koh** — 10+ years in financial services, now building AI systems.
 
-→ **[About Me](ABOUT_ME.md)** | **[GitHub](https://github.com/winstonkoh87)** | **[LinkedIn](https://www.linkedin.com/in/winstonkoh87/)**
+→ **[About Me](./ABOUT_ME.md)** | **[GitHub](https://github.com/winstonkoh87)** | **[LinkedIn](https://www.linkedin.com/in/winstonkoh87/)**
