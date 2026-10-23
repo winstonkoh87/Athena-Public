@@ -10,7 +10,7 @@ Purpose: Enforces Section 4.6 of /end workflow by:
 
 Living Docs (The Metabolic Layer):
 - User_Profile_Core.md (Bio/Traits/PERSONALITY SCORES)
-- Psychology_L1L5.md (Current State)
+- Inner_State.md (Current State)
 - Session_Observations.md (Calibration)
 - Operating_Principles.md (New Rules)
 """
@@ -19,7 +19,6 @@ import glob
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 # Paths
 CONTEXT_DIR = Path(__file__).parent.parent.parent / ".context"
@@ -29,14 +28,14 @@ SESSION_LOGS_DIR = CONTEXT_DIR / "memories" / "session_logs"
 # Living Docs
 LIVING_DOCS = {
     "User_Profile_Core.md": "Bio, traits, typology, PERSONALITY SCORES",
-    "Psychology_L1L5.md": "Emotional shifts, schema updates, therapeutic insights",
+    "Inner_State.md": "Emotional shifts, schema updates, therapeutic insights",
     "Session_Observations.md": "Calibration references, new vocabulary, case patterns",
     "Operating_Principles.md": "New decision rules, frameworks, constraints",
 }
 
 # Signal patterns to detect (regex)
 SIGNAL_PATTERNS = {
-    "Psychology_L1L5.md": [
+    "Inner_State.md": [
         r"(schema|L[1-5]|trauma|trigger|emotional|pattern|insight|mechanism)",
         r"(self-gaslighting|abandonment|invalidation|escalation|dysregulation)",
         r"(therapy|therapeutic|processing|grief|closure)",
@@ -137,7 +136,7 @@ MBTI_MARKERS = {
 }
 
 # Current baseline (from User_Profile_Core.md)
-CURRENT_PROFILE: dict[str, Any] = {
+CURRENT_PROFILE = {
     "MBTI": "INTJ-T",
     "Big_Five": {
         "Neuroticism": 85,
@@ -166,7 +165,7 @@ def get_latest_session_log():
 
 def extract_signals(session_content: str) -> dict:
     """Scan session content for signals requiring Living Doc updates."""
-    signals: dict[str, list[str]] = {doc: [] for doc in LIVING_DOCS}
+    signals = {doc: [] for doc in LIVING_DOCS}
 
     for doc, patterns in SIGNAL_PATTERNS.items():
         for pattern in patterns:
@@ -183,7 +182,7 @@ def extract_signals(session_content: str) -> dict:
 
 def detect_personality_drift(session_content: str) -> dict:
     """Detect signals that suggest personality score changes."""
-    drift: dict[str, Any] = {
+    drift = {
         "Big_Five": {},
         "MBTI_functions": {},
         "recommendations": []
@@ -333,7 +332,7 @@ def main():
     if updates_needed or drift["recommendations"]:
         print("⚠️  UPDATES MAY BE NEEDED. AI must review session for:")
         print("   • Personality score changes → User_Profile_Core.md")
-        print("   • New psychological insights → Psychology_L1L5.md")
+        print("   • New psychological insights → Inner_State.md")
         print("   • New calibration references → Session_Observations.md")
         print("   • New decision rules → Operating_Principles.md")
     else:

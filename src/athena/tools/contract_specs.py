@@ -1,5 +1,5 @@
 """
-Contract Specifications & Pip-to-Dollar Mapping Engine (IC Markets Raw Spread).
+Contract Specifications & Pip-to-Dollar Mapping Engine (Institutional Raw Spread).
 ================================================================================
 Resolves TD-053: Asset Contract Specifications Mapping in Sizing Scripts.
 Provides canonical contract sizing, pip values, lot size calculations, and
@@ -24,7 +24,7 @@ class ContractSpec:
     lot_step: float = 0.01
 
 
-# Canonical IC Markets Raw Spread Specifications Table
+# Canonical Institutional Raw Spread Specifications Table
 _SPECS: dict[str, ContractSpec] = {}
 
 
@@ -139,7 +139,7 @@ _register(
     pip_value_std_lot=50.0,
 )
 
-# 4. Cryptocurrencies (IC Markets CFD Specifications)
+# 4. Cryptocurrencies (CFD Specifications)
 # BTCUSD: 1 BTC contract. Standard point/pip move of $1.00 = $1.00 per lot ($0.01 per 0.01 micro lot)
 _register(
     ["BTCUSD", "BITCOIN"],

@@ -124,20 +124,24 @@ def sync_file_to_supabase(
             #    full payload list; only mutate the DB once every embed has succeeded.
             chunk_payloads = []
             for idx, chunk in enumerate(chunks):
-                chunk_payloads.append({
-                    "file_path": db_path,
-                    "table_name": table_name,
-                    "chunk_index": idx,
-                    "title": meta.get("title", abs_file.name),
-                    "content": chunk,
-                    "embedding": get_embedding(chunk),
-                    "metadata": meta,
-                })
+                chunk_payloads.append(
+                    {
+                        "file_path": db_path,
+                        "table_name": table_name,
+                        "chunk_index": idx,
+                        "title": meta.get("title", abs_file.name),
+                        "content": chunk,
+                        "embedding": get_embedding(chunk),
+                        "metadata": meta,
+                    }
+                )
 
             # 2. Now safe to mutate: delete stale chunks, then upsert the fresh set.
             client.table("document_chunks").delete().eq("file_path", db_path).execute()
             for chunk_data in chunk_payloads:
-                client.table("document_chunks").upsert(chunk_data, on_conflict="file_path,chunk_index").execute()
+                client.table("document_chunks").upsert(
+                    chunk_data, on_conflict="file_path,chunk_index"
+                ).execute()
 
             # 3. Upsert parent metadata (no file-level embedding stored to save DB size)
             parent_data = {
@@ -147,8 +151,12 @@ def sync_file_to_supabase(
             }
             _enrich_data_by_table(parent_data, abs_file, table_name, meta)
 
-            conflict_target = "filename" if table_name == "user_profile" else "file_path"
-            client.table(table_name).upsert(parent_data, on_conflict=conflict_target).execute()
+            conflict_target = (
+                "filename" if table_name == "user_profile" else "file_path"
+            )
+            client.table(table_name).upsert(
+                parent_data, on_conflict=conflict_target
+            ).execute()
 
             if manifest:
                 manifest.update_entry(abs_file)
@@ -156,7 +164,9 @@ def sync_file_to_supabase(
         except Exception as e:
             if "code" in str(e).lower() and table_name in ["protocols", "case_studies"]:
                 try:
-                    client.table(table_name).upsert(parent_data, on_conflict="code").execute()
+                    client.table(table_name).upsert(
+                        parent_data, on_conflict="code"
+                    ).execute()
                     if manifest:
                         manifest.update_entry(abs_file)
                     return True
@@ -224,7 +234,11 @@ def delete_file_from_vector(file_path_str: str):
     table_name = "system_docs"
     if "session_logs" in file_path_str:
         table_name = "sessions"
-    elif "case_studies" in file_path_str or "proposals" in file_path_str or "Reflection Essay" in file_path_str:
+    elif (
+        "case_studies" in file_path_str
+        or "proposals" in file_path_str
+        or "essays" in file_path_str
+    ):
         table_name = "case_studies"
     elif "protocols" in file_path_str:
         table_name = "protocols"
@@ -261,7 +275,11 @@ def verify_chunk_integrity(expected_min_ratio: float = 0.5) -> bool:
         if not context_dir.exists():
             return True
 
-        local_files = [f for f in context_dir.glob("**/*") if f.is_file() and f.suffix in (".md", ".json", ".yaml")]
+        local_files = [
+            f
+            for f in context_dir.glob("**/*")
+            if f.is_file() and f.suffix in (".md", ".json", ".yaml")
+        ]
         client = get_client()
         res = client.table("document_chunks").select("id", count="exact").execute()
         chunk_count = res.count or 0
@@ -270,4 +288,3 @@ def verify_chunk_integrity(expected_min_ratio: float = 0.5) -> bool:
     except Exception:
         # Return True if vector DB connection is offline/unconfigured to avoid blocking local runs
         return True
-

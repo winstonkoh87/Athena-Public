@@ -7,7 +7,6 @@ Centralized configuration and path discovery.
 
 import os
 from pathlib import Path
-from typing import Any
 
 # Global Cache for PROJECT_ROOT
 _PROJECT_ROOT_CACHE: Path | None = None
@@ -54,15 +53,9 @@ def set_project_root(root: Path | str | None) -> Path:
         "system_docs": FRAMEWORK_DIR / "v8.2-stable" / "modules",
     }
     EXTENDED_DIRS = [
-        (PROJECT_ROOT / "analysis", "case_studies"),
-        (PROJECT_ROOT / "Marketing", "system_docs"),
-        (PROJECT_ROOT / "proposals", "case_studies"),
-        (PROJECT_ROOT / "Winston", "system_docs"),
-        (PROJECT_ROOT / "docs" / "audit", "system_docs"),
-        (PROJECT_ROOT / "gem_knowledge_base", "system_docs"),
+        (PROJECT_ROOT / "docs", "system_docs"),
+        (PROJECT_ROOT / "examples", "system_docs"),
         (PROJECT_ROOT / ".athena", "system_docs"),
-        (PROJECT_ROOT / ".projects", "system_docs"),
-        (PROJECT_ROOT / "Reflection Essay", "case_studies"),
         (CONTEXT_DIR / "research", "case_studies"),
         (CONTEXT_DIR / "specs", "system_docs"),
     ]
@@ -78,7 +71,7 @@ def set_project_root(root: Path | str | None) -> Path:
     try:
         import sys
         if "athena.boot.constants" in sys.modules:
-            bconst: Any = sys.modules["athena.boot.constants"]
+            bconst = sys.modules["athena.boot.constants"]
             bconst.PROJECT_ROOT = PROJECT_ROOT
             bconst.AGENT_DIR = AGENT_DIR
             bconst.CONTEXT_DIR = CONTEXT_DIR
@@ -186,15 +179,9 @@ CORE_DIRS = {
 
 # Extended Memory (Silos mapped to logical tables)
 EXTENDED_DIRS = [
-    (PROJECT_ROOT / "analysis", "case_studies"),
-    (PROJECT_ROOT / "Marketing", "system_docs"),
-    (PROJECT_ROOT / "proposals", "case_studies"),
-    (PROJECT_ROOT / "Winston", "system_docs"),
-    (PROJECT_ROOT / "docs" / "audit", "system_docs"),
-    (PROJECT_ROOT / "gem_knowledge_base", "system_docs"),
+    (PROJECT_ROOT / "docs", "system_docs"),
+    (PROJECT_ROOT / "examples", "system_docs"),
     (PROJECT_ROOT / ".athena", "system_docs"),
-    (PROJECT_ROOT / ".projects", "system_docs"),
-    (PROJECT_ROOT / "Reflection Essay", "case_studies"),
     (CONTEXT_DIR / "research", "case_studies"),
     (CONTEXT_DIR / "specs", "system_docs"),
 ]
@@ -226,7 +213,7 @@ def get_current_session_log() -> Path | None:
 
     import re
 
-    pattern_legacy = re.compile(r"^(\d{4}-\d{2}-\d{2})-session-(S?\d{2,4})(?:-.*)?\.md$")
+    pattern_legacy = re.compile(r"^(\d{4}-\d{2}-\d{2})-session-(S?\d{2,4})\.md$")
     pattern_new = re.compile(r"^S(\d{3})_(\d{8})_.*\.md$")
     session_files = []
 
