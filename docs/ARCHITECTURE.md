@@ -12,12 +12,12 @@
 ```
 Athena/
 ├── .agent/                        # Agent configuration
-│   ├── skills/                    #   43 active skills (42 with context_trigger)
-│   │   └── protocols/             #   421 active + 34 archived = 455 total, 26 categories
+│   ├── skills/                    #   44 active skills (43 with context_trigger)
+│   │   └── protocols/             #   427 active + 34 archived = 461 total, 26 categories
 │   │       └── archive/           #     34 deprecated protocols (read-only, see README)
-│   ├── workflows/                 #   55 root + 19 _domain = 74 slash-command workflows
+│   ├── workflows/                 #   56 root + 21 _domain = 77 slash-command workflows
 │   │   └── _domain/               #     Domain-scoped, conditionally activated
-│   ├── scripts/                   #   279 automation scripts
+│   ├── scripts/                   #   300 automation scripts
 │   ├── telemetry/                 #   Retrieval instrumentation logs + tier maps
 │   ├── config/                    #   Agent manifests + CAPS.json (canonical counts)
 │   ├── CLUSTER_INDEX.md           #   15 cognitive clusters (routing map)
@@ -27,9 +27,9 @@ Athena/
 │   └── archive_skills/            #   17 sunset skills (read-only, see README)
 │
 ├── .context/                      # Personal knowledge base
-│   ├── memories/                  #   4,939 memory files (session logs + case studies + profile)
+│   ├── memories/                  #   5,626 memory files (session logs + case studies + profile)
 │   │   ├── session_logs/          #     Dated session records
-│   │   ├── case_studies/          #     503 documented patterns (14 domains)
+│   │   ├── case_studies/          #     604 documented patterns (14 domains)
 │   │   ├── profile/               #     Core profile, psychology, voice DNA
 │   │   └── observations/          #     Session insights
 │   ├── memory_bank/               #   10 boot files (activeContext, userContext,
@@ -173,9 +173,9 @@ Full cluster details: `CLUSTER_INDEX.md` (private workspace — see table above 
 |:------|------:|:------------|
 | Cognitive Domains | 8 | Memory activation targets (priority-ordered for tie-breaking) |
 | Cognitive Clusters | 15 | Co-activating procedural memory bundles |
-| Skills | 40 active (17 archived) |
-| Protocols | 399 active (32 archived; 431 total) |
-| Workflows | 69 (51 root + 18 _domain/) |
+| Skills | 44 active (17 archived) |
+| Protocols | 427 active (34 archived; 461 total) |
+| Workflows | 77 (56 root + 21 _domain/) |
 
 ---
 

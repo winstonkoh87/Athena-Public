@@ -13,9 +13,9 @@
 | **Decision Protocols** | 461 (427 active + 34 archived, 26 categories) |
 | **Orchestration Workflows** | 77 (56 root + 21 domain) |
 | **Skills** | 44 active (43 with context_trigger), 17 archived |
-| **Case Studies** | 600 (15 domains) |
+| **Case Studies** | 604 (15 domains) |
 | **Total Sessions** | 2,100+ |
-| **Memory Files** | 5,591 |
+| **Memory Files** | 5,626 |
 
 ---
 
