@@ -6,6 +6,14 @@ Intelligence and strategic reasoning modules for Athena.
 Includes deterministic GTO computation engine and sentinel monitoring.
 """
 
+from athena.intelligence.evidence_contract import (
+    ClaimKind,
+    ClaimStatus,
+    EvidenceClaim,
+    extract_evidence_claims_from_frontmatter,
+    filter_claims_for_profiling,
+    validate_interpersonal_calibration,
+)
 from athena.intelligence.gto_engine import (
     ARENA_MAX_FRACTION,
     BVI_FREEZE_EXPOSURE_PCT,
@@ -53,6 +61,12 @@ from athena.intelligence.sentinel import (
 )
 
 __all__ = [
+    "ClaimKind",
+    "ClaimStatus",
+    "EvidenceClaim",
+    "extract_evidence_claims_from_frontmatter",
+    "filter_claims_for_profiling",
+    "validate_interpersonal_calibration",
     "ARENA_MAX_FRACTION",
     "BVI_FREEZE_EXPOSURE_PCT",
     "BVI_RUIN_SCORE",

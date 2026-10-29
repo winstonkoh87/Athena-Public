@@ -1,6 +1,6 @@
 # Athena — Architecture Reference
 
-> **Last Updated**: 29 October 2026
+> **Last Updated**: 30 October 2026
 > **Version**: v10.0.6
 > **Canonical Counts**: See `.agent/config/CAPS.json` — if numbers in this file diverge, CAPS wins.
 > **Bionic Unit Spec**: `BIONIC_UNIT_SPEC.md` (private workspace) — the definitive human-AI augmentation mapping
@@ -17,7 +17,7 @@ Athena/
 │   │       └── archive/           #     34 deprecated protocols (read-only, see README)
 │   ├── workflows/                 #   56 root + 21 _domain = 77 slash-command workflows
 │   │   └── _domain/               #     Domain-scoped, conditionally activated
-│   ├── scripts/                   #   299 automation scripts
+│   ├── scripts/                   #   297 automation scripts
 │   ├── telemetry/                 #   Retrieval instrumentation logs + tier maps
 │   ├── config/                    #   Agent manifests + CAPS.json (canonical counts)
 │   ├── CLUSTER_INDEX.md           #   15 cognitive clusters (routing map)
@@ -27,9 +27,9 @@ Athena/
 │   └── archive_skills/            #   17 sunset skills (read-only, see README)
 │
 ├── .context/                      # Personal knowledge base
-│   ├── memories/                  #   5,713 memory files (session logs + case studies + profile)
+│   ├── memories/                  #   5,739 memory files (session logs + case studies + profile)
 │   │   ├── session_logs/          #     Dated session records
-│   │   ├── case_studies/          #     611 documented patterns (14 domains)
+│   │   ├── case_studies/          #     615 documented patterns (14 domains)
 │   │   ├── profile/               #     Core profile, psychology, voice DNA
 │   │   └── observations/          #     Session insights
 │   ├── memory_bank/               #   10 boot files (activeContext, userContext,
@@ -67,7 +67,7 @@ Athena/
 
 ---
 
-## Cognitive Stack — Perception Model (v9.9.9)
+### Cognitive Stack — Perception Model (v9.9.9)
 
 > Modeled after human sensory processing: **Parallel Activation → Attention Gate → Executive Function → Response**.
 > The brain doesn't classify-then-route; it activates-then-filters. Athena's runtime works the same way.
@@ -250,8 +250,8 @@ The proactive layer can **inject context** into the reactive layer — e.g., whe
 | Core Identity | `/start` | ~2K |
 | Memory Bank (3 files) | `/start` | ~3.5K |
 | Boot orchestrator | `/start` | ~2K |
-| CANONICAL Tier 1 (always boot) | `/start` | ~16K (40 entries) |
-| CANONICAL Tier 2 (domain-triggered) | Query match | ~41K (156 entries, loaded on demand) |
+| CANONICAL Tier 1 (always boot) | `/start` | ~16K (29 entries) |
+| CANONICAL Tier 2 (domain-triggered) | Query match | ~41K (140 entries, loaded on demand) |
 | Protocol (on-demand) | Attention gate pass | ~3-7K each |
 | Skill cluster (on-demand) | `context_trigger` match | ~5-15K per cluster |
 | Full context | `/fullload` | ~28K |
@@ -264,19 +264,20 @@ The proactive layer can **inject context** into the reactive layer — e.g., whe
 src/athena/tools/search.py (12s God Mode timeout + grep fallback)
 ├── Full SDK search (parallel hybrid RRF + semantic cache)
 │   ├── Canonical search (CANONICAL.md keyword matching, min 2-hit)
-│   ├── Tag search (grep against TAG_INDEX shards)
 │   ├── Vector search (Supabase pgvector, 11 parallel RPCs, threshold ≥0.3)
-│   ├── ~~GraphRAG search~~ (REMOVED 2026-06-06 — stale 16 months, user directive)
 │   ├── Filename search (find across project root, keyword OR logic)
 │   ├── Framework docs search (keyword matching in .framework/ + memory_bank/)
 │   ├── SQLite search (local athena.db — files + tags)
-│   └── Exocortex search (Wikipedia FTS5)
-├── Fusion: Weighted RRF (k=60, per-type weights, dynamic score modifiers)
+│   └── Web search [opt-in, auto via needs_web()] (provider layer: Serper/Brave/DDG)
+├── Fusion: Weighted RRF (k=60, per-type weights in search.py::WEIGHTS, dynamic score modifiers)
+│   └── Weights live in search.py::WEIGHTS — do not mirror elsewhere
+├── Reranker: ONNX Cross-Encoder (top-50 → limit, crash-safe no-op if unavailable)
 ├── Telemetry: retrieval_log.jsonl (quality: hit/partial/miss, source distribution)
 └── Grep fallback (runs if full search times out)
-    ├── CANONICAL.md
-    ├── PROTOCOL_SUMMARIES.md
-    ├── Session log filenames
+    ├── CANONICAL.md (keyword content matching)
+    ├── PROTOCOL_SUMMARIES.md (keyword content matching)
+    ├── Session log filenames (find -iname)
+    ├── Session log content (grep last 200 files by mtime — P3.3)
     └── Memory bank files
 ```
 
@@ -296,8 +297,8 @@ src/athena/tools/search.py (12s God Mode timeout + grep fallback)
 
 | Index | Size | Purpose |
 |:------|-----:|:--------|
-| `CLUSTER_INDEX.md` | 18KB | Routing map (15 clusters → 44 skills) |
-| `WORKFLOW_INDEX.md` | 6KB | Workflow registry (77 workflows) |
+| `CLUSTER_INDEX.md` | 18KB | Routing map (15 clusters → 26 skills) |
+| `WORKFLOW_INDEX.md` | 6KB | Workflow registry (74 workflows) |
 | `PROTOCOL_SUMMARIES.md` | 24KB | All-protocol quick-lookup |
 | `KNOWLEDGE_GRAPH.md` | 15KB | Concept relationships |
 
@@ -305,7 +306,7 @@ src/athena/tools/search.py (12s God Mode timeout + grep fallback)
 
 ---
 
-## Protocol Taxonomy (26 active categories)
+## Protocol Taxonomy (26 categories across 420 active protocols)
 
 | Category | Count | Category | Count |
 |:---------|------:|:---------|------:|
@@ -318,39 +319,59 @@ src/athena/tools/search.py (12s God Mode timeout + grep fallback)
 | marketing | 8 | reasoning | 8 |
 | research | 7 | coding | 6 |
 | trading | 6 | singapore | 5 |
-| diagnostics | 5 | archive | 32 |
+| diagnostics | 5 | archive | 34 |
 
 ---
 
-## CANONICAL Progressive Disclosure (v9.8.0)
+## Intelligence & Memory Subsystems (v9.9.9)
 
-Section 4 (Strategic Frameworks) contains 199 entries, ~58KB. Progressive disclosure tiers:
+### 1. Intelligence Engine (`src/athena/intelligence/`)
+- **`gto_engine.py`**: Deterministic Multiple-Criteria Decision Analysis (MCDA) engine with automated ±10% weight perturbation, pairwise dominance auditing, and winner stability gates. Automatically detects unstable ties and routes to Path D (Reversible Experiment) or Path E (Wait/Status Quo). Computes Empirically-discounted Expected Value (EEV), Half-Kelly sizing, Law-of-Ruin probabilities, and Monte Carlo trade simulations.
+- **`sentinel.py`**: Substantive session learning extractor and knowledge leak detector during session compilation.
+
+### 2. Contextual ATX Heading Breadcrumb Chunker (`src/athena/memory/`)
+- **`contextual_chunker.py`**: Pure standard-library hierarchical parser that extracts Markdown ATX heading hierarchy (`# Title > ## Section > ### Subheading`) and prepends structured breadcrumbs to every text chunk prior to vector embedding. Eliminates orphan context loss across RAG queries (shipped S1053).
+
+### 3. Verification & Guard Tooling (`src/athena/tools/` & `.agent/scripts/`)
+- **`citation_verifier.py`**: Automated Crossref API client with title similarity scoring and DOI metadata verification (shipped S1032).
+- **`contrast_check.py`**: Deterministic W3C WCAG 2.1 relative luminance checker with built-in reference self-tests (shipped S1055).
+
+---
+
+## CANONICAL Progressive Disclosure (v9.9.9)
+
+CANONICAL memory contains 199 entries, ~57KB. Progressive disclosure tiers:
 
 | Tier | Count | Size | Loading Strategy |
 |:-----|------:|-----:|:-----------------|
 | Tier 1 (Always Boot) | 40 | ~16KB | Loaded on every `/start` — universal laws, identity truths |
-| Tier 2 (Domain-Triggered) | 156 | ~41KB | Loaded when query matches domain keywords (trading, pricing, etc.) |
+| Tier 2 (Domain-Triggered) | 156 | ~40KB | Loaded when query matches domain keywords (trading, pricing, etc.) |
 | Tier 3 (On-Demand) | 3 | ~1KB | Loaded only via explicit search hit |
 
-**Boot savings**: 72% of Section 4 deferred = ~42KB saved per session.
+**Boot savings**: 69% of CANONICAL memory deferred = ~39KB saved per session.
 
 Tier map: `.agent/telemetry/tier_map.json` (generated by `canonical_tier_analysis.py`).
 
 ---
 
-## MCP Server
+## MCP Server (FastMCP v3.x, stdio transport — 14 Tools)
 
 ```
-src/athena/mcp_server.py (FastMCP v3.x, stdio transport)
-├── smart_search      — Hybrid RAG search (read, memory)
-├── agentic_search    — Multi-step query decomposition (read, admin)
-├── quicksave         — Session checkpoint with Triple-Lock governance
-├── health_check      — Vector API + Database subsystem audit
-├── recall_session    — Retrieve recent session log content
-├── governance_status — Triple-Lock compliance state
-├── list_memory_paths — Active memory directory inventory
-├── set_secret_mode   — Toggle demo/external redaction mode
-├── permission_status — Current permission + tool manifest
+src/athena/mcp_server.py
+├── smart_search               — Hybrid RAG search (read, memory)
+├── agentic_search             — Multi-step query decomposition (read, admin)
+├── quicksave                  — Session checkpoint with Triple-Lock governance
+├── health_check               — Vector API + Database subsystem audit
+├── recall_session             — Retrieve recent session log content
+├── governance_status          — Triple-Lock compliance state
+├── list_memory_paths          — Active memory directory inventory
+├── set_secret_mode            — Toggle demo/external redaction mode
+├── permission_status          — Current permission + tool manifest
+├── meta_awareness_check       — Run meta-awareness diagnostic
+├── report_external_web_search — Audit external web search invocation
+├── search_web                 — Live web search provider relay
+├── classify_turn              — Classify turn complexity (SNIPER/STANDARD/ULTRA)
+├── context_gate               — Context gating and missing retrieval resolution
 └── Resources:
     ├── athena://session/current  — Full current session log
     └── athena://memory/canonical — CANONICAL.md content
@@ -373,23 +394,6 @@ src/athena/mcp_server.py (FastMCP v3.x, stdio transport)
 
 ---
 
-## Metrics (6 Jun 2026)
+## Metrics
 
-| Metric | Count |
-|:-------|------:|
-| Protocols (active) | 399 |
-| Protocols (archived) | 32 |
-| Skills (active) | 40 (40 conditional) |
-| Cognitive Clusters | 15 |
-| Cognitive Systems | 8 |
-| Workflows | 69 (51 root + 18 _domain/) |
-| Automation Scripts | 247 |
-| Case Studies | 492 (15 domains, 7 archived) |
-| Session Logs | 1,888 |
-| Total Memory Files | 3,658 |
-| Source Files (SDK) | 72 |
-| Test Files | 13 |
-| Documentation Files | 76 |
-| Active Indexes | 4 (63KB) |
-| CANONICAL Entries | ~400 (29 Tier 1, 140 Tier 2, 3 Tier 3) |
-| Cap Policy | Uncapped (attention budget constraint via Protocol 530) |
+Live inventory counts are **not duplicated here** — a hand-maintained table only drifts. The single source of truth is **[`.agent/config/CAPS.json`](.agent/config/CAPS.json)**, kept current by the Gate-4 pre-commit hook (`core.hooksPath=.agent/hooks`), which also auto-syncs the Workspace Structure tree at the top of this file. Read counts from there.

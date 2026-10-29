@@ -429,7 +429,6 @@ def get_embedding(
                                     "Gemini API quota exhausted — retry later."
                                 )
                     if attempt < max_retries - 1:
-                        import time
                         time.sleep(wait)
                         continue
                     else:
@@ -456,7 +455,6 @@ def get_embedding(
                         raise
 
                 if attempt < max_retries - 1:
-                    import time
                     wait = (2 ** attempt) + random.uniform(0, 1)
                     print(f"  ⚠️  Request exception in get_embedding: {e}. Retrying in {wait:.2f}s...")
                     time.sleep(wait)
