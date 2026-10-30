@@ -55,7 +55,7 @@ Before touching "working" code, ask:
 
 ## Integration
 
-- Links to: [Protocol 130: Vibe Coding](../../../examples/protocols/workflow/WFL-130-vibe-coding.md) — when speed matters
+- Links to: [Protocol 130: Vibe Coding](../../../.agent/skills/protocols/workflow/WFL-130-vibe-coding.md) — when speed matters
 - Links to: Protocol 93: Forward-Only Architecture — freeze after validation (internal protocol)
 - Links to: [TASK_LOG Template](https://github.com/winstonkoh87/Athena-Public/blob/main/examples/templates/TASK_LOG_template.md) — intent persistence
 - Source: Reddit r/vibecoding (Dec 2025)
