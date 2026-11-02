@@ -31,22 +31,55 @@ import re
 
 # Matches Markdown ATX headings: # H1, ## H2, ### H3, etc.
 _HEADING_RE = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
+_FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)
+_CLAIM_KIND_RE = re.compile(r"^claim_kind:\s*['\"]?([a-zA-Z0-9_\-]+)['\"]?", re.MULTILINE | re.IGNORECASE)
+_STATUS_RE = re.compile(r"^status:\s*['\"]?([a-zA-Z0-9_\-]+)['\"]?", re.MULTILINE | re.IGNORECASE)
 
 
-def _build_breadcrumb(heading_stack: dict[int, str], filename: str) -> str:
-    """Render the current heading stack as a breadcrumb string.
+def extract_frontmatter_provenance(text: str) -> dict[str, str]:
+    """Extract epistemic claim_kind and status provenance from Markdown frontmatter (TD-084)."""
+    if not text.startswith("---"):
+        return {}
+    m = _FRONTMATTER_RE.match(text)
+    if not m:
+        return {}
+    fm_text = m.group(1)
+    prov: dict[str, str] = {}
+    kind_m = _CLAIM_KIND_RE.search(fm_text)
+    if kind_m:
+        prov["claim_kind"] = kind_m.group(1).lower().strip()
+    status_m = _STATUS_RE.search(fm_text)
+    if status_m:
+        prov["status"] = status_m.group(1).lower().strip()
+    return prov
+
+
+def _build_breadcrumb(
+    heading_stack: dict[int, str],
+    filename: str,
+    provenance: dict[str, str] | None = None,
+) -> str:
+    """Render the current heading stack and epistemic provenance as a breadcrumb string.
 
     Example output:
-        [Doc: CS-652-keith-leo.md | # The 6 Pillars > ## Generosity Asymmetry]
+        [Doc: CS-453.md | Kind: design_proposal | Status: active | # The 6 Pillars > ## Generosity Asymmetry]
     """
+    labels = [f"Doc: {filename}"]
+    if provenance:
+        if provenance.get("claim_kind"):
+            labels.append(f"Kind: {provenance['claim_kind']}")
+        if provenance.get("status"):
+            labels.append(f"Status: {provenance['status']}")
+
     parts = []
     for level in sorted(heading_stack):
         text = heading_stack[level]
         parts.append(f"{'#' * level} {text}")
 
     if parts:
-        return f"[Doc: {filename} | {' > '.join(parts)}]\n\n"
-    return f"[Doc: {filename}]\n\n"
+        labels.append(" > ".join(parts))
+
+    return f"[{' | '.join(labels)}]\n\n"
 
 
 # ---------------------------------------------------------------------------
@@ -108,6 +141,8 @@ def chunk_markdown_contextual(
     if not text or not text.strip():
         return []
 
+    provenance = extract_frontmatter_provenance(text)
+
     # --- Step 1: Index all headings and their positions ----------------------
     headings: list[tuple[int, int, str]] = []  # (position, level, text)
     for m in _HEADING_RE.finditer(text):
@@ -155,7 +190,7 @@ def chunk_markdown_contextual(
                     # Just grab the first heading to establish context
                     break
 
-        breadcrumb = _build_breadcrumb(heading_stack, filename)
+        breadcrumb = _build_breadcrumb(heading_stack, filename, provenance)
         chunks.append(breadcrumb + chunk_body)
 
         # Advance position (subtract overlap for continuity)

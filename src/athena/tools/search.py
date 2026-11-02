@@ -1592,6 +1592,15 @@ def run_search(
             else:
                 conf_badge = "[LOW]"
 
+            # Epistemic provenance badges (TD-084)
+            if doc.metadata.get("claim_kind") == "design_proposal":
+                conf_badge += "[PROPOSAL]"
+            elif doc.metadata.get("claim_kind"):
+                conf_badge += f"[{doc.metadata['claim_kind'].upper()}]"
+
+            if doc.metadata.get("status") in ("superseded", "disputed"):
+                conf_badge += f"[{doc.metadata['status'].upper()}]"
+
             has_rerank = "reranker" in doc.signals and "score" in doc.signals["reranker"]
             score_display = (
                 f"Rerank:{doc.signals['reranker']['score']:.2f}"

@@ -5,6 +5,7 @@ athena.core.models
 Shared data structures and Pydantic models.
 """
 
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -54,6 +55,27 @@ class SearchResult:
             if k not in self.metadata:
                 self.metadata[k] = v
 
+        # Epistemic provenance extraction (TD-084)
+        if "claim_kind" in self.metadata:
+            self.claim_kind = self.metadata["claim_kind"]
+        elif self.content and self.content.startswith("[Doc:"):
+            m_kind = re.search(r"\|\s*Kind:\s*([a-zA-Z0-9_\-]+)", self.content[:200], re.IGNORECASE)
+            self.claim_kind = m_kind.group(1).lower().strip() if m_kind else None
+            if self.claim_kind:
+                self.metadata["claim_kind"] = self.claim_kind
+        else:
+            self.claim_kind = None
+
+        if "status" in self.metadata:
+            self.status = self.metadata["status"]
+        elif self.content and self.content.startswith("[Doc:"):
+            m_status = re.search(r"\|\s*Status:\s*([a-zA-Z0-9_\-]+)", self.content[:200], re.IGNORECASE)
+            self.status = m_status.group(1).lower().strip() if m_status else None
+            if self.status:
+                self.metadata["status"] = self.status
+        else:
+            self.status = None
+
     def to_dict(self) -> dict[str, Any]:
         d = {
             "id": self.id,
@@ -62,6 +84,10 @@ class SearchResult:
             "rrf_score": self.rrf_score,
             "signals": self.signals,
         }
+        if self.metadata.get("claim_kind"):
+            d["claim_kind"] = self.metadata["claim_kind"]
+        if self.metadata.get("status"):
+            d["status"] = self.metadata["status"]
         resolved_path = self.path or self.metadata.get("path")
         if resolved_path:
             d["path"] = resolved_path

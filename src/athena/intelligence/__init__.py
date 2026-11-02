@@ -14,6 +14,10 @@ from athena.intelligence.evidence_contract import (
     filter_claims_for_profiling,
     validate_interpersonal_calibration,
 )
+from athena.intelligence.gate_telemetry import (
+    GateTelemetryAnalyzer,
+    TelemetrySummary,
+)
 from athena.intelligence.gto_engine import (
     ARENA_MAX_FRACTION,
     BVI_FREEZE_EXPOSURE_PCT,
@@ -61,6 +65,8 @@ from athena.intelligence.sentinel import (
 )
 
 __all__ = [
+    "GateTelemetryAnalyzer",
+    "TelemetrySummary",
     "ClaimKind",
     "ClaimStatus",
     "EvidenceClaim",
