@@ -137,8 +137,8 @@ def validate_interpersonal_calibration(text: str) -> dict[str, Any]:
 
     # 1. Detect fabricated psychometric percentiles
     percentile_pattern = re.compile(
-        r"(?:percentile|\b\d{1,2}%\b).*?\b(narcissis|machiavell|psychopath|dark triad|sociopath|borderline|histrionic|neuroticism)\b|"
-        r"\b(narcissis|machiavell|psychopath|dark triad|sociopath|borderline|histrionic|neuroticism)\b.*?(?:percentile|\b\d{1,2}%\b)",
+        r"(?:percentile|\b\d{1,2}%).*?\b(narcissis\w*|machiavell\w*|psychopath\w*|dark triad|sociopath\w*|borderline|histrionic|neuroticism)\b|"
+        r"\b(narcissis\w*|machiavell\w*|psychopath\w*|dark triad|sociopath\w*|borderline|histrionic|neuroticism)\b.*?(?:percentile|\b\d{1,2}%)",
         re.IGNORECASE,
     )
     if percentile_pattern.search(text):

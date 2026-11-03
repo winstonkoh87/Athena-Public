@@ -63,10 +63,18 @@ from athena.intelligence.sentinel import (
     check_shutdown_sentinel,
     update_active_context,
 )
+from athena.intelligence.spec_gate import (
+    SpecPillarResult,
+    SpecVerificationResult,
+    UpstreamSpecGate,
+)
 
 __all__ = [
     "GateTelemetryAnalyzer",
     "TelemetrySummary",
+    "SpecPillarResult",
+    "SpecVerificationResult",
+    "UpstreamSpecGate",
     "ClaimKind",
     "ClaimStatus",
     "EvidenceClaim",
