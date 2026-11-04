@@ -17,10 +17,12 @@ Zero-delimiters: strictly plain ASCII output.
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any
 
 
 @dataclass
@@ -32,6 +34,94 @@ class TelemetrySummary:
     compliance_band: str
     class_counts: dict[str, int] = field(default_factory=dict)
     class_shares: dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
+class OutputContractAudit:
+    contract_satisfied: bool
+    adherence_score: float
+    elements_present: list[str]
+    missing_elements: list[str]
+    verdict: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "contract_satisfied": self.contract_satisfied,
+            "adherence_score": self.adherence_score,
+            "elements_present": self.elements_present,
+            "missing_elements": self.missing_elements,
+            "verdict": self.verdict,
+        }
+
+
+SUBSTANCE_DECODE_PILLARS = [
+    (
+        "prior",
+        r"\b(?:prior|base\s+rate|arena\s+base\s+rate|arena\s+prior|historical\s+base\s+rate)\b",
+        "Base-Rate Prior (Arena Base Rate)",
+    ),
+    (
+        "discriminators",
+        r"\b(?:discriminator(?:s)?|verifiable\s+detail(?:s)?|observable\s+update(?:s)?|observable\s+discriminator(?:s)?|signals?\s+observed)\b",
+        "Observable Discriminators",
+    ),
+    (
+        "sign_check",
+        r"\b(?:sign\s+check|mp-?16|inflating|deflating|flip\s+the\s+sign)\b",
+        "Sign Check (MP-16 Inflating/Deflating Audit)",
+    ),
+    (
+        "payoff_action",
+        r"\b(?:payoff-?weighted|payoff\s+valuation|asymmetric\s+upside|ergodic(?:ity)?|ev\s*=|asymmetry)\b",
+        "Payoff-Weighted Action / Asymmetry",
+    ),
+]
+
+
+def evaluate_substance_decode_adherence(text: str) -> dict[str, Any]:
+    """
+    Evaluates whether model output satisfies the substance-decode output contract (TD-069b M3).
+    Checks for the 4 core pillars:
+      1. Base-Rate Prior
+      2. Observable Discriminators
+      3. Sign Check (MP-16)
+      4. Payoff-Weighted Action
+    """
+    if not text:
+        return OutputContractAudit(
+            contract_satisfied=False,
+            adherence_score=0.0,
+            elements_present=[],
+            missing_elements=[p[0] for p in SUBSTANCE_DECODE_PILLARS],
+            verdict="FAIL",
+        ).to_dict()
+
+    present: list[str] = []
+    missing: list[str] = []
+
+    for name, pattern, _ in SUBSTANCE_DECODE_PILLARS:
+        if re.search(pattern, text, re.IGNORECASE):
+            present.append(name)
+        else:
+            missing.append(name)
+
+    score = len(present) / len(SUBSTANCE_DECODE_PILLARS)
+    satisfied = score >= 0.75  # Requires at least 3 of 4 pillars
+
+    if satisfied:
+        verdict = "PASS"
+    elif score >= 0.5:
+        verdict = "PARTIAL"
+    else:
+        verdict = "FAIL"
+
+    return OutputContractAudit(
+        contract_satisfied=satisfied,
+        adherence_score=round(score, 2),
+        elements_present=present,
+        missing_elements=missing,
+        verdict=verdict,
+    ).to_dict()
 
 
 class GateTelemetryAnalyzer:
@@ -152,4 +242,32 @@ class GateTelemetryAnalyzer:
                 share = summary.class_shares.get(cls, 0.0)
                 lines.append(f"  {cls:<15}: {count:>4} fires ({share:>5.1f}%)")
 
+        return "\n".join(lines)
+
+    def audit_output_contract(self, text: str) -> OutputContractAudit:
+        """
+        Audits output text against substance-decode contract (TD-069b M3).
+        """
+        d = evaluate_substance_decode_adherence(text)
+        return OutputContractAudit(
+            contract_satisfied=d["contract_satisfied"],
+            adherence_score=d["adherence_score"],
+            elements_present=d["elements_present"],
+            missing_elements=d["missing_elements"],
+            verdict=d["verdict"],
+        )
+
+    def render_contract_report(self, text: str) -> str:
+        """
+        Renders an ASCII verification report for output contract adherence.
+        """
+        audit = self.audit_output_contract(text)
+        lines = [
+            "=== Substance-Decode Output Contract Audit (TD-069b M3) ===",
+            f"Verdict:            {audit.verdict}",
+            f"Contract Satisfied: {audit.contract_satisfied}",
+            f"Adherence Score:    {int(audit.adherence_score * 100)}% ({len(audit.elements_present)}/4 pillars)",
+            f"Pillars Present:    {', '.join(audit.elements_present) if audit.elements_present else 'None'}",
+            f"Pillars Missing:    {', '.join(audit.missing_elements) if audit.missing_elements else 'None'}",
+        ]
         return "\n".join(lines)

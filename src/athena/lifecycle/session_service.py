@@ -114,6 +114,41 @@ class SessionService:
         session_num = self.get_next_session_number(target_date)
         return f"{target_date}-session-{session_num:02d}"
 
+    def get_all_time_session_count(self) -> int:
+        """
+        Returns the total cumulative count of historical sessions since inception.
+        Scans all session log markdown files across .context/**/session_logs/.
+        """
+        import glob
+        pattern = config.PROJECT_ROOT / ".context" / "**" / "session_logs" / "**" / "*.md"
+        files = glob.glob(str(pattern), recursive=True)
+        # Exclude README and analysis files
+        valid_files = [
+            f for f in files
+            if not Path(f).name.startswith("README") and not str(f).endswith("analysis")
+        ]
+        return len(valid_files)
+
+    def get_dual_session_id(self, date_str: str | None = None) -> dict[str, Any]:
+        """
+        Returns a dual-index session payload with sequential ID and cumulative all-time index.
+        Example: {'sequential_id': '2026-11-04-session-S1567', 'all_time_index': 3026, 'display_tag': 'S1567 [All-Time #3026]'}
+        """
+        target_date = date_str or datetime.now().strftime("%Y-%m-%d")
+        seq_id = self.get_next_sequence_id(target_date)
+        # Extract sequential S number if present
+        s_match = re.search(r"session-S(\d+)", seq_id, re.IGNORECASE)
+        seq_tag = f"S{s_match.group(1)}" if s_match else seq_id.split("-session-")[-1]
+        all_time_index = self.get_all_time_session_count() + 1
+        display_tag = f"{seq_tag} [All-Time #{all_time_index}]"
+
+        return {
+            "session_id": seq_id,
+            "sequential_id": seq_tag,
+            "all_time_index": all_time_index,
+            "display_tag": display_tag,
+        }
+
     def create_session(
         self,
         focus: str | None = None,

@@ -16,7 +16,9 @@ from athena.intelligence.evidence_contract import (
 )
 from athena.intelligence.gate_telemetry import (
     GateTelemetryAnalyzer,
+    OutputContractAudit,
     TelemetrySummary,
+    evaluate_substance_decode_adherence,
 )
 from athena.intelligence.gto_engine import (
     ARENA_MAX_FRACTION,
@@ -68,13 +70,22 @@ from athena.intelligence.spec_gate import (
     SpecVerificationResult,
     UpstreamSpecGate,
 )
+from athena.intelligence.ucds_validator import (
+    KnockoutStatus,
+    TrackType,
+    UCDSAuditReport,
+    UCDSDossierValidator,
+    audit_ucds_dossier,
+)
 
 __all__ = [
     "GateTelemetryAnalyzer",
+    "OutputContractAudit",
     "TelemetrySummary",
     "SpecPillarResult",
     "SpecVerificationResult",
     "UpstreamSpecGate",
+    "evaluate_substance_decode_adherence",
     "ClaimKind",
     "ClaimStatus",
     "EvidenceClaim",
@@ -122,5 +133,10 @@ __all__ = [
     "check_boot_sentinel",
     "check_shutdown_sentinel",
     "update_active_context",
+    "KnockoutStatus",
+    "TrackType",
+    "UCDSAuditReport",
+    "UCDSDossierValidator",
+    "audit_ucds_dossier",
 ]
 
