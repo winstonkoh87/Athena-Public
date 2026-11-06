@@ -472,3 +472,210 @@ def check_sacrificial_fuse(
         "message": msg,
     }
 
+
+def audit_effective_drawdown_cliff(
+    balance: float = 1300.0,
+    margin_used: float = 300.0,
+    planned_stop_loss: float = 0.0,
+    stop_out_pct: float = 0.5,
+) -> dict:
+    """
+    Effective Drawdown Cliff & Margin Lock Dominance Auditor (CANONICAL §522 / S1580).
+    Computes true liquidation equity (stop_out_pct * margin_used) and effective loss capacity
+    (balance - liquidation_equity). Blocks optical planned stop losses that exceed effective capacity.
+    """
+    liq_equity = max(0.0, round(margin_used * stop_out_pct, 2))
+    eff_capacity = max(0.0, round(balance - liq_equity, 2))
+
+    violates_optical_stop = planned_stop_loss > eff_capacity
+    margin_level_at_stop = 0.0
+    if margin_used > 0:
+        equity_at_stop = max(0.0, balance - planned_stop_loss)
+        margin_level_at_stop = round((equity_at_stop / margin_used) * 100.0, 2)
+
+    if violates_optical_stop:
+        msg = (
+            f"BLOCK: Optical Planned Stop Loss Defect (CANONICAL §522 / S1580). "
+            f"Planned stop loss (S${planned_stop_loss:,.2f}) exceeds effective loss capacity "
+            f"(S${eff_capacity:,.2f}). Broker 50% margin liquidation cliff triggers at equity "
+            f"S${liq_equity:,.2f} before planned stop is executed."
+        )
+        return {
+            "passed": False,
+            "status": "BLOCK",
+            "balance": balance,
+            "margin_used": margin_used,
+            "stop_out_pct": stop_out_pct,
+            "liquidation_equity": liq_equity,
+            "effective_loss_capacity": eff_capacity,
+            "planned_stop_loss": planned_stop_loss,
+            "margin_level_at_stop": margin_level_at_stop,
+            "violates_optical_stop": True,
+            "message": msg,
+        }
+
+    msg = (
+        f"Effective loss capacity is S${eff_capacity:,.2f} (Liquidation cliff equity: S${liq_equity:,.2f}). "
+        f"Planned stop loss S${planned_stop_loss:,.2f} is within effective capacity."
+    )
+    return {
+        "passed": True,
+        "status": "PASS",
+        "balance": balance,
+        "margin_used": margin_used,
+        "stop_out_pct": stop_out_pct,
+        "liquidation_equity": liq_equity,
+        "effective_loss_capacity": eff_capacity,
+        "planned_stop_loss": planned_stop_loss,
+        "margin_level_at_stop": margin_level_at_stop,
+        "violates_optical_stop": False,
+        "message": msg,
+    }
+
+
+def check_hmr_liquidation_envelope(
+    equity: float = 1000.0,
+    current_margin: float = 107.2,
+    hmr_multiplier: float = 10.0,
+    stop_out_pct: float = 0.5,
+) -> dict:
+    """
+    Higher Margin Requirement (HMR) Rollover & Volatility Multiplier Auditor (CANONICAL §522 / S1580).
+    Audits whether an open position survives broker leverage cuts (e.g. 10x leverage reduction from
+    1:2000 to 1:200 during 23:59 server daily rollover, news releases, or weekend holding).
+    """
+    hmr_margin = max(0.0, round(current_margin * hmr_multiplier, 2))
+    hmr_stop_out_equity = max(0.0, round(hmr_margin * stop_out_pct, 2))
+
+    hmr_margin_level = float("inf")
+    if hmr_margin > 0:
+        hmr_margin_level = round((equity / hmr_margin) * 100.0, 2)
+
+    if equity <= hmr_stop_out_equity:
+        msg = (
+            f"CRITICAL: Instant mechanical auto-liquidation under HMR (CANONICAL §522). "
+            f"Equity (${equity:,.2f}) is below the HMR 50% stop-out threshold (${hmr_stop_out_equity:,.2f}) "
+            f"when margin requirement expands {hmr_multiplier:.0f}x to ${hmr_margin:,.2f}."
+        )
+        return {
+            "passed": False,
+            "status": "CRITICAL_LIQUIDATION",
+            "equity": equity,
+            "current_margin": current_margin,
+            "hmr_multiplier": hmr_multiplier,
+            "hmr_margin": hmr_margin,
+            "hmr_stop_out_equity": hmr_stop_out_equity,
+            "hmr_margin_level": hmr_margin_level,
+            "message": msg,
+        }
+
+    if hmr_margin_level <= 100.0:
+        msg = (
+            f"WARN: Margin call warning under HMR (CANONICAL §522). "
+            f"HMR margin level ({hmr_margin_level:.1f}%) is <= 100%. Position cannot enter new trades "
+            f"and is vulnerable to liquidation spikes."
+        )
+        return {
+            "passed": False,
+            "status": "MARGIN_CALL_WARN",
+            "equity": equity,
+            "current_margin": current_margin,
+            "hmr_multiplier": hmr_multiplier,
+            "hmr_margin": hmr_margin,
+            "hmr_stop_out_equity": hmr_stop_out_equity,
+            "hmr_margin_level": hmr_margin_level,
+            "message": msg,
+        }
+
+    msg = (
+        f"HMR envelope is clear: Under {hmr_multiplier:.0f}x rollover margin (${hmr_margin:,.2f}), "
+        f"margin level remains resilient at {hmr_margin_level:.1f}%."
+    )
+    return {
+        "passed": True,
+        "status": "PASS",
+        "equity": equity,
+        "current_margin": current_margin,
+        "hmr_multiplier": hmr_multiplier,
+        "hmr_margin": hmr_margin,
+        "hmr_stop_out_equity": hmr_stop_out_equity,
+        "hmr_margin_level": hmr_margin_level,
+        "message": msg,
+    }
+
+
+def classify_near_miss_excursion(
+    max_adverse_excursion: float,
+    effective_capacity: float = 1150.0,
+) -> dict:
+    """
+    Foundational Near-Miss Trio Excursion Classifier (CANONICAL §522 / S1580 / INC-001/003/005).
+    Categorizes excursion depth against the -S$1,150 effective loss capacity cliff:
+      CLEAR: <= 50% capacity (<= S$575)
+      ELEVATED_WATCH: 50% < excursion <= 65% (S$575 to S$747.50)
+      NEAR_MISS (Amber): 65% < excursion <= 100% (S$747.50 to S$1,150) -> Near-Miss Trio Archetype
+      CLIFF_BREACH (Red): > 100% (> S$1,150) -> Reload Catastrophe Archetype (INC-010/INC-011)
+    """
+    excursion_abs = abs(float(max_adverse_excursion))
+    cap = max(1.0, float(effective_capacity))
+    utilization_pct = round((excursion_abs / cap) * 100.0, 2)
+
+    if excursion_abs > cap:
+        return {
+            "passed": False,
+            "category": "CLIFF_BREACH",
+            "severity": "RED",
+            "max_adverse_excursion": excursion_abs,
+            "effective_capacity": cap,
+            "capacity_utilization_pct": utilization_pct,
+            "incident_archetype": "INC-010/INC-011 Reload Catastrophe (Excursion exceeded 100% capacity)",
+            "message": (
+                f"RED ALERT: Effective Drawdown Cliff Breached (Utilization: {utilization_pct:.1f}%). "
+                f"Adverse excursion S${excursion_abs:,.2f} exceeded the S${cap:,.2f} liquidation endurance cliff."
+            ),
+        }
+
+    if utilization_pct >= 65.0:
+        return {
+            "passed": False,
+            "category": "NEAR_MISS",
+            "severity": "AMBER",
+            "max_adverse_excursion": excursion_abs,
+            "effective_capacity": cap,
+            "capacity_utilization_pct": utilization_pct,
+            "incident_archetype": "INC-001/003/005 Near-Miss Trio (Excursion grazed 65%-100% cliff)",
+            "message": (
+                f"AMBER WARNING: Foundational Near-Miss Trio Excursion (Utilization: {utilization_pct:.1f}%). "
+                f"Adverse excursion S${excursion_abs:,.2f} grazed the S${cap:,.2f} cliff. "
+                "Beware outcome bias and optical survival traps."
+            ),
+        }
+
+    if utilization_pct >= 50.0:
+        return {
+            "passed": True,
+            "category": "ELEVATED_WATCH",
+            "severity": "YELLOW",
+            "max_adverse_excursion": excursion_abs,
+            "effective_capacity": cap,
+            "capacity_utilization_pct": utilization_pct,
+            "incident_archetype": "Elevated Volatility Excursion (50%-65% capacity)",
+            "message": (
+                f"YELLOW WATCH: Elevated excursion S${excursion_abs:,.2f} ({utilization_pct:.1f}% of capacity)."
+            ),
+        }
+
+    return {
+        "passed": True,
+        "category": "CLEAR",
+        "severity": "GREEN",
+        "max_adverse_excursion": excursion_abs,
+        "effective_capacity": cap,
+        "capacity_utilization_pct": utilization_pct,
+        "incident_archetype": "Nominal Volatility Envelope (<= 50% capacity)",
+        "message": (
+            f"GREEN: Nominal excursion S${excursion_abs:,.2f} ({utilization_pct:.1f}% of capacity)."
+        ),
+    }
+
+

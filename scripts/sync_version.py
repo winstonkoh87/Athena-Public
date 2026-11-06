@@ -135,9 +135,7 @@ EXEMPTIONS: list[tuple[str, str, str]] = [
     ("docs/wiki/*", r".",
      "vendored wiki pages carry per-page stamps, same class as Athena-Public.wiki"),
 
-    # Archived and deploy scripts carry their own release versions (v1.0.0, v0.0.1).
-    (".agent/scripts/deploy_v1.sh", r".",
-     "deploy script for v1.0.0 release — version pinned to that release"),
+    # Archived scripts carry their own release versions (v1.0.0, v0.0.1).
     (".agent/scripts/archive/*", r".",
      "archived scripts carrying their own pinned versions (install_mu v0.0.1, deploy_v1, etc.)"),
 

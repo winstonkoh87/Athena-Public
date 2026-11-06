@@ -75,7 +75,7 @@ Then type `/start` in your IDE's AI chat panel. Work normally. Type `/end` to sa
 
 ## Repository Structure
 
-Following [Protocol 543](.agent/skills/protocols/engineering/ENG-543-github-repo-scaffold.md) standard repository scaffold:
+Following Protocol 543 standard repository scaffold:
 
 ```text
 Athena/
