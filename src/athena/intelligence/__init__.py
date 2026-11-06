@@ -60,6 +60,15 @@ from athena.intelligence.gto_engine import (
     run_monte_carlo_simulation,
     screen_ruin,
 )
+from athena.intelligence.prop_risk_guard import (
+    AccountType,
+    ErgodicityCarryAudit,
+    PropAuditVerdict,
+    PropCapacityAudit,
+    audit_ergodicity_and_carry,
+    audit_prop_risk_capacity,
+    format_prop_risk_report,
+)
 from athena.intelligence.sentinel import (
     check_boot_sentinel,
     check_shutdown_sentinel,
@@ -138,5 +147,12 @@ __all__ = [
     "UCDSAuditReport",
     "UCDSDossierValidator",
     "audit_ucds_dossier",
+    "AccountType",
+    "ErgodicityCarryAudit",
+    "PropAuditVerdict",
+    "PropCapacityAudit",
+    "audit_ergodicity_and_carry",
+    "audit_prop_risk_capacity",
+    "format_prop_risk_report",
 ]
 

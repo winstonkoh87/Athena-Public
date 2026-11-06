@@ -15,7 +15,7 @@ on your disk across Claude Code, Antigravity, Cursor, Gemini CLI, and VS Code.
 
 ![20-second demo: /start recalls last session → work → /end](docs/demo.gif)
 
-[Quickstart](#quickstart) · [How It Works](#how-it-works) · [SDK & MCP Tools](#what-ships-in-the-sdk) · [Docs](docs/GETTING_STARTED.md) · [Why Athena?](docs/WHY_ATHENA.md) · [Safety](SAFETY.md)
+[Quickstart](#quickstart) · [How It Works](#how-it-works) · [Structure](#repository-structure) · [SDK & MCP Tools](#what-ships-in-the-sdk) · [Docs](docs/GETTING_STARTED.md) · [Why Athena?](docs/WHY_ATHENA.md) · [Safety](SAFETY.md)
 
 </div>
 
@@ -73,6 +73,28 @@ Then type `/start` in your IDE's AI chat panel. Work normally. Type `/end` to sa
 | Standard | `/start` → work → `/end` | ~2K–10K | Daily engineering & analysis (`STANDARD`, Lambda 10–30) |
 | Deep | `/ultrastart` → work → `/ultraend` | ~20K | High-stakes strategy & architecture (`ULTRA`, Lambda > 30) |
 
+## Repository Structure
+
+Following [Protocol 543](.agent/skills/protocols/engineering/ENG-543-github-repo-scaffold.md) standard repository scaffold:
+
+```text
+Athena/
+├── src/athena/          # Core runtime (Memory, Intelligence/GTO, Governance, Lifecycle, Tools)
+├── tests/               # Comprehensive test suites (unit, integration, red-team)
+├── scripts/             # Automation, synchronization, and verification harnesses
+├── docs/                # Architecture, guides, API specs, and benchmarks
+├── data/                # Active datasets and project assets (latest iteration only)
+├── supabase/            # Database schemas, migrations, and vector functions
+├── .agent/              # Agent workflows, skills, protocols, and configuration
+├── .context/            # Persistent memory, case studies, canonical truths, and session logs
+├── pyproject.toml       # Build configuration and dependency declarations
+├── Makefile             # Standard task runner (test, lint, sync)
+├── ARCHITECTURE.md      # Narrative system architecture and memory layout
+├── CHANGELOG.md         # Release history and audit log
+├── LICENSE              # MIT License
+└── README.md            # Project front door
+```
+
 ## What Ships in the SDK
 
 Athena is not just a prompt pack — it ships executable Python engines and two Model Context Protocol (MCP) servers (`athena.mcp_server` and `athena.duckdb_mcp_server`):
@@ -97,7 +119,7 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 | **Quantitative decision screening & wargaming** — EEV, 1/3 Kelly, Ruin, MCDA, 2-turn game trees | ✅ Shipped (`code-available`) | [`gto_engine.py`](src/athena/intelligence/gto_engine.py) & [`wargame.py`](src/athena/intelligence/wargame.py) emit SHA-256 receipts (`107` tests); Stop hook blocks unreceipted numeric engine claims |
 | **Pre-registered problem framing** — VOI stop-rule, `R1–R13` commitment & falsifier gates | ✅ Shipped (`code-available`) | [`frame_ledger.py`](src/athena/intelligence/frame_ledger.py) validates falsifiers, loop budgets, and Brier calibration (`57` tests) |
 | **Governed autonomy** — hooks block destructive commands, ungrounded claims, and secrets | ✅ Shipped (partial) | Ruin check blocks 14/16 destructive commands; 2 shell bypasses are [known and tracked](docs/TECH_DEBT.md) |
-| **Compounding personalization** — session 2,000 recalls session 5 | 🟡 N=1 evidence | 2,100+ sessions, 428 active protocols, and 624 case studies by the author; no multi-user study |
+| **Compounding personalization** — session 2,000 recalls session 5 | 🟡 N=1 evidence | 2,100+ sessions, 428 active protocols, and 626 case studies by the author; no multi-user study |
 | **Anti-sycophancy** — personalization doesn't silently increase agreement | 🟡 Partial mitigation | Code-enforced meta-awareness gate (Claude Code hook); agent-discretion in hookless IDEs — see [honest limits](docs/ENGINEERING_DEPTH.md) |
 
 > **Why publish this table?** Because the failure mode of this product category is self-mythologizing — describing aspirations in the present tense. Athena's own convention ([Epistemic Status](examples/workflows/_shared.md#epistemic-status-convention-anti-self-mythologizing)) requires labeling every mechanism as `code-enforced`, `code-available`, `agent-discretion`, or `aspirational`. This table is that convention applied to the README.

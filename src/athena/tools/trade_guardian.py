@@ -300,3 +300,175 @@ class TradeGuardian:
     def ruin_zone_trades(self) -> list[dict]:
         trades = self.load_journal()
         return [t for t in trades if t["duration_minutes"] > DANGER_MAX_MINUTES]
+
+
+def check_desk_halt(
+    state_or_dict: dict | None = None,
+    halt_until_override: str | None = None,
+    current_time: datetime | None = None,
+) -> dict:
+    """
+    Somatic Desk Circuit Breaker Gate (CANONICAL §509 / §519 / INC-011).
+    Mechanically verifies whether the desk is under an active trading halt
+    following extreme somatic depletion, adverse excursions, or operator timeouts.
+    """
+    now = current_time or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+
+    state = state_or_dict or {}
+    halt_until_str = halt_until_override or state.get("desk_halt_until")
+    halt_active_flag = state.get("desk_halt_active", False)
+    halt_reason = state.get("desk_halt_reason", "Mandatory Somatic Circuit Breaker Active")
+
+    if not halt_until_str and not halt_active_flag:
+        return {
+            "passed": True,
+            "status": "PASS",
+            "desk_halt_active": False,
+            "desk_halt_until": None,
+            "desk_halt_reason": None,
+            "remaining_hours": 0.0,
+            "message": "No active desk halt. Trading cleared under operational protocols.",
+        }
+
+    halt_until_dt: datetime | None = None
+    if halt_until_str:
+        try:
+            dt_clean = str(halt_until_str).strip()
+            halt_until_dt = datetime.fromisoformat(dt_clean)
+            if halt_until_dt.tzinfo is None:
+                halt_until_dt = halt_until_dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            halt_until_dt = None
+
+    if halt_until_dt is not None:
+        remaining_seconds = (halt_until_dt - now).total_seconds()
+        remaining_hours = max(0.0, round(remaining_seconds / 3600.0, 2))
+        is_active = remaining_seconds > 0
+
+        if is_active:
+            return {
+                "passed": False,
+                "status": "HARD STOP",
+                "desk_halt_active": True,
+                "desk_halt_until": halt_until_dt.isoformat(),
+                "desk_halt_reason": halt_reason,
+                "remaining_hours": remaining_hours,
+                "message": (
+                    f"HARD STOP: Somatic Desk Circuit Breaker active until {halt_until_dt.isoformat()} "
+                    f"({remaining_hours:.1f}h remaining). Reason: {halt_reason}. All trading strictly prohibited."
+                ),
+            }
+        else:
+            return {
+                "passed": True,
+                "status": "PASS",
+                "desk_halt_active": False,
+                "desk_halt_until": halt_until_dt.isoformat(),
+                "desk_halt_reason": halt_reason,
+                "remaining_hours": 0.0,
+                "message": f"Somatic desk halt expired at {halt_until_dt.isoformat()}. Desk is clear for trading.",
+            }
+
+    if halt_active_flag:
+        return {
+            "passed": False,
+            "status": "HARD STOP",
+            "desk_halt_active": True,
+            "desk_halt_until": None,
+            "desk_halt_reason": halt_reason,
+            "remaining_hours": 0.0,
+            "message": f"HARD STOP: Somatic Desk Circuit Breaker is active (Reason: {halt_reason}). Trading strictly prohibited.",
+        }
+
+    return {
+        "passed": True,
+        "status": "PASS",
+        "desk_halt_active": False,
+        "desk_halt_until": None,
+        "desk_halt_reason": None,
+        "remaining_hours": 0.0,
+        "message": "No active desk halt. Desk is clear.",
+    }
+
+
+def check_sacrificial_fuse(
+    bankroll: float = 1000.0,
+    fuse_limit: float = 1300.0,
+    emergency_reload: bool = False,
+    reload_count: int = 0,
+    bullets_consumed: int = 3,
+    max_bullets: int = 10,
+    buffer_allowance: float = 50.0,
+) -> dict:
+    """
+    Option B Sacrificial Fuse & Reload Trap Auditor (CANONICAL §519 / CS-745 / INC-011).
+    Operationalizes the S$1,300 active broker fuse limit, guards against the Reload Trap
+    (emergency margin injections mid-campaign), and monitors war-chest bullet exhaustion.
+    """
+    violates_reload = emergency_reload or (reload_count > 0)
+    surplus = max(0.0, round(bankroll - fuse_limit, 2))
+    violates_surplus = bankroll > (fuse_limit + buffer_allowance)
+    bullets_rem = max(0, max_bullets - bullets_consumed)
+    exhaustion_warning = bullets_rem <= 3
+
+    if violates_reload:
+        return {
+            "passed": False,
+            "status": "BLOCK",
+            "bankroll": bankroll,
+            "fuse_limit": fuse_limit,
+            "surplus_amount": surplus,
+            "violates_reload_trap": True,
+            "violates_unswept_surplus": violates_surplus,
+            "bullets_consumed": bullets_consumed,
+            "max_bullets": max_bullets,
+            "bullets_remaining": bullets_rem,
+            "bullet_exhaustion_warning": exhaustion_warning,
+            "message": (
+                "BLOCK: Reload Trap Detected (CANONICAL §519 / INC-011). Emergency deposit injection "
+                "during active campaign circumvents account physics and converts bounded sacrificial fuse "
+                "into unhedged catastrophic ruin."
+            ),
+        }
+
+    if violates_surplus:
+        return {
+            "passed": False,
+            "status": "WARN",
+            "bankroll": bankroll,
+            "fuse_limit": fuse_limit,
+            "surplus_amount": surplus,
+            "violates_reload_trap": False,
+            "violates_unswept_surplus": True,
+            "bullets_consumed": bullets_consumed,
+            "max_bullets": max_bullets,
+            "bullets_remaining": bullets_rem,
+            "bullet_exhaustion_warning": exhaustion_warning,
+            "message": (
+                f"Unswept surplus float detected: Bankroll ${bankroll:.2f} exceeds Option B "
+                f"sacrificial fuse limit of ${fuse_limit:.2f} by ${surplus:.2f}. "
+                "Sweep excess capital immediately to preserve 66-second capital isolation."
+            ),
+        }
+
+    msg = f"Bankroll ${bankroll:.2f} is within Option B sacrificial fuse limit of ${fuse_limit:.2f}."
+    if exhaustion_warning:
+        msg += f" [WARNING: Only {bullets_rem} of {max_bullets} war-chest bullets remain]"
+
+    return {
+        "passed": True,
+        "status": "PASS",
+        "bankroll": bankroll,
+        "fuse_limit": fuse_limit,
+        "surplus_amount": surplus,
+        "violates_reload_trap": False,
+        "violates_unswept_surplus": False,
+        "bullets_consumed": bullets_consumed,
+        "max_bullets": max_bullets,
+        "bullets_remaining": bullets_rem,
+        "bullet_exhaustion_warning": exhaustion_warning,
+        "message": msg,
+    }
+
