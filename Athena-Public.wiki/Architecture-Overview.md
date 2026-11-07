@@ -2,7 +2,7 @@
 
 Athena is the **open-source compounding context layer for AI coding agents**, portable across IDEs. It provides persistent memory, structured reasoning, and governed execution across any LLM while keeping 100% of your data locally in plain Markdown on disk.
 
-*Last Updated: 2026-10-18 · v10.0.6*
+*Last Updated: 2026-11-04 · v10.0.6*
 
 ---
 
@@ -14,7 +14,7 @@ Athena is the **open-source compounding context layer for AI coding agents**, po
 |:---|:---|:---|
 | **Memory & State** | Longitudinal context persistence | Local Markdown files (`.context/`), session logs, active context checkpoints, SQLite FTS5 |
 | **Retrieval Engine** | Chunk-level hybrid RAG | BM25 keyword + Supabase pgvector + RRF rank fusion + Cross-Encoder reranking |
-| **Cognitive Protocols** | Executable reasoning frameworks | 427 active protocols across 26 domains (decision, risk, engineering, research) |
+| **Cognitive Protocols** | Executable reasoning frameworks | 428 active protocols across 26 domains (decision, risk, engineering, research) |
 | **Agentic Skills** | Dynamic capability units | 44 active skills with path- and topic-triggered conditional activation |
 | **Governance & Safety** | Ruin prevention & execution gates | Law #1 (No Irreversible Ruin), Stop Governance Gate, deterministic receipt tracking |
 | **Interface & Bridge** | Cross-IDE portability | Native support for Claude Code, Antigravity, Cursor, Gemini CLI, and VS Code |

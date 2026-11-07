@@ -3,7 +3,7 @@
 > **Local-first memory, decision engine, and governance harness for AI agents — portable across IDEs.**
 > Persistent memory, numeric decision screening, and governed execution · Own the state, rent the intelligence · MIT Licensed
 
-*Last Updated: 2026-10-18 · v10.0.6*
+*Last Updated: 2026-11-08 · v10.0.6*
 
 Athena gives any LLM persistent memory, a deterministic decision and frame engine, and a governance harness across coding sessions. It operates seamlessly across Claude Code, Antigravity, Cursor, Gemini CLI, and VS Code.
 
@@ -68,5 +68,5 @@ Or use [GitHub Codespaces](https://codespaces.new/winstonkoh87/Athena-Public) fo
 ## 📊 Community & Scale
 
 - **1M+** Reddit Views · **#1 All-Time** on r/ChatGPT · **#2 All-Time** on r/GeminiAI
-- **461** Protocols (**427** active across 26 categories) · **294** Scripts · **77** Slash Workflows · **44** Skills
+- **462** Protocols (**428** active across 26 categories) · **293** Scripts · **77** Slash Workflows · **44** Skills
 - **2,100+** Sessions Logged · **MIT Licensed** · [Main Repository](https://github.com/winstonkoh87/Athena-Public)

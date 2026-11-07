@@ -1,0 +1,41 @@
+# ==============================================================================
+# Athena-Public — Git Attributes & LF Normalization (Protocol 543)
+# ==============================================================================
+
+# Auto-detect text files and normalize line endings to LF on commit
+* text=auto eol=lf
+
+# Explicit text file formats
+*.py text eol=lf diff=python
+*.md text eol=lf
+*.txt text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.sh text eol=lf
+*.sql text eol=lf
+*.ts text eol=lf
+*.js text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+Makefile text eol=lf
+
+# Binary files (preserve bit-for-bit, do not convert line endings)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.wav binary
+*.mp3 binary
+*.mp4 binary
+*.mov binary
+*.zip binary
+*.tar.gz binary
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+*.numbers binary
+*.xlsx binary
