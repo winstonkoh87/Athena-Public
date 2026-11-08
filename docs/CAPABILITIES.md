@@ -13,9 +13,9 @@
 | **Decision Protocols** | 462 (428 active + 34 archived, 26 categories) |
 | **Orchestration Workflows** | 77 (56 root + 21 domain) |
 | **Skills** | 44 active (43 with context_trigger), 17 archived |
-| **Case Studies** | 626 (15 domains) |
+| **Case Studies** | 627 (15 domains) |
 | **Total Sessions** | 2,100+ |
-| **Memory Files** | 5,894 |
+| **Memory Files** | 5,908 |
 
 ---
 
@@ -219,7 +219,7 @@ athena/
 
 ---
 
-## 📖 Case Study Categories (626 across 15 domains)
+## 📖 Case Study Categories (627 across 15 domains)
 
 | Category | Examples |
 |----------|----------|
