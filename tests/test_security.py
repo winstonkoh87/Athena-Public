@@ -45,6 +45,48 @@ class TestSecurityModule:
         assert stat.S_IMODE(target.stat().st_mode) == 0o700
         assert _harden_dir(tmp_path / "missing") is False
 
+    def test_dspy_cache_patch_refuses_planted_pickle(self, tmp_path, monkeypatch):
+        import pickle
+        import sqlite3
+        import sys
+        from pathlib import Path
+        from types import SimpleNamespace
+
+        from diskcache_community import FanoutCache
+        from diskcache_community.core import MODE_PICKLE
+
+        from athena.core.security import _patch_dspy_if_loaded
+
+        marker = tmp_path / "planted-code-ran"
+
+        class Planted:
+            def __reduce__(self):
+                return (Path.touch, (marker,))
+
+        dspy_cache = SimpleNamespace(
+            enable_disk_cache=True, disk_cache=FanoutCache(str(tmp_path / "dspy"))
+        )
+        monkeypatch.setitem(sys.modules, "dspy", SimpleNamespace(cache=dspy_cache))
+        assert _patch_dspy_if_loaded() is True
+
+        cache = dspy_cache.disk_cache
+        cache.set("request-key", {"answer": "Paris"})
+        assert cache.get("request-key") == {"answer": "Paris"}
+
+        cache.close()
+        for db in (tmp_path / "dspy").glob("*/cache.db"):
+            con = sqlite3.connect(db)
+            with con:
+                con.execute(
+                    "UPDATE Cache SET mode = ?, value = ?",
+                    (MODE_PICKLE, pickle.dumps(Planted())),
+                )
+            con.close()
+
+        assert cache.get("request-key") is None
+        assert not marker.exists()
+        cache.close()
+
 
 class TestRedaction:
     """athena.core.permissions.redact — mask VALUES, not just labels."""
