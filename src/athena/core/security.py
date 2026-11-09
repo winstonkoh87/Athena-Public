@@ -91,7 +91,7 @@ def _patch_dspy_if_loaded() -> bool:
         if cache is None:
             return False
         disk_cache = getattr(cache, "disk_cache", None)
-        if not hasattr(disk_cache, "directory"):
+        if disk_cache is None or not hasattr(disk_cache, "directory"):
             return False
         if not getattr(cache, "enable_disk_cache", False):
             return False
