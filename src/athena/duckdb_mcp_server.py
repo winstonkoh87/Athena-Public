@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -67,6 +68,36 @@ def _resolve_path(file_path: str) -> Path:
     if not p.exists():
         raise FileNotFoundError(f"File not found: {p}")
     return p
+
+
+TABLE_NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,63}$")
+SENSITIVE_TARGET_DIRS = {".git", ".ssh", ".gnupg", ".aws", ".env"}
+
+
+def _validate_table_name(name: str) -> str:
+    """Validate table name against alphanumeric/underscore pattern (CWE-89 SQL injection shield)."""
+    cleaned = (name or "").strip()
+    if not TABLE_NAME_PATTERN.match(cleaned):
+        raise ValueError(
+            f"Invalid table name: '{name}'. Table names must start with a letter or underscore "
+            "and contain only alphanumeric/underscore characters (max 64 chars)."
+        )
+    return cleaned
+
+
+def _escape_sql_literal(val: str | Path) -> str:
+    """Escape single quotes in SQL string literals to prevent injection/syntax errors."""
+    return str(val).replace("'", "''")
+
+
+def _validate_export_path(path: Path) -> None:
+    """Ensure export path does not write to sensitive system or credential directories."""
+    resolved = path.resolve()
+    for part in resolved.parts:
+        if part in SENSITIVE_TARGET_DIRS:
+            raise PermissionError(
+                f"Security restriction: export target path cannot reside inside sensitive directory '{part}'."
+            )
 
 
 def _format_results(rows: list[tuple], columns: list[str]) -> dict[str, Any]:
@@ -160,13 +191,14 @@ def profile(
                 f"(limit: {MAX_PROFILE_BYTES / 1e6:.0f} MB). Use query() with LIMIT instead."
             }
 
+        escaped_p = _escape_sql_literal(p)
         suffix = p.suffix.lower()
         if suffix in (".csv", ".tsv"):
-            read_fn = f"read_csv('{p}', auto_detect=true)"
+            read_fn = f"read_csv('{escaped_p}', auto_detect=true)"
         elif suffix in (".parquet", ".pq"):
-            read_fn = f"read_parquet('{p}')"
+            read_fn = f"read_parquet('{escaped_p}')"
         elif suffix in (".json", ".jsonl", ".ndjson"):
-            read_fn = f"read_json('{p}', auto_detect=true)"
+            read_fn = f"read_json('{escaped_p}', auto_detect=true)"
         else:
             return {"error": f"Unsupported file type: {suffix}. Supported: .csv, .tsv, .parquet, .json, .jsonl"}
 
@@ -256,33 +288,35 @@ def create_table_from_file(
     conn = _get_conn()
 
     try:
+        valid_table = _validate_table_name(table_name)
         p = _resolve_path(file_path)
         suffix = p.suffix.lower()
+        escaped_p = _escape_sql_literal(p)
 
         if suffix in (".csv", ".tsv"):
-            read_fn = f"read_csv('{p}', auto_detect=true)"
+            read_fn = f"read_csv('{escaped_p}', auto_detect=true)"
         elif suffix in (".parquet", ".pq"):
-            read_fn = f"read_parquet('{p}')"
+            read_fn = f"read_parquet('{escaped_p}')"
         elif suffix in (".json", ".jsonl", ".ndjson"):
-            read_fn = f"read_json('{p}', auto_detect=true)"
+            read_fn = f"read_json('{escaped_p}', auto_detect=true)"
         else:
             return {"error": f"Unsupported file type: {suffix}"}
 
-        conn.execute(f"CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM {read_fn}")
+        conn.execute(f"CREATE OR REPLACE TABLE {valid_table} AS SELECT * FROM {read_fn}")
 
         # Get row count
-        count_row = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()
+        count_row = conn.execute(f"SELECT COUNT(*) FROM {valid_table}").fetchone()
         count = count_row[0] if count_row else 0
 
         # Get schema
-        schema_result = conn.execute(f"DESCRIBE {table_name}")
+        schema_result = conn.execute(f"DESCRIBE {valid_table}")
         schema_cols = [desc[0] for desc in schema_result.description]
         schema_rows = schema_result.fetchall()
         schema = [dict(zip(schema_cols, row, strict=False)) for row in schema_rows]
 
         return {
             "status": "created",
-            "table_name": table_name,
+            "table_name": valid_table,
             "source_file": str(p),
             "row_count": count,
             "column_count": len(schema),
@@ -336,15 +370,17 @@ def export_result(
 
     try:
         out = Path(os.path.expanduser(os.path.expandvars(output_path))).resolve()
+        _validate_export_path(out)
         out.parent.mkdir(parents=True, exist_ok=True)
+        escaped_out = _escape_sql_literal(out)
 
         fmt = format.lower()
         if fmt == "csv":
-            conn.execute(f"COPY ({sql}) TO '{out}' (HEADER, DELIMITER ',')")
+            conn.execute(f"COPY ({sql}) TO '{escaped_out}' (HEADER, DELIMITER ',')")
         elif fmt == "parquet":
-            conn.execute(f"COPY ({sql}) TO '{out}' (FORMAT PARQUET)")
+            conn.execute(f"COPY ({sql}) TO '{escaped_out}' (FORMAT PARQUET)")
         elif fmt == "json":
-            conn.execute(f"COPY ({sql}) TO '{out}' (FORMAT JSON, ARRAY true)")
+            conn.execute(f"COPY ({sql}) TO '{escaped_out}' (FORMAT JSON, ARRAY true)")
         else:
             return {"error": f"Unsupported format: {fmt}. Use csv, parquet, or json."}
 
