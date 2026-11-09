@@ -18,5 +18,5 @@ Please report vulnerabilities via email/Telegram to the maintainer.
 - **Status**: Mitigated :white_check_mark:
 - **Component**: `dspy-ai` -> `diskcache`
 - **Impact**: Arbitrary code execution via malicious cache files.
-- **Mitigation**: Runtime patch in `athena.core.security` enforces `diskcache.JSONDisk` serializer, blocking pickle exploits.
-- **Verification**: `athena.boot.orchestrator` applies this patch on startup.
+- **Mitigation**: Runtime patch in `athena.core.security` swaps `dspy` caches to `diskcache-community`'s `SafeJSONDisk` serializer with `on_error="miss"`, completely rejecting and dropping untrusted pickle payloads.
+- **Verification**: `athena.boot.orchestrator` applies this patch on startup; regression tested against planted pickle entries in `tests/test_security.py`.

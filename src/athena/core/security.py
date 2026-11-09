@@ -17,8 +17,8 @@ defense-in-depth for the shared-volume / container / multi-user case:
     1. Restrict cache/state directory permissions to 0700 (owner-only) so other
        local users cannot plant a malicious pickle.
     2. If ``dspy`` happens to be loaded in-process, swap its ``FanoutCache`` to
-       the pickle-free JSON disk backend. Best-effort only; this module NEVER
-       imports ``dspy`` itself (it is not an Athena dependency).
+       the pickle-free SafeJSONDisk backend (diskcache-community). Best-effort only;
+       this module NEVER imports ``dspy`` itself (it is not an Athena dependency).
 
 Everything here is best-effort and must never raise into the boot sequence.
 
@@ -78,8 +78,8 @@ def harden_cache_directories() -> list[str]:
 def _patch_dspy_if_loaded() -> bool:
     """
     If ``dspy`` is ALREADY imported in this process, swap its FanoutCache to the
-    pickle-free JSONDisk backend. Never imports ``dspy`` itself (not an Athena
-    dependency). Returns True if a patch was applied.
+    pickle-free SafeJSONDisk backend (diskcache-community). Never imports ``dspy``
+    itself (not an Athena dependency). Returns True if a patch was applied.
     """
     dspy = sys.modules.get("dspy")
     if dspy is None:
@@ -104,7 +104,7 @@ def _patch_dspy_if_loaded() -> bool:
             size_limit=size_limit,
             disk=SafeJSONDisk.with_options(on_error="miss"),  # pickle-free serialization
         )
-        logger.info("Security: dspy disk cache swapped to JSONDisk (pickle-free).")
+        logger.info("Security: dspy disk cache swapped to SafeJSONDisk (pickle-free).")
         return True
     except Exception as e:  # best-effort; never break boot
         logger.debug("dspy cache patch skipped: %s", e)

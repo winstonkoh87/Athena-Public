@@ -137,6 +137,8 @@ Athena-Public.LEGACY-DO-NOT-PUSH/
 # Credential and recovered notes dumps (NEVER TRACK)
 recovered_notes.txt
 *_notes_recovered*
+*passphrase*
+athena_backup_passphrase.txt
 
 .context/telemetry/
 .athena/
