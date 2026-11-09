@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "athena-agent"
 version = "10.0.6"
-description = "Local-first memory, decision engine, and governance harness for AI agents — persistent memory, structured reasoning, and governed AI agents that work across any LLM. Own the state. Rent the intelligence."
+description = "Turn stateless LLMs into a stateful, compounding AI agent. Local-first persistent memory, quantitative decision screens, and governance harness across Claude Code, Antigravity, Cursor, and VS Code. Own the state. Rent the intelligence."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -13,8 +13,8 @@ authors = [
     { name = "Winston Koh" }
 ]
 keywords = [
-    "ai-agent", "llm", "cognitive-os", "memory-bank",
-    "model-agnostic", "ai-framework", "developer-tools"
+    "ai-agent", "stateful-ai", "stateful-agent", "llm", "cognitive-os",
+    "memory-bank", "context-engineering", "model-agnostic", "ai-framework", "developer-tools"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

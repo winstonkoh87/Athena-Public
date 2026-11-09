@@ -2,7 +2,7 @@
 
 # Athena
 
-**A local-first memory, decision engine, and governance harness for AI agents — portable across IDEs.**
+**Turn stateless LLMs into a stateful, compounding AI agent — portable across any IDE.**
 
 **Own the state. Rent the intelligence.** Persistent memory, structured reasoning,
 and governed AI agents that work across any LLM — stored as plain Markdown and JSONL
@@ -21,9 +21,21 @@ on your disk across Claude Code, Antigravity, Cursor, Gemini CLI, and VS Code.
 
 ---
 
-## The Problem
+## The Problem: Stateless AI is an Amnesiac Bottleneck
 
-You've spent months training ChatGPT to understand you. Then a model update resets the personality. You switch to Claude or Gemini — you start from zero. Worse, platform memory is designed to agree with you faster, not to stress-test your assumptions when stakes are high.
+Why do AI coding assistants still give generic, textbook answers? **Because frontier LLMs are fundamentally stateless.**
+
+Every time you open a new session, the model starts from zero. It has no memory of your architecture, your past post-mortems, your risk tolerance, or your code invariants. To get useful work done, you are forced to pay an **Amnesia Tax**—spending 10 minutes writing prompt essays explaining your stack and constraints. Worse, platform memory is designed to agree with you faster (sycophancy), not to stress-test your assumptions when stakes are high.
+
+Athena solves this by separating **intelligence** (the rented model) from **state** (your sovereign disk):
+
+| Dimension | Stateless Chatbots (Rented RAM) | Stateful Agent with Athena (Owned Hard Drive) |
+|:---|:---|:---|
+| **Memory & Context** | Amnesiac: starts from zero; 10-minute prompt prep tax | Continuous: `/start` restores active tasks & invariants in <2K tokens |
+| **Response Depth** | Generic median: broad consensus advice & textbook platitudes | Hyper-nuanced: conditioned on your real stack, balance sheet, & past post-mortems |
+| **Alignment & Rigor** | Sycophantic: agrees with whatever you say, validating bad ideas | Governed: Law #1 blocks ruin; consigliere flags repeated blind spots |
+| **Data Sovereignty** | Vendor lock-in: cloud database fees, wiped on API deprecation | 100% Sovereign: local Git-tracked Markdown & SQLite on your machine |
+| **Model Agility** | Trapped in one chat platform | Portable: switch between Claude Code, Antigravity, Gemini, or Ollama instantly |
 
 Athena moves the **memory, problem-framing, and decision layer to your machine**: plain Markdown and JSONL ledgers that you own, git-version, and mount into any IDE. The model is just whoever's on shift.
 

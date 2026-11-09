@@ -17,13 +17,14 @@
 
 - Realized AI was the biggest leverage opportunity of my lifetime
 - Spent 2 years going from "user" to "builder"
-- 1,900+ sessions building Athena — my production-grade personal knowledge system
+- 2,100+ sessions building Athena — my production-grade personal knowledge system
 - Key insight: **Co-development with AI > Using AI**
 
 ### Chapter 3: Now (2024+)
 
 - Building at the intersection of AI + systems thinking + financial engineering
 - Focus: Tools that make knowledge work compounding, not ephemeral
+- Designing stateful agent architectures: Decoupling transient LLM compute from persistent, local-first state layers so AI augmentation compounds over years instead of resetting every session
 
 ---
 
@@ -31,10 +32,10 @@
 
 | Capability | Evidence |
 |------------|----------|
-| **Systems Architecture** | Designed a 399-protocol knowledge framework ([Architecture](../ARCHITECTURE.md)) |
+| **Systems Architecture** | Designed a 428-protocol knowledge framework ([Architecture](../ARCHITECTURE.md)) |
 | **AI Engineering** | Built RAG pipelines ([VectorRAG](./VECTORRAG.md) + [Semantic Search](./SEMANTIC_SEARCH.md)) |
-| **Technical Writing** | 1,900+ session logs, 492 case studies, zero fluff |
-| **Automation** | 247 Python scripts for system optimization |
+| **Technical Writing** | 2,100+ session logs, 627 case studies, zero fluff |
+| **Automation** | 293 Python scripts for system optimization |
 | **Strategic Thinking** | Spent 10 years navigating institutional politics and incentive structures |
 
 ---
