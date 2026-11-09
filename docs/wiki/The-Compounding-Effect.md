@@ -126,4 +126,4 @@ Debug a pricing mistake → the system prevents the same mistake next quarter.
 
 > **The algorithm is open-source. The engineering is replicable. The data is yours — a personal continuity asset nobody can fork.** It's not a lock-in moat: the files are portable by design, and the advantage only compounds if you keep curating them.
 
-→ Back to [Home](Home) · [FAQ](FAQ) · [Case Studies](../docs/CASE_STUDIES.md)
+→ Back to [Home](Home) · [FAQ](FAQ) · [Case Studies](../CASE_STUDIES.md)

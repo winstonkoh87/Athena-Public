@@ -16,7 +16,7 @@ Athena gives any LLM persistent memory, a deterministic decision and frame engin
 | **Zero Infrastructure Cost** | High-performance sovereignty | Local SQLite FTS5 + pgvector on Supabase free tier ($0/month). |
 
 > [!TIP]
-> **Before you begin, ask yourself**: *"How do I want Athena to best help me in my daily life and work?"* — This is the guiding principle. Everything else exists to serve your answer. See [Your First Session](../docs/YOUR_FIRST_SESSION.md) for the full onboarding guide.
+> **Before you begin, ask yourself**: *"How do I want Athena to best help me in my daily life and work?"* — This is the guiding principle. Everything else exists to serve your answer. See [Your First Session](../YOUR_FIRST_SESSION.md) for the full onboarding guide.
 
 ---
 
@@ -55,7 +55,7 @@ Or use [GitHub Codespaces](https://codespaces.new/winstonkoh87/Athena-Public) fo
 | Page | Description |
 |:-----|:------------|
 | **🚀 [Getting Started](Getting-Started)** | Installation, first boot, workspace modes, CLI commands |
-| **📖 [Your First Session](../docs/YOUR_FIRST_SESSION.md)** | The intent-first onboarding guide |
+| **📖 [Your First Session](../YOUR_FIRST_SESSION.md)** | The intent-first onboarding guide |
 | **🏗️ [Architecture](Architecture-Overview)** | Substrate layers, Hybrid RAG, MCP Server, Tech Stack |
 | **⚡ [Workflows](Workflow-Reference)** | `/start`, `/end`, `/do`, `/osint`, `/gto` and 77 commands |
 | **🎯 [Use Cases](Use-Cases)** | Decision-making, research, planning, meta-thinking |

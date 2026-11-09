@@ -63,7 +63,7 @@ Athena is **not** an employee. It is an **Exocortex** — an external brain.
 
 Treat it like a co-founder, not an intern.
 
-This principle is codified as the **[Grace Protocol](../docs/concepts/Grace_Protocol.md)** — named after Grace Harper (*Terminator: Dark Fate*), a human who volunteered for cybernetic augmentation and retained full agency. Athena builds Graces, not Terminators.
+This principle is codified as the **[Grace Protocol](../concepts/Grace_Protocol.md)** — named after Grace Harper (*Terminator: Dark Fate*), a human who volunteered for cybernetic augmentation and retained full agency. Athena builds Graces, not Terminators.
 
 ---
 
@@ -79,4 +79,4 @@ This is the core thesis: Athena's persistent memory and longitudinal context all
 
 ---
 
-> See [MANIFESTO.md](../.framework/v8.2-stable/MANIFESTO.md) for the full philosophy.
+> See [MANIFESTO.md](../MANIFESTO.md) for the full philosophy.

@@ -19,7 +19,6 @@ root_files:
   - CLAUDE.md
   - CODE_OF_CONDUCT.md
   - CONTRIBUTING.md
-  - Dockerfile.sandbox
   - LICENSE
   - README.md
   - SAFETY.md
@@ -28,11 +27,8 @@ root_files:
   - athena.yaml
   - llms.txt
   - pyproject.toml
-  - robots.txt
-  - sitemap.xml
   - .env.example
   - .gitignore
-  - .nojekyll
 
 # --- Documentation ---
 docs:
@@ -89,17 +85,14 @@ tests:
   - tests/test_great_steal.py
 
 # --- Tools ---
-tools:
-  - tools/README.md
-  - tools/exocortex_search.yaml
+tools: []
 
 # --- Wiki ---
 wiki:
-  - wiki/
+  - docs/wiki/
 
 # --- Community ---
-community:
-  - community/
+community: []
 
 # --- Framework (Public subset only) ---
 framework:

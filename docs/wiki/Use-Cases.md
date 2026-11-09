@@ -10,7 +10,7 @@ Athena is domain-agnostic — it adapts to whatever *you* do. Most users converg
 
 > *"Should I take this job offer? Should I pivot my business? Should I invest in this asset?"*
 
-Athena's [Trilateral Feedback Protocol](../docs/TRILATERAL_FEEDBACK.md) runs your decision through **3 independent AI models**, cross-validates their reasoning, and synthesizes a weighted recommendation — based on Ray Dalio's Believability-Weighted Decision Making.
+Athena's [Trilateral Feedback Protocol](../TRILATERAL_FEEDBACK.md) runs your decision through **3 independent AI models**, cross-validates their reasoning, and synthesizes a weighted recommendation — based on Ray Dalio's Believability-Weighted Decision Making.
 
 Under the hood, Athena uses **MCDA (Multi-Criteria Decision Analysis)** and **pairwise comparison** — calibrated to *your* history, *your* revealed preferences, and *your* risk profile built over hundreds of sessions. The result isn't generic advice; it's a well-calibrated recommendation tuned to how **you** actually make decisions.
 
@@ -74,4 +74,4 @@ This is the capability most people don't know they need — because by definitio
 
 Athena solves this by combining longitudinal pattern detection (hundreds of sessions of *your* behavior) with the Trilateral Feedback Protocol's multi-model cross-validation. When three independent models converge on a concern you haven't raised, that signal has weight. This isn't generic "have you considered..." prompting — it's **calibrated meta-cognition** built from your actual decision history.
 
-**Key concepts**: [Quadrant IV](../docs/concepts/Quadrant_IV.md) · Trilateral Feedback · User-Driven RSI
+**Key concepts**: [Quadrant IV](../concepts/Quadrant_IV.md) · Trilateral Feedback · User-Driven RSI

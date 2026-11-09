@@ -35,7 +35,14 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # --- Target files: v-prefixed versions (e.g., v9.5.1) ---
 # These files use "v9.X.Y" format in badges, headers, etc.
 VPREFIXED_FILES=(
-  # Wiki (primary)
+  # Wiki (canonical docs mirror)
+  "docs/wiki/FAQ.md"
+  "docs/wiki/Getting-Started.md"
+  "docs/wiki/Home.md"
+  "docs/wiki/Workflow-Reference.md"
+  "docs/wiki/Philosophy.md"
+  "docs/wiki/Use-Cases.md"
+  # Wiki (legacy fallbacks)
   "Athena-Public.wiki/FAQ.md"
   "Athena-Public.wiki/Getting-Started.md"
   "Athena-Public.wiki/Home.md"

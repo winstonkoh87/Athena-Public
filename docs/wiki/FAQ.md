@@ -85,7 +85,7 @@ Athena works with any agent that can read Markdown files. For first-class integr
 - **Kilo Code** — `athena init --ide kilocode`
 - **Zoo Code** — `athena init --ide zoocode`
 
-See the [full compatibility guide](../docs/COMPATIBLE_IDES.md).
+See the [full compatibility guide](../COMPATIBLE_IDES.md).
 
 ### 🎨 How do I customize the AI's personality?
 

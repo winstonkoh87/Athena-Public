@@ -23,7 +23,7 @@ input_schema:
       default: false
   required: [query]
 implementation:
-  script: ../examples/scripts/smart_search.py
+  script: ../scripts/smart_search.py
   runtime: python3
   args_template: >
     {query}

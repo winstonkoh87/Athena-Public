@@ -6,15 +6,14 @@ table name validation, SQL escaping, and export directory confinement.
 """
 
 from pathlib import Path
-import tempfile
+
 import pytest
 
 from athena.duckdb_mcp_server import (
-    _validate_table_name,
     _escape_sql_literal,
     _validate_export_path,
+    _validate_table_name,
     create_table_from_file,
-    export_result,
 )
 
 

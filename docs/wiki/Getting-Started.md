@@ -47,7 +47,7 @@ Type `/tutorial` on your first session. Athena walks you through everything — 
 
 > **Everything stays local.** Your profile is stored as a Markdown file on your machine (`user_profile.md`). No cloud. No tracking.
 
-> See [Your First Session](../docs/YOUR_FIRST_SESSION.md) for the full onboarding guide — including the guiding question that shapes your entire Athena experience.
+> See [Your First Session](../YOUR_FIRST_SESSION.md) for the full onboarding guide — including the guiding question that shapes your entire Athena experience.
 
 ---
 

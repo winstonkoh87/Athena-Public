@@ -1,7 +1,7 @@
 # Athena Sandbox (Law #1: No Irreversible Ruin)
 # Isolated execution environment for untrusted/experimental code.
 #
-# Build:  docker build -f Dockerfile.sandbox -t athena-sandbox .
+# Build:  docker build -f docker/Dockerfile.sandbox -t athena-sandbox .
 # Usage:  docker run --rm --read-only --network none athena-sandbox python3 /workspace/script.py
 
 FROM python:3.12-alpine

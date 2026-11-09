@@ -82,7 +82,9 @@ Athena/
 ├── src/athena/          # Core runtime (Memory, Intelligence/GTO, Governance, Lifecycle, Tools)
 ├── tests/               # Comprehensive test suites (unit, integration, red-team)
 ├── scripts/             # Automation, synchronization, and verification harnesses
-├── docs/                # Architecture, guides, API specs, and benchmarks
+├── docs/                # Architecture, guides, wiki sources, roadmap, and API specs
+├── examples/            # Published agent workflows, case studies, protocols, and templates
+├── docker/              # Sandboxed container environments
 ├── data/                # Active datasets and project assets (latest iteration only)
 ├── supabase/            # Database schemas, migrations, and vector functions
 ├── .agent/              # Agent workflows, skills, protocols, and configuration
