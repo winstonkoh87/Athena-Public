@@ -85,13 +85,13 @@ def _patch_dspy_if_loaded() -> bool:
     if dspy is None:
         return False
     try:
-        import diskcache
+        from diskcache_community import FanoutCache, SafeJSONDisk
 
         cache = getattr(dspy, "cache", None)
         if cache is None:
             return False
         disk_cache = getattr(cache, "disk_cache", None)
-        if not isinstance(disk_cache, diskcache.FanoutCache):
+        if not hasattr(disk_cache, "directory"):
             return False
         if not getattr(cache, "enable_disk_cache", False):
             return False
@@ -99,10 +99,10 @@ def _patch_dspy_if_loaded() -> bool:
         directory = disk_cache.directory
         size_limit = disk_cache.size_limit
         disk_cache.close()
-        cache.disk_cache = diskcache.FanoutCache(
+        cache.disk_cache = FanoutCache(
             directory=directory,
             size_limit=size_limit,
-            disk=diskcache.JSONDisk,  # pickle-free serialization
+            disk=SafeJSONDisk.with_options(on_error="miss"),  # pickle-free serialization
         )
         logger.info("Security: dspy disk cache swapped to JSONDisk (pickle-free).")
         return True
