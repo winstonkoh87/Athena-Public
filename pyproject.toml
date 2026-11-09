@@ -41,6 +41,7 @@ dependencies = [
     "pyyaml>=6.0",
     "onnxruntime>=1.16.0",
     "python-docx>=1.1.0",
+    "duckdb>=1.0.0",
 ]
 
 [project.scripts]
@@ -59,7 +60,8 @@ dev = [
     "black",
     "ruff",
     "pipreqs",
-    "pydeps"
+    "pydeps",
+    "duckdb>=1.0.0"
 ]
 local = [
     "tokenizers>=0.19.0",
@@ -71,7 +73,8 @@ cloud = [
     "anthropic>=0.40.0"
 ]
 mcp = [
-    "fastmcp>=2.14.0"
+    "fastmcp>=2.14.0",
+    "duckdb>=1.0.0"
 ]
 rerank = [
     "sentence-transformers>=2.2.0",
@@ -86,6 +89,7 @@ full = [
     "google-genai>=1.0.0",
     "anthropic>=0.40.0",
     "fastmcp>=2.14.0",
+    "duckdb>=1.0.0",
     "pytest",
     "ruff",
     "black"

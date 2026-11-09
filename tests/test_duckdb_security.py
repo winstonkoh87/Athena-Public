@@ -45,13 +45,13 @@ class TestDuckDBSecurity:
 
     def test_validate_export_path_sensitive_dirs(self):
         with pytest.raises(PermissionError):
-            _validate_export_path(Path("/Users/user/.ssh/id_rsa.csv"))
+            _validate_export_path(Path("/Users/example/.ssh/id_rsa.csv"))
 
         with pytest.raises(PermissionError):
-            _validate_export_path(Path("/Users/user/project/.git/compromised.parquet"))
+            _validate_export_path(Path("/Users/example/project/.git/compromised.parquet"))
 
         with pytest.raises(PermissionError):
-            _validate_export_path(Path("/Users/user/.aws/credentials.json"))
+            _validate_export_path(Path("/Users/example/.aws/credentials.json"))
 
         # Safe path
         _validate_export_path(Path("/tmp/safe_export.csv"))

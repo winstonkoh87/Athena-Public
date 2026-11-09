@@ -20,7 +20,11 @@ import re
 from pathlib import Path
 from typing import Any
 
-import duckdb
+try:
+    import duckdb
+except ImportError:
+    duckdb = None  # type: ignore
+
 from fastmcp import FastMCP
 
 # ---------------------------------------------------------------------------
@@ -41,7 +45,7 @@ mcp = FastMCP(
 logger = logging.getLogger("athena.duckdb_mcp")
 
 # Persistent in-memory connection (survives across tool calls within a session)
-_conn: duckdb.DuckDBPyConnection | None = None
+_conn: Any = None
 
 # Safety: max rows returned per query to avoid context window flooding
 MAX_ROWS = 500
@@ -49,9 +53,14 @@ MAX_ROWS = 500
 MAX_PROFILE_BYTES = 500 * 1024 * 1024
 
 
-def _get_conn() -> duckdb.DuckDBPyConnection:
+def _get_conn() -> Any:
     """Lazy-init a persistent in-memory DuckDB connection."""
     global _conn
+    if duckdb is None:
+        raise ImportError(
+            "duckdb is required for DuckDB MCP Server. "
+            "Please install it with: pip install duckdb"
+        )
     if _conn is None:
         _conn = duckdb.connect(":memory:")
         # Enable httpfs for remote parquet if needed later
