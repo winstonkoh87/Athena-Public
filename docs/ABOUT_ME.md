@@ -34,7 +34,7 @@
 |------------|----------|
 | **Systems Architecture** | Designed a 428-protocol knowledge framework ([Architecture](../ARCHITECTURE.md)) |
 | **AI Engineering** | Built RAG pipelines ([VectorRAG](./VECTORRAG.md) + [Semantic Search](./SEMANTIC_SEARCH.md)) |
-| **Technical Writing** | 2,100+ session logs, 627 case studies, zero fluff |
+| **Technical Writing** | 2,100+ session logs, 629 case studies, zero fluff |
 | **Automation** | 293 Python scripts for system optimization |
 | **Strategic Thinking** | Spent 10 years navigating institutional politics and incentive structures |
 
