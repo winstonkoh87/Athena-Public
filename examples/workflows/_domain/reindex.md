@@ -32,7 +32,7 @@ python3 .agent/scripts/supabase_sync.py
 ## Verification
 
 ```bash
-python3 .agent/scripts/supabase_search.py "test query" --limit 3
+python3 .agent/scripts/smart_search.py "test query" --limit 3
 ```
 
 Should return relevant results from recently added content.

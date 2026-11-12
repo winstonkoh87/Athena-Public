@@ -58,7 +58,9 @@ Friedman & Savage resolved this paradox with a **double-inflection utility funct
 
 ## 2. The Formula
 
-$$E(EV) = E(V) + E(U) - E(O)$$
+```text
+E(EV) = E(V) + E(U) - E(O)
+```
 
 | Symbol | Name | Definition |
 |:---|:---|:---|
@@ -82,7 +84,9 @@ EEV is not a single metric — it is the **synthesis** of two independent value 
 
 The **Limit Point** is the exact dollar amount ($X) where:
 
-$$E(EV) = E(V) + E(U) - E(O) = 0$$
+```text
+E(EV) = E(V) + E(U) - E(O) = 0
+```
 
 - **Left of Limit Point**: EEV > 0 → Rational. Proceed.
 - **At Limit Point**: EEV = 0 → Breakeven. Maximum allowable spend.
@@ -108,7 +112,9 @@ UEV operates on three distinct phases:
 
 ### Step 1: Calculate E(V) — Financial Value
 
-$$E(V) = (\text{Win Rate} \times \text{Avg Win}) - (\text{Loss Rate} \times \text{Avg Loss})$$
+```text
+E(V) = (Win Rate × Avg Win) - (Loss Rate × Avg Loss)
+```
 
 **Example (Blackjack $0.01 units, 300 hands/hr):**
 
@@ -164,7 +170,9 @@ Opportunity Cost can only be claimed IF you have the **energy** to execute the a
 
 ### Step 4: Calculate E(EV)
 
-$$E(EV) = E(V) + E(U) - E(O)$$
+```text
+E(EV) = E(V) + E(U) - E(O)
+```
 
 **Example:**
 
@@ -273,7 +281,7 @@ Before committing capital to any asymmetric bet, run this test:
 | Question | Yes → | No → |
 |----------|-------|------|
 | Is my SL **outside** the noise band (≥ 1× ATR/BB width)? | Proceed | **Do not trade.** |
-| Can my bankroll sustain this SL at **Half-Kelly sizing**? | Proceed | Reduce position or abstain |
+| Can my bankroll sustain this SL at **One-Third Kelly sizing**? | Proceed | Reduce position or abstain |
 | Does this SL represent **< 5% of bankroll** after position sizing? | **+EEV. Execute.** | **Undercapitalized. Do not trade.** |
 
 ---
@@ -367,12 +375,12 @@ For this specific setup:
 - **Conservative SL** = $1,500–$1,650 (1.5× BB width)
 - **Kelly-adjusted position size**: At $1,500 SL on a $10K bankroll (15% risk), **the position must be reduced** to respect the Kelly Criterion:
 
-```
-Kelly % = (WR × RR - (1 - WR)) / RR
-Half-Kelly = Kelly% / 2  (standard conservative adjustment)
+```text
+Kelly % = (WR * RR - (1 - WR)) / RR
+One-Third Kelly = Kelly% / 3  (0.33x GTO ceiling per Law #1)
 ```
 
-If your edge yields Kelly = 10%, then Half-Kelly = 5%, and your maximum position = **$500 risk** — which means you need to **trade a smaller position** with the $1,500 SL width, not a full position with a $500 SL width.
+If your edge yields Kelly = 10%, then One-Third Kelly = 3.33%, and your maximum position = **$333 risk** (Half-Kelly at 5% exceeds the <= 5% 50%-drawdown Law #1 cap under MacLean-Thorp-Ziemba) — which means you need to **trade a smaller position** with the $1,500 SL width, not a full position with a $500 SL width.
 
 > **The Pivot**: *"I will not trade this setup because I cannot afford the stop loss required to let the thesis play out."* — This is the highest EEV decision a trader can make.
 
@@ -385,7 +393,7 @@ Reality: Offers below ~30% are rejected by the majority.
 
 **EEV Explanation**: Accepting an insulting offer generates severe **negative UEV** (humiliation, loss of dignity). At the ~30% threshold, the monetary gain from MEV exactly equals the dignity cost from UEV. Below 30%, EEV < 0 → Reject. Above 30%, EEV > 0 → Accept.
 
-This is structurally identical to the TOTO Limit Point — both are solved by finding where $E(V) + E(U) = 0$.
+This is structurally identical to the TOTO Limit Point — both are solved by finding where `E(V) + E(U) = 0`.
 
 ---
 
@@ -441,7 +449,7 @@ Neither condition holds for the everyday person. For them:
 > As net worth → ∞, EEV → MEV (utility curve flattens, every dollar is equal)
 > As net worth → 0, EEV diverges from MEV (utility curve steepens, variance becomes lethal)
 
-This is why **Kelly Criterion** exists: full Kelly maximizes long-run geometric growth, but for any finite player in a single game, full Kelly is suicidal. Half-Kelly or less is required because you don't get the ensemble average — you get YOUR timeline.
+This is why **Kelly Criterion** exists: full Kelly maximizes long-run geometric growth, but for any finite player in a single game, full Kelly is suicidal (and Half-Kelly still carries 12.5% probability of halving). One-Third Kelly (0.33x GTO ceiling) or less is required because you don't get the ensemble average — you get YOUR timeline.
 
 **The Product Implication:**
 
@@ -609,13 +617,15 @@ Level 3 (Multi-Agent EEV) adds:
 
 ### The Multi-Agent EEV Equation
 
-$$\text{System EEV} = \sum_{i=1}^{n} w_i \cdot \text{EEV}_i$$
+```text
+System EEV = Sum_{i=1..n} (w_i * EEV_i)
+```
 
 Where:
 
-- $n$ = number of stakeholders affected
-- $w_i$ = weight of stakeholder $i$'s utility (proportional to their influence on your outcomes)
-- $\text{EEV}_i$ = impact of the action on stakeholder $i$'s economic expected value
+- `n` = number of stakeholders affected
+- `w_i` = weight of stakeholder `i`'s utility (proportional to their influence on your outcomes)
+- `EEV_i` = impact of the action on stakeholder `i`'s economic expected value
 
 A decision is System-EEV-positive ONLY when the weighted sum across all stakeholders is positive.
 

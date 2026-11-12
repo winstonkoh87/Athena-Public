@@ -39,7 +39,7 @@ Before sending a prompt, injected specific "know-how":
 
 ## 3. Implementation in Athena
 
-* **Current State**: `supabase_search.py` is our Context Engineering engine. By running it *before* answering, we are effectively handing ourselves a "Cheat Sheet" for every turn.
+* **Current State**: `smart_search.py` (Hybrid RAG) is our Context Engineering engine. By running it *before* answering, we are effectively handing ourselves a "Cheat Sheet" for every turn.
 * **Directive**: Do not rely on "Training Data" (Memory). Rely on "Context" (Search Results). Training data is the studied brain; Context is the open book.
 
 ---

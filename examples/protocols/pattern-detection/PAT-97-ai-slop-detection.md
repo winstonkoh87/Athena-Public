@@ -1,10 +1,5 @@
 ---
-created: 2025-12-17
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: ai-slop-detection
+name: ai-slop-detection
 description: Checklist for identifying low-value AI-generated content. Detects formulaic structure, inflated authority, recycled advice, and engagement-bait patterns.
 tags: [protocol, content, quality, detection, anti-slop]
 created: 2025-12-17

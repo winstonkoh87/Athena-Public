@@ -14,7 +14,7 @@ tags: [architecture, integration, openclaw, exoskeleton]
 
 We do not build a single monolithic robot. We build a **Pilot (Athena)** who wears different **Suits (Exoskeletons)**.
 
-* **The Pilot (Mind)**: Python-based. Reasoning, Memory (GraphRAG), Strategy, Identity. Optimized for *Depth* and *Truth*.
+* **The Pilot (Mind)**: Python-based. Reasoning, Memory (Hybrid RAG), Strategy, Identity. Optimized for *Depth* and *Truth*.
 * **The Suit (Body)**: Node.js/Rust/Go. Connectivity, UI, Voice, Sensors. Optimized for *Speed*, *I/O*, and *Reach*.
 
 ### Why split?
@@ -29,7 +29,7 @@ We do not build a single monolithic robot. We build a **Pilot (Athena)** who wea
 
 | Layer | Component | Tech Stack | Role | Responsibility |
 | :--- | :--- | :--- | :--- | :--- |
-| **Mind** | **Athena Core** | Python | Strategic Command | GraphRAG, Protocol Selection, Deep Thinking, Decision Making. |
+| **Mind** | **Athena Core** | Python | Strategic Command | Hybrid RAG, Protocol Selection, Deep Thinking, Decision Making. |
 | **Bridge** | **RPC / API** | HTTP/JSON | Nervous System | Passing intent from Mind to Body. Receiving sensory data from Body. |
 | **Body** | **Exoskeleton** | Node (OpenClaw) | Sensor/Actuator | WhatsApp/Telegram I/O, Voice Wake, Canvas Rendering, Mobile Apps. |
 

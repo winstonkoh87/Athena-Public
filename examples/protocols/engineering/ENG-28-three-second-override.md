@@ -1,10 +1,5 @@
 ---
-created: 2025-12-10
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: three-second-override
+name: three-second-override
 description: Universal mechanism explaining acting against better judgment. Scanner detects threat but conviction overrides within 3 seconds. Wait 10+ seconds for prefrontal.
 created: 2025-12-10
 last_updated: 2026-07-22

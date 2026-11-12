@@ -97,7 +97,7 @@ Static interfaces feel dead. Use **Micro-Interactions**.
 | **[Variant AI](https://variant.ai)** | Creative Director | Early-stage visual exploration, component mood boarding, design system generation |
 | **Coding AI** (Claude/Gemini) | Engineer | Code execution from locked design system |
 
-**Workflow**: See [`/web-build`](../../../examples/workflows/web-build.md) for the full 4-step pipeline.
+**Workflow**: See [`/web-build`](../../../examples/workflows/_domain/web-build.md) for the full 4-step pipeline.
 **Source**: CS-540
 
 ---

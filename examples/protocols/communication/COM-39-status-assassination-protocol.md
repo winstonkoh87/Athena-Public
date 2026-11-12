@@ -1,10 +1,5 @@
 ---
-created: 2025-12-11
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----description: Diagnose and prevent accidental social destruction via status-threat triggers. Highlighting origin = mud on shoes. High-status transition environments.
+description: Diagnose and prevent accidental social destruction via status-threat triggers. Highlighting origin = mud on shoes. High-status transition environments.
 created: 2025-12-11
 last_updated: 2026-07-22
 ---

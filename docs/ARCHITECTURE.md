@@ -1,6 +1,6 @@
 # Athena — Architecture Reference
 
-> **Last Updated**: 12 November 2026
+> **Last Updated**: 13 November 2026
 > **Version**: v10.0.6
 > **Canonical Counts**: See `.agent/config/CAPS.json` — if numbers in this file diverge, CAPS wins.
 > **Bionic Unit Spec**: `BIONIC_UNIT_SPEC.md` (private workspace) — the definitive human-AI augmentation mapping
@@ -13,11 +13,11 @@
 Athena/
 ├── .agent/                        # Agent configuration
 │   ├── skills/                    #   44 active skills (43 with context_trigger)
-│   │   └── protocols/             #   428 active + 34 archived = 462 total, 26 categories
-│   │       └── archive/           #     34 deprecated protocols (read-only, see README)
+│   │   └── protocols/             #   410 active + 51 archived = 461 total, 26 categories
+│   │       └── archive/           #     51 archived protocols (read-only, see README)
 │   ├── workflows/                 #   56 root + 21 _domain = 77 slash-command workflows
 │   │   └── _domain/               #     Domain-scoped, conditionally activated
-│   ├── scripts/                   #   293 automation scripts
+│   ├── scripts/                   #   290 automation scripts
 │   ├── telemetry/                 #   Retrieval instrumentation logs + tier maps
 │   ├── config/                    #   Agent manifests + CAPS.json (canonical counts)
 │   ├── CLUSTER_INDEX.md           #   15 cognitive clusters (routing map)
@@ -27,7 +27,7 @@ Athena/
 │   └── archive_skills/            #   17 sunset skills (read-only, see README)
 │
 ├── .context/                      # Personal knowledge base
-│   ├── memories/                  #   5,964 memory files (session logs + case studies + profile)
+│   ├── memories/                  #   5,980 memory files (session logs + case studies + profile)
 │   │   ├── session_logs/          #     Dated session records
 │   │   ├── case_studies/          #     629 documented patterns (14 domains)
 │   │   ├── profile/               #     Core profile, psychology, voice DNA
@@ -49,11 +49,11 @@ Athena/
 │   └── archive/                   #   v7 / v8.0 / v8.1 codex archive (historical)
 ├── .projects/                     # Isolated project workspaces
 │
-├── src/                           # Athena SDK source (87 Python files across 9 modules)
-├── tests/                         # Test suite (35 files, 400 tests, 100% passing)
+├── src/                           # Athena SDK source (111 Python files across 11 modules)
+├── tests/                         # Test suite (57 Python files)
 ├── supabase/                      # Cloud vector store migrations
 │
-├── docs/                          # Documentation (80 files)
+├── docs/                          # Documentation (89 files)
 │
 ├── README.md                      # Public repository README
 ├── ARCHITECTURE.md                # System Architecture Reference
@@ -175,7 +175,7 @@ Full cluster details: `CLUSTER_INDEX.md` (private workspace — see table above 
 | Cognitive Domains | 8 | Memory activation targets (priority-ordered for tie-breaking) |
 | Cognitive Clusters | 15 | Co-activating procedural memory bundles |
 | Skills | 44 active (17 archived) |
-| Protocols | 428 active (34 archived; 462 total) |
+| Protocols | 410 active (51 archived; 461 total) |
 | Workflows | 77 (56 root + 21 _domain/) |
 
 ---
@@ -218,7 +218,7 @@ The two layers are **complementary, not nested**:
 - **Reactive** (Perception Model): User asks → parallel activation → attention gate → executive function → response
 - **Proactive** (Grace Harper): Time/behavior fires → BEH protocol activation → nudge/enforce/block
 
-The proactive layer can **inject context** into the reactive layer — e.g., when `/start` surfaces "BEH-601: 0 solo sessions in 20 weeks," that context enters the Attention Gate's top-down priming for the rest of the session.
+The proactive layer can **inject context** into the reactive layer — e.g., when `/start` surfaces an active BEH accountability trigger, that context enters the Attention Gate's top-down priming for the rest of the session.
 
 ### Implementation (Operational, Not Coded)
 
@@ -293,33 +293,38 @@ src/athena/tools/search.py (12s God Mode timeout + grep fallback)
 
 ---
 
-## Active Indexes (4 lean files, 63KB total)
+## Active Indexes (5 generated files)
 
-| Index | Size | Purpose |
-|:------|-----:|:--------|
-| `CLUSTER_INDEX.md` | 18KB | Routing map (15 clusters → 26 skills) |
-| `WORKFLOW_INDEX.md` | 6KB | Workflow registry (74 workflows) |
-| `PROTOCOL_SUMMARIES.md` | 24KB | All-protocol quick-lookup |
-| `KNOWLEDGE_GRAPH.md` | 15KB | Concept relationships |
+| Index | Path | Purpose |
+|:------|:-----|:--------|
+| `CLUSTER_INDEX.md` | `.agent/CLUSTER_INDEX.md` | Routing map (16 clusters + 8 systems) |
+| `WORKFLOW_INDEX.md` | `.agent/WORKFLOW_INDEX.md` | Workflow registry (root + `_domain/`) |
+| `SKILL_INDEX.md` | `.agent/skills/SKILL_INDEX.md` | Active skills + protocol tree registry |
+| `PROTOCOL_SUMMARIES.md` | `.context/PROTOCOL_SUMMARIES.md` | All-protocol quick-lookup |
+| `KNOWLEDGE_GRAPH.md` | `.context/KNOWLEDGE_GRAPH.md` | Concept relationships |
 
-> **Archived** (2026-03-26): TAG_INDEX (1.55MB), CODE_INDEX.json (374KB), SKILL_INDEX.md (97KB), protocols.json (169KB). Moved to `.context/archive/` and `.agent/archive_skills/` respectively. See GTO Audit for rationale.
+> **Archived** (`TAG_INDEX_legacy`, `CODE_INDEX.json`, `protocols.json`): Moved to `.context/archive/` and `.agent/archive_skills/`. (`SKILL_INDEX.md` remains active at `.agent/skills/SKILL_INDEX.md`.)
 
 ---
 
-## Protocol Taxonomy (26 categories across 428 active protocols)
+## Protocol Taxonomy (26 active categories — see `CAPS.json`)
 
 | Category | Count | Category | Count |
 |:---------|------:|:---------|------:|
-| architecture | 60 | psychology | 40 |
-| decision | 46 | business | 28 |
-| workflow | 24 | strategy | 21 |
-| engineering | 21 | communication | 17 |
-| pattern-detection | 15 | content | 13 |
-| meta | 11 | safety | 9 |
-| marketing | 8 | reasoning | 8 |
-| research | 7 | coding | 6 |
-| trading | 6 | singapore | 5 |
-| diagnostics | 5 | archive | 34 |
+| architecture | 65 | decision | 51 |
+| psychology | 42 | business | 31 |
+| engineering | 25 | strategy | 25 |
+| workflow | 23 | pattern-detection | 20 |
+| communication | 19 | safety | 15 |
+| content | 14 | meta | 11 |
+| reasoning | 9 | marketing | 8 |
+| research | 8 | singapore | 7 |
+| trading | 7 | coding | 6 |
+| case-studies | 4 | creation | 4 |
+| diagnostics | 4 | verification | 4 |
+| memory | 3 | behavioral | 2 |
+| qa | 2 | design | 1 |
+| *archive* | *51* | — | — |
 
 ---
 
@@ -354,27 +359,39 @@ Tier map: `.agent/telemetry/tier_map.json` (generated by `canonical_tier_analysi
 
 ---
 
-## MCP Server (FastMCP v3.x, stdio transport — 14 Tools)
+## MCP Servers (FastMCP v3.x, stdio transport — 19 Athena + 5 DuckDB Tools)
 
 ```
-src/athena/mcp_server.py
+src/athena/mcp_server.py (19 tools)
 ├── smart_search               — Hybrid RAG search (read, memory)
 ├── agentic_search             — Multi-step query decomposition (read, admin)
 ├── quicksave                  — Session checkpoint with Triple-Lock governance
-├── health_check               — Vector API + Database subsystem audit
-├── recall_session             — Retrieve recent session log content
+├── health_check               — System health check (read)
+├── recall_session             — Session log retrieval (read, memory)
 ├── governance_status          — Triple-Lock compliance state
 ├── list_memory_paths          — Active memory directory inventory
 ├── set_secret_mode            — Toggle demo/external redaction mode
-├── permission_status          — Current permission + tool manifest
 ├── meta_awareness_check       — Run meta-awareness diagnostic
+├── permission_status          — Current permission + tool manifest
 ├── report_external_web_search — Audit external web search invocation
 ├── search_web                 — Live web search provider relay
 ├── classify_turn              — Classify turn complexity (SNIPER/STANDARD/ULTRA)
+├── frame_open                 — Open pre-registered problem frame & hypothesis
+├── frame_validate             — Validate VOI, ruin floor, and R1-R13 gates
+├── frame_resolve              — Record frame outcome & Brier score
+├── frame_status               — Inspect open/closed frames
+├── decision_screen            — Deterministic EEV / 1/3 Kelly / Ruin / MCDA screen
 ├── context_gate               — Context gating and missing retrieval resolution
 └── Resources:
     ├── athena://session/current  — Full current session log
     └── athena://memory/canonical — CANONICAL.md content
+
+src/athena/duckdb_mcp_server.py (5 tools)
+├── query                      — Read-only analytical SQL over local files/tables
+├── profile                    — Column summary & cardinality profiling
+├── create_table_from_file     — Load CSV/JSON/Parquet into session DuckDB table
+├── list_tables                — Inspect registered DuckDB tables
+└── export_result              — Export query output to disk
 ```
 
 **Config**: `~/.gemini/antigravity/mcp_config.json` (registered as stdio server).

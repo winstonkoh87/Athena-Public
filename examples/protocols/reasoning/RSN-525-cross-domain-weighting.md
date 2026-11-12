@@ -179,7 +179,7 @@ Trader with $5K bankroll. Considering a long EURUSD position with 100-pip stop l
 | Sub-Problem | Domain | Conviction | Answer |
 |:------------|:-------|:-----------|:-------|
 | Is 100-pip SL structurally sound? | Semi-deterministic | 0.85 | ATR is 73 pips. 100/73 = 137% coverage. Survives noise. ✅ |
-| Is 5% ($250) appropriate risk? | Deterministic | 0.90 | Within Half-Kelly bounds, within pain threshold. ✅ |
+| Is 5% ($250) appropriate risk? | Deterministic | 0.90 | Within One-Third Kelly / campaign risk bounds, within pain threshold. ✅ |
 | Should I long EURUSD right now? (direction) | Stochastic | 0.10 | No model reliably predicts direction. |
 | Will this specific trade win? | Stochastic | 0.05 | Identical to TOTO at the individual trade level. |
 

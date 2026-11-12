@@ -71,7 +71,7 @@ Any system + ruin signal → IMMEDIATE → Survival System
 ### 4. Trading Execution ⚡
 
 - **Capstone**: `zenith-execution`
-- **Skills**: Half-Kelly sizing + Stop-loss calc + Monte Carlo sim + Portfolio rebalancer
+- **Skills**: One-Third Kelly sizing + Stop-loss calc + Monte Carlo sim + Portfolio rebalancer
 - **Triggers**: "position size", "how much", "Kelly", "stop loss", "rebalance"
 - **Co-activates**: → Cluster 3 (Risk Gate) as prerequisite check
 - **Domain**: Trading

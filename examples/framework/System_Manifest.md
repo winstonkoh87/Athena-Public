@@ -32,7 +32,7 @@ last_updated: 2026-07-22
 | Path | Purpose | Key Files |
 | :--- | :--- | :--- |
 | **`/.framework/`** | **The Soul** (Identity & Laws) | `v8.2-stable/modules/Core_Identity.md`, `MANIFESTO.md` |
-| **`/.context/`** | **The Brain** (Memory & State) | `project_state.md`, `memories/`, `User_Vault/` |
+| **`/.context/`** | **The Brain** (Memory & State) | `CANONICAL.md`, `PROJECTS.md`, `memories/` |
 | **`/.agent/`** | **The Hands** (Execution) | `scripts/`, `workflows/`, `skills/protocols/` |
 | **`/.projects/`** | **The Work** (Ventures) | Client work, personal projects |
 | **`/Athena-Public/`** | **The Face** (Open Source) | Sanitized mirror of useful protocols/docs |

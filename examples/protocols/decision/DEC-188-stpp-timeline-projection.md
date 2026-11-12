@@ -1,11 +1,5 @@
 ---
-
 created: 2025-12-25
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----created: 2025-12-25
 last_updated: 2026-07-22
 ---
 
@@ -52,7 +46,9 @@ Emotional Bias and poor strategy thrive on **singular visualization** (seeing on
 
 > **"Pain is not proportional to the event. Pain is proportional to the GAP between Fantasy and Reality."**
 
-$$ \text{Pain} = \text{Fantasy Magnitude} - \text{Reality Magnitude} $$
+```text
+Pain = Fantasy Magnitude - Reality Magnitude
+```
 
 * **Scenario A**: Expect T3 acquaintance behavior, get T3. **Gap = 0. Pain = 0.**
 * **Scenario B**: Expect Soulmate (T1), get T3. **Gap = 100. Pain = 100.**

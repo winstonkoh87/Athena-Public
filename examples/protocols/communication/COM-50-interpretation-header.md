@@ -1,10 +1,5 @@
 ---
-created: 2025-12-12
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----description: Lightweight disambiguation for ambiguous prompts. One-line interpretation header, no approval step, proceed immediately.
+description: Lightweight disambiguation for ambiguous prompts. One-line interpretation header, no approval step, proceed immediately.
 created: 2025-12-12
 last_updated: 2026-07-22
 ---

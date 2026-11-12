@@ -1,10 +1,5 @@
 ---
-created: 2025-12-10
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: spindle-buffer-protocol
+name: spindle-buffer-protocol
 description: 5-10 second delay technique to prevent emotional hijacking. Use when facing real-time pressure requiring immediate response. Allows prefrontal cortex to come back online before responding.
 created: 2025-12-10
 last_updated: 2026-07-22

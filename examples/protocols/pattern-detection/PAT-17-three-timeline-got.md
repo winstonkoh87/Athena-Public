@@ -1,10 +1,5 @@
 ---
-created: 2025-12-10
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: three-timeline-got
+name: three-timeline-got
 description: Magic number 3 for decision analysis. Best/Base/Worst or Continue/Modify/Exit configurations. 3 timelines captures 80%+ variance at 30% compute cost.
 created: 2025-12-10
 last_updated: 2026-07-22

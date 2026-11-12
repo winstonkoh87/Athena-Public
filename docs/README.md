@@ -7,12 +7,14 @@ Welcome to the documentation for **Project Athena** — a local-first cognitive 
 ### Architecture & System Design
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Comprehensive technical blueprint, core architecture, memory subsystems, and biological stack model.
 - [SEMANTIC_SEARCH.md](SEMANTIC_SEARCH.md) — Hybrid vector search architecture, Reciprocal Rank Fusion (RRF), cross-encoder re-ranking, and caching layer.
+- [EXOCORTEX.md](EXOCORTEX.md) — Exocortex knowledge-base indexing, multi-channel retrieval CLI, and configuration guide.
 - [USER_DRIVEN_RSI.md](USER_DRIVEN_RSI.md) — Recursive Self-Improvement (RSI) protocol driven by user signals, feedback loops, and calibration mechanisms.
 - [CAPABILITIES.md](CAPABILITIES.md) — Shipped system capabilities, operational status, and verification matrix.
 
 ### Onboarding & Guides
 - [GETTING_STARTED.md](GETTING_STARTED.md) — Step-by-step installation, environment setup, and CLI verification.
 - [YOUR_FIRST_SESSION.md](YOUR_FIRST_SESSION.md) — Hands-on walkthrough of a complete agent session lifecycle (`/start` to `/end`).
+- [UPDATING.md](UPDATING.md) — Safe upgrade guide for preserving personal context while pulling upstream Athena releases.
 - [FAQ.md](FAQ.md) — Frequently asked questions regarding local-first deployment, vector synchronization, and IDE integration.
 
 ### Governance, Philosophy & Principles

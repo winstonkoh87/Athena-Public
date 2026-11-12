@@ -1,15 +1,15 @@
 {
   "_comment": "Canonical inventory counts for Project Athena. Single source of truth for pre-commit caps, audit asserts, and AGENTS.md regeneration. Update via .agent/scripts/sync_agents_md.py (runs automatically: pre-commit Gate 4 + shutdown.py Phase 1.5), not by hand.",
-  "_generated": "2026-11-12",
+  "_generated": "2026-11-13",
   "_generator": "S411 sync_agents_md.py automation (TD-028)",
   "version": {
     "framework": "v8.2-stable",
     "system": "v10.0.6"
   },
   "protocols": {
-    "total": 462,
-    "active": 428,
-    "archived": 34,
+    "total": 461,
+    "active": 410,
+    "archived": 51,
     "categories": 26,
     "cap": "uncapped",
     "cap_policy": "Protocols are uncapped as of v9.8.0. The constraint is on BOOT LOAD (attention budget), not on total count. Protocol 530 (Conditional Skill Loading) + Progressive Disclosure ensure only relevant protocols enter context per session. Archived protocols don't affect boot. TD-019 is now structurally resolved."
@@ -51,9 +51,9 @@
     "retrieval_audit_script": ".agent/scripts/retrieval_audit.py",
     "canonical_tier_analysis": ".agent/scripts/canonical_tier_analysis.py"
   },
-  "scripts": 293,
+  "scripts": 290,
   "memories": {
-    "total_files": 5964,
+    "total_files": 5980,
     "path": ".context/memories/"
   },
   "paths": {

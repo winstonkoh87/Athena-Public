@@ -9,7 +9,7 @@ generator: generate_protocol_summaries.py
 # Protocol Summaries
 
 > **Purpose**: One-line summaries for rapid protocol discovery. Referenced by `AGENTS.md` for agent retrieval.
-> **Inventory**: 182 protocols across 23 categories.
+> **Inventory**: 178 protocols across 23 categories.
 > **Generated**: 2026-11-12 by `generate_protocol_summaries.py`
 
 ---
@@ -121,7 +121,7 @@ generator: generate_protocol_summaries.py
 | [512 Pre-Planning Discussion (Gray Area Resolution)](../examples/protocols/engineering/ENG-512-pre-planning-discussion.md) | Purpose: Resolve ambiguity *before* specification. |
 | [513 Context Isolation (Anti-Context-Rot)](../examples/protocols/engineering/ENG-513-context-isolation.md) | Purpose: Prevent quality degradation from context window accumulation. |
 | [542 GateGuard — Read-Before-Write Enforcement](../examples/protocols/engineering/ENG-542-gateguard-read-before-write.md) | Purpose: Eliminate blind edits by demanding investigation before the first modification to any file. |
-| [55 Development Execution Standard: The Silent Validator (Pre-Computation)](../examples/protocols/engineering/ENG-55-silent-validator.md) | Forces a silent pre-computation phase (O1-style) before answering. Generates 3 paths, kills 2, an... |
+| [55 Development Execution Standard: The Silent Validator (Pre-Computation)](../examples/protocols/engineering/ENG-55-silent-validator.md) | Forces a silent pre-computation phase (System-2 chain-of-thought) before answering. Generates 3 p... |
 | [79 Vibe Engineering](../examples/protocols/engineering/ENG-79-vibe-engineering.md) | Purpose: To maximize AI-Human high-bandwidth collaboration ("Vibe Engineering") while minimizing ... |
 | [86 Infrastructure & Continuity Hub: Exponential Backoff (Autonomous Monitoring)](../examples/protocols/engineering/ENG-86-exponential-backoff.md) | When monitoring async processes, use exponential backoff to minimize token waste while maintainin... |
 | [99 Visual Verification ("Not Real Until I See It")](../examples/protocols/engineering/ENG-99-visual-verification.md) | "It's not real or done until I can see it with my eyes" |
@@ -199,19 +199,6 @@ generator: generate_protocol_summaries.py
 | [312 Carousell Listing Min-Max Formula](../examples/protocols/marketing/MKT-312-carousell-minmax-formula.md) | Carousell listing optimization has three independent layers. |
 | [338 Multi-Platform Content Flow](../examples/protocols/marketing/MKT-338-multi-platform-content-flow.md) | Origin: Reddit (r/DigitalMarketing) - "Solo social media manager handling 6 platforms" Purpose: R... |
 
-## Meta (8)
-
-| Protocol | Summary |
-|----------|---------|
-| [000 DA: External Devil's Advocate (The Anti-Echo Chamber)](../examples/protocols/meta/MTA-000-devils-advocate.md) | Purpose: Break the "Internal Simulation Loop" by forcing the system to confront *actual external ... |
-| [000 The Ultimate Auditor (Adversarial Self-Correction)](../examples/protocols/meta/MTA-000-ultimate-auditor.md) | Purpose: Force the highest possible standard of reasoning by treating every internal thought as a... |
-| [004 RED-TEAM REVIEW — v4.1 (Strategic Matrix)](../examples/protocols/meta/MTA-004-red-team-v4-1.md) | * Law #1 (No Ruin): Any strategy with >5% risk of existential downside (bankruptcy, jail, reputat... |
-| [004 RED-TEAM REVIEW — v4.2 (Strategic Matrix)](../examples/protocols/meta/MTA-004-red-team-v4-2.md) | * Law #1 (No Ruin): Any strategy with >5% risk of existential downside (bankruptcy, jail, reputat... |
-| [004 RED-TEAM REVIEW — v4.3 (Strategic Matrix)](../examples/protocols/meta/MTA-004-red-team-v4-3.md) | Purpose: Adversarial audit and strategic expansion of any high-stakes artifact. |
-| [117 Zero-Point Protocol (终极操作系统)](../examples/protocols/meta/MTA-117-zero-point-protocol.md) | The ultimate operating system reversal: from game player → game designer → the field itself. |
-| [Athena Spec Sheet (Post-Facto & Red-Teamed)](../examples/protocols/meta/MTA-Athena_Spec_Sheet_Post_Facto.md) | Date: 2026-01-30 Architect: [AUTHOR] Agent: Model V Status: Hardened (Level 4) Goal: Build a "Sov... |
-| [Internal Protocol Ranking (MCDA)](../examples/protocols/meta/MTA-internal_protocol_ranking.md) | Methodology: Multi-Criteria Decision Analysis (MCDA) |
-
 ## Research (6)
 
 | Protocol | Summary |
@@ -243,6 +230,16 @@ generator: generate_protocol_summaries.py
 | [110 Decoding](../examples/protocols/coding/COD-110-structured-decoding.md) | Philosophy: "Output is not creating text; it is filling a form." Origin: Adapted from SGLang (Saf... |
 | [118 The Stop Pattern](../examples/protocols/coding/COD-118-stop-pattern.md) | "Negative constraints are stronger than positive instructions." |
 | [900 Project Scaffolding Standards](../examples/protocols/coding/COD-900-project-scaffolding.md) | Every new project MUST contain: |
+
+## Meta (5)
+
+| Protocol | Summary |
+|----------|---------|
+| [000 DA: External Devil's Advocate (The Anti-Echo Chamber)](../examples/protocols/meta/MTA-000-devils-advocate.md) | Purpose: Break the "Internal Simulation Loop" by forcing the system to confront *actual external ... |
+| [000 The Ultimate Auditor (Adversarial Self-Correction)](../examples/protocols/meta/MTA-000-ultimate-auditor.md) | Purpose: Force the highest possible standard of reasoning by treating every internal thought as a... |
+| [004 RED-TEAM REVIEW — v4.3 (Strategic Matrix)](../examples/protocols/meta/MTA-004-red-team-v4-3.md) | Purpose: Adversarial audit and strategic expansion of any high-stakes artifact. |
+| [117 Zero-Point Protocol (终极操作系统)](../examples/protocols/meta/MTA-117-zero-point-protocol.md) | The ultimate operating system reversal: from game player → game designer → the field itself. |
+| [Internal Protocol Ranking (MCDA)](../examples/protocols/meta/MTA-internal_protocol_ranking.md) | Methodology: Multi-Criteria Decision Analysis (MCDA) |
 
 ## Singapore (5)
 
@@ -279,13 +276,6 @@ generator: generate_protocol_summaries.py
 | [141 Claim Atomization Audit](../examples/protocols/verification/VER-141-claim-atomization-audit.md) | Prevent AI hallucinations from reaching deliverables by decomposing outputs into verifiable atomi... |
 | [171 Cross-Model Validation (Tri-Lateral Iteration Engine)](../examples/protocols/verification/VER-171-cross-model-validation.md) | Reduce single-model blind spots by using multiple SOTA LLMs as adversarial peer reviewers. |
 
-## Diagnostics (2)
-
-| Protocol | Summary |
-|----------|---------|
-| [004 Empirical Chat Forensics (Vivisection)](../examples/protocols/diagnostics/DIA-004-chat-forensics.md) | Chat logs are the "raw code" of human interaction. |
-| [Diagnostic-First Refactoring (Surgeon's Scan)](../examples/protocols/diagnostics/DIA-SKILL.md) | Analyze codebase structure before making changes — the "Surgeon's Scan" pattern |
-
 ## Trading (2)
 
 | Protocol | Summary |
@@ -298,6 +288,12 @@ generator: generate_protocol_summaries.py
 | Protocol | Summary |
 |----------|---------|
 | [221 High-Performance UX & Design](../examples/protocols/content/CNT-221-high-performance-ux-design.md) | Protocol for building high-conversion, premium aesthetic websites. Focuses on visual hierarchy, n... |
+
+## Diagnostics (1)
+
+| Protocol | Summary |
+|----------|---------|
+| [004 Empirical Chat Forensics (Vivisection)](../examples/protocols/diagnostics/DIA-004-chat-forensics.md) | Chat logs are the "raw code" of human interaction. |
 
 ## Qa (1)
 

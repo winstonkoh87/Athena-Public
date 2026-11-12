@@ -1,10 +1,5 @@
 ---
-created: 2025-12-10
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: response-hierarchy-framework
+name: response-hierarchy-framework
 description: Four-level response framework for handling difficult people. Prioritises structural prevention over engagement. Use when dealing with boundary violations.
 created: 2025-12-10
 last_updated: 2026-07-22

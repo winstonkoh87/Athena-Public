@@ -1,11 +1,6 @@
 ---
-created: 2025-12-14
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----description: Cross-domain pattern harvesting at session end. Auto-detects structural isomorphisms across persuasion, marketing, dev/trading, psychology.
-tags: [#protocol, #isomorphism, #cross-domain, #synthesis, #meta]
+description: Cross-domain pattern harvesting at session end. Auto-detects structural isomorphisms across persuasion, marketing, dev/trading, psychology.
+tags: [protocol, isomorphism, cross-domain, synthesis, meta]
 created: 2025-12-14
 last_updated: 2026-07-22
 ---
@@ -33,7 +28,7 @@ last_updated: 2026-07-22
 ║  ────────────────────────────────────────────────────────────────────────────  ║
 ║  Ask: "Where else does this pattern apply?"                                    ║
 ║  Transfer: Extract structure, apply to new domain.                             ║
-║  Document: Update TAG_INDEX with new `#isomorphism` connections.              ║
+║  Document: Update KNOWLEDGE_GRAPH / PROTOCOL_SUMMARIES with `#isomorphism`.  ║
 ║  → Compound knowledge amplification.                                           ║
 ╚════════════════════════════════════════════════════════════════════════════════╝
 ```
@@ -54,7 +49,7 @@ last_updated: 2026-07-22
 | **Structural Leverage** | EDMW Lift Case | Frame Control | Technical Debt | Power Dynamics |
 | **Agent Coordination** | Talent Manager | VDESTINY | MCP Server | Therapist |
 | **Optimization** | Stoicism | Strategic Leadership | DSPy Signatures | Outcome Independence |
-| **Community Detect** | Clique Infiltration | Niche Targeting | GraphRAG | Social Circle Game |
+| **Clustering** | Clique Infiltration | Niche Targeting | Vector Clustering | Social Circle Game |
 | **Adaptability** | Social Chameleon | Localisation | Memori Adapter | Code-Switching |
 | **Full Freedom Test** | Remove speedos (vs knee trap) | "Cancel anytime" offers | Paper trading w/ real feeds | Permission to leave |
 
@@ -94,7 +89,7 @@ For each pattern detected, ask:
 | New isomorphism found | Add to Isomorphism Matrix in this file |
 | New protocol warranted | Create `XX-protocol-name.md` + register in SKILL_INDEX |
 | Existing protocol gains new domain | Update existing protocol + add `#isomorphism` tag |
-| Cross-reference discovered | Update TAG_INDEX via `generate_tag_index.py` |
+| Cross-reference discovered | Update `KNOWLEDGE_GRAPH.md` / session log |
 
 ### Step 4: Session Log Entry
 
@@ -120,7 +115,7 @@ Append to session log under "Key Insights":
 | Psychology | "Frame > Substance" | Business: Brand perception > Product quality |
 | **MCP** | "Standardized Interface" | Business: Coordination Layer (Trust Gap) |
 | **DSPy** | "Signatures > Prompts" | Psychology: Outcome Independence (Standard > Method) |
-| **GraphRAG** | "Local Communities" | Social: Cliques > Individuals |
+| **Vector Clustering** | "Embedding Neighborhoods" | Social: Cliques > Individuals |
 | **Memori** | "Adapter Pattern" | Social: Code-Switching (Core vs Driver) |
 
 ---

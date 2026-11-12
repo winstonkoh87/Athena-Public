@@ -86,7 +86,7 @@ Rather than prescribing brute-force solutions, Athena consistently identifies **
 | Problem | Brute-Force "Solution" | Athena Leverage Point |
 |:--------|:----------------------|:---------------------|
 | Hawker losing money | Work harder, longer hours | Change pricing structure (MP-4 escape) |
-| Trading losses | Increase position size | Reduce variance (Half-Kelly sizing) |
+| Trading losses | Increase position size | Reduce variance (One-Third Kelly sizing) |
 | Poor distribution | Spend more on ads | Own the channel (MP-3 + MP-1) |
 | Client underpricing | Negotiate harder | Outcome pricing reframe (MP-9 lever repositioning) |
 | Relationship pattern | Try harder with same type | Examine wound-selection loop (MP-8 root cause) |

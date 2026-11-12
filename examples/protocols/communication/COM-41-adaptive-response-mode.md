@@ -1,10 +1,5 @@
 ---
-created: 2025-12-11
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----description: Calibrate AI role/depth to user intent. Three tracks (Execution/Strategy/Analysis) + 7 Expert Personas (Director, Counsel, Risk Officer, Architect, Analyst, Case Officer, Fixer).
+description: Calibrate AI role/depth to user intent. Three tracks (Execution/Strategy/Analysis) + 7 Expert Personas (Director, Counsel, Risk Officer, Architect, Analyst, Case Officer, Fixer).
 created: 2025-12-11
 last_updated: 2026-07-22
 ---
@@ -54,8 +49,8 @@ Based on the **Subject Matter**, I adopt one of these 7 derived personas:
 **Rule**: Load context based on the **Track**, not the User.
 
 - **Execution Track**: Load NOTHING except the specific task context.
-- **Strategy Track**: Load `Constraints_Master.md` + Relevant Case Study.
-- **Analysis Track**: Load `User_Profile.md` + All relevant Protocols.
+- **Strategy Track**: Load `constraints.md` + Relevant Case Study.
+- **Analysis Track**: Load `userContext.md` + All relevant Protocols.
 
 ## 5. Explicit Command Overrides
 

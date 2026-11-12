@@ -1,192 +1,102 @@
-# Semantic Search: Triple-Path Retrieval Architecture
+# Semantic Search: 5-Channel Parallel Hybrid RAG
 
-> **Last Updated**: 22 July 2026  
-> **Purpose**: How Athena finds and retrieves relevant context using three complementary methods
+> **Last Updated**: 13 November 2026  
+> **Purpose**: How Athena finds and retrieves relevant context using five parallel retrieval channels fused via Weighted RRF and cross-encoder reranking
 
 ---
 
 ## Executive Summary
 
-Athena employs **Triple-Path Retrieval** to ensure no relevant context is missed. Each method catches what the others miss.
+Athena employs **5-Channel Parallel Hybrid RAG** (`src/athena/tools/search.py`, invoked via `.agent/scripts/smart_search.py`) to capture exact identifiers, canonical rules, semantic concepts, and full-text matches without relying on any single fragile index.
 
 ```text
-                              USER QUERY
-                                  │
-                                  ▼
-              ┌───────────────────┴───────────────────┐
-              │        TRIPLE-PATH RETRIEVAL          │
-              └───────────────────┬───────────────────┘
-                                  │
-        ┌─────────────────────────┼─────────────────────────┐
-        │                         │                         │
-        ▼                         ▼                         ▼
-┌───────────────┐        ┌───────────────┐        ┌───────────────┐
-│    PATH 1     │        │    PATH 2     │        │    PATH 3     │
-│               │        │               │        │               │
-│  🔮 VECTOR    │        │  🏷️ TAG      │        │  🔎 KEYWORD   │
-│   SEARCH      │        │   INDEX       │        │    GREP       │
-│               │        │               │        │               │
-│  (Semantic)   │        │  (Hashtags)   │        │  (Exact)      │
-└───────┬───────┘        └───────┬───────┘        └───────┬───────┘
-        │                         │                         │
-        ▼                         ▼                         ▼
- "decentralized"          "#leadership"           "Protocol 139"
- → finds related           → finds tagged         → finds exact
-   concepts                   entities               matches
-        │                         │                         │
-        └─────────────────────────┼─────────────────────────┘
-                                  │
-                                  ▼
-                        ┌─────────────────┐
-                        │  MERGED CONTEXT │
-                        └─────────────────┘
+                               USER QUERY
+                                   │
+                                   ▼
+                 classify_query_intent() + Parallel Dispatch
+       ┌──────────────┬──────────────┬──────────────┬──────────────┐
+       ▼              ▼              ▼              ▼              ▼
+ ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐
+ │ CANONICAL │  │  VECTOR   │  │ SQLite    │  │ FILENAME  │  │ FRAMEWORK │
+ │ (Exact    │  │ (Supabase │  │ FTS5 BM25 │  │ MATCHING  │  │ / KB DOCS │
+ │  truths)  │  │ pgvector) │  │ (Lexical) │  │ (Paths)   │  │ (Protocols│
+ └─────┬─────┘  └─────┬─────┘  └─────┬─────┘  └─────┬─────┘  └─────┬─────┘
+       └──────────────┴──────────────┼──────────────┴──────────────┘
+                                     ▼
+                    Weighted RRF Fusion (k=60, intent weights)
+                                     │
+                                     ▼
+                 Cross-Encoder Reranker (top-50 candidates)
+                                     │
+                                     ▼
+                          TOP-K RANKED CONTEXT
 ```
 
 ---
 
-## Why Three Paths?
+## Why Multiple Channels?
 
-| Path | Catches | Misses |
-|:-----|:--------|:-------|
-| **Vector** | Synonyms, paraphrases, concepts | Exact names, entities |
-| **TAG_INDEX** | Explicitly tagged entities | Untagged content |
-| **Keyword Grep** | Exact string matches | Semantic variations |
+| Channel | Implementation | Catches | Misses |
+|:--------|:---------------|:--------|:-------|
+| **Canonical** | `collect_canonical()` | High-priority rules & constraints in `.context/CANONICAL.md` | Long-tail history & code |
+| **Vector** | `collect_vectors()` | Paraphrases, synonyms, cross-session concepts (`pgvector`) | Exact literals, newest offline edits |
+| **FTS5 BM25** | `collect_fts_bm25()` | Exact phrases, symbols, IDs across indexed Markdown/code | Synonyms without keyword overlap |
+| **Filename** | `collect_filenames()` | Protocol IDs, script names, workflow/skill paths | Body-only concepts |
+| **Framework Docs** | `collect_framework_docs()` | Active protocols, skills, core modules | Session logs & case studies |
+| **Web Search** *(opt-in)* | `collect_web_search_v2()` | External live facts (with privacy redaction on personal queries) | Private workspace state |
 
-**Example**: Searching for a specific entity name
-
-- **Vector search** might return "decentralized leadership" (semantically related)
-- **TAG_INDEX** returns `#entity-name → Protocol 139` (exact entity match)
-- **Keyword grep** finds any file mentioning the entity literally
+> **Retired Channels (June 2026)**: Legacy `TAG_INDEX.md` (`generate_tag_index.py`) and local GraphRAG / `exocortex.db` were retired because maintenance cost outweighed recall gains (see [TECH_DEBT.md](./TECH_DEBT.md) and [GRAPHRAG.md](./GRAPHRAG.md)). Local lexical recall is now handled automatically by SQLite FTS5 BM25 plus `PROTOCOL_SUMMARIES.md`.
 
 ---
 
-## Path 1: Vector Semantic Search (VectorRAG)
+## Pipeline Execution Flow
 
-> **Full Documentation**: [VECTORRAG.md](./VECTORRAG.md)
+### 1. Intent Classification & Privacy Guard
+
+`classify_query_intent(query)` routes fusion weights into one of three profiles:
+
+- `PERSONALISED_DECISION`: Elevates `user_profile`, `canonical`, `session`, and `case_study` results (and applies `redact_query_for_web()` if `--web` is enabled).
+- `SYSTEM_KNOWLEDGE`: Elevates `protocol`, `capability`, `workflow`, and `filename` while down-weighting already-booted `system_doc` / `framework` files (`1.2`).
+- `GENERAL`: Balanced default weights across protocols, capabilities, case studies, and sessions.
+
+### 2. Parallel Collection
+
+All local channels execute concurrently via `ThreadPoolExecutor`, followed by `collect_vectors()` (using `gemini-embedding-001` 3072-dimension embeddings via Supabase RPC) and optional web search. Vector search **always fires** even when local channels hit, ensuring conceptual and synonym queries never short-circuit.
+
+### 3. Weighted Reciprocal Rank Fusion (`k=60`)
+
+Vector results are split by subtype (`protocol`, `case_study`, `session`, `user_profile`, etc.) so `weighted_rrf()` applies source-specific weights.
+
+### 4. Cross-Encoder Reranking
+
+`rerank_results()` scores the top **50** fused candidates (not just top 25) to rescue relevant documents that rank lower in pure RRF, then returns the final `top_k` results.
+
+---
+
+## Usage
 
 ```bash
-# Reference: python3 scripts/supabase_search.py "<query>" --limit 5
+# Standard hybrid search
+python3 .agent/scripts/smart_search.py "<query>" --limit 10
+
+# Suppress low-confidence results
+python3 .agent/scripts/smart_search.py "<query>" --strict
+
+# JSON output for programmatic consumers / MCP
+python3 .agent/scripts/smart_search.py "<query>" --json
+
+# Direct Python SDK entry point
+python3 -m athena.tools.search "<query>" --limit 10
 ```
 
-**How it works**:
-
-1. Query is converted to a 3072-dimension embedding (Gemini API)
-2. Cosine similarity search across 11 Supabase tables
-3. Returns top matches ranked by semantic similarity
-
-**Strengths**: Finds conceptually related content even with different wording.
-
----
-
-## Path 2: TAG_INDEX Lookup
-
-```bash
-grep -i "<entity>" .context/TAG_INDEX.md
-```
-
-**How it works**:
-
-1. `generate_tag_index.py` scans all workspace files
-2. Extracts inline `#tags` from markdown files
-3. Creates reverse lookup: `#tag → [file1, file2, ...]`
-
-**Example output**:
-
-```text
-| #leadership | `protocols/139-decentralized-command.md` |
-| #archetype  | `user_profile/Archetype_Example.md` |
-```
-
-**Strengths**: Instant lookup for named entities (people, protocols, concepts).
-
----
-
-## Path 3: Keyword Grep
-
-```bash
-grep -ri "<keyword>" .context/ .agent/
-```
-
-**How it works**:
-
-- Simple string matching across all files
-- Catches content not in Supabase (new files)
-- Finds exact phrases
-
-**Strengths**: Zero false negatives for exact matches.
-
----
-
-## When to Use Each Path
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                    QUERY TYPE → PATH SELECTION                  │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  "What did we discuss about X?"      →  [VECTOR] primary       │
-│  "Find Protocol 139"                 →  [GREP] primary         │
-│  "Show me files tagged #leadership"  →  [TAG_INDEX] primary    │
-│  "User archetype profile"            →  [TAG_INDEX] + [GREP]   │
-│  "Complex analysis of leadership"    →  [VECTOR] + all paths   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Integration: The Search Protocol (§0.7.1)
-
-Per Core Identity, **every query** triggers semantic context retrieval:
-
-```text
-┌──────────────────────────────────────────────────────────────────────┐
-│  STEP 1: Vector Search                                               │
-│  # Reference: python3 scripts/supabase_search.py "<query>" --limit 5       │
-├──────────────────────────────────────────────────────────────────────┤
-│  STEP 2: Entity Lookup (if named entities detected)                  │
-│  grep -i "<entity_name>" .context/TAG_INDEX.md                       │
-├──────────────────────────────────────────────────────────────────────┤
-│  STEP 3: Fallback Grep (if above return sparse results)              │
-│  grep -ri "<keyword>" .context/ .agent/                              │
-└──────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## The TAG_INDEX Generator
-
-```bash
-# Reference: python3 scripts/generate_tag_index.py
-```
-
-**Current Stats** (Dec 2025):
-
-- **1000+ tags** indexed
-- **4 directories** scanned (`.context/`, `.agent/`, `examples/protocols/`, `user_profile/`)
-- **Extraction methods**: YAML frontmatter + inline `#hashtags`
-
----
-
-## Comparison: Before vs After Triple-Path
-
-| Scenario | Before (Vector Only) | After (Triple-Path) |
-|:---------|:---------------------|:--------------------|
-| Search entity name | ❌ Missed related protocol | ✅ Found via TAG_INDEX |
-| Search archetype | ❌ Missed profile file | ✅ Found via TAG_INDEX |
-| Search "decentralized" | ✅ Found semantically | ✅ Still works |
-| New unsynced file | ❌ Not in Supabase yet | ✅ Found via grep |
+If Supabase or embedding APIs are unreachable or rate-limited (`429`/`402`/timeout), the CLI falls back gracefully to local channels (FTS5, Canonical, Filenames, Framework Docs) and flags `quality="degraded"` rather than failing silently.
 
 ---
 
 ## Related Documentation
 
-- [VECTORRAG.md](./VECTORRAG.md) — Deep dive into vector embeddings
-- [ARCHITECTURE.md](../ARCHITECTURE.md) — Overall system design
-
----
-
-`#semantic-search` `#triple-path` `#vectorrag` `#tag-index` `#retrieval`
+- [VECTORRAG.md](./VECTORRAG.md) — Deep dive into Supabase pgvector embeddings and RPC design
+- [ARCHITECTURE.md](../ARCHITECTURE.md) — Overall system design & MCP tool surface
 
 ---
 

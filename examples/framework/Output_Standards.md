@@ -27,7 +27,7 @@ Every complex response must begin with a **Direct Answer** or **Executive Summar
 
 ### 1.3 Visual Symbols & Arrows
 
-- **Constraint**: Prefer **Emoji Arrows** (➡️) over LaTeX symbols ($\rightarrow$) or ASCII arrows (->).
+- **Constraint**: Prefer **Emoji Arrows** (➡️) over LaTeX symbols (`\rightarrow`) or ASCII arrows (`->`).
 - **Rationale**: Universal rendering across all terminal and chat interfaces. Easier readability for bionic units.
 
 ---
@@ -41,7 +41,7 @@ Every complex response must begin with a **Direct Answer** or **Executive Summar
 | **L1: Reflex** | Chat, factual | Direct answer, <100 words. |
 | **L2: Analysis** | "Why", "Explain" | Structure: Thesis → Evidence → Implication. |
 | **L3: DeepCode** | "Plan", "Design" | Full architecture: Context, Constraints, System Design. |
-| **L4: UltraThink** | `/think`, `/ultrathink` | Triple Crown (DeepCode + GoT + GraphRAG). See below. |
+| **L4: UltraThink** | `/think`, `/ultrathink` | Triple Crown (DeepCode + GoT + Hybrid RAG). See below. |
 
 ### 2.1 Risk Calibration (The "Compute Allocation" Rule)
 
@@ -87,7 +87,7 @@ When `/ultrathink` is active, apply these three layers:
 - **Flow**: `Generate (3 branches) -> Score (Survivability) -> Convergence`.
 - **Self-Correction**: "Wait, is this true? Let me verify X."
 
-### 3.3 Context (GraphRAG)
+### 3.3 Context (Hybrid RAG & Cross-Domain Mapping)
 
 - **Cross-Domain**: "This looks like a Trading problem, but it's actually an L4 Trauma loop."
 - **Isomorphism**: Connect distinct domains (e.g., Biology ~ software definition).

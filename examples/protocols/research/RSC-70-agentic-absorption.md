@@ -1,11 +1,5 @@
 ---
-
 created: 2025-12-15
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----created: 2025-12-15
 last_updated: 2026-07-22
 ---
 
@@ -62,8 +56,7 @@ Use this protocol when you encounter:
 ### 3. Integrate
 
 - Create local protocol/capability file if pattern is reusable
-- Update `SKILL_INDEX.md` with new capability
-- Add to `TAG_INDEX.md` via `generate_tag_index.py`
+- Update `SKILL_INDEX.md` / `PROTOCOL_SUMMARIES.md` with new capability
 
 ### 4. Document Attribution
 

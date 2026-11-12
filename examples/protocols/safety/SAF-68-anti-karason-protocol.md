@@ -1,11 +1,6 @@
 ---
-created: 2025-12-14
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----description: The "Self-Healing" mechanism. Confronts self-deception and enforces reality testing when "High Supply" zones are detected. Partner to Protocol 23.
-tags: [#protocol, #anti-karason, #self-healing, #reality-check, #safety]
+description: The "Self-Healing" mechanism. Confronts self-deception and enforces reality testing when "High Supply" zones are detected. Partner to Protocol 23.
+tags: [protocol, anti-karason, self-healing, reality-check, safety]
 created: 2025-12-14
 last_updated: 2026-07-22
 ---

@@ -1,10 +1,5 @@
 ---
-created: 2025-12-27
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: high-performance-ux-design
+name: high-performance-ux-design
 description: Protocol for building high-conversion, premium aesthetic websites. Focuses on visual hierarchy, navigation conventions, and readability physics.
 tags: [protocol, web-design, ux, ui, conversion, 2026-standards]
 created: 2025-12-27

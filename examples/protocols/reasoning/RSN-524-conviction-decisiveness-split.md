@@ -86,7 +86,7 @@ The split maps to two established frameworks:
 > "You might consider a long entry around 1.0850 with a stop somewhere below 1.0800..."
 
 **After** (operational, precise):
-> "Setup: Long 1.0850 / SL 1.0800 / TP1 1.0920 / Size: 2% Half-Kelly.
+> "Setup: Long 1.0850 / SL 1.0800 / TP1 1.0920 / Size: 2% (within One-Third Kelly cap).
 > Structural tell required: [specific condition]. Your calibration: present Y/N?"
 
 ### 2. Defer P(S), Not Structure

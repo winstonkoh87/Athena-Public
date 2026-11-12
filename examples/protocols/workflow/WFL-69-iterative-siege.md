@@ -1,11 +1,6 @@
 ---
-created: 2025-12-14
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----description: Iterative self-referential development loop. "Siege" a problem until solved, rather than "Try once and quit". Inspired by 'ralph-wiggum' plugin.
-tags: [#protocol, #iteration, #loop, #sieging, #ralph-wiggum]
+description: Iterative self-referential development loop. "Siege" a problem until solved, rather than "Try once and quit". Inspired by 'ralph-wiggum' plugin.
+tags: [protocol, iteration, loop, sieging, ralph-wiggum]
 created: 2025-12-14
 last_updated: 2026-07-22
 ---

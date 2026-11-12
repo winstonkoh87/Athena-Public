@@ -233,7 +233,7 @@ Before writing the `@pending` line in the checkpoint block:
 3. If any item has been pending **7+ sessions**: quietly promote it to `@seeded` for next session's Phase 4
 
 > This step is **advisory only** — it never blocks session close.
-> See [Protocol 528](../../docs/protocols/528-sandboxed-execution-modes.md).
+> See [Protocol 528](../../examples/protocols/architecture/ARC-528-execution-awareness.md).
 
 ---
 

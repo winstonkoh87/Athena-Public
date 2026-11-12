@@ -1,11 +1,11 @@
 ---
-title: "JIT Context Injection"
 id: 405
+title: "JIT Context Injection"
 type: workflow
-author: [AUTHOR] (Stolen from Claude Code)
-created: 2026-02-02
+author: "[AUTHOR] (Stolen from Claude Code)"
 source: r/ClaudeAI - "7 Claude Code Power Tips Nobody's Talking About"
 tags: [workflow, prompting, dynamic, preprocessing, stolen]
+created: 2026-02-02
 ---
 
 # Protocol 405: JIT Context Injection

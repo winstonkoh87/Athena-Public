@@ -53,13 +53,13 @@ def generate_protocol_summaries():
     print("=" * 60)
 
     hot_protocols = [
-        WORKSPACE / ".agent/skills/protocols/meta/000-ultimate-auditor.md",
+        WORKSPACE / ".agent/skills/protocols/meta/MTA-000-ultimate-auditor.md",
         WORKSPACE
-        / ".agent/skills/protocols/decision/75-synthetic-parallel-reasoning.md",
-        WORKSPACE / ".agent/skills/protocols/safety/001-law-of-ruin.md",
-        WORKSPACE / ".agent/skills/protocols/decision/124-sdr-calculator.md",
+        / ".agent/skills/protocols/decision/DEC-75-synthetic-parallel-reasoning.md",
+        WORKSPACE / ".agent/skills/protocols/safety/SAF-001-law-of-ruin.md",
+        WORKSPACE / ".agent/skills/protocols/decision/DEC-124-sdr-calculator.md",
         WORKSPACE
-        / ".agent/skills/protocols/architecture/133-query-archetype-routing.md",
+        / ".agent/skills/protocols/architecture/ARC-133-query-archetype-routing.md",
     ]
 
     for proto_path in hot_protocols:

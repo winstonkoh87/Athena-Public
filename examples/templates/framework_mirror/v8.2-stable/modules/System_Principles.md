@@ -153,7 +153,7 @@ graphrag_extracted: true
   - Debt ($20k) is Ergodic.
   - Suicide is Non-Ergodic.
 - **Agency Law**: Never outsource Due Diligence to "Friends." **Friendship is not a Hedge.**
-- **Directive**: When $L \ll CapEx$ (Loss is less than Lifetime Capacity), it is just a **Tuition Fee**. Pay it and graduate.
+- **Directive**: When `L << CapEx` (Loss is less than Lifetime Capacity), it is just a **Tuition Fee**. Pay it and graduate.
 
 ### Law 9: The Survival Trap (Linear Wage Checkmate)
 

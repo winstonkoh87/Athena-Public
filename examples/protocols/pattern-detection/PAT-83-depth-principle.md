@@ -1,11 +1,5 @@
 ---
-
 created: 2025-12-16
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----created: 2025-12-16
 last_updated: 2026-07-22
 ---
 
@@ -21,7 +15,7 @@ last_updated: 2026-07-22
 
 **"Complexity is a Loop, not a Line."**
 
-In high-stakes or complex environments (Negotiation, Architecture, Sales), a linear approach ($A \to B \to C$) fails because it ignores **State Calibration**.
+In high-stakes or complex environments (Negotiation, Architecture, Sales), a linear approach (`A → B → C`) fails because it ignores **State Calibration**.
 
 You cannot force a result. You must **engineer the demand** for the result through back-and-forth oscillation.
 
@@ -40,18 +34,18 @@ Instead of a Roadmap, use a **Tension Engine**:
 
 ### A. Sales (The Origin)
 
-* **Wrong**: Dumping the full pitch on slide one ($Steps 1 \to 10$).
-* **Right**: Tease value $\to$ Pull Back $\to$ Wait for them to lean in $\to$ Reveal more. **Make them ask.**
+* **Wrong**: Dumping the full pitch on slide one (`Steps 1 → 10`).
+* **Right**: Tease value → Pull Back → Wait for them to lean in → Reveal more. **Make them ask.**
 
 ### B. Coding (The Isomorphism)
 
 * **Wrong**: Writing full functionality in one pass.
-* **Right**: Prototype $\to$ Test Failure $\to$ Refine Architecture $\to$ Test Again. **Iterate until the solution fits the problem perfectly.**
+* **Right**: Prototype → Test Failure → Refine Architecture → Test Again. **Iterate until the solution fits the problem perfectly.**
 
 ### C. Business (The Deal)
 
 * **Wrong**: Pitching the product immediately.
-* **Right**: Tease Value $\to$ Withdraw Availability $\to$ Let them ask "How much?" $\to$ Close.
+* **Right**: Tease Value → Withdraw Availability → Let them ask "How much?" → Close.
 
 ## 4. Implementation Rule
 

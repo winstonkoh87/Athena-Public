@@ -1,11 +1,5 @@
 ---
-
 created: 2025-12-25
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----created: 2025-12-25
 last_updated: 2026-07-22
 ---
 
@@ -56,7 +50,9 @@ An **Absorbing Barrier** is a state from which you cannot recover:
 
 For a repeated action with P(ruin) = r per trial:
 
-$$ P(\text{Survive } n \text{ trials}) = (1-r)^n $$
+```text
+P(Survive n trials) = (1 - r)^n
+```
 
 | P(Ruin) per Trial | Survival after 10 | Survival after 50 | Survival after 100 |
 |-------------------|-------------------|-------------------|---------------------|

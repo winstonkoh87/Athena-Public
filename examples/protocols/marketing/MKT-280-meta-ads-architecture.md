@@ -1,10 +1,5 @@
 ---
-created: 2026-01-15
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: meta-ads-architecture
+name: meta-ads-architecture
 description: Strategic framework for Meta (Facebook/Instagram) advertising, focusing on high-trust niches (Financial/Services).
 tags: [marketing, ads, meta, traffic, lead-gen]
 created: 2026-01-15

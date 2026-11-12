@@ -1,10 +1,7 @@
----created: 2025-12-16
-last_updated: 2026-07-22
 ---
-
----description: Full workspace refactor — deep audit, Supabase sync, and remediation
+description: Full workspace refactor — deep audit, Supabase sync, and remediation
 created: 2025-12-16
-last_updated: 2026-07-22
+last_updated: 2026-11-13
 ---
 
 # /refactor — Ultimate System Optimization
@@ -78,7 +75,7 @@ git add -A && git commit -m "checkpoint: pre-refactor $(date +%Y-%m-%d-%H%M)" --
 
 | Issue | Action |
 |-------|--------|
-| **Orphans** | Add references to `System_Manifest.md` or `SKILL_INDEX.md` |
+| **Orphans** | Add references to `ARCHITECTURE.md` or `SKILL_INDEX.md` |
 | **Broken links** | Repair path or remove dead reference |
 | **Link Rot** | Test external URLs (manual spot check) |
 | **Cross-ref warnings** | Add tags to reduce warnings |
@@ -172,15 +169,15 @@ python3 .agent/scripts/orphan_detector.py
 
 ## Phase 6.5: Index Regeneration (~10s)
 
-> **Goal**: Regenerate TAG_INDEX after any file changes.
+> **Goal**: Regenerate protocol summaries and skill indexes after any file changes.
 
 // turbo
 
 ```bash
-python3 .agent/scripts/generate_tag_index.py
+python3 examples/scripts/generate_protocol_summaries.py
 ```
 
-> Updates `TAG_INDEX.md` with current file tags.
+> Updates `.context/PROTOCOL_SUMMARIES.md` with active protocol entries.
 
 ---
 

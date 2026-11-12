@@ -126,7 +126,7 @@ Where:
 
 ### 1C: Asymmetric Utility Check
 
-> **Question**: "Does any agent's utility function contain a term with $U = -\infty$ (ruin-class outcome)?"
+> **Question**: "Does any agent's utility function contain a term with `U = -Infinity` (ruin-class outcome)?"
 >
 > - If **YES** for you → That dimension is **non-ergodic**. Apply Law #1 constraint.
 > - If **YES** for opponent → That is their **pressure point**. Potential leverage (ethical only).

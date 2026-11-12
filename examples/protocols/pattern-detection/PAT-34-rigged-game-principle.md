@@ -1,10 +1,5 @@
 ---
-created: 2025-12-10
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: rigged-game-principle
+name: rigged-game-principle
 description: Cannot win where scoring system penalises your architecture. Table selection > table performance. Exit rigged games, find arenas that reward your stack.
 created: 2025-12-10
 last_updated: 2026-07-22

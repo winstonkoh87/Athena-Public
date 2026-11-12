@@ -1,10 +1,10 @@
 ---
-title: "Decoupled Fetch & Reason"
 id: 404
+title: "Decoupled Fetch & Reason"
 type: workflow
-author: [AUTHOR] (Antigravity)
-created: 2026-02-02
+author: "[AUTHOR] (Antigravity)"
 tags: [workflow, architecture, glass-box, reasoning, cost-optimization]
+created: 2026-02-02
 ---
 
 # Protocol 404: Decoupled Fetch & Reason

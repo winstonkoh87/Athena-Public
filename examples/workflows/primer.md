@@ -41,14 +41,14 @@ Load the following files (in order):
    - `notes/profile/Session_Observations.md` (Calibration patterns, cases)
 
 4. **Architecture**
-   - `.context/manifests/System_Manifest.md`
-   - `.context/project_state.md` (Tech stack, active patterns)
+   - `.framework/v8.2-stable/modules/System_Manifest.md`
+   - `.context/PROJECTS.md` (Tech stack, active patterns)
    - List active workflows in `.agent/workflows/`
    - List protocols in `.agent/skills/protocols/` (count + categories)
 
 5. **Memory & Skill Index**
    - `.context/PROTOCOL_SUMMARIES.md` (Protocol/topic discovery)
-   - `.context/SKILL_INDEX.md` (Capability registry)
+   - `.agent/skills/SKILL_INDEX.md` (Capability registry)
 
 6. **Metrics**
    - Check latest session log for session count, calibration score

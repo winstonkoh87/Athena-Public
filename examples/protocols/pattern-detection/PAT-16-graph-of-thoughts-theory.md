@@ -1,7 +1,6 @@
 ---
 created: 2025-12-10
 last_updated: 2026-07-22
-graphrag_extracted: true
 ---
 
 # Protocol: Synthetic Parallel Reasoning via Graph of Thoughts

@@ -45,7 +45,7 @@ gh run view <run-id> | grep <job-name>
 | Docker build | ✅ Yes |
 | GitHub CI | ✅ Yes |
 | npm install | ❌ No (fast enough) |
-| GraphRAG reindex | ✅ Yes (~130s) |
+| Full vector / FTS reindex | ✅ Yes (~130s) |
 | Git operations | ❌ No |
 
 ---

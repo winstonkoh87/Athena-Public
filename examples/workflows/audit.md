@@ -185,7 +185,7 @@ python3 .agent/scripts/cross_reference.py
 > **Scope**: Only runs during `--deep` audits. Skipped on `--session`.
 
 - [ ] **Deprecated protocols**: `grep -rli 'DEPRECATED\|SUPERSEDED' .agent/skills/protocols/ | grep -v '/archive/'` → move any results to `archive/`
-- [ ] **Stale indexes**: Check `WORKFLOW_INDEX.md`, `SKILL_INDEX.md`, `TAG_INDEX*.md` dates vs current date. Flag if >7 days stale.
+- [ ] **Stale indexes**: Check `WORKFLOW_INDEX.md`, `SKILL_INDEX.md`, `PROTOCOL_SUMMARIES.md` dates vs current date. Flag if >7 days stale.
 - [ ] **Context size**: `du -sh .context/` → if >250MB, flag for manual review
 - [ ] **activeContext.md line count**: `wc -l < .context/memory_bank/activeContext.md` → if >80 lines, compact oldest checkpoints to `sessionArchive.md`
 

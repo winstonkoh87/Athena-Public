@@ -1,11 +1,5 @@
 ---
-
 created: 2025-12-23
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----created: 2025-12-23
 last_updated: 2026-07-22
 ---
 
@@ -30,11 +24,11 @@ CDD enforces that every line of code must be anchored to a **Persistent Context*
 If you increase the LLM capability (Gemini 3.1 Pro) but feed it zero context (empty chat), you get garbage.
 If you feed it high-context (CDD), you get production code.
 
-## 2. The Living Spec (`project_state.md`)
+## 2. The Living Spec (`PROJECTS.md` / `activeContext.md`)
 
 We do not use messy chat logs for context. We use a **Single Source of Truth** file.
 
-### The File: `.context/project_state.md`
+### The File: `.context/PROJECTS.md` (and `memory_bank/activeContext.md`)
 
 This file is the *machine-readable* snapshot of the codebase. It tracks:
 
@@ -44,15 +38,15 @@ This file is the *machine-readable* snapshot of the codebase. It tracks:
 
 ## 3. The Workflow
 
-1. **Read**: Before coding, read `project_state.md` to understand the *laws* of this specific repo.
-2. **Update**: After causing a structural change (new library, new pattern), **autonomically** update `project_state.md`.
-3. **Enforce**: If the user asks for something that violates `project_state.md` (e.g., "Install Tailwind"), reject it or ask for override/update.
+1. **Read**: Before coding, read `PROJECTS.md` and `activeContext.md` to understand the *laws* of this specific repo.
+2. **Update**: After causing a structural change (new library, new pattern), **autonomically** update `PROJECTS.md` / `activeContext.md`.
+3. **Enforce**: If the user asks for something that violates `PROJECTS.md` / `constraints.md` (e.g., "Install Tailwind"), reject it or ask for override/update.
 
 ## 4. Comparison
 
 | Feature | Standard Coding | CDD (Athena) |
 |:---|:---|:---|
-| **Memory** | Chat History (Ephemeral) | `project_state.md` (Persistent) |
+| **Memory** | Chat History (Ephemeral) | `PROJECTS.md` (Persistent) |
 | **Consistency** | Drifts every session | Locked to Spec |
 | **Onboarding** | "Read the docs" (Human) | "Read the State" (Machine) |
 
@@ -60,5 +54,5 @@ This file is the *machine-readable* snapshot of the codebase. It tracks:
 
 ## 5. Technical Notes
 
-* **Trigger**: On `/start`, the system should be aware of `project_state.md`.
+* **Trigger**: On `/start`, the system loads `activeContext.md` and resolves `PROJECTS.md`.
 * **Maintenance**: This file must be pruned. If it grows >200 lines, refactor or archive old states.

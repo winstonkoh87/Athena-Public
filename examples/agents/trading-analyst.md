@@ -22,7 +22,7 @@ Orchestrates trade structure analysis using the full suite of trading skills. Bi
 
 | Skill | Function |
 |:------|:---------|
-| `kelly-mandate` | Position sizing via Half-Kelly |
+| `kelly-mandate` | Position sizing via One-Third Kelly (0.33x GTO) |
 | `stop-loss-calc` | SL at structural invalidation |
 | `win-rate-dominance` | WR vs RR trade-off analysis |
 | `zenith-execution` | Complete trade setup calculator |

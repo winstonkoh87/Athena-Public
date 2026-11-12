@@ -43,25 +43,35 @@ GATE 1: Law of Ruin          GATE 2: Ergodicity           GATE 3: WR Dominance
 └─────────────────────┘     └─────────────────────┘     └─────────────────────┘
 ```
 
-### Position Sizing: Half-Kelly (DEC-046)
+### Position Sizing: One-Third Kelly GTO Anchor (DEC-046)
 
-```
-Full Kelly:  f* = (bp − q) / b
-Half-Kelly:  f  = f* / 2
+```text
+Full Kelly:       f* = (bp - q) / b
+One-Third Kelly:  f  = f* / 3
+Quarter-Kelly:    f  = f* / 4
 
 Where:
-  b = net odds (reward ÷ risk)
+  b = net odds (reward / risk)
   p = probability of winning
-  q = 1 − p
+  q = 1 - p
+
+MacLean, Thorp & Ziemba (2011) Continuous Drawdown Theorem:
+  P(Drawdown >= D) = (1 - D)^(2/c - 1)
+  For D = 0.50 (50% drawdown / account halving):
+    Full Kelly (c = 1.00) : P(down 50%) = 50.0%  (Suicidal)
+    Half-Kelly (c = 0.50) : P(down 50%) = 12.5%  (Violates Law #1: 12.5% > 5%)
+    Law #1 Cap (c = 0.38) : P(down 50%) = 5.0%   (Permissible leverage ceiling)
+    One-Third  (c = 0.33) : P(down 50%) = 3.1%   (GTO Sweet Spot: keeps 55.6% compounding)
+    Quarter    (c = 0.25) : P(down 50%) = 0.8%   (Defensive mode)
 
 Example (10% EV, 1:3 R:R):
   b = 3, p = 0.55, q = 0.45
-  f* = (3 × 0.55 − 0.45) / 3 = 0.40 (40% — suicidal)
-  f  = 0.40 / 2 = 0.20 (20% — still aggressive)
+  f* = (3 * 0.55 - 0.45) / 3 = 0.40 (40% — suicidal)
+  f  = 0.40 / 3 = 0.133 (13.3% — One-Third Kelly campaign cap)
   Practical: Cap at 1-2% risk per trade for operational safety.
 ```
 
-**Rule**: Half-Kelly is the MAXIMUM. Industry standard 1-2% risk per trade is the operational floor.
+**Rule**: Half-Kelly violates Law #1 (12.5% P(halving) > 5%). One-Third Kelly (0.33x) is the GTO ceiling per CAMPAIGN (aggregate exposure across layers). Industry standard 1-2% risk per trade is the operational floor.
 
 ### The Variance Shields
 
@@ -98,12 +108,12 @@ Total risk across all layers: Still ≤ 2% of capital
 
 | "Efficient" (Looks Smart, Kills You) | "Robust" (Looks Dumb, Survives) |
 |:-------------------------------------|:-------------------------------|
-| Full Kelly sizing | Half-Kelly |
+| Full Kelly sizing | One-Third Kelly (0.33x GTO) |
 | 58% allocation, max profit | 6% allocation, survives tail |
 | Narrow SL + High R:R | Wide SL + High WR |
 | Hold for "the big move" | Partial profit + re-entry |
 
-**Rule**: Growth = Edge − (Variance² / 2). Variance is a SUBTRACTION term. High WR structurally dominates High RR (TRD-367).
+**Rule**: Growth ≈ Edge − (sigma^2 / 2) = Edge − (Variance / 2). Variance drag is a SUBTRACTION term. High WR structurally dominates High RR (TRD-367).
 
 ### Post-Trade: Journal Analysis
 
@@ -145,7 +155,7 @@ DEC-046 (Kelly Mandate), DEC-050 (Risk Pareto), DEC-101 (Inverse Sizing Matrix)
 
 ### Absorbed Skills
 - `trading-risk-gate` → Pre-trade 3-gate pipeline
-- `zenith-execution` → Half-Kelly, stop-loss calc, Monte Carlo, portfolio rebalance
+- `zenith-execution` → One-Third Kelly, stop-loss calc, Monte Carlo, portfolio rebalance
 - `trade-journal-analyzer` → Post-trade drawdown classification
 
 ### Key Case Studies
@@ -163,13 +173,13 @@ CS-367 (High WR Supremacy), CS-461 (Multi-Timeframe Cascade), CS-462 (Mean Rever
 
 ## Validated Patterns (Empirical)
 
-- [V] **High WR > High RR**: Variance Drag (V²/2) geometrically destroys low-WR portfolios. A 70% WR / 1:1 RR system dominates a 30% WR / 1:3 RR system over N>100 trades. | Reapply: Every system design.
-- [V] **Commission Drag Kills Edge**: 46% commission drag on FX vs 0% on oil CFDs. Switching arenas is a higher-EV move than optimizing entries. | Reapply: Every new instrument evaluation.
-- [V] **Half-Kelly is Maximum**: Full Kelly = theoretical ceiling (Carnot Engine). Half-Kelly = operational reality. | Reapply: Every position sizing calculation.
+- [V] **High WR > High RR**: Variance Drag (sigma^2/2 = Variance/2) geometrically destroys low-WR portfolios. A 70% WR / 1:1 RR system dominates a 30% WR / 1:3 RR system over N>100 trades. | Reapply: Every system design.
+- [V] **Commission Drag Kills Edge**: High round-trip FX commissions vs 0-commission instruments erode EV. Switching arenas can be a higher-EV move than optimizing entries. | Reapply: Every new instrument evaluation.
+- [V] **One-Third Kelly is Maximum**: Full Kelly = theoretical ceiling (50% P(halving)). Half-Kelly still carries 12.5% P(halving). One-Third Kelly (0.33x) = Law #1 compliant GTO ceiling (3.1% P(halving), 55.6% compounding). | Reapply: Every position sizing calculation.
 - [V] **Weekend Gaps are Non-Ergodic**: A single weekend gap can wipe weeks of gains. The expected cost of holding > expected gain. | Reapply: Every Friday.
 
 ## References
 
 - META_PATTERNS.md — MP-2 (Efficiency-Survival Inversion)
 - CS-560 — The Engine Map
-- [bionic-decision-engine](../therapeutic-ifs/SKILL.md) — Parent engine for non-capital decisions
+- [bionic-decision-engine](../decision/bionic-decision-engine/SKILL.md) — Parent engine for non-capital decisions

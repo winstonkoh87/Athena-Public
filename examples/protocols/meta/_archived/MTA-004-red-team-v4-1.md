@@ -9,7 +9,7 @@ graphrag_extracted: true
 last_updated: 2026-07-22
 ---
 
-# RED-TEAM REVIEW — v4.2 (Strategic Matrix)
+# RED-TEAM REVIEW — v4.1 (Strategic Matrix)
 >
 > **Purpose**: Adversarial audit and strategic expansion of any high-stakes artifact.
 > **Philosophy**: "It is not enough to find the flaws; we must architect the pivot."
@@ -22,7 +22,6 @@ last_updated: 2026-07-22
 * **Respects Physics**: Feasible within strict constraints of Time, Capital, Compute, and Energy. No "magic info" steps.
 * **Sycophancy**: Validating the user's existing bias to be "helpful" instead of accurate.
 * **Orphan Statistic**: A number presented without a source, denominator, or causal link.
-* **Survivorship Bias**: Assuming success is replicable by ignoring the invisible graveyard of failures.
 
 ---
 
@@ -33,9 +32,8 @@ Before reviewing, assume the "Alien Observer" stance and declare:
 1. **Thesis**: What is the core argument/frame of this artifact?
 2. **Falsification**: What specific metric/event would prove this wrong? (e.g., "Churn >4%")
 3. **Excluded Reality**: What valid perspective is strictly IGNORED here?
-4. **Reality Check**: What is the *unspoken* cultural narrative or meta-game here? (e.g., "Implied consent," "Face-saving," "Hidden debt").
 
-> *Do not proceed until these 4 are answered.*
+> *Do not proceed until these 3 are answered.*
 
 ---
 
@@ -45,9 +43,9 @@ Score the artifact against this matrix. **Start at 50%**. Deduct for vagueness.
 
 | Component | Weight | Criteria for Max Score | Score |
 |-----------|--------|------------------------|-------|
-| **Logic & Rigor** | **30%** | Deductively sound. Checks **Survivorship Bias** & **Sample Size (n>1)**. No orphan stats. | __ / 30 |
+| **Logic & Rigor** | **30%** | Deductively sound. No orphan stats. Causal links explicit. | __ / 30 |
 | **Bias Mitigation** | **20%** | Steelmans opposition. Checks for Sycophancy. | __ / 20 |
-| **Completeness** | **20%** | Addresses "The Victim". Covers **Edge Cases** (Cultural nuance/misinterpretation). | __ / 20 |
+| **Completeness** | **20%** | Addresses "The Victim". Covers edge cases. | __ / 20 |
 | **Strategic Align** | **15%** | Aligns with Law #1. Respects Physics. High Utility. | __ / 15 |
 | **Actionability** | **15%** | Recommendations are distinct, executable, and ranked. | __ / 15 |
 
@@ -62,10 +60,9 @@ Critique through these specific personas. **One concrete objection per lens.**
 
 | Lens | The Attack Question |
 |------|---------------------|
-| **The Skeptic** | "I disagree because this relies on **Survivorship Bias** or **Small Sample Size (n=1)**. Show me the graveyard." |
+| **The Skeptic** | "I disagree with premise X because [Strongest Counter-Argument]." |
 | **The Victim** | "This strategy harms me because [Negative Externalities]." |
-| **The Historian**| "This assumes current returns continue forever. What about **Mean Reversion**? Does this work in a bear market?" |
-| **The Anthropologist** | "You are missing the **Cultural Narrative**. What is the *implied* social contract here? (e.g., The 'Tinder Dinner' implication)." |
+| **The Historian**| "This exact mechanism failed in [Year/Context]. Why is this different?" |
 | **The Cynic** | "You are lying to yourself about [Hidden Incentive/Ego]." |
 | **The System** | "This ignores the 2nd order effect on [Broader Ecosystem]." |
 | **The Entropy** | "This will rot via [Vector] because [Reason]." |
@@ -103,7 +100,7 @@ Rank top 3 recommendations.
 
 ## PHASE 5: THE BLIND SPOT & KILL SWITCH
 
-1. "I am least confident about ______ because ______." (Check for **Survivorship Bias** here).
+1. "I am least confident about ______ because ______."
 2. **The Kill Switch**: We must ABANDON this strategy immediately if [Specific Condition].
 
 ---
@@ -116,4 +113,4 @@ Rank top 3 recommendations.
 
 ## Related Protocols
 
-- [Protocol 121: Decision Frameworks (MCDA / WEU / Pairwise)](../decision/DEC-121-mcda-eev-framework.md)
+- [Protocol 121: Decision Frameworks (MCDA / WEU / Pairwise)](../../decision/DEC-121-mcda-eev-framework.md)

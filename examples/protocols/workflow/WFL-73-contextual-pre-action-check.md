@@ -1,12 +1,7 @@
 ---
-created: 2025-12-15
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: contextual-pre-action-check
+name: contextual-pre-action-check
 description: Pre-action mental checklist to assess context before speaking or acting
-tags: [#communication, #context, #decision-making, #de-escalation, #strategic]
+tags: [communication, context, decision-making, de-escalation, strategic]
 created: 2025-12-15
 last_updated: 2026-07-22
 ---

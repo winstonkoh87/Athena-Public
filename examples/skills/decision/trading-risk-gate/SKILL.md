@@ -44,15 +44,15 @@ GATE 1: Law of Ruin          GATE 2: Ergodicity           GATE 3: WR Dominance
 
 ### Gate 2: Ergodicity Audit
 
-- Ensemble average ≠ Time average for non-ergodic processes
-- $P(\text{Survive } n \text{ trials}) = (1-r)^n$
-- Even 5% risk/trial = 0.6% survival after 100 trials
-- **VETO** if P(survival over all planned trials) < 80%
+- Ensemble average ≠ Time average for non-ergodic processes (Taleb / Ole Peters). Never accept ensemble odds for a time decision — you only get one trajectory.
+- Do NOT apply `(1 - r)^n` with `r = fraction risked per trade`; that formula applies only when `r` is the per-trial probability of a total wipeout event.
+- For stopped trading strategies, compute gambler's ruin (`RoR`) via `scripts/gto_exec.sh ruin ...`, `decision_screen(action='ruin', ...)`, or `zenith-execution` Monte Carlo (absorbing barrier at 0.2× capital).
+- **VETO** if P(ruin) > 5% (P(survival) < 95%) over the planned trial sequence.
 
 ### Gate 3: Win Rate Dominance
 
 - High WR / Low RR systems structurally dominate High RR / Low WR systems
-- Variance Drag ($V^2/2$) geometrically destroys low-WR portfolios
+- Variance Drag (`sigma^2 / 2 = Variance / 2`) geometrically destroys low-WR portfolios
 - Validates that the system's WR sustains the chosen RR structure
 
 ## Output

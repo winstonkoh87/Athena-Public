@@ -1,13 +1,13 @@
 ---
 name: silent-validator
-description: Forces a silent pre-computation phase (O1-style) before answering. Generates 3 paths, kills 2, and simulates reputation risk to minimize agreeableness and maximize correctness.
+description: Forces a silent pre-computation phase (System-2 chain-of-thought) before answering. Generates 3 paths, kills 2, and simulates reputation risk to minimize agreeableness and maximize correctness.
 ---
 
 # Development Execution Standard: The Silent Validator (Pre-Computation)
 
 > **Origin**: "God-Tier Prompt" Analysis (Reddit)
 > **Integration Date**: 13 December 2025
-> **Purpose**: To force the AI to "think before speaking" by simulating O1-style chain-of-thought (Wei et al., 2022) and reputation risk.
+> **Purpose**: To force the AI to "think before speaking" via structured System-2 chain-of-thought (Wei et al., 2022) and reputation risk.
 
 ---
 
@@ -88,7 +88,7 @@ However, your final answer must bear the *fingerprints* of this process:
 
 ## Referenced By
 
-* [Session 05 Log]()
+* Session 05 Log (historical archive)
 
 ---
 

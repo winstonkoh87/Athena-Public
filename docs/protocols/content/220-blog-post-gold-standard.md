@@ -63,7 +63,7 @@ This protocol defines the quality bar for blog posts on the author's portfolio. 
 ### Do
 
 - ✅ **Justified text** with `hyphens: auto`
-- ✅ **The 3-Sentence Rule**: Paragraphs $\le 3$ sentences (Strict Readability)
+- ✅ **The 3-Sentence Rule**: Paragraphs <= 3 sentences (Strict Readability)
 - ✅ **Specific, relatable examples** (not generic "imagine if...")
 - ✅ **Soften polarizing statements** (e.g., "prompting is table stakes" instead of "prompting is just typing")
 - ✅ **Acknowledge counterpoints** ("Yes, AI will eliminate some roles...")
@@ -82,7 +82,7 @@ This protocol defines the quality bar for blog posts on the author's portfolio. 
 
 ### CSS
 
-- External `style.css` for global styles (Follow [Protocol 221](./221-high-performance-ux-design.md) for UI/UX standards)
+- External `style.css` for global styles (Follow **Protocol 221: High-Performance UX Design** / `CNT-221` for UI/UX standards)
 - Inline styles only for targeted overrides (ToC, table caption)
 - `prefers-reduced-motion` support for animations
 

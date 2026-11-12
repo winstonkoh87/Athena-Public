@@ -29,8 +29,8 @@
 ┌──────────────────────────────────────────────┐
 │              Your Machine (Owned)             │
 │  ┌──────────┐  ┌──────────┐  ┌────────────┐  │
-│  │ Markdown  │  │ Session  │  │  Tag Index  │  │
-│  │  Files    │  │  Logs    │  │  (8K tags)  │  │
+│  │ Markdown  │  │ Session  │  │ FTS5 + Vec │  │
+│  │  Files    │  │  Logs    │  │  Indexes   │  │
 │  └────┬─────┘  └────┬─────┘  └──────┬─────┘  │
 │       └──────────────┼───────────────┘        │
 │                      ▼                        │
@@ -98,20 +98,16 @@ tags: [memory, search, mcp]
 | `embedding` | VECTOR(3072) | gemini-embedding-001 |
 | `metadata` | JSONB | Source file, tags, timestamp |
 
-### Tag Index (Markdown)
+### Lexical Index (SQLite FTS5)
 
-```text
-#memory → 47 files
-#search → 31 files
-#protocol → 122 files
-Total: 8,079 tags
-```
+- Local BM25 lexical search over indexed Markdown and workspace artifacts
+- Complements semantic pgvector search and `CANONICAL.md` keyword lookup via Weighted RRF (`k=60`)
 
 ---
 
-## 5. API Surface (MCP Server)
+## 5. API Surface (MCP Servers)
 
-18 tools + 2 resources via Model Context Protocol (`src/athena/mcp_server.py`).
+19 Athena tools + 2 resources (`src/athena/mcp_server.py`) plus 5 DuckDB SQL tools (`src/athena/duckdb_mcp_server.py`) via Model Context Protocol.
 
 | Tool | Permission | Latency |
 |------|-----------|---------|
@@ -132,7 +128,8 @@ Total: 8,079 tags
 | `context_gate` | read | < 50ms (cache hit) / 3–8s (uncached) |
 | `meta_awareness_check` | read | < 50ms |
 | `classify_turn` | read | instant |
-| `search_web` / `report_external_web_search` | read | < 1s |
+| `search_web` | read | < 1s |
+| `report_external_web_search` | read | instant |
 
 **Transport**: stdio (IDE integration) or SSE (remote access, port 8765).
 
@@ -141,17 +138,17 @@ Total: 8,079 tags
 ## 6. Search Architecture
 
 ```text
-Query → [Keyword Search (Tag Index)] ──┐
-                                        ├── RRF Fusion → Reranker → Results
-Query → [Semantic Search (pgvector)] ──┘
+Query → [BM25 FTS5 / CANONICAL / Filenames] ──┐
+                                              ├── RRF Fusion → Reranker → Results
+Query → [Semantic Search (pgvector)]       ──┘
 ```
 
 | Metric | Value |
 |--------|-------|
 | **Search MRR** | 0.472 (strict) / 0.755 (rerank-on A/B) |
 | **Latency** | < 50ms (cache hit) / ~15ms (reranker forward pass) / 3–8s (uncached pgvector) |
-| **Index Size** | 8,079 tags, 78MB vectors |
-| **Fusion Method** | Reciprocal Rank Fusion (RRF) with intent-specific weights |
+| **Channels** | 5 local channels (Canonical, pgvector, FTS5 BM25, Framework/KB, Filenames) + optional Web |
+| **Fusion Method** | Weighted Reciprocal Rank Fusion (RRF, k=60) with intent-specific weights |
 
 ---
 

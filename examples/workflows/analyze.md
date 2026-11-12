@@ -88,7 +88,7 @@ python3 .agent/scripts/auto_file_insights.py \
     --findings "<finding1>||<finding2>||<finding3>" \
     --patterns "<pattern1>||<pattern2>" \
     --relevance "<active project relevance>" \
-    --base-dir "/Users/[AUTHOR]/Project Athena"
+    --base-dir "/path/to/athena-workspace"
 ```
 
 Or write the case study manually if the findings are complex enough to warrant full narrative (like CS-552).

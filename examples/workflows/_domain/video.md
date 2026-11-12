@@ -22,7 +22,7 @@ tools:
 1. **Search Exocortex** for relevant context on the topic:
 
    ```bash
-   python3 Athena-Public/examples/scripts/smart_search.py "<topic>" --limit 5 --include-personal
+   python3 Athena-Public/examples/scripts/smart_search.py "<topic>" --limit 5 
    ```
 
 2. **Write the script** using this structure:

@@ -16,7 +16,7 @@ These triggers apply to ALL coding tasks.
 
 ### 🛑 Architecture & Scope
 
-* **If you are about to** add a new public method... **STOP**. Check `System_Manifest.md` first.
+* **If you are about to** add a new public method... **STOP**. Check `ARCHITECTURE.md` / `SPEC_SHEET.md` first.
 * **If you are about to** create a new top-level directory... **STOP**. Verify against `structure_map.py`.
 * **If you are about to** modify a file >300 lines... **STOP**. Propose a split/refactor first.
 

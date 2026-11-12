@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "athena-agent"
 version = "10.0.6"
-description = "Turn stateless LLMs into a stateful, compounding AI agent. Local-first persistent memory, quantitative decision screens, and governance harness across Claude Code, Antigravity, Cursor, and VS Code. Own the state. Rent the intelligence."
+description = "Athena — a local-first memory, decision engine, and governance harness for AI agents that helps you make better decisions with your own context. Persistent memory, structured reasoning, and governed AI agents that work across any LLM."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

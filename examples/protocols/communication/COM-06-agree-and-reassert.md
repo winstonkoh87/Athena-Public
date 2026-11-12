@@ -1,10 +1,5 @@
 ---
-created: 2025-12-10
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: agree-and-reassert
+name: agree-and-reassert
 description: Boundary-setting protocol that avoids escalation. Validates their reason, reasserts your feeling, then exits. For setting boundaries while preserving relationship.
 created: 2025-12-10
 last_updated: 2026-07-22

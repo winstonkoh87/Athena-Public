@@ -1,7 +1,6 @@
 ---
 created: 2025-12-24
 last_updated: 2026-09-05
-graphrag_extracted: true
 ---
 
 # Protocol 171: Cross-Model Validation (Tri-Lateral Iteration Engine)

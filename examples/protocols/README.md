@@ -7,7 +7,7 @@
 >
 > See [Creating Your Own Protocols](#creating-new-protocols) to build yours.
 
-**187 active protocols across 21 categories** — battle-tested thinking patterns that standardize how an AI agent reasons. (205 total including 18 archived protocols.)
+**170 active protocols across 22 categories** — battle-tested thinking patterns that standardize how an AI agent reasons. (192 total including 22 archived protocols.)
 
 ## Featured Protocols
 
@@ -29,13 +29,13 @@
 
 ## Categories
 
-### 🧭 Decision (28 protocols)
+### 🧭 Decision (20 protocols)
 
 Decision frameworks, reasoning patterns, multi-criteria analysis, risk assessment, ergodicity, commitment devices.
 
 [Browse Decision Protocols →](decision/)
 
-### 🏗️ Architecture (22 protocols)
+### 🏗️ Architecture (19 protocols)
 
 System design, token management, context handling, latency architecture, cognitive systems, intent classification, recovery patterns.
 
@@ -47,13 +47,13 @@ Problem framing, graph of thought, GTO execution, crisis triage, cross-domain we
 
 [Browse Reasoning Protocols →](reasoning/)
 
-### ⚙️ Engineering (18 protocols)
+### ⚙️ Engineering (14 protocols)
 
 Code patterns, TDD, vibe coding, git workflows, context compaction, infrastructure, micro-commits.
 
 [Browse Engineering Protocols →](engineering/)
 
-### 📋 Workflow (17 protocols)
+### 📋 Workflow (16 protocols)
 
 Agentic loops, multi-agent coordination, JIT context, handoff protocols, iteration patterns.
 
@@ -65,13 +65,13 @@ Analytical heuristics — BS detection, AI slop detection, form-substance gaps, 
 
 [Browse Pattern Detection Protocols →](pattern-detection/)
 
-### 🎯 Strategy (8 protocols)
+### 🎯 Strategy (9 protocols)
 
 Competitive positioning, min-max optimization, value trinity, business viability assessment, product-market fit.
 
 [Browse Strategy Protocols →](strategy/)
 
-### 🧠 Meta (8 protocols)
+### 🧠 Meta (5 protocols)
 
 Protocols about protocols — red team reviews, devil's advocate, self-improvement, auditing.
 
@@ -89,7 +89,7 @@ Spec-driven development, semantic search standards, structured decoding, project
 
 [Browse Coding Protocols →](coding/)
 
-### 🔬 Research (5 protocols)
+### 🔬 Research (6 protocols)
 
 Deep investigation, cyborg methodology, agentic absorption, research orchestration.
 
@@ -131,13 +131,25 @@ Marketplace listing optimization, SEO channel strategy, positioning frameworks.
 
 [Browse Marketing Protocols →](marketing/)
 
-### 🩺 Diagnostics (2 protocols)
+### 🩺 Diagnostics (1 protocol)
 
 Diagnostic-first refactoring and forensic analysis patterns.
 
 [Browse Diagnostics Protocols →](diagnostics/)
 
-### 🌏 Singapore (4 protocols)
+### 🧪 QA (1 protocol)
+
+Claim-evidence coupling and quality assurance verification gates.
+
+[Browse QA Protocols →](qa/)
+
+### ✨ Quality (1 protocol)
+
+Structural hygiene and de-sloppification passes.
+
+[Browse Quality Protocols →](quality/)
+
+### 🌏 Singapore (5 protocols)
 
 Region-specific social/institutional dynamics — face physics, exam-strategy compression, systemic-failure patterns.
 

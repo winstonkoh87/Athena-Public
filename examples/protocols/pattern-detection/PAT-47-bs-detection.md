@@ -1,10 +1,5 @@
 ---
-created: 2025-12-12
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: bs-detection-protocol
+name: bs-detection-protocol
 description: Systematic validation checklist for knowledge extraction. Identifies naming collisions, internal contradictions, operational friction, and psychological mismatches.
 created: 2025-12-12
 last_updated: 2026-07-22

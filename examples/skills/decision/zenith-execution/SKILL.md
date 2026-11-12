@@ -1,6 +1,6 @@
 ---
 name: zenith-execution
-description: "Unified trade execution suite: Half-Kelly sizing, stop-loss calculation, Monte Carlo simulation, and portfolio rebalancing. Absorbs: kelly-mandate, stop-loss-calc, monte-carlo-sim, portfolio-rebalancer."
+description: "Unified trade execution suite: One-Third Kelly sizing, stop-loss calculation, Monte Carlo simulation, and portfolio rebalancing. Absorbs: kelly-mandate, stop-loss-calc, monte-carlo-sim, portfolio-rebalancer."
 argument-hint: "setup | sizing | simulate | rebalance | optimize <ticker>"
 allowed-tools:
   - Read
@@ -23,12 +23,25 @@ Unified quantitative execution skill for High Win-Rate trading systems (Protocol
 
 ## Sub-Commands
 
-### 1. Position Sizing (Half-Kelly)
+### 1. Position Sizing: One-Third Kelly (0.33x) GTO Anchor
+
+#### Mathematical Foundation: MacLean, Thorp & Ziemba (2011) Continuous Drawdown Theorem
+
+```text
+P(Drawdown >= D) = (1 - D)^(2/c - 1)
+Growth Rate Kept: g(c) = c * (2 - c)
+```
+
+For 50% drawdown (`D = 0.50`):
+- **Full Kelly (1.00x)**: 100.0% growth, 50.0% P(down 50%) — Suicidal
+- **Half-Kelly (0.50x)**: 75.0% growth, 12.5% P(down 50%) — Violates Law #1 (`> 5%`)
+- **One-Third Kelly (0.33x)**: 55.6% growth, 3.1% P(down 50%) — **GTO Sweet Spot (Passes Law #1)**
+- **Quarter-Kelly (0.25x)**: 43.8% growth, 0.8% P(down 50%) — Defensive mode
 
 1. Demands Win Rate, Reward:Risk, and Total Capital.
-2. Computes Full Kelly (theoretical optimum).
-3. Halves it (Half-Kelly) for psychological variance and execution error.
-4. Hard caps at 10% regardless of edge.
+2. Computes Full Kelly (theoretical optimum): `f* = (bp - q) / b`.
+3. Scales by One-Third (`f = f* / 3`) per campaign (aggregate risk across all orders/layers) to satisfy Law #1 (`<= 5%` halving risk).
+4. Hard caps at 10% regardless of edge (and 1-2% operational floor per setup).
 
 ### 2. Stop-Loss (Structural Invalidation)
 

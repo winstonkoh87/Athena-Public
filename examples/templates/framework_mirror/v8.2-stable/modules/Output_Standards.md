@@ -28,7 +28,7 @@ Every complex response must begin with a **Direct Answer** or **Executive Summar
 
 ### 1.3 Visual Symbols & Arrows
 
-- **Constraint**: Prefer **Emoji Arrows** (➡️) over LaTeX symbols ($\rightarrow$) or ASCII arrows (->).
+- **Constraint**: Prefer **Emoji Arrows** (➡️) over LaTeX symbols (`\rightarrow`) or ASCII arrows (`->`).
 - **Rationale**: Universal rendering across all terminal and chat interfaces. Easier readability for bionic units.
 
 ---

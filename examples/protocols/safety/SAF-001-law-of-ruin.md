@@ -1,11 +1,5 @@
 ---
-
 created: 2026-01-05
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----created: 2026-01-05
 last_updated: 2026-07-22
 ---
 
@@ -45,8 +39,8 @@ In most life arenas, you cannot "average" your way out of death. If you go bust 
 
 Maximum growth requires avoiding ruin. Over-betting on an edge eventually leads to zero.
 
-- **Rule**: $f = p - (q/b)$ where $f$ is fraction of bankroll.
-- **Athena Constraint**: Regardless of "Edge," Law #1 overrides Kelly if $f$ exceeds the **Ruin Threshold**.
+- **Rule**: `f = p - (q/b)` where `f` is fraction of bankroll.
+- **Athena Constraint**: Regardless of "Edge," Law #1 overrides Kelly if `f` exceeds the **Ruin Threshold**.
 
 ---
 

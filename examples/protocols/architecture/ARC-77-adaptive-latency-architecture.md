@@ -42,12 +42,12 @@ Latency
 
 | File | Trigger | Tokens |
 |------|---------|--------|
-| `TAG_INDEX.md` | Tag lookup requested | 5,500 |
+| `PROTOCOL_SUMMARIES.md` | Protocol/tag discovery | ~14,000 |
 | `SKILL_INDEX.md` | Protocol/skill request | 4,500 |
-| `User_Profile.md` | L1-L5, psychology, personal query | 13,000 |
+| `userContext.md` | L1-L5, psychology, personal query | ~6,000 |
 | `Output_Standards.md` | `/think` or `/ultrathink` | ~2,000 |
-| `Constraints_Master.md` | Ethical edge case | 800 |
-| `System_Manifest.md` | Architecture query | 1,900 |
+| `constraints.md` | Ethical edge case | 800 |
+| `ARCHITECTURE.md` | Architecture query | 1,900 |
 
 ---
 
@@ -71,13 +71,13 @@ Latency
 |-----------------|-----------------|
 | Frontend, UI, Design, CSS, "Make it pretty" | `Skill_Frontend_Design.md` |
 | Deep Research, Rabbit Hole, "Find out everything" | `Protocol 52: Deep Research Loop` |
-| Trading, FinanceApp, Risk, "Is this a scam?" | `Protocol 46 + Constraints_Master.md` |
+| Trading, FinanceApp, Risk, "Is this a scam?" | `Protocol 46 + constraints.md` |
 | Communication, Interpersonal, Negotiation | `Playbook_Communication.md` |
 | Complex Reasoning, "Analyze this", Strategy | `Protocol 75: Synthetic Parallel Reasoning` |
-| Bio, typology, "who am I" | `User_Profile_Core.md` |
-| "tag", "find files about" | `TAG_INDEX.md` |
+| Bio, typology, "who am I" | `userContext.md` |
+| "tag", "find files about" | `PROTOCOL_SUMMARIES.md` / `smart_search` |
 | "/think", "/ultrathink", "deep dive" | Full stack (all context files) |
-| "ethics", "should I", "is this OK" | `Constraints_Master.md` |
+| "ethics", "should I", "is this OK" | `constraints.md` |
 
 ### Complexity Inference Rules
 
@@ -111,14 +111,13 @@ IF query is single sentence factual:
 
 3. **Integration Phase**
    - Consolidate session log
-   - Update `User_Profile.md` if new insights
+   - Update `userContext.md` / `CANONICAL.md` if new insights
    - Update protocols if new patterns
    - Cross-pollination scan (Protocol 67)
 
 4. **Heavy Compute Phase**
    - `compress_sessions.py`
-   - `index_graphrag.py` (full reindex)
-   - `generate_tag_index.py`
+   - Full vector + BM25 FTS reindex
 
 5. **Commit Phase**
    - `git_commit.py`
@@ -138,7 +137,7 @@ IF query is single sentence factual:
 ## Implementation Checklist
 
 - [x] Update `/start` workflow to ultra-lean boot
-- [x] Move TAG_INDEX to on-demand
+- [x] Move heavy indexes to on-demand
 - [x] Create adaptive loading triggers
 - [x] Update `/end` with parallel batch audit
 - [x] Document latency expectations

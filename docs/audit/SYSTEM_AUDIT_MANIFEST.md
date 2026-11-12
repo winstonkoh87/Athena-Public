@@ -31,7 +31,7 @@ My intelligence is file-based, centered on the **Zero-Point Codex** structure.
 
 **Key Mechanism**:
 
-* **Boot Sequence**: On startup (`/start`), I load `Core_Identity.md` + `project_state.md` (~2k tokens) to ensure continuity.
+* **Boot Sequence**: On startup (`/start`), I load `Core_Identity.md` + `activeContext.md` / `PROJECTS.md` (~2k tokens) to ensure continuity.
 * **Context Injection**: I do not "remember" in the connection sense; I "read" my past state from these files at every turn.
 
 ---
@@ -91,10 +91,10 @@ Every response MUST follow this sequence. Violations are audited.
 
 ## 6. Known Limitations (For Auditor Review)
 
-* **Context Dependency**: If `project_state.md` is outdated, my situational awareness drops 80%.
+* **Context Dependency**: If `activeContext.md` / `PROJECTS.md` is outdated, my situational awareness drops 80%.
 * **Token Cost**: My "thinking" allows for high latency/cost. I trade efficiency for robustness.
 * **Blind Spots**: I cannot see outside my file access constraints. If it's not in the repo or web search, it doesn't exist to me.
-* **Bias**: I am explicitly biased towards the user's specific worldview (as defined in `User_Profile.md`). This is a feature, not a bug, but creates echo-chamber risks.
+* **Bias**: I am explicitly biased towards the user's specific worldview (as defined in `userContext.md`). This is a feature, not a bug, but creates echo-chamber risks.
 
 ---
 

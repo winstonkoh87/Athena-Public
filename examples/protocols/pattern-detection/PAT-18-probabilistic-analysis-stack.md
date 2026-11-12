@@ -1,10 +1,5 @@
 ---
-created: 2025-12-10
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: probabilistic-analysis-stack
+name: probabilistic-analysis-stack
 description: Three-level hierarchy - Scenario Analysis (3 timelines), Sensitivity Analysis (±20% perturbation), Monte Carlo (1000+ runs). Stack depth based on stakes and reversibility.
 created: 2025-12-10
 last_updated: 2026-07-22

@@ -64,13 +64,17 @@ This represents **Total Value Captured** at the Sovereign Point.
 
 ## The Formula: When to Stop Spending
 
-Given a Utility function $U(c)$ where $c$ is CapEx (Cost):
+Given a Utility function `U(c)` where `c` is CapEx (Cost):
 
-$$ S = \arg \max_{c} \left( \frac{U(c)}{c} \right) $$
+```text
+S = argmax_c (U(c) / c)
+```
 
-At this optimal point $S$, the **Marginal Utility** (the derivative) equals the **Average Utility** (the slope of the ray from the origin):
+At this optimal point `S`, the **Marginal Utility** (the derivative) equals the **Average Utility** (the slope of the ray from the origin):
 
-$$ U'(c) = \frac{U(c)}{c} $$
+```text
+U'(c) = U(c) / c
+```
 
 ### What This Means in Plain English
 
@@ -79,9 +83,9 @@ $$ U'(c) = \frac{U(c)}{c} $$
 
 | Zone | Condition | Action |
 |------|-----------|--------|
-| **Left of S** | $U'(c) > \frac{U(c)}{c}$ | Under-invested. Spend more. |
-| **At S** | $U'(c) = \frac{U(c)}{c}$ | **Optimal. Buy here.** |
-| **Right of S** | $U'(c) < \frac{U(c)}{c}$ | Diminishing returns. Stop. |
+| **Left of S** | `U'(c) > U(c) / c` | Under-invested. Spend more. |
+| **At S** | `U'(c) = U(c) / c` | **Optimal. Buy here.** |
+| **Right of S** | `U'(c) < U(c) / c` | Diminishing returns. Stop. |
 
 ---
 

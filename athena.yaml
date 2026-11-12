@@ -51,9 +51,9 @@ tools:
     - memory # Quicksave / session logging
     - browser # Web interaction
 
-  # Declarative tools: YAML definitions in tools/ directory
+  # Declarative tools: YAML definitions in examples/tools/ directory
   # Each .yaml file defines: name, description, input_schema, implementation
-  declarative_dir: "tools/"
+  declarative_dir: "examples/tools/"
 
 # ---------------------------------------------------------------------------
 # Skills — Composable instruction modules

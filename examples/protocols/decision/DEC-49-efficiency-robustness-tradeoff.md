@@ -1,10 +1,5 @@
 ---
-created: 2025-12-12
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: efficiency-robustness-tradeoff
+name: efficiency-robustness-tradeoff
 description: Explicit framework for choosing between efficiency (optimised for best case) and robustness (survivable in worst case). Forces conscious choice rather than magical thinking.
 created: 2025-12-12
 last_updated: 2026-07-22
@@ -35,7 +30,7 @@ Efficiency optimises for the best case. Robustness survives the worst case. Thes
 | **Pareto frontier** | The boundary where improving one dimension requires sacrificing another |
 | **COS Committee** | Council Operating System—multi-perspective reasoning (6 seats) |
 | **SoTA** | State-of-the-Art (current best-performing models) |
-| **TAG_INDEX** | Keyword-to-file mapping for deterministic retrieval |
+| **Canonical / Index** | Keyword-to-file mapping (`PROTOCOL_SUMMARIES.md` / `CANONICAL.md`) |
 
 ---
 
@@ -110,7 +105,7 @@ Athena defaults to **robustness-first** because the dominant constraint is **hum
 |-----------|-----------------|---------|---------------|
 | **Quicksave** | Prevent state loss / enable rollback | Checkpoint each turn | +latency, +writes |
 | **Semantic Search** | Prevent missing prior context | Forced retrieval (mandatory) | +tool calls |
-| **Dual-Path Search** | Reduce retrieval blind spots | Redundancy (vector + TAG_INDEX) | +latency, +compute |
+| **Dual-Path Search** | Reduce retrieval blind spots | Redundancy (vector + lexical FTS) | +latency, +compute |
 | **Verbose Boot** | Prevent persona drift / instruction loss | Full Core Identity on `/start` | +context budget |
 | **COS Committee** | Reduce single-path failure | Multi-perspective synthesis | +slower inference |
 | **Cross-Model Validation** | Reduce "confident wrong" answers | External SoTA audit | +audit latency |
@@ -138,7 +133,7 @@ These are accepted trade-offs. The design principle: *"When token cost is not th
 
 ### Degraded Mode
 
-If Supabase or external tools are degraded: fall back to local context + last-known TAG_INDEX snapshot. Robustness includes surviving partial outages.
+If Supabase or external tools are degraded: fall back to local SQLite FTS5 + `CANONICAL.md` / `PROTOCOL_SUMMARIES.md`. Robustness includes surviving partial outages.
 
 ---
 
@@ -277,7 +272,7 @@ This is robustness at SNIPER-speed. The reasoning already happened when the prot
 
 ### 49.9.3 Parallel Execution (Concurrent Redundancy)
 
-When Semantic Search + TAG_INDEX lookup + web search run **simultaneously** rather than sequentially, you get **redundant retrieval** (robustness) at roughly the latency cost of **one** retrieval. The Dual-Path Search pattern in 49.3.5 isn't just redundancy—it's redundancy *without multiplicative latency*.
+When Semantic Search + Lexical FTS / Canonical lookup + web search run **simultaneously** rather than sequentially, you get **redundant retrieval** (robustness) at roughly the latency cost of **one** retrieval. The Dual-Path Search pattern in 49.3.5 isn't just redundancy—it's redundancy *without multiplicative latency*.
 
 ```text
 Sequential:  Search₁ (2s) → Search₂ (2s) → Search₃ (2s) = 6s total

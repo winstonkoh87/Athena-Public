@@ -77,5 +77,5 @@ Never: full conversation history, debug logs, unrelated research.
 
 - [Protocol 513: Context Isolation](../../../protocols/engineering/ENG-513-context-isolation.md)
 - [Protocol 43: Micro-Commit](../../../protocols/engineering/ENG-43-micro-commit-protocol.md)
-- `.context/memories/protocols/engineering/100-git-worktree-parallelism.md`
-- `.context/memories/protocols/architecture/409-parallel-worktree-orchestration.md`
+- [Protocol 100: Git Worktree Parallelism](../../../protocols/engineering/ENG-100-git-worktree-parallelism.md)
+- [Protocol 409: Parallel Worktree Orchestration](../../../../.framework/v8.2-stable/protocols/409_Parallel_Worktree_Orchestration.md)

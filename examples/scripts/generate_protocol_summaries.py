@@ -174,7 +174,7 @@ def extract_frontmatter(filepath: Path) -> dict[str, str]:
         clean_flat = re.sub(r"\s*\n+\s*", " ", clean).strip()
         clean_unbold = clean_flat.replace("**", "").strip()
         if re.match(
-            r"^(Source|Domain|Priority|Tags|Protocol|Definition|Status|Version|Updated|Created|Last[ _]Updated|Category|Type|Reference|Dependencies)\s*:",
+            r"^(?:(?:⚠️|ℹ️)\s*)?(Source|Domain|Priority|Tags|Protocol|Definition|Status|Version|Updated|Created|Last[ _]Updated|Category|Type|Reference|Dependencies|ID[ _-]note|Redirect)\s*:",
             clean_unbold,
             re.IGNORECASE,
         ):

@@ -1,10 +1,5 @@
 ---
-created: 2025-12-13
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----description: Prevent Centaur Mode failure via integrated granular iterative AI collaboration. Sentence-level friction vs task-level delegation. Jagged Frontier defense.
+description: Prevent Centaur Mode failure via integrated granular iterative AI collaboration. Sentence-level friction vs task-level delegation. Jagged Frontier defense.
 created: 2025-12-13
 last_updated: 2026-07-22
 ---

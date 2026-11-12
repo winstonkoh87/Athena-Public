@@ -33,7 +33,7 @@ The pre-commit hook will auto-scan, but the agent MUST also:
 ```bash
 # MANDATORY: Verify remote target
 git remote -v
-# Must show: origin  https://github.com/[AUTHOR]87/Athena-Public.git
+# Must show: origin  https://github.com/winstonkoh87/Athena-Public.git
 ```
 
 // turbo

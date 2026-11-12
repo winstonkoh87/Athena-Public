@@ -1,10 +1,5 @@
 ---
-created: 2025-12-10
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----name: third-party-displacement
+name: third-party-displacement
 description: Technique for delivering hard truths without triggering defences. Uses displaced address ("investors who..." instead of "you...") to bypass identity threat.
 created: 2025-12-10
 last_updated: 2026-07-22

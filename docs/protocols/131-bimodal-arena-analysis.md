@@ -125,8 +125,8 @@ Sequence by dependencies:
 
 ## Visualization Assets
 
-- [Social Curves]()
-- [Business Curves]()
+- Social Curves (bimodal overlap diagram)
+- Business Curves (red vs. blue distribution diagram)
 
 ---
 

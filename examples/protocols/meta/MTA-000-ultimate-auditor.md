@@ -1,7 +1,6 @@
 ---
 created: 2026-01-05
 last_updated: 2026-07-22
-graphrag_extracted: true
 ---
 
 # Protocol 000: The Ultimate Auditor (Adversarial Self-Correction)

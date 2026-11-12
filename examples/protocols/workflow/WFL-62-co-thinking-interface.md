@@ -1,11 +1,6 @@
 ---
-created: 2025-12-14
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----tags: [protocol, reasoning, interface, collaboration]
 description: Forces AI to switch from "Answer Machine" to "Thinking Partner" for vague or high-stakes queries.
+tags: [protocol, reasoning, interface, collaboration]
 created: 2025-12-14
 last_updated: 2026-07-22
 ---

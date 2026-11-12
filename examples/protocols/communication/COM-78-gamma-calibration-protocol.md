@@ -1,11 +1,5 @@
 ---
-
 created: 2025-12-14
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----created: 2025-12-14
 last_updated: 2026-07-22
 ---
 

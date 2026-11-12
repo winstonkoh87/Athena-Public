@@ -1,10 +1,5 @@
 ---
-created: 2025-12-27
-last_updated: 2026-07-22
-graphrag_extracted: true
----
-
----id: 202
+id: 202
 title: Recovery Patterns
 category: architecture
 created: 2025-12-27
@@ -33,7 +28,7 @@ Failures are inevitable. The question is: **how fast can you recover?**
 
 | Symptom | Recovery |
 |---------|----------|
-| Supabase unreachable | Fallback to local grep search + TAG_INDEX.md |
+| Supabase unreachable | Fallback to local SQLite FTS5 / grep search + `CANONICAL.md` |
 | GitHub push fails | Stage changes, report, attempt retry on next commit |
 | External URL timeout | Report "source unavailable", proceed with cached/prior knowledge |
 

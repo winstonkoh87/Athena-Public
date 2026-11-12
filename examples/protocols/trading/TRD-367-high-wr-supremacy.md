@@ -1,8 +1,7 @@
 ---
+tags: ["protocol", "trading", "mathematics", "psychology", "variance-drag", "expected-value"]
 created: 2026-02-23
 last_updated: 2026-07-22
-graphrag_extracted: true
-tags: ["protocol", "trading", "mathematics", "psychology", "variance-drag", "expected-value"]
 ---
 
 # Protocol 367: High Win-Rate Supremacy
@@ -24,13 +23,16 @@ The conventional retail advice is to "find 1:3 RR setups so you only need to win
 ## 2. The Mathematical Layer: Volatility Drag
 
 Expected Value (EV) is only half the equation for success. The formula for geometric compounding is:
-$$ Growth \approx EV - \frac{Variance^2}{2} $$
+
+```text
+Growth ≈ EV - (sigma^2 / 2) = EV - Variance / 2
+```
 
 ### The 1:3 RR Trap (The Grinder)
 
 - **Profile**: Win 30%, Lose 70%. Payoff is 3:1.
 - **The Delusion**: "My EV is positive, therefore I win."
-- **The Reality**: Because Variance ($V$) is huge (you will hit 10-20 consecutive losses strictly due to the 70% loss rate), the $-\frac{Variance^2}{2}$ term becomes massive. It drags the compounding line down, effectively demanding microscopic position sizing (tiny Kelly fraction) just to survive the drawdowns.
+- **The Reality**: Because Variance (`V = sigma^2`) is huge (you will hit 10-20 consecutive losses strictly due to the 70% loss rate), the `-Variance / 2` term becomes massive. It drags the compounding line down, effectively demanding microscopic position sizing (tiny Kelly fraction) just to survive the drawdowns.
 
 ### The High WR Supremacy
 
@@ -78,14 +80,14 @@ Comparing two positive Expected Value (EV) systems on a simplified Roulette mode
 
 - **EV**: +20.0% edge
 
-- **Variance ($V$)**: 2.160
-- **Kelly Sizing (Max Safe Bet)**: 10.0% (Half-Kelly: 5.0%)
+- **Variance (V)**: 2.160
+- **Kelly Sizing (Theoretical f* vs Law #1 Cap)**: 10.0% full Kelly (One-Third Kelly 0.33x ceiling: 3.3%; Half-Kelly 5.0% exceeds Law #1 <= 5% ruin threshold on drawdowns)
 - **Physics**: Despite a massive EV, losing 60% of outcomes guarantees long drawdown sequences. Variance drag forces small bet sizing to avoid ruin.
 
 ### System B: The High WR Supremacy (75% Win Rate, 2:3 Payout)
 
 - **EV**: +25.0% edge
 
-- **Variance ($V$)**: 0.520
-- **Kelly Sizing (Max Safe Bet)**: 37.5% (Half-Kelly: 18.75%)
-- **Physics**: Scaling the win-rate (while sacrificing the payout size) collapses the Variance by exactly >4X. Because variance acts as a destructive square in compounding equations ($V^2/2$), **minimizing variance is more important than maximizing payout ratios**. This collapse allows for significantly larger safe position sizing while aggressively smoothing the equity curve.
+- **Variance (V)**: 0.520
+- **Kelly Sizing (Theoretical f* vs Law #1 Cap)**: 37.5% full Kelly (One-Third Kelly 0.33x ceiling: 12.5%, subject to 4% hard per-trade risk cap; Half-Kelly 18.75% exceeds Law #1)
+- **Physics**: Scaling the win-rate (while sacrificing the payout size) collapses the Variance by exactly >4X. Because variance enters the compounding equation directly as drag (`sigma^2 / 2 = Variance / 2` — here `0.52/2 ≈ 0.26` for B vs `2.16/2 ≈ 1.08` for A), **minimizing variance is more important than maximizing payout ratios**. This collapse allows for significantly larger safe position sizing while aggressively smoothing the equity curve.

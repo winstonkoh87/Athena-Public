@@ -23,13 +23,13 @@ Any change to one lever drastically alters the mathematical constraints of the o
 
 * **Function**: Determines the Reward-to-Risk (RR) ratio.
 * **Trade-off**: High TP = High RR, but mathematically crushes WR. Low TP = Low RR, but guarantees high WR.
-* **The Principle**: As established in Protocol 367, high WR structures are mathematically superior for retail operators due to the collapse of Variance Drag ($V^2/2$).
+* **The Principle**: As established in Protocol 367, high WR structures are mathematically superior for retail operators due to the collapse of Variance Drag (`sigma^2 / 2 = Variance / 2`).
 
 ### 3. Position Size (The Variance Multiplier)
 
 * **Function**: The total capital at risk.
 * **Trade-off**: Determines the amplitude of the compounding curve.
-* **The Math**: Must be governed by Kelly or Half-Kelly fractional sizing. Over-sizing turns a positive EV system into an inevitable ruin scenario.
+* **The Math**: Must be governed by One-Third Kelly (0.33x GTO ceiling per Law #1) or Quarter-Kelly fractional sizing. Over-sizing turns a positive EV system into an inevitable ruin scenario.
 
 ### 4. Layering: Flat vs Martingale (The Entry Optimizer)
 

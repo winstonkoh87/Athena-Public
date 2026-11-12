@@ -123,7 +123,7 @@ Skills are separate files, loaded on-demand via **conditional activation** (`con
 
 ```text
 .agent/skills/
-├── protocols/          # 402 active + 34 archived = 436 total (24 categories)
+├── protocols/          # 410 active + 51 archived = 461 total (26 categories)
 │   ├── decision/
 │   ├── safety/
 │   ├── architecture/
@@ -131,7 +131,7 @@ Skills are separate files, loaded on-demand via **conditional activation** (`con
 ├── red-team-review/    # Always-on skills (10)
 ├── semantic-search/
 ├── data-analysis/
-└── ...                 # 41 active skills total
+└── ...                 # 44 active skills total
 ```
 
 ```mermaid

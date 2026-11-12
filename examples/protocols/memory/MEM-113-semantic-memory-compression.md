@@ -76,7 +76,7 @@ Constraints:
 
 ## 3. Storage Schema
 
-Store facts in `.context/memory_bank/user_profile.md` (for User) or `.context/memory_bank/project_state.md` (for Projects).
+Store facts in `.context/memory_bank/userContext.md` (for User) or `.context/PROJECTS.md` (for Projects).
 
 **Example Entry**:
 

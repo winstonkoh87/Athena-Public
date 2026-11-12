@@ -1,13 +1,13 @@
 ---
 description: 4-step pipeline for building premium websites with AI — Research → Copy → Design → Code
 created: 2026-03-20
-source: CS-540 (Luke Carter Anti-Slop Pipeline Steal)
+source: Anti-Slop Pipeline (Stolen Pattern)
 ---
 
 # /web-build — Premium Website Build Pipeline
 
 > **Philosophy**: Separation of concerns. Design AI ≠ Coding AI. Copy drives design, not the reverse.
-> **Source**: CS-540
+> **Source**: Anti-Slop Pipeline (Separation of design and coding AI concerns)
 
 ## Prerequisites
 
@@ -91,7 +91,6 @@ Before shipping, verify:
 
 ## Applicability
 
-- E9 [CLIENT] website phase (P2–P3)
-- Any future web design client work
+- Any web design client work
 - Personal site redesigns
 - Portfolio website updates

@@ -1,8 +1,6 @@
 ---
-
 created: 2026-02-28
 last_updated: 2026-07-22
-graphrag_extracted: false
 ---
 
 # Protocol 503: Cognitive Clusters (Skill Architecture Pattern)

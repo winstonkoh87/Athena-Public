@@ -103,7 +103,7 @@ Phase 4: QA         → #8 Adversarial QA
 Phase 1: GATE       → #3 Trading Risk Gate
                        (Law #1 check. Ruin probability. Ergodicity audit.)
 Phase 2: SIZE       → #4 Trading Execution
-                       (Half-Kelly sizing. Stop-loss. Entry mechanics.)
+                       (One-Third Kelly sizing. Stop-loss. Entry mechanics.)
 Phase 3: REVIEW     → #5 Trade Analytics
                        (Post-trade journal. Drawdown classification.)
 Phase 4: REFLECT    → #9 Strategic Reasoning

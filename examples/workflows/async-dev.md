@@ -28,7 +28,7 @@ python3 .agent/scripts/scaffold_feature.py "feature-name" "Description"
 Run this block to generate the plan.
 **Tag**: `#planning`
 
-1. **Context**: `python3 .agent/scripts/supabase_search.py "keywords"`
+1. **Context**: `python3 .agent/scripts/smart_search.py "keywords"`
 2. **Research**: Create `CODE_RESEARCH.md` in the feature directory.
 3. **Plan**: Create `IMPLEMENTATION_PLAN.md`.
 

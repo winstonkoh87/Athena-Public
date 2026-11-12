@@ -35,7 +35,7 @@ After loading the latest checkpoint from `activeContext.md`, scan `@pending` ite
 - If any item has been pending **7+ sessions**: include one neutral line in boot output: `ℹ️ Long-pending: [TASK] — N sessions.`
 - No escalation, no gate. The user decides what to act on.
 
-See [Protocol 528](../../docs/protocols/528-sandboxed-execution-modes.md).  
+See [Protocol 528](../../examples/protocols/architecture/ARC-528-execution-awareness.md).  
 
 ### Behavioral Accountability Surface (Grace Harper Model)
 

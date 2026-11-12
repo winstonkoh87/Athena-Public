@@ -1,7 +1,6 @@
 ---
 created: 2025-12-22
 last_updated: 2026-07-22
-graphrag_extracted: true
 ---
 
 # Protocol 137: Graph of Thoughts (GoT) Decision Application
