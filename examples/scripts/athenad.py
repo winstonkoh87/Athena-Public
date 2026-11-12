@@ -27,7 +27,11 @@ import time
 from pathlib import Path
 
 # --- CONFIGURATION ---
-PROJECT_ROOT = Path(__file__).resolve().parents[3]  # src/athena/core -> ROOT
+_here = Path(__file__).resolve()
+PROJECT_ROOT = next(
+    (d for d in _here.parents if (d / "pyproject.toml").exists() or (d / ".context").exists()),
+    _here.parents[2],
+)
 DB_PATH = PROJECT_ROOT / ".agent" / "inputs" / "athena.db"
 SCHEMA_PATH = Path(__file__).resolve().parent / "schema.sql"
 

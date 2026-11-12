@@ -24,11 +24,12 @@ from pathlib import Path
 # ─── Config ──────────────────────────────────────────────────────────
 
 ROOT = Path(__file__).resolve().parent.parent.parent  # Project Athena root
+_DEFAULT_PROTOCOLS_DIR = ROOT / ".agent" / "skills" / "protocols"
 SESSION_LOGS_DIR = ROOT / ".context" / "memories" / "session_logs"
 ACTIVE_CONTEXT = ROOT / ".context" / "memory_bank" / "activeContext.md"
 HEATMAP_MD = ROOT / ".context" / "PROTOCOL_HEATMAP.md"
 HEATMAP_JSON = ROOT / ".context" / "protocol_heatmap.json"
-PROTOCOLS_DIR = ROOT / ".agent" / "skills" / "protocols"
+PROTOCOLS_DIR = _DEFAULT_PROTOCOLS_DIR
 SKILLS_DIR = ROOT / ".agent" / "skills"
 WORKFLOWS_DIR = ROOT / ".agent" / "workflows"
 
@@ -121,15 +122,62 @@ def scan_all_sessions() -> tuple[dict, int]:
 
 # ─── Known Protocols Registry ────────────────────────────────────────
 
+_PROTOCOL_FILENAME_RE = re.compile(r"^(?:[A-Za-z]+-(?:[A-Za-z]+-)?)?(\d+)(?=[-_.]|$)")
+
+
+def _iter_active_protocol_files() -> list[Path]:
+    """Collect active protocol Markdown files across populated roots."""
+    src_dir = ROOT / "src"
+    if src_dir.is_dir() and str(src_dir) not in sys.path:
+        sys.path.insert(0, str(src_dir))
+
+    # Respect direct PROTOCOLS_DIR monkeypatches if overridden from default
+    search_bases: list[Path] = []
+    if PROTOCOLS_DIR != _DEFAULT_PROTOCOLS_DIR:
+        search_bases.append(PROTOCOLS_DIR)
+
+    try:
+        from athena.core.config import get_protocol_dirs
+
+        search_bases.extend(get_protocol_dirs(ROOT))
+    except ImportError:
+        search_bases.extend([
+            ROOT / ".agent" / "skills" / "protocols",
+            ROOT / "examples" / "protocols",
+        ])
+        fw_dir = ROOT / ".framework"
+        if fw_dir.is_dir():
+            for child in sorted(fw_dir.iterdir()):
+                if child.is_dir() and not child.name.startswith("."):
+                    search_bases.append(child / "protocols")
+
+    ignored_dirs = {"_archived", "archive"}
+    ignored_files = {"README.md", "INDEX.md"}
+    files: list[Path] = []
+    seen: set[Path] = set()
+    for base in search_bases:
+        if not base.is_dir():
+            continue
+        for proto_file in sorted(base.rglob("*.md")):
+            if proto_file.name in ignored_files or proto_file.name.startswith("."):
+                continue
+            rel_parts = proto_file.relative_to(base).parts
+            if any(part in ignored_dirs or part.startswith(".") for part in rel_parts[:-1]):
+                continue
+            resolved = proto_file.resolve()
+            if resolved not in seen:
+                seen.add(resolved)
+                files.append(proto_file)
+    return files
+
+
 def get_known_protocols() -> set:
-    """Get all protocol files in the protocols directory."""
+    """Get all active protocol IDs across populated protocol directories."""
     known = set()
-    if PROTOCOLS_DIR.exists():
-        for proto_file in PROTOCOLS_DIR.rglob("*.md"):
-            # Extract protocol number from filename like 528-execution-enforcement.md
-            match = re.match(r'^(\d+)', proto_file.name)
-            if match:
-                known.add(f"P{match.group(1).zfill(3)}")
+    for proto_file in _iter_active_protocol_files():
+        match = _PROTOCOL_FILENAME_RE.match(proto_file.stem)
+        if match:
+            known.add(f"P{match.group(1).zfill(3)}")
     return known
 
 

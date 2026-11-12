@@ -19,10 +19,17 @@ from datetime import datetime
 from pathlib import Path
 
 # Configuration
-WORKSPACE = Path(__file__).resolve().parent.parent.parent
+_here = Path(__file__).resolve()
+WORKSPACE = next(
+    (d for d in _here.parents if (d / "pyproject.toml").exists() or (d / ".context").exists()),
+    _here.parents[2],
+)
 PROTOCOLS_DIR = WORKSPACE / ".agent" / "skills" / "protocols"
-PUBLIC_PROTOCOLS_DIR = WORKSPACE.parent / "Athena-Public" / "examples" / "protocols"
+PUBLIC_PROTOCOLS_DIR = WORKSPACE / "examples" / "protocols"
+FRAMEWORK_PROTOCOLS_GLOB = WORKSPACE / ".framework"
 OUTPUT_PATH = WORKSPACE / ".context" / "PROTOCOL_SUMMARIES.md"
+_IGNORED_FILENAMES = {"README.md", "INDEX.md"}
+_IGNORED_DIRNAMES = {"archive", "_archived"}
 
 # CONCURRENCY LIMIT
 MAX_CONCURRENT_REQUESTS = 5  # Higher for Ollama (local)
@@ -126,9 +133,14 @@ Content (first 2000 chars):
             return "Protocol summary pending."
 
 
+_PROTOCOL_CODE_RE = re.compile(
+    r"^(?:[A-Za-z]+-(?:[A-Za-z]+-)?)?(\d+)(?=[-_.]|$)"
+)
+
+
 def parse_protocol_code(filename: str) -> str | None:
-    """Extract protocol code from filename."""
-    match = re.match(r"(\d+)-", filename)
+    """Extract numeric protocol code from filename (numeric, prefixed, or flat)."""
+    match = _PROTOCOL_CODE_RE.match(Path(filename).stem)
     return match.group(1) if match else None
 
 
@@ -142,26 +154,32 @@ async def main():
     print(f"📋 PROTOCOL COMPRESSION ({mode})")
     print("=" * 50)
 
-    # Collect protocol files
-    protocol_files = []
-    for dir_path in [PROTOCOLS_DIR, PUBLIC_PROTOCOLS_DIR]:
-        if dir_path.exists():
-            protocol_files.extend(list(dir_path.rglob("*.md")))
+    # Collect protocol files across active directories
+    candidate_dirs = [PROTOCOLS_DIR, PUBLIC_PROTOCOLS_DIR]
+    if FRAMEWORK_PROTOCOLS_GLOB.exists():
+        candidate_dirs.extend(sorted(FRAMEWORK_PROTOCOLS_GLOB.glob("*/protocols")))
 
-    # Deduplicate by protocol code, prioritizing private over public
+    protocol_files = []
+    for dir_path in candidate_dirs:
+        if not dir_path.exists():
+            continue
+        for f in sorted(dir_path.rglob("*.md")):
+            rel_parts = f.relative_to(dir_path).parts
+            if f.name in _IGNORED_FILENAMES or any(
+                part in _IGNORED_DIRNAMES for part in rel_parts[:-1]
+            ):
+                continue
+            protocol_files.append(f)
+
+    # Deduplicate by protocol code, prioritizing private (.agent/) over examples/framework
     id_to_file = {}
     for f in protocol_files:
         code = parse_protocol_code(f.name)
         if not code:
             continue
 
-        # If ID already exists, only replace if current file is in the private directory
-        if code not in id_to_file:
+        if code not in id_to_file or ".agent" in f.parts:
             id_to_file[code] = f
-        else:
-            # Check if current file is private (lives in .agent/)
-            if ".agent" in str(f):
-                id_to_file[code] = f
 
     # Convert back to list and sort
     protocol_files = sorted(

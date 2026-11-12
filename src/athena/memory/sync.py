@@ -181,7 +181,10 @@ def _enrich_data_by_table(data: dict, file_path: Path, table_name: str, meta: di
             int(session_num_match.group(1)) if session_num_match else 1
         )
     elif table_name == "protocols":
-        code_match = re.match(r"(\d+)", file_path.name)
+        code_match = re.match(
+            r"^(?:[A-Za-z]+-(?:[A-Za-z]+-)?)?(\d+)(?=[-_.]|$)",
+            file_path.stem,
+        )
         data["code"] = code_match.group(1) if code_match else "000"
         data["name"] = file_path.stem
     elif table_name == "case_studies":

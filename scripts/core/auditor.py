@@ -16,7 +16,11 @@ from enum import Enum
 from pathlib import Path
 
 # Find project root
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
+_here = Path(__file__).resolve()
+PROJECT_ROOT = next(
+    (d for d in _here.parents if (d / "pyproject.toml").exists() or (d / ".context").exists()),
+    _here.parents[2],
+)
 AUDIT_LOG_DIR = PROJECT_ROOT / ".agent" / "audit"
 
 from dotenv import load_dotenv

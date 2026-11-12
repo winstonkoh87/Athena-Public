@@ -9,8 +9,11 @@ Generates and maintains the map of the workspace.
 Usage: python3 .agent/scripts/index_workspace.py
 """
 
+import argparse
+import importlib.util
 import os
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -93,52 +96,112 @@ def generate_tag_index():
     print(f"✅ Generated {TAG_INDEX_FILE}")
 
 
-def generate_protocol_summaries():
-    """Scans protocol folders and builds a compressed summary table."""
+def _load_summary_generator():
+    """Load generate_protocol_summaries helper module from the repo if available."""
+    for base in (PROJECT_ROOT, Path(__file__).resolve().parents[2]):
+        candidate = base / "examples" / "scripts" / "generate_protocol_summaries.py"
+        if candidate.is_file():
+            spec = importlib.util.spec_from_file_location("generate_protocol_summaries", candidate)
+            if spec and spec.loader:
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                return module
+    return None
+
+
+def _iter_fallback_protocol_files(root: Path) -> list[Path]:
+    """Fallback active-protocol collector when generate_protocol_summaries.py is absent."""
+    src_dir = root / "src"
+    if src_dir.is_dir() and str(src_dir) not in sys.path:
+        sys.path.insert(0, str(src_dir))
+    try:
+        from athena.core.config import iter_protocol_files
+
+        return iter_protocol_files(root)
+    except ImportError:
+        pass
+
+    ignored_dirs = {"_archived", "archive"}
+    ignored_files = {"README.md", "INDEX.md"}
+    candidates = [
+        root / ".agent" / "skills" / "protocols",
+        root / "examples" / "protocols",
+    ]
+    fw_dir = root / ".framework"
+    if fw_dir.is_dir():
+        for child in sorted(fw_dir.iterdir()):
+            if child.is_dir() and not child.name.startswith("."):
+                candidates.append(child / "protocols")
+
+    files: list[Path] = []
+    seen: set[Path] = set()
+    for base in candidates:
+        if not base.is_dir():
+            continue
+        for md in sorted(base.rglob("*.md")):
+            if md.name in ignored_files or md.name.startswith("."):
+                continue
+            rel_parts = md.relative_to(base).parts
+            if any(p in ignored_dirs or p.startswith(".") for p in rel_parts[:-1]):
+                continue
+            resolved = md.resolve()
+            if resolved not in seen:
+                seen.add(resolved)
+                files.append(md)
+    return files
+
+
+def generate_protocol_summaries(force: bool = False):
+    """Delegate summary indexing to generate_protocol_summaries.py with safe fallback."""
+    generator = _load_summary_generator()
+    if generator is not None and hasattr(generator, "generate_summaries"):
+        generator.generate_summaries(
+            repo_root=PROJECT_ROOT,
+            output_file=PROTOCOL_SUMMARIES_FILE,
+            force=force,
+        )
+        return
+
     protocols = []
+    num_re = re.compile(r"^(?:[A-Za-z]+-(?:[A-Za-z]+-)?)?(\d+)(?=[-_.]|$)")
+    target_dir = Path(PROTOCOL_SUMMARIES_FILE).resolve().parent
 
-    for path in PROTOCOLS_DIR.rglob("*.md"):
+    for path in _iter_fallback_protocol_files(PROJECT_ROOT):
         try:
-            content = path.read_text(encoding="utf-8")
-            # Extract Code/Title
-            title_match = re.search(
-                r"^# (?:Protocol )?(\d+)[:.]?\s*(.*)", content, re.MULTILINE
+            content = path.read_text(encoding="utf-8", errors="ignore")
+            heading_match = re.search(
+                r"^#\s+(?:Protocol(?:\s+(?:[A-Za-z]+-)*\d+)?\s*[:.]?\s*)?(.*)",
+                content,
+                re.MULTILINE,
             )
-            if title_match:
-                code = title_match.group(1)
-                title = title_match.group(2).strip()
-            else:
-                code = "???"
-                title = path.stem
+            title = heading_match.group(1).strip() if heading_match and heading_match.group(1).strip() else path.stem
+            num_match = num_re.match(path.stem)
+            code = num_match.group(1) if num_match else "—"
 
-            # Extract Trigger (When)
             trigger_match = re.search(r"\*\*When\*\*:\s*(.*)", content)
             trigger = trigger_match.group(1).strip() if trigger_match else "---"
-
-            # Extract Summary
-            summary_match = re.search(
-                r"^#.*?$.*?^(.+)", content, re.MULTILINE | re.DOTALL
-            )
-            summary = (
-                summary_match.group(1).strip()[:100] + "..." if summary_match else "---"
-            )
+            rel_link = Path(os.path.relpath(path, target_dir)).as_posix()
 
             protocols.append(
                 {
                     "code": code,
                     "title": title,
                     "trigger": trigger,
-                    "summary": summary,
-                    "path": path.relative_to(PROJECT_ROOT),
+                    "summary": "---",
+                    "path": rel_link,
                 }
             )
         except Exception:
             continue
 
-    # Sort by code
-    protocols.sort(key=lambda x: x["code"])
+    if not protocols and not force:
+        if PROTOCOL_SUMMARIES_FILE.exists():
+            print(f"⚠️ No active protocols found; preserved existing {PROTOCOL_SUMMARIES_FILE}")
+        else:
+            print(f"⚠️ No active protocols found under {PROJECT_ROOT}; skipped writing {PROTOCOL_SUMMARIES_FILE}")
+        return
 
-    # Write PROTOCOL_SUMMARIES.md
+    protocols.sort(key=lambda x: x["code"])
     output = [
         "# Protocol Summaries (Compressed)\n",
         f"> **Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n",
@@ -152,11 +215,19 @@ def generate_protocol_summaries():
         row = f"| {p['code']} | [{p['title']}]({p['path']}) | {p['trigger']} | {p['summary']} |"
         output.append(row)
 
-    PROTOCOL_SUMMARIES_FILE.write_text("\n".join(output))
+    PROTOCOL_SUMMARIES_FILE.parent.mkdir(parents=True, exist_ok=True)
+    PROTOCOL_SUMMARIES_FILE.write_text("\n".join(output), encoding="utf-8")
     print(f"✅ Generated {PROTOCOL_SUMMARIES_FILE}")
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Build TAG_INDEX.md and PROTOCOL_SUMMARIES.md")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Write PROTOCOL_SUMMARIES.md even if 0 active protocols are discovered",
+    )
+    args = parser.parse_args()
     CONTEXT_DIR.mkdir(parents=True, exist_ok=True)
     generate_tag_index()
-    generate_protocol_summaries()
+    generate_protocol_summaries(force=args.force)

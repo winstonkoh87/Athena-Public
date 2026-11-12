@@ -35,8 +35,8 @@ START_REF_FILE = PROJECT_ROOT / ".context" / ".session_start_ref"
 
 # File categories for auto-classification
 CATEGORIES = {
-    "protocols": [".agent/skills/protocols/"],
-    "workflows": [".agent/workflows/"],
+    "protocols": [".agent/skills/protocols/", "examples/protocols/", ".framework/"],
+    "workflows": [".agent/workflows/", "examples/workflows/"],
     "memory_bank": [".context/memory_bank/"],
     "session_logs": [".context/memories/session_logs/"],
     "insights": [".context/memories/insights/"],

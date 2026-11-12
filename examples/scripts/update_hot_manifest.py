@@ -39,16 +39,21 @@ def get_recent_files(limit=5):
     files = []
     search_dirs = [
         PROJECT_ROOT / ".agent" / "skills" / "protocols",
+        PROJECT_ROOT / "examples" / "protocols",
         PROJECT_ROOT / ".context" / "memories" / "session_logs",
         PROJECT_ROOT / ".framework" / "v8.2-stable" / "modules",
+        *sorted((PROJECT_ROOT / ".framework").glob("*/protocols")),
     ]
 
     all_files = []
     for d in search_dirs:
         if d.exists():
             for f in d.glob("**/*.md"):
-                # Skip archive folders
-                if "archive" in str(f):
+                rel_parts = f.relative_to(d).parts
+                # Skip archive folders and directory index stubs
+                if f.name in {"README.md", "INDEX.md"} or any(
+                    part in {"archive", "_archived"} for part in rel_parts[:-1]
+                ):
                     continue
                 all_files.append((f, f.stat().st_mtime))
 

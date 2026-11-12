@@ -260,7 +260,15 @@ class AthenaRetriever(RRFPipeline):
 
     def __init__(self):
         super().__init__()
-        self.project_root = Path(__file__).resolve().parents[4]
+        _here = Path(__file__).resolve()
+        self.project_root = next(
+            (
+                d
+                for d in _here.parents
+                if (d / "pyproject.toml").exists() or (d / ".context").exists()
+            ),
+            _here.parents[3],
+        )
         self.tag_shards = [
             self.project_root / ".context" / "TAG_INDEX_A-M.md",
             self.project_root / ".context" / "TAG_INDEX_N-Z.md",
@@ -342,17 +350,29 @@ class AthenaRetriever(RRFPipeline):
         results = []
         query_lower = query.lower().replace(" ", "_")
 
-        search_dirs = [
+        protocol_dirs = [
+            self.project_root / ".agent" / "skills" / "protocols",
             self.project_root / ".agent" / "protocols",
+            self.project_root / "examples" / "protocols",
+        ]
+        search_dirs = [
+            *protocol_dirs,
             self.project_root / ".context",
             self.project_root / ".framework",
         ]
 
+        seen: set[Path] = set()
         for search_dir in search_dirs:
             if not search_dir.exists():
                 continue
             for path in search_dir.rglob("*.md"):
-                if query_lower in path.stem.lower():
+                rel_parts = path.relative_to(search_dir).parts
+                if any(part in {"_archived", "archive"} for part in rel_parts[:-1]):
+                    continue
+                if path in seen:
+                    continue
+                seen.add(path)
+                if query_lower in path.stem.lower() or query_lower.replace("_", "-") in path.stem.lower():
                     results.append(
                         RetrievalResult(
                             content=f"File: {path.name}",

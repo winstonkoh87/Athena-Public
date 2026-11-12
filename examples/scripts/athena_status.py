@@ -44,6 +44,45 @@ def count_files(directory, pattern="*"):
     return len(list(path.glob(pattern)))
 
 
+def count_protocols(root: Path | None = None) -> int:
+    """Count active protocols across .agent/skills/protocols, examples/protocols, and .framework."""
+    base = Path(root).resolve() if root is not None else PROJECT_ROOT
+    src_dir = base / "src"
+    if src_dir.is_dir() and str(src_dir) not in sys.path:
+        sys.path.insert(0, str(src_dir))
+    try:
+        from athena.core.config import iter_protocol_files
+
+        return len(iter_protocol_files(base))
+    except ImportError:
+        pass
+
+    ignored_dirs = {"_archived", "archive"}
+    ignored_files = {"README.md", "INDEX.md"}
+    candidates = [
+        base / ".agent" / "skills" / "protocols",
+        base / "examples" / "protocols",
+    ]
+    fw_dir = base / ".framework"
+    if fw_dir.is_dir():
+        for child in sorted(fw_dir.iterdir()):
+            if child.is_dir() and not child.name.startswith("."):
+                candidates.append(child / "protocols")
+
+    seen: set[Path] = set()
+    for proto_dir in candidates:
+        if not proto_dir.is_dir():
+            continue
+        for md_file in proto_dir.rglob("*.md"):
+            if md_file.name in ignored_files or md_file.name.startswith("."):
+                continue
+            rel_parts = md_file.relative_to(proto_dir).parts
+            if any(p in ignored_dirs or p.startswith(".") for p in rel_parts[:-1]):
+                continue
+            seen.add(md_file.resolve())
+    return len(seen)
+
+
 def get_recent_sessions(limit=5):
     path = PROJECT_ROOT / ".context/memories/session_logs/"
     if not path.exists():
@@ -110,7 +149,7 @@ def main():
     print(f"{CYAN}{'━' * 60}{RESET}")
 
     # Section: Core Metrics
-    protocols = count_files(".agent/skills/protocols", "**/*.md")
+    protocols = count_protocols(PROJECT_ROOT)
     sessions = count_files(".context/memories/session_logs", "*.md")
     scripts = count_files(".agent/scripts", "*.py")
     health = get_system_health()

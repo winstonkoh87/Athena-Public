@@ -63,7 +63,15 @@ class KnowledgeGraphParser:
     def __init__(self, graph_path: Path | None = None):
         if graph_path is None:
             # Default location
-            project_root = Path(__file__).resolve().parents[4]
+            _here = Path(__file__).resolve()
+            project_root = next(
+                (
+                    d
+                    for d in _here.parents
+                    if (d / "pyproject.toml").exists() or (d / ".context").exists()
+                ),
+                _here.parents[3],
+            )
             graph_path = project_root / ".context" / "KNOWLEDGE_GRAPH.md"
 
         self.graph_path = graph_path

@@ -85,18 +85,36 @@ TEMPLATE = '''# {title}
 '''
 
 
-def get_next_protocol_number():
-    """Finds the next available protocol number."""
-    if not os.path.exists(PROTOCOLS_DIR):
-        return 1
+def _get_protocol_dirs():
+    """Return existing protocol root directories in priority order."""
+    candidates = [
+        PROTOCOLS_DIR,
+        os.path.join(PROJECT_ROOT, "examples", "protocols"),
+    ]
+    fw_root = os.path.join(PROJECT_ROOT, ".framework")
+    if os.path.isdir(fw_root):
+        for entry in sorted(os.listdir(fw_root)):
+            pdir = os.path.join(fw_root, entry, "protocols")
+            if os.path.isdir(pdir):
+                candidates.append(pdir)
+    return [d for d in candidates if os.path.isdir(d)]
 
-    files = os.listdir(PROTOCOLS_DIR)
+
+def get_next_protocol_number():
+    """Finds the next available protocol number across all active protocol dirs."""
+    id_re = re.compile(r'^(?:[A-Za-z]+-(?:[A-Za-z]+-)?)?(\d+)(?=[-_.]|$)')
+    ignored_dirs = {"archive", "_archived"}
     numbers = []
 
-    for f in files:
-        match = re.match(r'^(\d+)-', f)
-        if match:
-            numbers.append(int(match.group(1)))
+    for base_dir in _get_protocol_dirs():
+        for root, dirs, files in os.walk(base_dir):
+            dirs[:] = [d for d in dirs if d not in ignored_dirs]
+            for f in files:
+                if not f.endswith(".md") or f in {"README.md", "INDEX.md"}:
+                    continue
+                match = id_re.match(os.path.splitext(f)[0])
+                if match:
+                    numbers.append(int(match.group(1)))
 
     return max(numbers) + 1 if numbers else 1
 

@@ -58,10 +58,54 @@ INPUTS_DIR = CONTEXT_DIR / "inputs"
 # === UNIFIED MEMORY CONFIGURATION ===
 # These directories are the "Active Memory" for VectorRAG and local search.
 
+IGNORED_PROTOCOL_FILENAMES = {"README.md", "INDEX.md"}
+IGNORED_PROTOCOL_DIRNAMES = {"archive", "_archived"}
+
+
+def get_protocol_dirs(root: Path | None = None) -> list[Path]:
+    """Return populated protocol directories in priority order."""
+    base = root or PROJECT_ROOT
+    candidates: list[Path] = [
+        base / ".agent" / "skills" / "protocols",
+        base / "examples" / "protocols",
+    ]
+    fw_dir = base / ".framework"
+    if fw_dir.exists():
+        candidates.extend(sorted(fw_dir.glob("*/protocols")))
+
+    populated: list[Path] = []
+    for directory in candidates:
+        if not directory.exists() or not directory.is_dir():
+            continue
+        has_active_md = any(
+            p.name not in IGNORED_PROTOCOL_FILENAMES
+            and not any(
+                part in IGNORED_PROTOCOL_DIRNAMES
+                for part in p.relative_to(directory).parts[:-1]
+            )
+            for p in directory.rglob("*.md")
+        )
+        if has_active_md:
+            populated.append(directory)
+    return populated
+
+
+def get_protocols_dir(root: Path | None = None) -> Path:
+    """Return primary populated protocols directory, or examples/.agent fallback."""
+    populated = get_protocol_dirs(root)
+    if populated:
+        return populated[0]
+    base = root or PROJECT_ROOT
+    examples_protocols = base / "examples" / "protocols"
+    if examples_protocols.exists():
+        return examples_protocols
+    return base / ".agent" / "skills" / "protocols"
+
+
 CORE_DIRS = {
     "sessions": SESSIONS_DIR,
     "case_studies": MEMORIES_DIR / "case_studies",
-    "protocols": AGENT_DIR / "skills" / "protocols",
+    "protocols": get_protocols_dir(),
     "capabilities": AGENT_DIR / "skills" / "capabilities",
     "workflows": AGENT_DIR / "workflows",
     "system_docs": FRAMEWORK_DIR / "v8.2-stable" / "modules",
@@ -87,6 +131,7 @@ EXTENDED_DIRS = [
 def get_active_memory_paths():
     """Returns a deduplicated list of all active memory directory Paths."""
     paths = [p for p in CORE_DIRS.values() if p.exists()]
+    paths.extend(get_protocol_dirs())
     paths.extend([p for p, _ in EXTENDED_DIRS if p.exists()])
     return sorted(set(paths))
 

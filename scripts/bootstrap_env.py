@@ -26,7 +26,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_here = Path(__file__).resolve()
+PROJECT_ROOT = next(
+    (d for d in _here.parents if (d / "pyproject.toml").exists() or (d / ".context").exists()),
+    _here.parents[1],
+)
 VENV_DIR = PROJECT_ROOT / ".venv"
 VENV_PYTHON = VENV_DIR / "bin" / "python3"
 LOCKFILE = PROJECT_ROOT / ".agent" / "config" / "requirements.lock"

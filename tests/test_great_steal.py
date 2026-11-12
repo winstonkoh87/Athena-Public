@@ -11,18 +11,17 @@ Tests the three features extracted from OpenClaw:
 Usage: python3 -m pytest Athena-Public/tests/test_great_steal.py -v
 """
 
-import os
 import sys
 from pathlib import Path
 
 import pytest
 
-# Add project root to path
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT / "Athena-Public" / "src"))
-
-# Set ATHENA_ROOT so config.py finds the right root
-os.environ["ATHENA_ROOT"] = str(PROJECT_ROOT)
+# Add repo src to sys.path without mutating global ATHENA_ROOT for other tests
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = REPO_ROOT / "src"
+if not SRC_DIR.exists():
+    SRC_DIR = REPO_ROOT.parent / "Athena-Public" / "src"
+sys.path.insert(0, str(SRC_DIR))
 
 
 # =============================================

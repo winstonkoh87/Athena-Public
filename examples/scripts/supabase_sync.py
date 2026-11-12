@@ -29,12 +29,26 @@ _save_lock = threading.Lock()
 
 # Target Configuration
 MEMORY_DIR = PROJECT_ROOT / ".context" / "memories"
+def _resolve_populated_dir(*candidates: Path) -> Path:
+    """Return the first candidate directory containing at least one .md file."""
+    for candidate in candidates:
+        if candidate.exists() and any(candidate.rglob("*.md")):
+            return candidate
+    return candidates[0]
+
+
 TARGET_DIRS = {
     "sessions": MEMORY_DIR / "session_logs",
     "case_studies": MEMORY_DIR / "case_studies",
-    "protocols": PROJECT_ROOT / ".agent" / "skills" / "protocols",
+    "protocols": _resolve_populated_dir(
+        PROJECT_ROOT / ".agent" / "skills" / "protocols",
+        PROJECT_ROOT / "examples" / "protocols",
+    ),
     "capabilities": PROJECT_ROOT / ".agent" / "skills" / "capabilities",
-    "workflows": PROJECT_ROOT / ".agent" / "workflows",
+    "workflows": _resolve_populated_dir(
+        PROJECT_ROOT / ".agent" / "workflows",
+        PROJECT_ROOT / "examples" / "workflows",
+    ),
     "system_docs": PROJECT_ROOT / ".framework" / "v8.2-stable" / "modules",
     "playbooks": PROJECT_ROOT / ".context" / "playbooks",
     "references": PROJECT_ROOT / ".context" / "references",
@@ -152,7 +166,7 @@ def sync_workspace(force: bool = False):
                     continue
                 # Archive pollution guard: never index dead/frozen content. Archived
                 # material must not surface in live retrieval.
-                if "/archive" in str(f).replace("\\", "/"):
+                if "/archive" in str(f).replace("\\", "/") or "/_archived" in str(f).replace("\\", "/"):
                     continue
                 all_tasks.append((f, table))
 
@@ -161,7 +175,7 @@ def sync_workspace(force: bool = False):
         if folder.exists():
             files = list(folder.glob("**/*.md"))
             for f in files:
-                if "/archive" in str(f).replace("\\", "/"):
+                if "/archive" in str(f).replace("\\", "/") or "/_archived" in str(f).replace("\\", "/"):
                     continue
                 all_tasks.append((f, table))
 

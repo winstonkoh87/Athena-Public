@@ -17,6 +17,8 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
+from athena.core.config import get_protocol_dirs, iter_protocol_files
+
 # ── ANSI Colors ──
 CYAN = "\033[96m"
 GREEN = "\033[92m"
@@ -47,7 +49,7 @@ FILE_REF_PATTERNS = [
 SEARCH_DIRS = [
     PROJECT_ROOT / ".context" / "memories" / "case_studies",
     PROJECT_ROOT / ".context" / "memories" / "insights",
-    PROJECT_ROOT / ".agent" / "skills" / "protocols",
+    *get_protocol_dirs(PROJECT_ROOT),
     PROJECT_ROOT / ".context" / "memory_bank",
     PROJECT_ROOT / "docs",
 ]
@@ -90,26 +92,47 @@ def extract_session_date(filename: str) -> datetime | None:
 
 def find_referenced_file(ref: str) -> Path | None:
     """Search for a referenced file across known directories."""
-    for search_dir in SEARCH_DIRS:
-        if not search_dir.exists():
-            continue
-        # Direct match
+    direct_repo = PROJECT_ROOT / ref
+    if direct_repo.is_file():
+        return direct_repo
+
+    search_dirs: list[Path] = []
+    seen: set[Path] = set()
+    for d in [*SEARCH_DIRS, *get_protocol_dirs(PROJECT_ROOT)]:
+        if d.exists() and d not in seen:
+            seen.add(d)
+            search_dirs.append(d)
+
+    ref_name = Path(ref).name
+    for search_dir in search_dirs:
         candidate = search_dir / ref
-        if candidate.exists():
+        if candidate.is_file():
             return candidate
-        # Recursive search
-        for match in search_dir.rglob(ref):
-            return match
+        for match in sorted(search_dir.rglob(ref_name)):
+            if match.is_file():
+                return match
     return None
 
 
 def resolve_protocol_ref(protocol_num: str) -> Path | None:
-    """Resolve a protocol number like '162' to its file path."""
-    protocols_dir = PROJECT_ROOT / ".agent" / "skills" / "protocols"
-    if not protocols_dir.exists():
+    """Resolve a protocol number like '162', '530', or '409' to its file path."""
+    raw = str(protocol_num).strip()
+    if not raw:
         return None
-    for match in protocols_dir.rglob(f"*{protocol_num}*"):
-        if match.suffix == ".md":
+    if raw.isdigit():
+        normalized = raw.lstrip("0") or "0"
+        pattern = re.compile(
+            rf"^(?:[A-Za-z]+-(?:[A-Za-z]+-)?)?0*{re.escape(normalized)}(?=[-_.]|$)",
+            re.IGNORECASE,
+        )
+    else:
+        pattern = re.compile(
+            rf"(?:^|[-_]){re.escape(raw)}(?=[-_.]|$)",
+            re.IGNORECASE,
+        )
+
+    for match in iter_protocol_files(PROJECT_ROOT):
+        if pattern.search(match.stem):
             return match
     return None
 

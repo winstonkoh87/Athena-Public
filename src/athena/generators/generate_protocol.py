@@ -4,6 +4,7 @@ Protocol Generator
 Describe a rough idea → get a full workflow.md with phases and turbo annotations.
 """
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -17,50 +18,61 @@ load_dotenv()
 WORKFLOWS_DIR = Path(".agent/workflows")
 PROTOCOLS_DIR = Path(".agent/skills/protocols")
 
+_IGNORED_FILENAMES = {"README.md", "INDEX.md"}
+_IGNORED_DIRNAMES = {"archive", "_archived"}
+_PROTOCOL_ID_RE = re.compile(
+    r"^(?:[A-Za-z]+-(?:[A-Za-z]+-)?)?(\d+)(?=[-_.]|$)"
+)
+
+
+def _discover_protocol_dirs() -> list[Path]:
+    """Return populated or candidate protocol directories in CWD."""
+    candidates = [PROTOCOLS_DIR, Path("examples/protocols")]
+    fw_dir = Path(".framework")
+    if fw_dir.exists():
+        candidates.extend(sorted(fw_dir.glob("*/protocols")))
+    return [d for d in candidates if d.exists() and d.is_dir()]
+
+
+def _iter_protocol_files() -> list[tuple[Path, Path]]:
+    """Yield (base_dir, protocol_file) across discovered protocol directories."""
+    results: list[tuple[Path, Path]] = []
+    for base_dir in _discover_protocol_dirs():
+        for f in sorted(base_dir.rglob("*.md")):
+            rel_parts = f.relative_to(base_dir).parts
+            if f.name in _IGNORED_FILENAMES or any(
+                part in _IGNORED_DIRNAMES for part in rel_parts[:-1]
+            ):
+                continue
+            results.append((base_dir, f))
+    return results
+
+
+def _extract_protocol_id(stem: str) -> int | None:
+    """Extract numeric protocol ID from numeric, prefixed, or flat names."""
+    match = _PROTOCOL_ID_RE.match(stem)
+    return int(match.group(1)) if match else None
+
+
 def get_existing_protocol_ids() -> set:
     """Scan all protocol directories for existing IDs."""
     ids: set[int] = set()
-    if not PROTOCOLS_DIR.exists():
-        return ids
-
-    for subdir in PROTOCOLS_DIR.iterdir():
-        if subdir.is_dir():
-            for f in subdir.glob("*.md"):
-                # Extract ID from filename like "108-bionic-operational-physics.md"
-                name = f.stem
-                if "-" in name:
-                    id_part = name.split("-")[0]
-                    if id_part.isdigit():
-                        ids.add(int(id_part))
-
-    # Also check root protocols
-    for f in PROTOCOLS_DIR.glob("*.md"):
-        name = f.stem
-        if "-" in name:
-            id_part = name.split("-")[0]
-            if id_part.isdigit():
-                ids.add(int(id_part))
-
+    for _base_dir, f in _iter_protocol_files():
+        pid = _extract_protocol_id(f.stem)
+        if pid is not None:
+            ids.add(pid)
     return ids
+
 
 def check_for_collisions():
     """Check for duplicate protocol IDs across directories."""
-    id_locations = {}
+    id_locations: dict[int, list[str]] = {}
+    for _base_dir, f in _iter_protocol_files():
+        pid = _extract_protocol_id(f.stem)
+        if pid is not None:
+            id_locations.setdefault(pid, []).append(str(f))
 
-    for subdir in PROTOCOLS_DIR.iterdir():
-        if subdir.is_dir():
-            for f in subdir.glob("*.md"):
-                name = f.stem
-                if "-" in name:
-                    id_part = name.split("-")[0]
-                    if id_part.isdigit():
-                        pid = int(id_part)
-                        if pid not in id_locations:
-                            id_locations[pid] = []
-                        id_locations[pid].append(str(f.relative_to(PROTOCOLS_DIR)))
-
-    collisions = {k: v for k, v in id_locations.items() if len(v) > 1}
-    return collisions
+    return {k: v for k, v in id_locations.items() if len(v) > 1}
 
 SYSTEM_PROMPT = """You are a workflow architect for the Athena AI system. Given a rough description, generate a complete workflow file.
 

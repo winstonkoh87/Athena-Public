@@ -10,7 +10,11 @@ import sys
 from pathlib import Path
 
 # Add project root to path
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_here = Path(__file__).resolve()
+PROJECT_ROOT = next(
+    (d for d in _here.parents if (d / "pyproject.toml").exists() or (d / ".context").exists()),
+    _here.parents[1],
+)
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 try:

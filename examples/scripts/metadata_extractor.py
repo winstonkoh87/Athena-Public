@@ -16,10 +16,20 @@ import os
 import re
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+_here = Path(__file__).resolve()
+PROJECT_ROOT = next(
+    (d for d in _here.parents if (d / "pyproject.toml").exists() or (d / ".context").exists()),
+    _here.parents[2],
+)
 PROTOCOLS_DIR = PROJECT_ROOT / ".agent" / "skills" / "protocols"
+PUBLIC_PROTOCOLS_DIR = PROJECT_ROOT / "examples" / "protocols"
 CASE_STUDIES_DIR = PROJECT_ROOT / ".context" / "memories" / "case_studies"
 REGISTRY_PATH = PROJECT_ROOT / ".agent" / "protocols.json"
+_IGNORED_FILENAMES = {"README.md", "INDEX.md"}
+_IGNORED_DIRNAMES = {"archive", "_archived"}
+_PROTOCOL_NAME_RE = re.compile(
+    r"^(?:[A-Za-z]+-(?:[A-Za-z]+-)?)?(\d+)[-_](.+)\.md$"
+)
 
 # Heuristic Maps
 KEYWORD_MAP = {
@@ -43,14 +53,14 @@ def extract_metadata(filepath):
         with open(filepath, encoding='utf-8') as f:
             content = f.read(2000) # Read first 2k chars
 
-        # Extract ID and Name from filename
+        # Extract ID and Name from filename (numeric, prefixed, or flat)
         filename = filepath.name
-        match = re.match(r'(\d+)-(.+)\.md', filename)
+        match = _PROTOCOL_NAME_RE.match(filename)
         if not match:
             return None
 
         pid = match.group(1)
-        name_slug = match.group(2).replace("-", " ").title()
+        name_slug = match.group(2).replace("-", " ").replace("_", " ").title()
 
         # Extract Real Name from H1
         h1_match = re.search(r'^# Protocol \d+: (.+)$', content, re.MULTILINE)
@@ -134,8 +144,18 @@ def extract_case_study_metadata(filepath):
         print(f"Error parsing case study {filepath}: {e}")
         return None
 
+def _iter_protocol_dirs() -> list[Path]:
+    """Return existing protocol directories in priority order."""
+    dirs = [PROTOCOLS_DIR, PUBLIC_PROTOCOLS_DIR]
+    fw_dir = PROJECT_ROOT / ".framework"
+    if fw_dir.exists():
+        dirs.extend(sorted(fw_dir.glob("*/protocols")))
+    return [d for d in dirs if d.exists() and d.is_dir()]
+
+
 def main():
-    if not PROTOCOLS_DIR.exists():
+    protocol_dirs = _iter_protocol_dirs()
+    if not protocol_dirs:
         print("Protocols dir not found.")
         return
 
@@ -148,23 +168,28 @@ def main():
     new_protocols = existing.copy()
     count = 0
 
-    for root, dirs, files in os.walk(PROTOCOLS_DIR):
-        for file in files:
-            if file.endswith(".md"):
-                path = Path(root) / file
-                meta = extract_metadata(path)
-                if meta:
-                    pid = meta["id"]
-                    # Only update if strict improvement or missing
-                    if pid not in new_protocols:
-                        new_protocols[pid] = meta
-                        count += 1
-                    else:
-                        # Merge tags (don't overwrite manual use cases if they exist)
-                        curr = new_protocols[pid]
-                        curr["context_tags"] = list(set(curr.get("context_tags", []) + meta["context_tags"]))
-                        if not curr.get("applied_use_cases"):
-                            curr["applied_use_cases"] = meta["applied_use_cases"]
+    for base_dir in protocol_dirs:
+        for path in sorted(base_dir.rglob("*.md")):
+            rel_parts = path.relative_to(base_dir).parts
+            if path.name in _IGNORED_FILENAMES or any(
+                part in _IGNORED_DIRNAMES for part in rel_parts[:-1]
+            ):
+                continue
+            meta = extract_metadata(path)
+            if meta:
+                pid = meta["id"]
+                # Only update if strict improvement or missing
+                if pid not in new_protocols:
+                    new_protocols[pid] = meta
+                    count += 1
+                else:
+                    # Merge tags (don't overwrite manual use cases if they exist)
+                    curr = new_protocols[pid]
+                    curr["context_tags"] = list(
+                        set(curr.get("context_tags", []) + meta["context_tags"])
+                    )
+                    if not curr.get("applied_use_cases"):
+                        curr["applied_use_cases"] = meta["applied_use_cases"]
 
     # Scan Case Studies
     if CASE_STUDIES_DIR.exists():

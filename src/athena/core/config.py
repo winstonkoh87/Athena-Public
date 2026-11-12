@@ -12,6 +12,85 @@ from typing import Any
 # Global Cache for PROJECT_ROOT
 _PROJECT_ROOT_CACHE: Path | None = None
 
+IGNORED_PROTOCOL_FILENAMES = frozenset({"README.md", "INDEX.md"})
+IGNORED_PROTOCOL_DIRNAMES = frozenset({"_archived", "archive"})
+
+
+def _is_active_protocol_markdown(path: Path, base_dir: Path) -> bool:
+    """Return True if path is an active protocol Markdown file under base_dir."""
+    if not path.is_file() or path.suffix != ".md":
+        return False
+    if path.name in IGNORED_PROTOCOL_FILENAMES or path.name.startswith("."):
+        return False
+    try:
+        rel_parts = path.relative_to(base_dir).parts
+    except ValueError:
+        return False
+    return not any(
+        part in IGNORED_PROTOCOL_DIRNAMES or part.startswith(".")
+        for part in rel_parts[:-1]
+    )
+
+
+def _has_protocol_markdown(directory: Path) -> bool:
+    """Return True if directory contains at least one active protocol file."""
+    if not directory.is_dir():
+        return False
+    return any(_is_active_protocol_markdown(p, directory) for p in directory.rglob("*.md"))
+
+
+def get_protocol_dirs(root: Path | None = None) -> list[Path]:
+    """Discover populated protocol directories across live, example, and framework trees."""
+    base = Path(root).resolve() if root is not None else PROJECT_ROOT
+    candidates: list[Path] = [
+        base / ".agent" / "skills" / "protocols",
+        base / "examples" / "protocols",
+    ]
+    framework_dir = base / ".framework"
+    if framework_dir.is_dir():
+        for child in sorted(framework_dir.iterdir()):
+            if child.is_dir() and not child.name.startswith("."):
+                candidates.append(child / "protocols")
+
+    found: list[Path] = []
+    seen: set[Path] = set()
+    for candidate in candidates:
+        if not _has_protocol_markdown(candidate):
+            continue
+        resolved = candidate.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        found.append(candidate)
+    return found
+
+
+def get_protocols_dir(root: Path | None = None) -> Path:
+    """Return the primary populated protocol directory, falling back cleanly."""
+    base = Path(root).resolve() if root is not None else PROJECT_ROOT
+    dirs = get_protocol_dirs(base)
+    if dirs:
+        return dirs[0]
+    examples_protocols = base / "examples" / "protocols"
+    if examples_protocols.is_dir():
+        return examples_protocols
+    return base / ".agent" / "skills" / "protocols"
+
+
+def iter_protocol_files(root: Path | None = None) -> list[Path]:
+    """Return active protocol Markdown files across populated dirs (priority-then-path order)."""
+    files: list[Path] = []
+    seen: set[Path] = set()
+    for proto_dir in get_protocol_dirs(root):
+        for md_file in sorted(proto_dir.rglob("*.md")):
+            if not _is_active_protocol_markdown(md_file, proto_dir):
+                continue
+            resolved = md_file.resolve()
+            if resolved not in seen:
+                seen.add(resolved)
+                files.append(md_file)
+    return files
+
 
 def set_project_root(root: Path | str | None) -> Path:
     """Explicitly set or reset the project root path and update global path constants."""
@@ -48,7 +127,7 @@ def set_project_root(root: Path | str | None) -> Path:
     CORE_DIRS = {
         "sessions": SESSIONS_DIR,
         "case_studies": MEMORIES_DIR / "case_studies",
-        "protocols": AGENT_DIR / "skills" / "protocols",
+        "protocols": get_protocols_dir(PROJECT_ROOT),
         "capabilities": AGENT_DIR / "skills" / "capabilities",
         "workflows": AGENT_DIR / "workflows",
         "system_docs": FRAMEWORK_DIR / "v8.2-stable" / "modules",
@@ -172,7 +251,7 @@ ATHENA_DB = AGENT_DIR / "inputs" / "athena.db"
 CORE_DIRS = {
     "sessions": SESSIONS_DIR,
     "case_studies": MEMORIES_DIR / "case_studies",
-    "protocols": AGENT_DIR / "skills" / "protocols",
+    "protocols": get_protocols_dir(PROJECT_ROOT),
     "capabilities": AGENT_DIR / "skills" / "capabilities",
     "workflows": AGENT_DIR / "workflows",
     "system_docs": FRAMEWORK_DIR / "v8.2-stable" / "modules",
@@ -191,6 +270,7 @@ EXTENDED_DIRS = [
 def get_active_memory_paths():
     """Returns a deduplicated list of all active memory directory Paths."""
     paths = [p for p in CORE_DIRS.values() if p.exists()]
+    paths.extend(get_protocol_dirs(PROJECT_ROOT))
     paths.extend([p for p, _ in EXTENDED_DIRS if p.exists()])
     return sorted(set(paths))
 

@@ -22,7 +22,7 @@ from datetime import datetime
 from pathlib import Path
 
 # Setup Path to import athena
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from athena.core.config import AGENT_DIR, CONTEXT_DIR, PROJECT_ROOT

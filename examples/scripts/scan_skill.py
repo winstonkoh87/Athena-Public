@@ -202,10 +202,26 @@ def find_skill_files(root: Path, recent_days: int = None) -> list[Path]:
         for f in (root / ".agent" / "skills").rglob("SKILL.md"):
             files.append(f)
 
-    # Protocols
-    if (root / ".agent" / "skills" / "protocols").exists():
-        for f in (root / ".agent" / "skills" / "protocols").rglob("*.md"):
-            files.append(f)
+    # Protocols (check .agent/skills/protocols, examples/protocols, .framework/*/protocols)
+    ignored_dirs = {"archive", "_archived"}
+    ignored_files = {"README.md", "INDEX.md"}
+    protocol_dirs = [
+        root / ".agent" / "skills" / "protocols",
+        root / "examples" / "protocols",
+        *(sorted((root / ".framework").glob("*/protocols")) if (root / ".framework").exists() else []),
+    ]
+    seen_files = set(files)
+    for pdir in protocol_dirs:
+        if pdir.exists():
+            for f in pdir.rglob("*.md"):
+                rel_parts = f.relative_to(pdir).parts
+                if f.name in ignored_files or any(
+                    part in ignored_dirs for part in rel_parts[:-1]
+                ):
+                    continue
+                if f not in seen_files:
+                    seen_files.add(f)
+                    files.append(f)
 
     # Filter by modification time if requested
     if recent_days is not None:

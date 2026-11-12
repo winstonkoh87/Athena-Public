@@ -14,19 +14,26 @@ from athena.core.config import PROJECT_ROOT
 WORKSPACE = PROJECT_ROOT
 WORKSPACE_URI = f"file://{WORKSPACE}"
 PROTOCOLS_DIR = WORKSPACE / ".agent" / "skills" / "protocols"
+PUBLIC_PROTOCOLS_DIR = WORKSPACE / "examples" / "protocols"
+
 
 def build_protocol_map():
     """Build mapping from protocol filename to actual path."""
     protocol_map = {}
-    for root, dirs, files in os.walk(PROTOCOLS_DIR):
-        # Skip graphrag_env
-        if 'graphrag_env' in root:
+    search_dirs = [PROTOCOLS_DIR, PUBLIC_PROTOCOLS_DIR]
+    fw_dir = WORKSPACE / ".framework"
+    if fw_dir.exists():
+        search_dirs.extend(sorted(fw_dir.glob("*/protocols")))
+
+    for base_dir in search_dirs:
+        if not base_dir.exists():
             continue
-        for f in files:
-            if f.endswith('.md'):
-                full_path = Path(root) / f
-                # Map both the basename and the old flat path
-                protocol_map[f] = full_path
+        for root, dirs, files in os.walk(base_dir):
+            dirs[:] = [d for d in dirs if d not in {"graphrag_env", "archive", "_archived"}]
+            for f in files:
+                if f.endswith('.md') and f not in {"README.md", "INDEX.md"}:
+                    full_path = Path(root) / f
+                    protocol_map.setdefault(f, full_path)
     return protocol_map
 
 def fix_links_in_file(filepath: Path, protocol_map: dict) -> int:
@@ -58,8 +65,8 @@ def fix_links_in_file(filepath: Path, protocol_map: dict) -> int:
 
 
     # Fix file:// links to protocols (regex needs dynamic handling if we want perfection, but strict old path logic is fine)
-    # We will relax the pattern to catch any file://.../protocols
-    pattern = r'file://.*?/\.agent/skills/protocols/([0-9]+-[a-z0-9-]+\.md)'
+    # We will relax the pattern to catch any file://.../protocols (numeric or prefixed)
+    pattern = r'file://.*?/\.agent/skills/protocols/((?:[A-Za-z]+-(?:[A-Za-z]+-)?)?[0-9]+-[a-z0-9-]+\.md)'
     content = re.sub(pattern, fix_protocol_link, content)
 
     # Also fix relative paths like ./agent/skills/protocols/XX-name.md
@@ -74,7 +81,7 @@ def fix_links_in_file(filepath: Path, protocol_map: dict) -> int:
             return new_link
         return match.group(0)
 
-    pattern2 = r'\./agent/skills/protocols/([0-9]+-[a-z0-9-]+\.md)'
+    pattern2 = r'\./agent/skills/protocols/((?:[A-Za-z]+-(?:[A-Za-z]+-)?)?[0-9]+-[a-z0-9-]+\.md)'
     content = re.sub(pattern2, fix_relative_link, content)
 
     # Fix .context/profile/ -> notes/profile/ path migration

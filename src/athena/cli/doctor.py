@@ -337,8 +337,13 @@ def check_05_session_integrity(root: Path, fix: bool = False) -> list[CheckResul
 
 def check_06_orphan_detection(root: Path, fix: bool = False) -> list[CheckResult]:
     """Quick orphan scan using existing orphan_detector.py."""
-    detector = root / ".agent" / "scripts" / "orphan_detector.py"
-    if not detector.exists():
+    candidates = (
+        root / ".agent" / "scripts" / "orphan_detector.py",
+        root / "scripts" / "orphan_detector.py",
+        root / "examples" / "scripts" / "orphan_detector.py",
+    )
+    detector = next((c for c in candidates if c.exists()), None)
+    if detector is None:
         return [CheckResult("Orphan Scan", SKIP, "orphan_detector.py not found")]
 
     code, output = _run([sys.executable, str(detector)], cwd=str(root), timeout=30)

@@ -74,7 +74,7 @@ fi
 echo -e "\n${BOLD}── Gate 2: Protocol Cap ──${NC}"
 
 PROTOCOL_CAP=500  # Customize per DISCIPLINE.md Rule 3
-PROTOCOL_DIRS=("${REPO_ROOT}/.agent/skills/protocols" "${REPO_ROOT}/examples/protocols")
+PROTOCOL_DIRS=("${REPO_ROOT}/.agent/skills/protocols" "${REPO_ROOT}/examples/protocols" "${REPO_ROOT}"/.framework/*/protocols)
 
 PROTOCOL_COUNT=0
 for pdir in "${PROTOCOL_DIRS[@]}"; do
@@ -115,10 +115,22 @@ echo -e "\n${BOLD}── Gate 4: Auto-Generate Indexes ──${NC}"
 
 STAGED_FILES=$(git diff --cached --name-only 2>/dev/null || true)
 
+# Helper to resolve script path across scripts/ and examples/scripts/
+_resolve_script() {
+    local name="$1"
+    for dir in "${REPO_ROOT}/scripts" "${REPO_ROOT}/examples/scripts"; do
+        if [[ -f "${dir}/${name}" ]]; then
+            echo "${dir}/${name}"
+            return 0
+        fi
+    done
+    return 1
+}
+
 # Regenerate protocol summaries if any protocol files changed
 if echo "$STAGED_FILES" | grep -qE '(protocols/|skills/protocols/).*\.md$'; then
-    if [[ -x "${REPO_ROOT}/scripts/generate_protocol_summaries.py" ]] || command -v python3 &>/dev/null; then
-        python3 "${REPO_ROOT}/scripts/generate_protocol_summaries.py" 2>/dev/null && \
+    if SUMMARY_SCRIPT=$(_resolve_script "generate_protocol_summaries.py") && command -v python3 &>/dev/null; then
+        python3 "$SUMMARY_SCRIPT" 2>/dev/null && \
             git add "${REPO_ROOT}/.context/PROTOCOL_SUMMARIES.md" 2>/dev/null && \
             log_ok "Regenerated PROTOCOL_SUMMARIES.md" || \
             log_warn "Protocol summary generation failed (non-blocking)"
@@ -127,8 +139,8 @@ fi
 
 # Regenerate skill index if any skill files changed
 if echo "$STAGED_FILES" | grep -qE 'skills/.*SKILL\.md$'; then
-    if [[ -x "${REPO_ROOT}/scripts/generate_skill_index.py" ]] || command -v python3 &>/dev/null; then
-        python3 "${REPO_ROOT}/scripts/generate_skill_index.py" 2>/dev/null && \
+    if SKILL_SCRIPT=$(_resolve_script "generate_skill_index.py") && command -v python3 &>/dev/null; then
+        python3 "$SKILL_SCRIPT" 2>/dev/null && \
             log_ok "Regenerated SKILL_INDEX.md" || \
             log_warn "Skill index generation failed (non-blocking)"
     fi
@@ -136,8 +148,8 @@ fi
 
 # Regenerate workflow index if any workflow files changed
 if echo "$STAGED_FILES" | grep -qE 'workflows/.*\.md$'; then
-    if [[ -x "${REPO_ROOT}/scripts/regenerate_workflow_index.py" ]] || command -v python3 &>/dev/null; then
-        python3 "${REPO_ROOT}/scripts/regenerate_workflow_index.py" 2>/dev/null && \
+    if WF_SCRIPT=$(_resolve_script "regenerate_workflow_index.py") && command -v python3 &>/dev/null; then
+        python3 "$WF_SCRIPT" 2>/dev/null && \
             log_ok "Regenerated workflow index" || \
             log_warn "Workflow index generation failed (non-blocking)"
     fi

@@ -16,7 +16,11 @@ from pathlib import Path
 from typing import Any
 
 # Find project root
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
+_here = Path(__file__).resolve()
+PROJECT_ROOT = next(
+    (d for d in _here.parents if (d / "pyproject.toml").exists() or (d / ".context").exists()),
+    _here.parents[2],
+)
 REFLECTIONS_DIR = PROJECT_ROOT / ".context" / "reflections"
 
 

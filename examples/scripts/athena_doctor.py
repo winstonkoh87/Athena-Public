@@ -167,40 +167,94 @@ def check_directory_structure(report: Report):
             )
 
 
+def _discover_active_protocol_files(project_root: Path) -> tuple[list[tuple[Path, Path]], bool]:
+    """Return ((proto_dir, md_file), any_dir_exists) across live, example, and framework dirs."""
+    src_dir = project_root / "src"
+    if src_dir.is_dir() and str(src_dir) not in sys.path:
+        sys.path.insert(0, str(src_dir))
+
+    candidates = [
+        project_root / ".agent" / "skills" / "protocols",
+        project_root / "examples" / "protocols",
+    ]
+    fw_dir = project_root / ".framework"
+    if fw_dir.is_dir():
+        for child in sorted(fw_dir.iterdir()):
+            if child.is_dir() and not child.name.startswith("."):
+                candidates.append(child / "protocols")
+    any_dir_exists = any(c.is_dir() for c in candidates)
+
+    try:
+        from athena.core.config import get_protocol_dirs, iter_protocol_files
+
+        dirs = get_protocol_dirs(project_root)
+        files = iter_protocol_files(project_root)
+        pairs = [
+            (next((d for d in dirs if f.is_relative_to(d)), f.parent), f)
+            for f in files
+        ]
+        return pairs, any_dir_exists
+    except ImportError:
+        pass
+
+    ignored_dirs = {"_archived", "archive"}
+    ignored_files = {"README.md", "INDEX.md"}
+    pairs: list[tuple[Path, Path]] = []
+    seen: set[Path] = set()
+    for proto_dir in candidates:
+        if not proto_dir.is_dir():
+            continue
+        for md_file in sorted(proto_dir.rglob("*.md")):
+            if md_file.name in ignored_files or md_file.name.startswith("."):
+                continue
+            rel_parts = md_file.relative_to(proto_dir).parts
+            if any(part in ignored_dirs or part.startswith(".") for part in rel_parts[:-1]):
+                continue
+            resolved = md_file.resolve()
+            if resolved not in seen:
+                seen.add(resolved)
+                pairs.append((proto_dir, md_file))
+    return pairs, any_dir_exists
+
+
 def check_protocols(report: Report):
     """Count and validate protocol files."""
-    # Auto-detect: private repo uses .agent/skills/protocols, public uses examples/protocols
-    protocols_dir = PROJECT_ROOT / ".agent" / "skills" / "protocols"
-    if not protocols_dir.exists():
-        protocols_dir = PROJECT_ROOT / "examples" / "protocols"
-    if not protocols_dir.exists():
+    pairs, any_dir_exists = _discover_active_protocol_files(PROJECT_ROOT)
+    if not any_dir_exists:
         report.add(Finding("Protocols", "fail", "Protocol directory missing"))
         return
+    if not pairs:
+        report.add(
+            Finding(
+                "Protocols",
+                "fail",
+                "0 active protocols found across protocol directories",
+                fix="Populate .agent/skills/protocols or keep examples/protocols intact",
+            )
+        )
+        return
 
-    # Count by category
-    categories = {}
-    total = 0
-    empty_protocols = []
+    categories: dict[str, int] = {}
+    empty_protocols: list[str] = []
 
-    for category_dir in sorted(protocols_dir.iterdir()):
-        if category_dir.is_dir():
-            files = list(category_dir.glob("*.md"))
-            categories[category_dir.name] = len(files)
-            total += len(files)
+    for proto_dir, f in pairs:
+        rel_parts = f.relative_to(proto_dir).parts
+        if len(rel_parts) > 1:
+            cat = rel_parts[0]
+        elif proto_dir.parent.parent.name == ".framework":
+            cat = "framework"
+        else:
+            cat = "general"
+        categories[cat] = categories.get(cat, 0) + 1
 
-            # Check for empty protocols
-            for f in files:
-                try:
-                    content = f.read_text(encoding="utf-8", errors="ignore")
-                    if len(content.strip()) < 50:
-                        empty_protocols.append(f.name)
-                except Exception:
-                    pass
+        try:
+            content = f.read_text(encoding="utf-8", errors="ignore")
+            if len(content.strip()) < 50:
+                empty_protocols.append(f.name)
+        except Exception:
+            pass
 
-    # Also count root-level protocol files
-    root_protocols = list(protocols_dir.glob("*.md"))
-    total += len(root_protocols)
-
+    total = len(pairs)
     report.add(
         Finding(
             "Protocols",
@@ -222,12 +276,21 @@ def check_protocols(report: Report):
 
 def check_workflows(report: Report):
     """Count and validate workflow files."""
-    workflows_dir = PROJECT_ROOT / ".agent" / "workflows"
-    if not workflows_dir.exists():
-        report.add(Finding("Workflows", "fail", "Workflows directory missing"))
+    candidates = (
+        PROJECT_ROOT / ".agent" / "workflows",
+        PROJECT_ROOT / "examples" / "workflows",
+    )
+    workflows: list[Path] = []
+    for candidate in candidates:
+        if candidate.exists():
+            found = list(candidate.glob("*.md"))
+            if found:
+                workflows = found
+                break
+    if not workflows:
+        report.add(Finding("Workflows", "fail", "Workflows directory missing or empty"))
         return
 
-    workflows = list(workflows_dir.glob("*.md"))
     report.add(Finding("Workflows", "pass", f"{len(workflows)} workflows defined"))
 
     # Check for workflows missing frontmatter
@@ -270,7 +333,7 @@ def check_dead_links(report: Report):
             content = md_file.read_text(encoding="utf-8", errors="ignore")
             for match in link_pattern.finditer(content):
                 link = match.group(1).split("#")[0].strip()
-                if not link:
+                if not link or (link.startswith("{") and link.endswith("}")):
                     continue
 
                 # Resolve relative to the file's directory

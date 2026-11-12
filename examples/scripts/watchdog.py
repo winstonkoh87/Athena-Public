@@ -33,6 +33,8 @@ SCAN_DIRS = [
     ".context/memories/session_logs",
     ".context/memories/case_studies",
     ".agent/skills/protocols",
+    "examples/protocols",
+    "examples/workflows",
 ]
 
 # ANSI Colors
@@ -68,17 +70,19 @@ def get_status(tokens):
 
 
 def scan_directory(dir_path, top_n=5):
-    """Scans directory and returns largest files."""
+    """Scans directory recursively and returns largest files."""
     results = []
 
     if not os.path.exists(dir_path):
         return results
 
-    for filename in os.listdir(dir_path):
-        filepath = os.path.join(dir_path, filename)
-        if os.path.isfile(filepath) and filename.endswith('.md'):
-            tokens = estimate_tokens(filepath)
-            results.append((filename, tokens, filepath))
+    for root, dirs, files in os.walk(dir_path):
+        dirs[:] = [d for d in dirs if d not in {"archive", "_archived"}]
+        for filename in files:
+            if filename.endswith('.md'):
+                filepath = os.path.join(root, filename)
+                tokens = estimate_tokens(filepath)
+                results.append((filename, tokens, filepath))
 
     results.sort(key=lambda x: x[1], reverse=True)
     return results[:top_n]

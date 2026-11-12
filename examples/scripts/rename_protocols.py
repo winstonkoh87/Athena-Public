@@ -60,9 +60,15 @@ DOMAIN_PREFIXES = {
     "workflow":          "WFL",
 }
 
-SKIP_DOMAINS = {"archive"}  # Don't rename archived files
+SKIP_DOMAINS = {"archive", "_archived"}  # Don't rename archived files
 
-PROTOCOLS_ROOT = Path(".agent/skills/protocols")
+_PRIVATE_PROTOCOLS_ROOT = Path(".agent/skills/protocols")
+_PUBLIC_PROTOCOLS_ROOT = Path("examples/protocols")
+PROTOCOLS_ROOT = (
+    _PRIVATE_PROTOCOLS_ROOT
+    if _PRIVATE_PROTOCOLS_ROOT.exists() and any(_PRIVATE_PROTOCOLS_ROOT.rglob("*.md"))
+    else _PUBLIC_PROTOCOLS_ROOT
+)
 
 
 def collect_renames(root: Path) -> list[tuple[Path, Path]]:

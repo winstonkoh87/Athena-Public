@@ -4,7 +4,10 @@ import re
 # Configuration
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROTOCOLS_DIR = os.path.join(PROJECT_ROOT, ".agent", "skills", "protocols")
+PUBLIC_PROTOCOLS_DIR = os.path.join(PROJECT_ROOT, "examples", "protocols")
 SKILL_INDEX_PATH = os.path.join(PROJECT_ROOT, ".agent", "skills", "SKILL_INDEX.md")
+_IGNORED_FILENAMES = {"README.md", "INDEX.md"}
+_IGNORED_DIRNAMES = {"archive", "_archived"}
 
 # ANSI Colors
 GREEN = "\033[92m"
@@ -20,15 +23,36 @@ def log(type, message):
     elif type == "ERROR":
         print(f"{RED}[ERROR]{RESET} {message}")
 
+def _iter_protocol_dirs():
+    """Return populated protocol directories in priority order."""
+    candidates = [PROTOCOLS_DIR, PUBLIC_PROTOCOLS_DIR]
+    fw_root = os.path.join(PROJECT_ROOT, ".framework")
+    if os.path.isdir(fw_root):
+        for entry in sorted(os.listdir(fw_root)):
+            pdir = os.path.join(fw_root, entry, "protocols")
+            if os.path.isdir(pdir):
+                candidates.append(pdir)
+    return [d for d in candidates if os.path.isdir(d)]
+
+
 def scan_protocols():
     """Scans for protocol files and ensures they are in SKILL_INDEX.md"""
-    if not os.path.exists(PROTOCOLS_DIR):
+    protocol_dirs = _iter_protocol_dirs()
+    if not protocol_dirs:
         log("ERROR", f"Protocols directory not found: {PROTOCOLS_DIR}")
         return
 
-    # 1. Get list of actual protocol files
-    actual_files = [f for f in os.listdir(PROTOCOLS_DIR) if f.endswith(".md")]
-    actual_files.sort()
+    # 1. Collect protocol files recursively, ignoring archives and index stubs
+    actual_files: list[tuple[str, str]] = []
+    for base_dir in protocol_dirs:
+        for root, dirs, files in os.walk(base_dir):
+            dirs[:] = sorted(d for d in dirs if d not in _IGNORED_DIRNAMES)
+            for fname in sorted(files):
+                if not fname.endswith(".md") or fname in _IGNORED_FILENAMES:
+                    continue
+                full_path = os.path.join(root, fname)
+                rel_path = os.path.relpath(full_path, base_dir)
+                actual_files.append((rel_path, full_path))
 
     # 2. Read SKILL_INDEX.md
     if not os.path.exists(SKILL_INDEX_PATH):
@@ -40,33 +64,30 @@ def scan_protocols():
 
     # 3. Check for missing protocols
     missing_protocols = []
-
-    # Simple check: is the filename present in the content?
-    # This avoids complex table parsing but is sufficient for existence check
-    for p_file in actual_files:
-        if p_file not in index_content:
-            missing_protocols.append(p_file)
+    for rel_path, full_path in actual_files:
+        fname = os.path.basename(full_path)
+        if fname not in index_content:
+            missing_protocols.append((rel_path, full_path))
 
     # 4. Fix missing protocols
     if missing_protocols:
         log("WARN", f"Found {len(missing_protocols)} protocols missing from index.")
         with open(SKILL_INDEX_PATH, "a") as f:
             f.write("\n")
-            for p in missing_protocols:
-                # Attempt to extract title from file content
-                title = p.replace(".md", "").replace("-", " ").title()
+            for rel_path, full_path in missing_protocols:
+                fname = os.path.basename(full_path)
+                title = fname.replace(".md", "").replace("-", " ").title()
                 try:
-                    with open(os.path.join(PROTOCOLS_DIR, p)) as pf:
+                    with open(full_path) as pf:
                         first_line = pf.readline().strip()
                         if first_line.startswith("# "):
                             title = first_line[2:].strip()
                 except Exception:
                     pass
 
-                # Append to file
-                entry = f"| **{title}** | `protocols/{p}` | Auto-indexed by Integrity Script |\n"
+                entry = f"| **{title}** | `protocols/{rel_path}` | Auto-indexed by Integrity Script |\n"
                 f.write(entry)
-                log("INFO", f"Added to Index: {p}")
+                log("INFO", f"Added to Index: {rel_path}")
     else:
         log("INFO", "SKILL_INDEX is in sync with protocols folder.")
 
