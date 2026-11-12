@@ -208,7 +208,7 @@ The codebase uses `ruff` for linting, `pytest` for tests, and CI must pass befor
 
 <div align="center">
 
-**MIT License** · [Contributing](CONTRIBUTING.md) · [Safety](SAFETY.md) · [Security](docs/SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
+**MIT License** · [Contributing](CONTRIBUTING.md) · [Safety](SAFETY.md) · [Security](docs/SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Accessibility](ACCESSIBILITY.md)
 
 Built and battle-tested solo across 2,100+ sessions by [Winston Koh](https://winstonkoh87.com).
 
