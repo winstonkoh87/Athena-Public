@@ -1325,6 +1325,33 @@ def context_gate(
             "Synthesize structural invariants across these domains."
         )
 
+    # 3-Tier Autonomous Compute Ladder (Tier 0 Inline / Tier 1 Subagent / Tier 2 Native Swarm)
+    q_lower = query.lower()
+    tier2_markers = (
+        "deliverable audit", "capstone", "tma", "audit the assignment", "audit the deliverables",
+        "in parallel", "across all", "multi-module", "refactor all", "full-stack",
+        "osint", "due diligence", "vet counterparty", "vet client", "vet contractor",
+        "/grill", "/ultrathink", "native swarm",
+    )
+    has_dashboard_reconcile = "dashboard" in q_lower and any(
+        k in q_lower for k in ("reconcil", "statement", "csv", "sql", "audit")
+    )
+    if any(m in q_lower for m in tier2_markers) or has_dashboard_reconcile or lambda_res["score"] >= 30:
+        compute_tier = "TIER_2_SWARM"
+        directive_parts.append(
+            "SWARM DIRECTIVE (Tier 2 Native Swarm): Multi-stream or high-stakes verification trigger matched — "
+            "autonomously activate Native Swarm (workspace='share' authors + fresh-context verifier/scouts + monitor, "
+            "leaving model unset) without asking user permission, and surface the Swarm Board link."
+        )
+    elif any(m in q_lower for m in ("compare directories", "scan folders", "open in browser", "localhost:")):
+        compute_tier = "TIER_1_SUBAGENT"
+        directive_parts.append(
+            "SUBAGENT DIRECTIVE (Tier 1 Fan-Out): Stateless recon/browser trigger matched — "
+            "autonomously dispatch invoke_subagent without asking user permission."
+        )
+    else:
+        compute_tier = "TIER_0_INLINE"
+
     if not directive_parts:
         directive_parts.append("Context bundle assembled. Proceed with answer.")
 
@@ -1385,6 +1412,7 @@ def context_gate(
         "local_first": local_first,
         "missing": missing,
         "underspec_opt": underspec_opt,
+        "compute_tier": compute_tier,
         "directive": directive,
         "risk_level": risk_level.name,
         "intent": intent,

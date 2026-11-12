@@ -23,7 +23,7 @@ Athena is a local-first memory, decision engine, and governance harness that giv
 ## Guides
 
 - [Compatible IDEs](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/COMPATIBLE_IDES.md): 7 supported editors (VS Code, Cursor, Windsurf, Zoo Code, Cline, Augment, Trae)
-- [Workflows](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/WORKFLOWS.md): 77 slash commands (56 root + 21 domain: /start, /end, /plan, /research, /ultrathink, etc.)
+- [Workflows](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/WORKFLOWS.md): 78 slash commands (57 root + 21 domain: /start, /end, /plan, /research, /ultrathink, etc.)
 - [Best Practices](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/BEST_PRACTICES.md): How to get the most out of Athena
 - [Multi-Model Strategy](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/MULTI_MODEL_STRATEGY.md): Using Gemini, Claude, and GPT together
 - [FAQ](https://github.com/winstonkoh87/Athena-Public/blob/main/docs/FAQ.md): Frequently asked questions

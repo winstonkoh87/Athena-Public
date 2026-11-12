@@ -114,13 +114,13 @@ athena --version              # Show version (v10.0.6)
 | `/save` | Quick checkpoint during session |
 | `/osint` | Counterparty due diligence & public footprint recon |
 
-> See [WORKFLOWS.md](../WORKFLOWS.md) in the repo for the full list of all 77 commands.
+> See [WORKFLOWS.md](../WORKFLOWS.md) in the repo for the full list of all 78 commands.
 
 ---
 
 ## 🛡️ Protocol Usage
 
-Protocols are reusable decision frameworks — "Standard Operating Procedures" for the AI. There are **462 protocols (428 active)** across 26 categories.
+Protocols are reusable decision frameworks — "Standard Operating Procedures" for the AI. There are **461 protocols (410 active)** across 26 categories.
 
 | Category | Examples |
 |:---------|:---------|

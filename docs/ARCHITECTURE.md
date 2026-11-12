@@ -27,7 +27,7 @@ Athena/
 │   └── archive_skills/            #   17 sunset skills (read-only, see README)
 │
 ├── .context/                      # Personal knowledge base
-│   ├── memories/                  #   5,980 memory files (session logs + case studies + profile)
+│   ├── memories/                  #   5,985 memory files (session logs + case studies + profile)
 │   │   ├── session_logs/          #     Dated session records
 │   │   ├── case_studies/          #     629 documented patterns (14 domains)
 │   │   ├── profile/               #     Core profile, psychology, voice DNA
@@ -176,7 +176,7 @@ Full cluster details: `CLUSTER_INDEX.md` (private workspace — see table above 
 | Cognitive Clusters | 15 | Co-activating procedural memory bundles |
 | Skills | 44 active (17 archived) |
 | Protocols | 410 active (51 archived; 461 total) |
-| Workflows | 77 (56 root + 21 _domain/) |
+| Workflows | 78 (57 root + 21 _domain/) |
 
 ---
 
