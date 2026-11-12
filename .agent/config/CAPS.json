@@ -21,9 +21,9 @@
     "always_on_count": 10
   },
   "workflows": {
-    "root": 56,
+    "root": 57,
     "domain": 21,
-    "total": 77,
+    "total": 78,
     "cap": "uncapped",
     "cap_policy": "Workflows are uncapped as of v9.8.0. Domain workflows are dormant by default (_domain/ tier) and only activate on query match. The constraint is attention budget, not inventory size. TD-017 is now structurally resolved."
   },

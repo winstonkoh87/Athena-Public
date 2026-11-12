@@ -1,10 +1,10 @@
 # Workflows in Project Athena
 
-> **Last Updated**: 15 October 2026
+> **Last Updated**: 13 November 2026
 
 Workflows are slash commands that trigger predefined sequences of actions. They're the backbone of Athena's session management and deep reasoning capabilities.
 
-> **Total**: 77 workflows (56 root + 21 domain-specific in `.agent/workflows/_domain/`)
+> **Total**: 78 workflows (57 root + 21 domain-specific in `.agent/workflows/_domain/`)
 
 ## Quick Reference
 
@@ -18,6 +18,9 @@ Workflows are slash commands that trigger predefined sequences of actions. They'
 | [`/ultrathink`](../examples/workflows/ultrathink.md) | Maximum depth (parallel orchestrator) | High |
 | [`/search`](../examples/workflows/search.md) | Web search with citations | Medium |
 | [`/research`](../examples/workflows/research.md) | Exhaustive multi-source investigation | High |
+| [`/osint`](../examples/workflows/osint.md) | Counterparty due diligence & UCDS dossier | High |
+| [`/gto`](../examples/workflows/gto.md) | Game-Theory Optimal decision & ruin screening | High |
+| [`/wargame`](../examples/workflows/wargame.md) | Two-turn adversarial wargaming & Red Cell engine | High |
 | [`/plan`](../examples/workflows/plan.md) | Structured planning with pre-mortem | Medium |
 | [`/brief`](../examples/workflows/brief.md) | Pre-prompt clarification protocol | Medium |
 | [`/refactor`](../examples/workflows/refactor.md) | Full workspace optimization | High |

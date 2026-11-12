@@ -11,7 +11,7 @@
 |--------|-------|
 | **Automation Scripts** | 290 |
 | **Decision Protocols** | 461 (410 active + 51 archived, 26 categories) |
-| **Orchestration Workflows** | 77 (56 root + 21 domain) |
+| **Orchestration Workflows** | 78 (57 root + 21 domain) |
 | **Skills** | 44 active (43 with context_trigger), 17 archived |
 | **Case Studies** | 629 |
 | **Total Sessions** | 2,100+ |
@@ -167,7 +167,7 @@
 
 ---
 
-## ⚙️ Orchestration Workflows (77: 56 root + 21 domain)
+## ⚙️ Orchestration Workflows (78: 57 root + 21 domain)
 
 | Workflow | Description |
 |----------|-------------|
@@ -178,6 +178,8 @@
 | `/ultrathink` | Maximum depth — full stack load + extended reasoning |
 | `/vibe` | Fast shipping mode — 70% rule, iterate quickly |
 | `/research` | Deep rabbit hole — multi-source exhaustive search |
+| `/osint` | Counterparty due diligence, binary knockouts, and 6-section UCDS dossier |
+| `/wargame` | Two-turn adversarial wargaming with context-isolated Red Cell generation |
 | `/brief` | Pre-prompt clarification — scope before execution |
 | `/audit` | Cross-model validation — Claude vs Gemini comparison |
 | `/deploy` | Public repo sync — sanitize and push |
@@ -199,12 +201,15 @@ athena/
 │   ├── permissions.py     # Capability RBAC and secret-mode gating
 │   └── models.py          # Data models for sessions, protocols, entities
 ├── intelligence/
-│   ├── frame_ledger.py    # Frame validation, VOI gate, Two-Loop state machine
-│   ├── gto_engine.py      # EEV dominance, ruin ceiling, Paths A-E screen
-│   ├── wargame.py         # 2-turn sequential game trees & trough ruin check
-│   ├── meta_awareness.py  # Inbound/outbound substance decode (PAT-574)
-│   ├── calibration.py     # Brier scoring and calibration curve tracking
-│   └── sentinel.py        # Adaptive latency / complexity classification
+│   ├── evidence_contract.py # Structured claim extraction & interpersonal calibration
+│   ├── frame_ledger.py      # Frame validation, VOI gate, Brier calibration ledger
+│   ├── gate_telemetry.py    # Governance gate telemetry & substance-decode audit
+│   ├── gto_engine.py        # EEV dominance, ruin ceiling, Paths A-E screen
+│   ├── prop_risk_guard.py   # Prop drawdown capacity & ergodicity/carry audit
+│   ├── sentinel.py          # Boot/shutdown sentinel & active-context checkpointing
+│   ├── spec_gate.py         # Upstream 4-pillar specification verification gate
+│   ├── ucds_validator.py    # Universal Counterparty Dossier Standard (UCDS) gate
+│   └── wargame.py           # 2-turn sequential game trees & trough ruin check
 ├── memory/
 │   ├── cache.py           # TTL-based LRU cache for search
 │   └── vectors.py         # Embedding generation and retrieval

@@ -14,6 +14,19 @@ from athena.intelligence.evidence_contract import (
     filter_claims_for_profiling,
     validate_interpersonal_calibration,
 )
+from athena.intelligence.frame_ledger import (
+    FrameLedger,
+    FrameRecord,
+    Hypothesis,
+    ValidationError,
+    ValidationResult,
+    Violation,
+    build_frame,
+    compute_evi,
+    scan_adoption,
+    score_frames,
+    validate_frame,
+)
 from athena.intelligence.gate_telemetry import (
     GateTelemetryAnalyzer,
     OutputContractAudit,
@@ -86,6 +99,13 @@ from athena.intelligence.ucds_validator import (
     UCDSDossierValidator,
     audit_ucds_dossier,
 )
+from athena.intelligence.wargame import (
+    UnscreenedWargame,
+    WargameCell,
+    WargameResult,
+    adjudicate_wargame,
+    resolve_two_turn_cell,
+)
 
 __all__ = [
     "GateTelemetryAnalyzer",
@@ -154,5 +174,21 @@ __all__ = [
     "audit_ergodicity_and_carry",
     "audit_prop_risk_capacity",
     "format_prop_risk_report",
+    "FrameLedger",
+    "FrameRecord",
+    "Hypothesis",
+    "ValidationError",
+    "ValidationResult",
+    "Violation",
+    "build_frame",
+    "compute_evi",
+    "scan_adoption",
+    "score_frames",
+    "validate_frame",
+    "UnscreenedWargame",
+    "WargameCell",
+    "WargameResult",
+    "adjudicate_wargame",
+    "resolve_two_turn_cell",
 ]
 

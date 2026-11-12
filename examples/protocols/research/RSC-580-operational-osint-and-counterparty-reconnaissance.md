@@ -58,19 +58,23 @@ When evaluating commercial entities, corporate vendors, high-ticket clients, or 
 ```
 
 ### Layer 1: Statutory Registry Forensics (ACRA BizFile+ / Regional Registrar)
+- **Five-State Provenance Ladder**:
+  - Tag every statutory field as `VERIFIED | ATTESTED | ABSENT:LAWFUL | ABSENT:SUSPICIOUS | CONTRADICTED`.
+  - **Singapore EPC Rule**: A solvent Exempt Private Company (<=20 individual shareholders) is statutorily exempt from filing financial statements with ACRA. Log missing balance sheets as `ABSENT:LAWFUL`, never as concealment or automatic insolvency.
+  - **Pricing Note**: Verify extract fees at purchase (`[VERIFY-AT-PURCHASE]`, e.g., Business Profile, People Profile, Financial Highlights).
 - **Paid-Up Capital vs. Senior Floating Charges**:
-  - Compare declared paid-up capital against active registered charges (`ALL MONIES` mortgages, debentures, factoring facilities).
-  - An entity with S$100,000 paid-up capital but multiple senior bank debentures is operating entirely on borrowed bank leverage. The bank takes 100% of liquidated assets in bankruptcy before unsecured creditors see S$0.01.
+  - Compare declared paid-up capital against active registered charges (`satisfied` vs `outstanding` `ALL MONIES` mortgages, debentures, factoring facilities).
+  - An entity with low paid-up capital and multiple unsatisfied senior bank debentures leaves unsecured creditors behind the bank in liquidation.
 - **The Director Graveyard Check**:
   - Audit the director/shareholder via a People Profile search.
-  - Detect patterns of serial phoenixing: opening a Pte Ltd, running it for 3-4 years, accumulating supplier debts, dissolving or striking off the shell, and immediately incorporating a new entity with identical branding.
+  - Distinguish legitimate business strike-offs from serial phoenixing: opening a Pte Ltd, running it for 3-4 years, accumulating supplier debts, dissolving the shell, and immediately incorporating a new entity with identical branding.
 - **Corporate Secretary & Registered Office**:
-  - Is the registered address a commercial shophouse/office, or a mass-incorporation virtual maildrop shared with 5,000 shell companies?
+  - Record whether the registered address is an owned commercial facility, a multi-year lease, a residential base, or a virtual maildrop.
 
-### Layer 2: Unfiltered Community & Review Laundering Forensics
+### Layer 2: Unfiltered Community & Complaint Enumeration
 Marketing agencies and predatory vendors routinely manufacture digital trust (Google 5-star review farming, influencer gift packages, sponsored articles).
-- **The Sentiment Haircut**:
-  - Compare curated surfaces (Google Maps: 4.8 stars) against independent aggregators (Hometrust, Glassdoor, local complaint boards: 5.0 to 6.5 / 10). A 30% to 40% haircut indicates baseline operational friction.
+- **Complaint Enumeration (Replaces Arbitrary Review Haircuts)**:
+  - Do not apply arbitrary percentage discounts to star ratings. Instead, record two countable metrics per source: `n_complaints` and `worst_allegation` in `{none, delay, variation_billing, defect, abandonment, abscondment}`.
 - **Unfiltered Forum Archaeology**:
   - Query local ground-truth hubs: HardwareZone EDMW, Reddit (r/singapore, r/singaporefi), RenoTalk, Lowyat.
   - Search exact keywords: `"<entity_name>" scam`, `"<director_name>" delay`, `"<entity_name>" court`, `"<entity_name>" tribunal`.
@@ -137,22 +141,46 @@ Intelligence is bidirectional. Operating effectively requires understanding how 
 
 ---
 
-## 5. Counterparty Risk Scorecard (100-Point Audit)
+## 5. Counterparty Risk Architecture (Knockout Gates + 100-Point Audit)
 
-When completing an OSINT evaluation on a counterparty, compute the aggregate score across five dimensions (20 points each):
+### 5.1 — Non-Compensatory Binary Knockout Gate (Booleans Gate; Scores Only Order)
+Before computing a linear point score, evaluate the following binary veto conditions. **If ANY condition is TRUE, the score is immediately overridden to `RED VETO` under Law #1.** High charisma, elite credentials, or positive reviews cannot compensate for a binary knockout:
+1. Active bankruptcy, winding-up petition, or undischarged insolvency of key principals.
+2. Active unsatisfied civil default judgment or criminal fraud charge.
+3. Operating an unlicensed regulated financial, medical, or legal business.
+4. Demanding personal bank account transfers or unregulated crypto transfers for a corporate contract.
+5. Corroborated physical/video evidence (`VERIFIED`) of project abandonment or deposit theft within the last 36 months.
+
+### 5.2 — 100-Point Linear Audit (Applied Only If All Knockout Gates Clear)
+When all binary knockout gates pass (`[CLEAR]`), compute the aggregate score across five dimensions (20 points each):
 
 | Dimension | 20 Points (Clean) | 10 Points (Caution) | 0 Points (Critical Red Flag) |
 |:---|:---|:---|:---|
-| **1. Statutory Standing** | Established >5y, healthy paid-up capital, 0 debentures | 1-3y incorporation, minor bank charge | Shell entity <1y, serial director dissolutions, heavy debentures |
-| **2. Review Integrity** | Unvarnished positive reviews across multiple raw boards | Bimodal reviews (some complaints, mostly resolved) | Severe sentiment haircut, farmed 5-star spam, video receipts of default |
-| **3. Financial Posture** | Modest lifestyle, operational reinvestment | Unclear personal financials, opaque holding structure | Leased luxury assets, negative working capital, deposit-dependency |
-| **4. Legal History** | Zero civil/criminal suits, clean regulatory records | Isolated settled dispute, minor demerit | Active civil lawsuits, CASE alerts, MOM stop-work orders, bankruptcy |
-| **5. Physical Permanence** | Owned property/facility, long-term verified lease | Multi-year commercial tenancy | Virtual office maildrop, unverifiable operational address |
+| **1. Statutory Standing** | Established >5y, healthy paid-up capital, 0 debentures (or verified `ABSENT:LAWFUL` EPC) | 1-3y incorporation, minor bank charge, early-stage startup | Shell entity <1y, serial director dissolutions, heavy floating debentures |
+| **2. Review Integrity** | Unvarnished positive reviews across multiple raw boards (`n_complaints = 0`) | Bimodal reviews (`n_complaints >= 1`, `worst_allegation: delay / workmanship`) | Severe sentiment haircut, farmed 5-star spam, `worst_allegation: abandonment / non_refund / fraud` |
+| **3. Financial Posture** | Modest lifestyle, operational reinvestment, institutional backing | Unclear personal financials, opaque holding structure | Leased luxury assets, negative working capital, deposit-dependency |
+| **4. Legal History** | Zero civil/criminal suits, clean regulatory records | Isolated settled commercial dispute, minor demerit | Active civil lawsuits, CASE alerts, MOM stop-work orders, bankruptcy |
+| **5. Physical Permanence** | Owned property/facility, long-term verified lease, established HQ | Multi-year commercial tenancy or verified accelerator cohort | Virtual office maildrop, unverifiable operational address |
 
-### Triage Verdict:
-- **Score 85–100 (Green / Unconditional)**: Standard commercial terms.
-- **Score 65–84 (Amber / Conditional Pass)**: Enforce **Contract Risk Inversion** (e.g., Back-heavy schedule: 10/15/25/25/15/10; milestone escrows; zero uncollateralized advances).
-- **Score <65 (Red / Hard Veto)**: Walk away. Downside risk exceeds all possible commercial upside under Law #1.
+### 5.3 — Directional Payment Matrix & Triage Verdict
+Payment architecture MUST match the cashflow direction identified in Track Selection (never apply vendor back-loading to an accounts-receivable client):
+
+| Score Band | Verdict | Track A-R: Accounts Receivable (Client Paying Us) | Track A-P: Accounts Payable (Us Paying Vendor) | Track A-N: Co-Venture / Network |
+|:---|:---|:---|:---|:---|
+| **85–100** | **GREEN (Unconditional)** | Standard terms (50% upfront, 50% on delivery) | Standard commercial milestones | Open collaboration; standard mutual NDA |
+| **65–84** | **AMBER (Conditional Shield)** | **Front-Load Cash**: 70–100% upfront or prepaid rolling retainer; staged IP handover; kill-switch on unpaid milestones | **Back-Load Cash**: Renovation Parity Shield (`10/15/25/25/15/10`); 60-day defects retention; zero uncollateralized deposits | Non-exclusive scope; strict IP ring-fencing; short-horizon trial project |
+| **<65 or Knockout** | **RED (Hard Veto)** | **Walk away** (or 100% cash-in-advance before any labor starts) | **Walk away immediately**. Downside risk violates Law #1. | **Disengage politely**. Zero cap-table or reputational entanglement. |
+
+### 5.4 — Universal Counterparty Dossier Standard (UCDS)
+All Track A commercial and network evaluations must be rendered using the 6-Section **Universal Counterparty Dossier Standard (UCDS)** defined in [osint.md](../../workflows/osint.md) and [SKILL.md](../../skills/research/operational-osint/SKILL.md):
+1. **Executive Snapshot & Horizon Forecast** (including `Builds to Exit` vs. `Empire Builder` trajectory and functional operator archetype).
+2. **Evidence & Statutory Matrix** (using the 5-State Provenance Ladder: `VERIFIED`, `ATTESTED`, `ABSENT:LAWFUL`, `ABSENT:SUSPICIOUS`, `CONTRADICTED`).
+3. **Behavioral Mechanics (Track-Appropriate)**.
+4. **SWOT Matrix (Strategic Positioning)**.
+5. **Operator Utility & Value-to-Us ("So What?")**.
+6. **Two-Sided Error Accounting & Contract Shield** (pricing both Type 1 Paranoia Tax and Type 2 Ruin Exposure).
+
+Verify UCDS dossier invariants deterministically with `python3 examples/scripts/ucds_audit.py --dossier <dossier.md>`.
 
 ---
 

@@ -15,7 +15,7 @@ Athena/
 │   ├── skills/                    #   44 active skills (43 with context_trigger)
 │   │   └── protocols/             #   410 active + 51 archived = 461 total, 26 categories
 │   │       └── archive/           #     51 archived protocols (read-only, see README)
-│   ├── workflows/                 #   56 root + 21 _domain = 77 slash-command workflows
+│   ├── workflows/                 #   57 root + 21 _domain = 78 slash-command workflows
 │   │   └── _domain/               #     Domain-scoped, conditionally activated
 │   ├── scripts/                   #   290 automation scripts
 │   ├── telemetry/                 #   Retrieval instrumentation logs + tier maps
@@ -328,22 +328,29 @@ src/athena/tools/search.py (12s God Mode timeout + grep fallback)
 
 ---
 
-## Intelligence & Memory Subsystems (v9.9.9)
+## Intelligence & Memory Subsystems (v10.0.6)
 
 ### 1. Intelligence Engine (`src/athena/intelligence/`)
-- **`gto_engine.py`**: Deterministic Multiple-Criteria Decision Analysis (MCDA) engine with automated ±10% weight perturbation, pairwise dominance auditing, and winner stability gates. Automatically detects unstable ties and routes to Path D (Reversible Experiment) or Path E (Wait/Status Quo). Computes Empirically-discounted Expected Value (EEV), Half-Kelly sizing, Law-of-Ruin probabilities, and Monte Carlo trade simulations.
-- **`sentinel.py`**: Substantive session learning extractor and knowledge leak detector during session compilation.
+- **`gto_engine.py`**: Deterministic Multiple-Criteria Decision Analysis (MCDA) engine with automated ±10% weight perturbation, pairwise dominance auditing, and winner stability gates. Automatically detects unstable ties and routes to Path D (Reversible Experiment) or Path E (Wait/Status Quo). Computes Empirically-discounted Expected Value (EEV), Half-Kelly sizing, Law-of-Ruin probabilities, dual-vault barbell screens, and Monte Carlo decision/trade simulations (`log_decision_receipt`, `find_unreceipted_engine_claims`).
+- **`wargame.py`** *(paired with `examples/scripts/wargame_runner.py` and `/wargame`)*: Two-turn sequential adversarial wargaming and Red Cell adjudication engine (`adjudicate_wargame`, `resolve_two_turn_cell`). Enforces Turn-1 absorbing barrier truncation (`t1_worst`), fail-closed Law #1 survival vetting (`UnscreenedWargame`), Game-Mode maximin and minimax-regret ranking, counterparty best-response (`red_best_responses`, `blue_at_red_br`, `red_br_winner`), sovereign rule-change shock columns (`counterparty_writes_rules=True`), deciding-margin fragility detection (`FRAGILITY_THRESHOLD = 0.10`), field provenance verification (`VALID_PROVENANCE_BASES`), and context-isolated Red Cell independence verification (`ObservableActionPacket`, `.athena/wargame_runs.jsonl`, `[THEATER]` stamping).
+- **`ucds_validator.py`** *(paired with `examples/scripts/ucds_audit.py`, `/osint`, and Protocol 580)*: Deterministic validator for the Universal Counterparty Dossier Standard (`UCDSDossierValidator`, `audit_ucds_dossier`). Enforces Track A/B bifurcation (`Track A-R`, `Track A-P`, `Track A-N`, `Track B`), non-compensatory binary knockout gates (`PASS | FAIL | HARD VETO`), 6-section completeness, directional cashflow inversion guards (front-loaded cash for client receivables vs. back-loaded milestones for vendor payables), the 5-state provenance ladder (`VERIFIED`, `ATTESTED`, `ABSENT:LAWFUL`, `ABSENT:SUSPICIOUS`, `CONTRADICTED`), the Singapore Exempt Private Company (`ABSENT:LAWFUL`) rule, functional archetype quarantine on Track B, and plain-ASCII math validation.
+- **`frame_ledger.py`**: Pre-registered problem framing, hypothesis tracking (`Hypothesis`, `FrameRecord`), Value of Information (VOI / `compute_evi`) stopping gates, tier complexity caps (`TIER_CAPS`), and Brier calibration scoring (`FrameLedger`, `validate_frame`, `score_frames`).
+- **`evidence_contract.py`**: Structured frontmatter claim extraction (`EvidenceClaim`, `ClaimKind`, `ClaimStatus`) and interpersonal calibration guardrails (`filter_claims_for_profiling`, `validate_interpersonal_calibration`).
+- **`spec_gate.py`**: Upstream four-pillar specification verifier (`UpstreamSpecGate`: Physical Envelope, Disciplinary Lexicon & Scope Boundaries, Frozen Empirical Telemetry, Submission Binary Contract).
+- **`prop_risk_guard.py`**: Proprietary trading drawdown capacity and ergodicity/carry auditing (`audit_prop_risk_capacity`, `audit_ergodicity_and_carry`, `PropCapacityAudit`, `ErgodicityCarryAudit`).
+- **`gate_telemetry.py`**: Governance gate telemetry aggregation and outbound substance-decode contract auditing (`GateTelemetryAnalyzer`, `evaluate_substance_decode_adherence`).
+- **`sentinel.py`**: Boot/shutdown sentinel verification and active-context session checkpointing (`check_boot_sentinel`, `check_shutdown_sentinel`, `update_active_context`).
 
 ### 2. Contextual ATX Heading Breadcrumb Chunker (`src/athena/memory/`)
 - **`contextual_chunker.py`**: Pure standard-library hierarchical parser that extracts Markdown ATX heading hierarchy (`# Title > ## Section > ### Subheading`) and prepends structured breadcrumbs to every text chunk prior to vector embedding. Eliminates orphan context loss across RAG queries (shipped S1053).
 
-### 3. Verification & Guard Tooling (`src/athena/tools/` & `.agent/scripts/`)
+### 3. Verification & Guard Tooling (`src/athena/tools/` & `examples/scripts/`)
 - **`citation_verifier.py`**: Automated Crossref API client with title similarity scoring and DOI metadata verification (shipped S1032).
 - **`contrast_check.py`**: Deterministic W3C WCAG 2.1 relative luminance checker with built-in reference self-tests (shipped S1055).
 
 ---
 
-## CANONICAL Progressive Disclosure (v9.9.9)
+## CANONICAL Progressive Disclosure (v10.0.6)
 
 CANONICAL memory contains 199 entries, ~57KB. Progressive disclosure tiers:
 
@@ -398,7 +405,7 @@ src/athena/duckdb_mcp_server.py (5 tools)
 
 ---
 
-## Telemetry & Instrumentation (v9.8.0)
+## Telemetry & Instrumentation (v10.0.6)
 
 | Component | Path | Purpose |
 |:----------|:-----|:--------|
