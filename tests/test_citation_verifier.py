@@ -34,6 +34,42 @@ class TestCitationVerifier(unittest.TestCase):
         self.assertIn("10.1038/s41586-020-2649-2", dois)
         self.assertIn("10.1145/3318464.3389700", dois)
 
+    def test_extract_and_normalize_sici_dois(self):
+        encoded = "https://doi.org/10.1175/1520-0493(1950)078%3C0001:VOFEIT%3E2.0.CO;2"
+        raw = "10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2"
+        md = f"Brier (1950) [DOI]({encoded}). Also {raw};"
+        dois = extract_dois(md)
+        self.assertEqual(
+            dois,
+            [
+                "10.1175/1520-0493(1950)078%3C0001:VOFEIT%3E2.0.CO;2",
+                "10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2",
+            ],
+        )
+        self.assertEqual(
+            normalize_doi(f"({encoded})."),
+            "10.1175/1520-0493(1950)078%3C0001:VOFEIT%3E2.0.CO;2",
+        )
+        self.assertEqual(
+            normalize_doi("10.1002/example(1999)"),
+            "10.1002/example(1999)",
+        )
+
+    @patch("requests.get")
+    def test_verify_sici_doi_encodes_angle_brackets_without_double_encoding(self, mock_get):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"message": {"title": ["Verification"]}}
+        mock_get.return_value = mock_resp
+
+        res_enc = verify_doi("10.1175/1520-0493(1950)078%3C0001:VOFEIT%3E2.0.CO;2")
+        res_raw = verify_doi("10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2")
+        self.assertTrue(res_enc.valid)
+        self.assertTrue(res_raw.valid)
+        called_urls = [call.args[0] for call in mock_get.call_args_list]
+        expected_url = "https://api.crossref.org/works/10.1175/1520-0493(1950)078%3C0001:VOFEIT%3E2.0.CO;2"
+        self.assertEqual(called_urls, [expected_url, expected_url])
+
     def test_compute_token_similarity(self):
         sim = _compute_token_similarity("Array programming with NumPy", "Array programming with NumPy")
         self.assertEqual(sim, 1.0)

@@ -3,13 +3,16 @@ protocol: 517
 name: Homeostatic Pressure
 domain: architecture
 created: 2026-03-05
-last_updated: 2026-07-22
+last_updated: 2026-11-13
 status: active
+epistemic_status: advisory  # discretionary checklist heuristic, not a background daemon
 ---
 
 # Protocol 517: Homeostatic Pressure (Synthetic Hormone System)
 
-> **Source**: HORA (Homeostatic Regulation Architecture) from robotics + LIDA cognitive cycles. Adapted to prompt-layer resource management.
+> **Source**: HORA (HOmeostatic Regulation Architecture, Bastos & Correia, DOI `10.1007/978-3-032-05176-9_31`) + LIDA cognitive cycles. Adapted to prompt-layer resource management.
+>
+> **Epistemic note**: There is no background daemon or computed scalar in Python enforcing these thresholds automatically; apply this table as an explicit discretionary self-check when under high context or tool-failure load.
 
 ## Problem
 
@@ -70,6 +73,8 @@ When the body is under metabolic stress, cortisol suppresses non-essential funct
 
 ## References
 
-- [HORA: Homeostatic Regulation in Robotics](https://arxiv.org/abs/1503.04324)
+- [HORA: From Homeostatic Principles to Discrete Emotions in an Agent Architecture (Bastos & Correia, 2025/2026)](https://doi.org/10.1007/978-3-032-05176-9_31)
+- [EILS: Emotion-Inspired Learning Signals (Tiwari, 2025)](https://arxiv.org/abs/2512.22200)
+- [Surprise! Using Physiological Stress for Allostatic Regulation Under the Active Inference Framework (Khan & Lowe, 2024)](https://arxiv.org/abs/2406.08471)
 - [LIDA Cognitive Architecture](https://ccrg.cs.memphis.edu/tutorial/)
 - Protocol 514: Sovereign Safety Sequence (see CLUSTER_INDEX #14)

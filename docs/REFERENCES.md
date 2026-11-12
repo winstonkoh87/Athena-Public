@@ -1,6 +1,6 @@
 ---
 created: 2026-02-12
-last_updated: 2026-10-20
+last_updated: 2026-11-13
 tags: #references #apa #academic #citations
 ---
 
@@ -8,9 +8,9 @@ tags: #references #apa #academic #citations
 
 > **Purpose**: Central academic reference list for the Athena framework. All citations follow APA 7th edition format. Documents within this repository use inline citations (Author, Year) that link back to this page.
 >
-> **Why this exists**: Athena synthesizes concepts from cognitive psychology, microeconomics, game theory, AI/ML research, and decision science. This reference list ensures every claim is traceable to its source — not opinion.
+> **Why this exists**: Athena synthesizes concepts from cognitive psychology, microeconomics, game theory, adversarial wargaming, intelligence analysis & OSINT, AI/ML research, and decision science. This reference list ensures every claim is traceable to its source — not opinion.
 >
-> **Verification policy**: AI-assembled citations are a known fabrication risk. Every DOI in this file was programmatically verified against the Crossref API and every arXiv ID against the arXiv export API on **20 October 2026** — **35/35 DOIs and 28/28 arXiv IDs resolved to the cited works, 0 failures** (the hooks doc's arXiv:2602.23971 was verified in the same sweep). New citations are not added without passing the same check.
+> **Verification policy**: AI-assembled citations are a known fabrication risk. Every DOI and arXiv ID in this file was programmatically verified against the Crossref API (`citation_verifier.py`) and the arXiv export API on **13 November 2026** — **48/48 DOIs and 39/39 arXiv IDs resolved to the cited works, 0 failures**. New citations are not added without passing the same check.
 
 ---
 
@@ -150,9 +150,55 @@ Wu, J., & Axelrod, R. (1995). How to cope with noise in the iterated prisoner's 
 
 > **Note**: Demonstrated that in the presence of noise (misimplementation or misperception of moves), standard Tit-for-Tat triggers endless mutual defection loops. Generous Tit-for-Tat and Contrite Tit-for-Tat restore cooperation through calibrated tolerance, directly grounding Athena's noise-tolerant relational defection responses in Protocol 500 §4D.
 
+### Adversarial Wargaming & Strategic Simulation
+
+Black, S., & Darken, C. (2024). Scaling artificial intelligence for digital wargaming in support of decision-making. *arXiv preprint arXiv:2402.06075*. <https://arxiv.org/abs/2402.06075>
+
+> **Note**: Presented at NATO STO-MP-MSG-207 (2023). Evaluates scaling AI agents for interactive digital wargaming in decision-support contexts. Grounds Athena's branching scenario wargaming engine (`src/athena/intelligence/wargame.py`, `.agent/scripts/wargame_runner.py`).
+
+Caffrey, M. B., Jr. (2019). *On wargaming: How wargames have shaped history and how they may shape the future* (Newport Paper No. 43). Naval War College Press.
+
+Perla, P. P. (1990). *The art of wargaming: A guide for professionals and hobbyists*. Naval Institute Press.
+
+> **Note**: Perla's canonical separation of wargaming from operations research / systems analysis — centering human decisions under imperfect information and adaptive adversary reaction — underpins Athena's multi-move tabletop simulations, pre-mortem red-teaming, and `/416-agent-swarm` stress-testing.
+
+---
+
+## Intelligence Analysis, Operational OSINT & Behavioral Forensics
+
+Dawes, R. M. (1979). The robust beauty of improper linear models in decision making. *American Psychologist, 34*(7), 571–582. <https://doi.org/10.1037/0003-066X.34.7.571>
+
+Douglas, J. E., Burgess, A. W., Burgess, A. G., & Ressler, R. K. (2013). *Crime classification manual: A standard system for investigating and classifying violent crime* (3rd ed.). Wiley.
+
+Grove, W. M., & Meehl, P. E. (1996). Comparative efficiency of informal (subjective, impressionistic) and formal (mechanical, algorithmic) prediction procedures: The clinical–statistical controversy. *Psychology, Public Policy, and Law, 2*(2), 293–323. <https://doi.org/10.1037/1076-8971.2.2.293>
+
+Grove, W. M., Zald, D. H., Lebow, B. S., Snitz, B. E., & Nelson, C. (2000). Clinical versus mechanical prediction: A meta-analysis. *Psychological Assessment, 12*(1), 19–30. <https://doi.org/10.1037/1040-3590.12.1.19>
+
+> **Note**: Together with Dawes (1979) and Grove & Meehl (1996), this meta-analysis across 136 studies establishes that structured mechanical scoring rules systematically match or outperform unstructured subjective clinical/expert judgment. Grounds Athena's quantitative screening gates (`src/athena/intelligence/ucds_validator.py`) against charismatic persuasion or narrative bias.
+
+Hazelwood, R. R., & Napier, M. R. (2004). Crime scene staging and its detection. *International Journal of Offender Therapy and Comparative Criminology, 48*(6), 744–759. <https://doi.org/10.1177/0306624X04268298>
+
+Heuer, R. J., Jr. (1999). *Psychology of intelligence analysis*. Center for the Study of Intelligence, Central Intelligence Agency.
+
+> **Note**: Foundational intelligence methodology text detailing cognitive pathologies in intelligence assessment — mirror imaging, confirmation bias, premature closure, and vividness bias — and formalizing Analysis of Competing Hypotheses (ACH) to weigh disconfirming evidence before synthesis. Directly informs Protocol 580 (`/osint`) and Athena's counterfactual validation gates.
+
+Keppel, R. D., & Weis, J. G. (2004). The rarity of "unusual" dispositions of victim bodies: Staging and posing. *Journal of Forensic Sciences, 49*(6), Article JFS2004033. <https://doi.org/10.1520/JFS2004033>
+
+Office of the United Nations High Commissioner for Human Rights, & Human Rights Center, UC Berkeley School of Law. (2022). *Berkeley protocol on digital open source investigations: A practical guide on the effective use of digital open source information in investigating violations of international criminal, human rights and humanitarian law* (HR/PUB/20/2). United Nations.
+
+> **Note**: Sets international evidentiary standards for open-source intelligence (OSINT): source provenance preservation, verification triage, and cognitive-bias safeguards when synthesizing public registries and digital footprints (`RSC-580`, `operational-osint`, `/osint`).
+
+Pherson, R. H., & Heuer, R. J., Jr. (2020). *Structured analytic techniques for intelligence analysis* (3rd ed.). CQ Press.
+
+Schlesinger, L. B., Gardenier, A., Jarvis, J., & Sheehan-Cook, J. (2014). Crime scene staging in homicide. *Journal of Police and Criminal Psychology, 29*(1), 44–51. <https://doi.org/10.1007/s11896-012-9114-6>
+
+> **Note**: Together with Douglas et al. (2013), Hazelwood & Napier (2004), and Keppel & Weis (2004), this Behavioral Investigative Analysis (BIA) literature characterizes deliberate staging indicators, impression management, and behavioral inconsistency detection — grounding Protocol 585 (`PSY-585`).
+
 ---
 
 ## AI, Machine Learning & Retrieval-Augmented Generation
+
+Besta, M., Blach, N., Kubicek, A., Gerstenberger, R., Podstawski, M., Gianinazzi, L., Gajda, J., Lehmann, T., Niewiadomski, H., Nyczyk, P., & Hoefler, T. (2024). Graph of thoughts: Solving elaborate problems with large language models. *Proceedings of the AAAI Conference on Artificial Intelligence, 38*(16), 17682–17690. <https://doi.org/10.1609/aaai.v38i16.29720> (<https://arxiv.org/abs/2308.09687>)
 
 Brown, T. B., Mann, B., Ryder, N., Subbiah, M., Kaplan, J., Dhariwal, P., ... & Amodei, D. (2020). Language models are few-shot learners. *Advances in Neural Information Processing Systems, 33*, 1877–1901. <https://arxiv.org/abs/2005.14165>
 
@@ -162,13 +208,21 @@ Du, Y., Li, S., Torralba, A., Tenenbaum, J. B., & Mordatch, I. (2023). Improving
 
 Khattab, O., Singhvi, A., Maheshwari, P., Zhang, Z., Santhanam, K., Vardhamanan, S., ... & Potts, C. (2023). DSPy: Compiling declarative language model calls into self-improving pipelines. *arXiv preprint arXiv:2310.03714*. <https://arxiv.org/abs/2310.03714>
 
+Lee, H., Xu, J., Seely, J., Lee, D., Sojoudi, S., Zaharia, M., & Tang, Y. (2026). Recursive self-improvement through multi-agent self-supervision. *arXiv preprint arXiv:2610.12176*. <https://arxiv.org/abs/2610.12176>
+
 Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., ... & Kiela, D. (2020). Retrieval-augmented generation for knowledge-intensive NLP tasks. *Advances in Neural Information Processing Systems, 33*, 9459–9474. <https://arxiv.org/abs/2005.11401>
 
-Liang, Y., Wu, Z., Liu, Y., Sun, Q., & Liu, D. (2023). Encouraging divergent thinking in large language models through multi-agent debate. *arXiv preprint arXiv:2305.19118*. <https://arxiv.org/abs/2305.19118>
+Liang, T., He, Z., Jiao, W., Wang, X., Wang, Y., Wang, R., Yang, Y., Shi, S., & Tu, Z. (2024). Encouraging divergent thinking in large language models through multi-agent debate. *Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing*, 17889–17904. <https://doi.org/10.18653/v1/2024.emnlp-main.992> (<https://arxiv.org/abs/2305.19118>)
 
 Liu, N. F., Lin, K., Hewitt, J., Paranjape, A., Bevilacqua, M., Petroni, F., & Liang, P. (2024). Lost in the middle: How language models use long contexts. *Transactions of the Association for Computational Linguistics, 12*, 157–173. <https://arxiv.org/abs/2307.03172>
 
+Liu, Y., Wang, R., Chu, Y., Hao, B., Lin, Y., Liu, S., & Shao, M. (2026). RouteGoT: Node-adaptive routing for cost-efficient graph of thoughts reasoning. *arXiv preprint arXiv:2603.05818*. <https://arxiv.org/abs/2603.05818>
+
+Pandey, T., Ghukasyan, A., Goktas, O., & Radha, S. K. (2025). Adaptive graph of thoughts: Test-time adaptive reasoning unifying chain, tree, and graph structures. *arXiv preprint arXiv:2502.05078*. <https://arxiv.org/abs/2502.05078>
+
 Wei, J., Wang, X., Schuurmans, D., Bosma, M., Ichter, B., Xia, F., ... & Zhou, D. (2022). Chain-of-thought prompting elicits reasoning in large language models. *Advances in Neural Information Processing Systems, 35*, 24824–24837. <https://arxiv.org/abs/2201.11903>
+
+Woodruff, D. P., Cohen-Addad, V., Jain, L., Mao, J., Zuo, S., Bateni, M., Branzei, S., Brenner, M. P., Chen, L., Feng, Y., Fortnow, L., Fu, G., Guan, Z., Hadizadeh, Z., Hajiaghayi, M. T., JafariRaviz, M., Javanmard, A., Karthik, C. S., Kawarabayashi, K., ... Mirrokni, V. (2026). Accelerating scientific research with Gemini: Case studies and common techniques. *arXiv preprint arXiv:2602.03837*. <https://arxiv.org/abs/2602.03837>
 
 Yao, S., Yu, D., Zhao, J., Shafran, I., Griffiths, T. L., Cao, Y., & Narasimhan, K. (2024). Tree of thoughts: Deliberate problem solving with large language models. *Advances in Neural Information Processing Systems, 36*. <https://arxiv.org/abs/2305.10601>
 
@@ -178,9 +232,9 @@ Yao, S., Yu, D., Zhao, J., Shafran, I., Griffiths, T. L., Cao, Y., & Narasimhan,
 
 Schick, T., Dwivedi-Yu, J., Dessì, R., Raileanu, R., Lomeli, M., Hambro, E., ... & Scialom, T. (2024). Toolformer: Language models can teach themselves to use tools. *Advances in Neural Information Processing Systems, 36*. <https://arxiv.org/abs/2302.04761>
 
-Shinn, N., Cassano, F., Gopinath, A., Narasimhan, K., & Yao, S. (2024). Reflexion: Language agents with verbal reinforcement learning. *Advances in Neural Information Processing Systems, 36*. <https://arxiv.org/abs/2303.11366>
+Shinn, N., Cassano, F., Berman, E., Gopinath, A., Narasimhan, K., & Yao, S. (2024). Reflexion: Language agents with verbal reinforcement learning. *Advances in Neural Information Processing Systems, 36*. <https://arxiv.org/abs/2303.11366>
 
-Wang, L., Ma, C., Feng, X., Zhang, Z., Yang, H., Zhang, J., ... & Wang, J. (2024). A survey on large language model based autonomous agents. *Frontiers of Computer Science, 18*(6), 186345. <https://arxiv.org/abs/2308.11432>
+Wang, L., Ma, C., Feng, X., Zhang, Z., Yang, H., Zhang, J., Chen, Z., Tang, J., Chen, X., Lin, Y., Zhao, W. X., Wei, Z., & Wen, J.-R. (2024). A survey on large language model based autonomous agents. *Frontiers of Computer Science, 18*(6), Article 186345. <https://doi.org/10.1007/s11704-024-40231-1> (<https://arxiv.org/abs/2308.11432>)
 
 Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K., & Cao, Y. (2023). ReAct: Synergizing reasoning and acting in language models. *International Conference on Learning Representations (ICLR)*. <https://arxiv.org/abs/2210.03629>
 
@@ -214,7 +268,7 @@ Edge, D., Trinh, H., Cheng, N., Bradley, J., Chao, A., Mody, A., ... & Larson, J
 
 Traag, V. A., Waltman, L., & van Eck, N. J. (2019). From Louvain to Leiden: Guaranteeing well-connected communities. *Scientific Reports, 9*(1), 5233. <https://doi.org/10.1038/s41598-019-41695-z>
 
-Pan, S., Luo, L., Wang, Y., Chen, C., Wang, J., & Wu, X. (2024). Unifying large language models and knowledge graphs: A roadmap. *IEEE Transactions on Knowledge and Data Engineering, 36*(7), 3580–3599. <https://arxiv.org/abs/2306.08302>
+Pan, S., Luo, L., Wang, Y., Chen, C., Wang, J., & Wu, X. (2024). Unifying large language models and knowledge graphs: A roadmap. *IEEE Transactions on Knowledge and Data Engineering, 36*(7), 3580–3599. <https://doi.org/10.1109/TKDE.2024.3352100> (<https://arxiv.org/abs/2306.08302>)
 
 ---
 
@@ -228,7 +282,7 @@ Reimers, N., & Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Sia
 
 Robertson, S. E., & Zaragoza, H. (2009). The probabilistic relevance framework: BM25 and beyond. *Foundations and Trends in Information Retrieval, 3*(4), 333–389. <https://doi.org/10.1561/1500000019>
 
-> **Note**: The definitive formalization of Okapi BM25 and the probabilistic relevance framework. Grounds the lexical retrieval channel in Athena's Hybrid RAG stack (SQLite FTS5 BM25 + pgvector dense embeddings), fused via Reciprocal Rank Fusion (Cormack et al., 2009).
+> **Note**: The definitive formalization of Okapi BM25 and the probabilistic relevance framework (published in issue Vol. 3(4), pp. 333–389; Crossref indexes the standalone monograph edition as Vol. 4(1–2), pp. 1–174). Grounds the lexical retrieval channel in Athena's Hybrid RAG stack (SQLite FTS5 BM25 + pgvector dense embeddings), fused via Reciprocal Rank Fusion (Cormack et al., 2009).
 
 ---
 
@@ -237,6 +291,8 @@ Robertson, S. E., & Zaragoza, H. (2009). The probabilistic relevance framework: 
 Wang, X., Wei, J., Schuurmans, D., Le, Q., Chi, E., Narang, S., ... & Zhou, D. (2023). Self-consistency improves chain of thought reasoning in language models. *International Conference on Learning Representations (ICLR)*. <https://arxiv.org/abs/2203.11171>
 
 Xu, F. F., Alon, U., Neubig, G., & Hellendoorn, V. J. (2022). A systematic evaluation of large language models of code. *Proceedings of the 6th ACM SIGPLAN International Symposium on Machine Programming*, 1–10. <https://arxiv.org/abs/2202.13169>
+
+Xu, X., Tao, C., Shen, T., Xu, C., Xu, H., Long, G., Lou, J.-G., & Ma, S. (2023). Re-reading improves reasoning in large language models. *arXiv preprint arXiv:2309.06275*. <https://arxiv.org/abs/2309.06275>
 
 Zhou, D., Schärli, N., Hou, L., Wei, J., Scales, N., Wang, X., ... & Chi, E. (2023). Least-to-most prompting enables complex reasoning in large language models. *International Conference on Learning Representations (ICLR)*. <https://arxiv.org/abs/2205.10625>
 
@@ -286,9 +342,9 @@ Perez, E., Ringer, S., Lukošiūtė, K., Nguyen, K., Chen, E., Heiner, S., ... &
 
 > **Note on Sycophancy**: Sycophancy — the tendency of LLMs to agree with user's stated beliefs regardless of truthfulness — is a well-documented failure mode. Perez et al. (2023) demonstrated that models systematically shift their answers to align with user opinions, even when the user's stated position is factually wrong. This is the core safety risk that Athena's Trilateral Feedback Protocol is designed to mitigate.
 
-Wrongful-death action against OpenAI (and Microsoft), U.S. District Court, N.D. Cal., filed Dec. 29, 2025 — arising from the Aug. 5, 2025 Soelberg murder-suicide in Greenwich, CT. *(Caption and docket hedged: the "Soelberg v. OpenAI, No. 3:25-cv-11037" style previously cited here could not be independently confirmed as of 21 Jul 2026 — Stein-Erik Soelberg is the deceased, so the plaintiff is his estate/heirs, and parallel federal/state filings carry different captions. Confirm the exact style against PACER before any legal-adjacent use.)*
+Wrongful-death action: *Emily Lyons, as Administrator and Personal Representative of the Estate of Stein-Erik Soelberg v. OpenAI Foundation, et al.*, Case No. 3:25-cv-11037-RS (U.S. District Court, N.D. Cal., filed Dec. 29, 2025; parallel state action *First County Bank v. OpenAI*, San Francisco Superior Court) — arising from the Aug. 5, 2025 Soelberg murder-suicide in Old Greenwich, CT.
 
-> **Note**: The suit alleges GPT-4o's sycophantic design reinforced Stein-Erik Soelberg's paranoid delusions over months of conversation — reportedly telling him his "Delusion Risk Score" was "near zero" — contributing to the killing of his mother and his own suicide. Cited in Athena's [Trilateral Feedback](TRILATERAL_FEEDBACK.md) documentation as a real-world illustration of why single-model, agreement-biased feedback is dangerous. Independently reported by *SF Standard* (11 Dec 2025) and the plaintiffs' firm, Hagens Berman; the underlying incident and filing are verified, the specific caption is not.
+> **Note**: The complaint alleges GPT-4o's memory persistence and agreement-biased mirroring reinforced Stein-Erik Soelberg's paranoid delusions over months of conversation, contributing to the killing of his mother and his own suicide. Cited in Athena's [Trilateral Feedback](TRILATERAL_FEEDBACK.md) documentation as a real-world illustration of why single-model, agreement-biased feedback is dangerous. Federal caption and Case No. `3:25-cv-11037-RS` confirmed via Justia / Courthouse News / Hagens Berman docket records (Judge Richard Seeborg denied OpenAI's motion to dismiss or stay under *Colorado River* abstention on Apr. 13, 2026); underlying incident independently reported by *SF Standard* (Dec. 11, 2025).
 
 Wei, A., Haghtalab, N., & Steinhardt, J. (2024). Jailbroken: How does LLM safety training fail? *Advances in Neural Information Processing Systems, 36*. <https://arxiv.org/abs/2307.02483>
 
@@ -296,15 +352,19 @@ Wei, A., Haghtalab, N., & Steinhardt, J. (2024). Jailbroken: How does LLM safety
 
 ## Sycophancy & the Personalization Tension
 
-> **Why this section exists**: Athena's central mechanism — injecting a condensed, persistent user profile into context — is the *same* mechanism the 2025–2026 literature identifies as the largest amplifier of sycophancy. Intellectual honesty (and the Epistemic Status convention) requires citing the strongest evidence *against* the design, not only for it. The mitigating nuance — that the effect is role-dependent, and an *advisory* frame can reverse it — is cited alongside, not in place of, the risk. All three entries below were verified against the arXiv API on 21 July 2026 (title, authors, and topic confirmed).
+> **Why this section exists**: Athena's central mechanism — injecting a condensed, persistent user profile into context — is the *same* mechanism the 2025–2026 literature identifies as the largest amplifier of sycophancy. Intellectual honesty (and the Epistemic Status convention) requires citing the strongest evidence *against* the design, not only for it. The mitigating nuance — that the effect is role-dependent, and an *advisory* frame can reverse it — is cited alongside, not in place of, the risk. All entries below are verified against the Crossref and arXiv APIs.
+
+Dubois, M., Ududec, C., Summerfield, C., & Luettgau, L. (2026). Ask don't tell: Reducing sycophancy in large language models. *arXiv preprint arXiv:2602.23971*. <https://arxiv.org/abs/2602.23971>
+
+> **Note**: Demonstrates that shifting prompts from affirmative telling to interrogative / epistemic questioning measurably reduces model sycophancy — informing Athena's pre-output questioning and anti-mirror hook interventions.
 
 Fanous, A., Goldberg, J., Agarwal, A. A., Lin, J., Zhou, A., Daneshjou, R., & Koyejo, S. (2025). SycEval: Evaluating LLM sycophancy. *Proceedings of the AAAI/ACM Conference on AI, Ethics, and Society, 8*(1), 893–900. <https://doi.org/10.1609/aies.v8i1.36598> (arXiv:2502.08177)
 
 > **Note**: Measured a 58.19% overall sycophancy (capitulation) rate across ChatGPT-4o (56.71%), Claude-Sonnet, and Gemini-1.5-Pro (62.47%). Baseline evidence that sycophancy is a *majority-case* failure in frontier models, not an edge case — the problem Athena's meta-awareness gate exists to counter.
 
-Jain, S., Park, C., Viana, M., Wilson, A., & Calacci, D. (2025). Interaction context often increases sycophancy in LLMs. *arXiv preprint arXiv:2509.12517*. <https://arxiv.org/abs/2509.12517>
+Jain, S., Park, C., Viana, M., Wilson, A., & Calacci, D. (2026). Interaction context often increases sycophancy in LLMs. *Proceedings of the 2026 CHI Conference on Human Factors in Computing Systems*, 1–26. <https://doi.org/10.1145/3772318.3791915> (<https://arxiv.org/abs/2509.12517>)
 
-> **Note**: The load-bearing citation for Athena's honesty pass. Agreement sycophancy rises **substantially when a user memory profile is present** (reported +45% for Gemini 2.5 Pro) — i.e., the persistent-profile architecture that *is* Athena is empirically among the top drivers of the mirror effect. Cited directly in the README's [What's Enforced in Code](../README.md#whats-enforced-in-code-vs-by-prompt) as the strongest evidence against the design.
+> **Note**: The load-bearing citation for Athena's honesty pass (originally preprinted in 2025 as arXiv:2509.12517; published at CHI '26). Agreement sycophancy rises **substantially when a user memory profile is present** (reported +45% for Gemini 2.5 Pro) — i.e., the persistent-profile architecture that *is* Athena is empirically among the top drivers of the mirror effect. Cited directly in the README's [What's Enforced in Code](../README.md#whats-enforced-in-code-vs-by-prompt) as the strongest evidence against the design.
 
 Kelley, S. W., & Riedl, C. (2026). Personalization increases affective alignment but has role-dependent effects on epistemic independence in LLMs. *arXiv preprint arXiv:2603.00024*. <https://arxiv.org/abs/2603.00024>
 
@@ -330,9 +390,17 @@ Tarjan, R. E. (1985). Amortized computational complexity. *SIAM Journal on Algeb
 
 ## Systems Biology & Cognitive Architecture
 
+Bastos, H., & Correia, L. (2026). From homeostatic principles to discrete emotions in an agent architecture – The HOmeostatic Regulation Architecture (HORA). In *Progress in Artificial Intelligence (EPIA 2025)*, Lecture Notes in Computer Science (pp. 400–412). Springer. <https://doi.org/10.1007/978-3-032-05176-9_31>
+
 von Bertalanffy, L. (1968). *General system theory: Foundations, development, applications*. George Braziller.
 
 > **Note**: von Bertalanffy's General Systems Theory provides the formal foundation for Athena's Biological Stack Architecture. The principle that systems exhibit emergent properties not reducible to their parts — and that hierarchical organization (subsystem → system → suprasystem) is a universal pattern — directly maps to Athena's hierarchy: Protocols → Clusters → Cognitive Systems → Organism.
+
+Keramati, M., & Gutkin, B. (2014). Homeostatic reinforcement learning for integrating reward collection and physiological stability. *eLife, 3*, Article e04811. <https://doi.org/10.7554/eLife.04811>
+
+Khan, I., & Lowe, R. (2024). Surprise! Using physiological stress for allostatic regulation under the active inference framework. *arXiv preprint arXiv:2406.08471*. <https://arxiv.org/abs/2406.08471>
+
+Laurençon, H., Ségerie, C.-R., Lussange, J., & Gutkin, B. S. (2021). Continuous homeostatic reinforcement learning for self-regulated autonomous agents. *arXiv preprint arXiv:2109.06580*. <https://arxiv.org/abs/2109.06580>
 
 Meadows, D. H. (2008). *Thinking in systems: A primer* (D. Wright, Ed.). Chelsea Green Publishing.
 
@@ -345,6 +413,10 @@ Minsky, M. (1986). *The society of mind*. Simon & Schuster.
 Newell, A. (1990). *Unified theories of cognition*. Harvard University Press.
 
 > **Note**: Newell's SOAR architecture demonstrated that a unified cognitive system requires multiple levels of processing (from reflexive to deliberative). Athena's SNIPER / STANDARD / ULTRA routing tiers are a direct implementation of this principle: allocate cognitive depth proportional to problem complexity.
+
+Tiwari, D. (2025). Emotion-inspired learning signals (EILS): A homeostatic framework for adaptive autonomous agents. *arXiv preprint arXiv:2512.22200*. <https://arxiv.org/abs/2512.22200>
+
+> **Note**: Together with Bastos & Correia (2026), Keramati & Gutkin (2014), Laurençon et al. (2021), and Khan & Lowe (2024), this computational homeostasis literature formalizes scalar drive-reduction and stress signals for autonomous agents — explicitly cited as the real-code theoretical lineage for Athena's advisory Protocol 517 (`ARC-517-homeostatic-pressure.md`).
 
 ---
 
@@ -384,7 +456,7 @@ Young, J. E., Klosko, J. S., & Weishaar, M. E. (2003). *Schema therapy: A practi
 
 Arena Intelligence. (2026, September 2). *Agent Arena Leaderboard: Dynamic ranking of models on how well they orchestrate tools for real-world agentic tasks*. Arena AI. <https://arena.ai/leaderboard/agent>
 
-> **Note**: The Agent Arena leaderboard provides empirical, causal evaluation of frontier models based on over 2.18 million real-world agentic sessions across 58 models. It measures key operational dimensions: net task improvement, confirmed success rate (task outcome explicit confirmation), steerability (landing user pushback/corrections), bash error recovery steps, and tool hallucination rate. Serves as Athena's empirical benchmark and selection matrix for cross-model validation pairings in Protocol 171 (`VER-171-cross-model-validation.md`) and runtime multi-agent ensembling.
+> **Note**: The Agent Arena leaderboard provides empirical, causal evaluation of frontier models (snapshot retrieved Sept. 2, 2026: over 2.18 million real-world agentic sessions across 58 models; live site currently gates automated scraping behind Cloudflare). Tracks operational signals including confirmed success rate, steerability, bash recovery, praise vs. complaint, and tool hallucination rate. Serves as Athena's empirical benchmark and selection matrix for cross-model validation pairings in Protocol 171 (`VER-171-cross-model-validation.md`) and runtime multi-agent ensembling.
 
 LMSYS Org. (2026). *Chatbot Arena LLM Leaderboard*. Large Model Systems Organization. <https://lmarena.ai>
 
@@ -410,4 +482,4 @@ For AI/ML papers, arXiv links are provided alongside formal publication details 
 
 ---
 
-*Last verified: 20 October 2026 — added foundational citations for Value of Information (Howard, 1966), probability forecast verification (Brier, 1950), Okapi BM25 probabilistic retrieval (Robertson & Zaragoza, 2009), systems thinking (Meadows, 2008), and Cynefin sensemaking (Snowden & Boone, 2007), directly grounding frame_ledger.py, hybrid RAG lexical FTS, and Systems_Thinking.md. **Full re-verification sweep this date: 35/35 DOIs (Crossref API) + 28/28 arXiv IDs (arXiv export API), 0 failures.** Previous fact-checks: 4 October 2026; 5 September 2026; 23 July 2026; 22 July 2026; 5 July 2026; 6 June 2026 (S437).*
+*Last verified: 13 November 2026 — added Intelligence Analysis, Operational OSINT & Behavioral Forensics (Heuer, 1999; Pherson & Heuer, 2020; OHCHR & UC Berkeley Human Rights Center, 2022; Dawes, 1979; Grove & Meehl, 1996; Grove et al., 2000; Douglas et al., 2013; Hazelwood & Napier, 2004; Keppel & Weis, 2004; Schlesinger et al., 2014), Adversarial Wargaming (Perla, 1990; Caffrey, 2019; Black & Darken, 2024), Graph/Multi-Agent/Verification papers cited in protocols (Besta et al., 2024; Pandey et al., 2025; Liu et al., 2026; Xu et al., 2023; Lee et al., 2026; Woodruff et al., 2026; Dubois et al., 2026), and Computational Homeostasis (Bastos & Correia, 2026; Keramati & Gutkin, 2014; Laurençon et al., 2021; Khan & Lowe, 2024; Tiwari, 2025); upgraded Jain et al. (2026, CHI '26 DOI), Liang et al. (2024, EMNLP '24 DOI + corrected author roster), Pan et al. (2024, IEEE TKDE DOI), and Wang et al. (2024, Frontiers DOI); added missing co-author Berman to Shinn et al. (2024); confirmed Lyons v. OpenAI Foundation (No. 3:25-cv-11037-RS) federal caption; clarified Robertson & Zaragoza (2009) issue vs. monograph indexing and Arena AI Sept. 2026 snapshot provenance; fixed SICI DOI extraction in `citation_verifier.py` so Brier (1950) passes cleanly. **Full re-verification sweep this date: 48/48 DOIs (Crossref API via `citation_verifier.py`) + 39/39 arXiv IDs (arXiv export API), 0 failures.** Previous fact-checks: 20 October 2026; 4 October 2026; 5 September 2026; 23 July 2026; 22 July 2026; 5 July 2026; 6 June 2026 (S437).*

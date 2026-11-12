@@ -20,6 +20,7 @@ import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote, unquote
 
 import requests
 
@@ -28,9 +29,9 @@ logger = logging.getLogger("athena.tools.citation_verifier")
 CROSSREF_API_URL = "https://api.crossref.org/works"
 USER_AGENT = "Athena-Academic-Verifier/10.0.6 (https://github.com/winstonkoh87/Athena-Public)"
 
-# Standard DOI pattern matching 10.NNNN/...
+# Standard DOI pattern matching 10.NNNN/... (including percent-encoded & ANSI SICI <...:...> segments)
 DOI_REGEX = re.compile(
-    r"(?:10\.\d{4,9}/[-._;()/:A-Za-z0-9]+)",
+    r"(?:10\.\d{4,9}/(?:[-._;()/:A-Za-z0-9]|%[0-9A-Fa-f]{2}|<[A-Za-z0-9._:;()-]+:[A-Za-z0-9._:;()-]+>)+)",
     re.IGNORECASE,
 )
 
@@ -73,10 +74,19 @@ class CitationVerificationResult:
 
 def normalize_doi(raw_doi: str) -> str:
     """Clean and normalize a DOI string, stripping URLs, prefixes, and trailing punctuation."""
-    clean = raw_doi.strip()
+    clean = raw_doi.strip().rstrip(".,;")
+    while clean and (
+        (clean[0] == "(" and clean[-1] == ")")
+        or (clean[0] == "[" and clean[-1] == "]")
+        or (clean[0] == "<" and clean[-1] == ">")
+    ):
+        clean = clean[1:-1].strip().rstrip(".,;")
     clean = re.sub(r"^https?://(dx\.)?doi\.org/", "", clean, flags=re.IGNORECASE)
     clean = re.sub(r"^doi:\s*", "", clean, flags=re.IGNORECASE)
-    clean = clean.rstrip(".,;)>]")
+    while clean and (
+        clean[-1] in ".,;>]" or (clean[-1] == ")" and clean.count(")") > clean.count("("))
+    ):
+        clean = clean[:-1]
     return clean.strip()
 
 
@@ -122,7 +132,8 @@ def verify_doi(
             error=f"Invalid DOI syntax: '{raw_doi}' does not conform to '10.NNNN/...'",
         )
 
-    url = f"{CROSSREF_API_URL}/{doi}"
+    encoded_doi = quote(unquote(doi), safe="/:().,;-_~!*'+")
+    url = f"{CROSSREF_API_URL}/{encoded_doi}"
     headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
 
     http_client = session or requests
