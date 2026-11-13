@@ -15,7 +15,7 @@
 | **Skills** | 44 active (43 with context_trigger), 17 archived |
 | **Case Studies** | 629 |
 | **Total Sessions** | 2,100+ |
-| **Memory Files** | 5,985 |
+| **Memory Files** | 5,991 |
 
 ---
 
