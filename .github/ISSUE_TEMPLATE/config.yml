@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: 📖 Ask Athena First
-    url: https://github.com/winstonkoh87/Athena-Public/blob/main/SUPPORT.md
+    url: https://github.com/winstonkoh87/Athena-Public/blob/main/.github/SUPPORT.md
     about: Most questions can be answered by your own Athena agent. Read this before opening an issue.
   - name: 💬 Discussions
     url: https://github.com/winstonkoh87/Athena-Public/discussions

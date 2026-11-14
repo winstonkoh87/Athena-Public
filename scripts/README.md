@@ -4,6 +4,11 @@ This directory houses development utilities, benchmarking tools, demo generators
 
 ## 📜 Key Scripts
 
+- [`boot_status.py`](boot_status.py) — Batched concurrent session boot telemetry, index health, and calibration probe (`< 1.0s`).
+- [`shutdown.py`](shutdown.py) — Session close orchestrator with micro checkpointing, safe git commits, and JSONL log rotation.
+- [`harness_score.py`](harness_score.py) — 6-pillar zero-iteration agent harness capability (`C`) and enforcement (`E`) scorer.
+- [`maintenance_ratio.py`](maintenance_ratio.py) — Output-vs-maintenance commit ratio analyzer and backlog gate.
+- [`decision_ledger.py`](decision_ledger.py) — Decision logging, outcome auditing, and Brier calibration score calculator.
 - [`benchmark_kv_cache.py`](benchmark_kv_cache.py) — Benchmarks KV cache latency, token throughput, and TTFT across supported model providers.
 - [`generate_demo_gif.py`](generate_demo_gif.py) — Programmatically captures and compiles terminal walkthroughs into high-fidelity animated demo GIFs.
 - [`sync_version.py`](sync_version.py) — Enforces synchronized semantic versioning across `pyproject.toml`, documentation, and manifest files.

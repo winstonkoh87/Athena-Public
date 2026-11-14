@@ -21,5 +21,5 @@
 /pyproject.toml             @winstonkoh87
 
 # Security & safety policies
-/SECURITY.md                @winstonkoh87
+/.github/SECURITY.md        @winstonkoh87
 /SAFETY.md                  @winstonkoh87

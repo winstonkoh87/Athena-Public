@@ -8,7 +8,7 @@ assignees: ''
 
 > 💡 **Consider submitting a PR instead of an issue.**
 > We love contributions! If you can build it, fork the repo, implement it with your Athena agent, and submit a PR.
-> See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
+> See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
 
 ## Problem Statement
 

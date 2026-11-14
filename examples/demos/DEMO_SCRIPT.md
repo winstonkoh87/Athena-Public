@@ -37,4 +37,4 @@ Type `/end`
 
 1. Convert the recording to `.gif`.
 2. Save as `athena_demo.gif` in `Athena-Public/images/`.
-3. Add to `[README.md](../README.md)`: `!Athena Demo`
+3. Add to `[README.md](../../README.md)`: `!Athena Demo`

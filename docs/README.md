@@ -10,6 +10,13 @@ Welcome to the documentation for **Project Athena** — a local-first cognitive 
 - [EXOCORTEX.md](EXOCORTEX.md) — Exocortex knowledge-base indexing, multi-channel retrieval CLI, and configuration guide.
 - [USER_DRIVEN_RSI.md](USER_DRIVEN_RSI.md) — Recursive Self-Improvement (RSI) protocol driven by user signals, feedback loops, and calibration mechanisms.
 - [CAPABILITIES.md](CAPABILITIES.md) — Shipped system capabilities, operational status, and verification matrix.
+- [ENGINEERING_DEPTH.md](ENGINEERING_DEPTH.md) — Technical deep dives, architectural tradeoffs, and honest mechanism boundaries.
+- [BENCHMARKS.md](BENCHMARKS.md) — Strict Anti-Goodhart retrieval evaluation, KV cache TTFT benchmarks, and reproducible harnesses.
+- [CLI.md](CLI.md) — Athena CLI command reference (`init`, `doctor`, `check`, decision and RAG entrypoints).
+- [WORKFLOWS.md](WORKFLOWS.md) — Boot/close lifecycle (`/start`, `/end`, `/ultrastart`, `/ultraend`) and slash-command reference.
+- [SECURITY.md](SECURITY.md) — Data residency, permissioning layer, capability tokens, and Secret Mode architecture.
+- [TECH_DEBT.md](TECH_DEBT.md) — Active technical debt ledger and known gate gaps.
+- [wiki/README.md](wiki/README.md) — Vendored GitHub Wiki mirror (`Architecture-Overview`, `Philosophy`, `Use-Cases`, `Workflow-Reference`).
 
 ### Onboarding & Guides
 - [GETTING_STARTED.md](GETTING_STARTED.md) — Step-by-step installation, environment setup, and CLI verification.
@@ -27,4 +34,4 @@ Welcome to the documentation for **Project Athena** — a local-first cognitive 
 
 ---
 
-> For questions or community contributions, see [CONTRIBUTING.md](../CONTRIBUTING.md) and [SECURITY.md](../SECURITY.md).
+> For questions or community contributions, see [CONTRIBUTING.md](../.github/CONTRIBUTING.md) and [SECURITY.md](../.github/SECURITY.md).

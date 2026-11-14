@@ -44,7 +44,7 @@ To add support for a new IDE:
 1. Determine where the IDE reads its agent rules from (e.g., `.cursor/rules.md`)
 2. Add a template constant and handler to `src/athena/cli/init.py`
 3. Add the IDE name to the `choices` list in `src/athena/__main__.py`
-4. Submit a PR — see [CONTRIBUTING.md](../CONTRIBUTING.md)
+4. Submit a PR — see [CONTRIBUTING.md](../.github/CONTRIBUTING.md)
 
 ---
 

@@ -17,13 +17,13 @@ last_reviewed: "2026-06-10"
 root_files:
   - AGENTS.md
   - CLAUDE.md
-  - CODE_OF_CONDUCT.md
-  - CONTRIBUTING.md
+  - .github/CODE_OF_CONDUCT.md
+  - .github/CONTRIBUTING.md
   - LICENSE
   - README.md
   - SAFETY.md
-  - SECURITY.md
-  - SUPPORT.md
+  - .github/SECURITY.md
+  - .github/SUPPORT.md
   - athena.yaml
   - llms.txt
   - pyproject.toml

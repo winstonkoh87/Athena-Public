@@ -22,6 +22,6 @@
             }
         }
     },
-    "postCreateCommand": "pip install -r requirements.txt && python3 .agent/scripts/boot.py --headless",
+    "postCreateCommand": "pip install -e '.[local]' && python3 scripts/boot_status.py",
     "remoteUser": "vscode"
 }

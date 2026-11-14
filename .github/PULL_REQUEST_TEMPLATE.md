@@ -18,7 +18,7 @@ Closes #<!-- issue number (REQUIRED — PRs without a linked issue will be close
 
 ## Checklist
 
-- [ ] I have read the [CONTRIBUTING](../CONTRIBUTING.md) guidelines and the **Quality Bar** section
+- [ ] I have read the [CONTRIBUTING](CONTRIBUTING.md) guidelines and the **Quality Bar** section
 - [ ] This PR addresses a specific gap or issue in **Athena** (not a generic improvement)
 - [ ] My code follows the project's style (modular, <500 lines per file)
 - [ ] I have tested my changes locally
