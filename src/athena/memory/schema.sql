@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS protocols (
     file_path TEXT UNIQUE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
--- Document Chunks: Segment-level text embeddings
+-- Document Chunks: Segment-level half-precision (halfvec) text embeddings
 CREATE TABLE IF NOT EXISTS document_chunks (
     id SERIAL PRIMARY KEY,
     file_path TEXT NOT NULL,
@@ -57,15 +57,16 @@ CREATE TABLE IF NOT EXISTS document_chunks (
     chunk_index INTEGER NOT NULL,
     title TEXT,
     content TEXT NOT NULL,
-    embedding VECTOR(3072),
+    embedding halfvec(3072),
     metadata JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(file_path, chunk_index)
 );
 -- ============================================================================
--- INDEXES (IVFFlat for fast similarity search)
+-- INDEXES (HNSW on halfvec(3072) bypasses pgvector's 2000-dim float32 cap)
 -- ============================================================================
--- Note: ivfflat index is omitted on document_chunks, sessions, case_studies, and protocols because pgvector limits ivfflat to 2000 dimensions, and we use 3072-dimensional Gemini embeddings. Exact sequential scan is used for query matching.
+CREATE INDEX IF NOT EXISTS document_chunks_embedding_halfvec_idx
+    ON document_chunks USING hnsw (embedding halfvec_cosine_ops);
 -- ============================================================================
 -- SEARCH FUNCTIONS (RPC)
 -- ============================================================================

@@ -78,3 +78,51 @@ def test_stale_detection(temp_workspace):
     # File not passed in scan -> Stale
     assert len(dm.get_stale_files([])) == 1
     assert str(f) in dm.get_stale_files([])
+
+
+def test_sync_file_to_supabase_does_not_duplicate_full_content_in_parent_table(tmp_path, monkeypatch):
+    """sync_file_to_supabase stores chunk content in document_chunks and keeps parent content empty."""
+    from athena.memory import sync as sync_mod
+
+    sample = tmp_path / "2026-11-14-session-99.md"
+    sample.write_text("# Session 99\n\nUnique Body Text for halfvec compaction test.\n", encoding="utf-8")
+
+    upserts: list[tuple[str, dict, str | None]] = []
+
+    class _QueryStub:
+        def __init__(self, table_name: str):
+            self.table_name = table_name
+
+        def delete(self):
+            return self
+
+        def eq(self, _col: str, _val: str):
+            return self
+
+        def upsert(self, payload: dict, on_conflict: str | None = None):
+            upserts.append((self.table_name, dict(payload), on_conflict))
+            return self
+
+        def execute(self):
+            return type("Resp", (), {"data": []})()
+
+    class _ClientStub:
+        def table(self, table_name: str):
+            return _QueryStub(table_name)
+
+    monkeypatch.setattr(sync_mod, "get_client", lambda: _ClientStub())
+    monkeypatch.setattr(sync_mod, "get_embedding", lambda _text, **_kw: [0.1] * 8)
+
+    ok = sync_mod.sync_file_to_supabase(sample, "sessions")
+    assert ok is True
+
+    chunk_upserts = [u for u in upserts if u[0] == "document_chunks"]
+    parent_upserts = [u for u in upserts if u[0] == "sessions"]
+    assert len(chunk_upserts) >= 1
+    assert "Unique Body Text" in chunk_upserts[0][1]["content"]
+    assert chunk_upserts[0][1]["embedding"] == [0.1] * 8
+
+    assert len(parent_upserts) == 1
+    assert parent_upserts[0][1]["content"] == ""
+    assert "embedding" not in parent_upserts[0][1]
+    assert parent_upserts[0][1]["session_number"] == 99

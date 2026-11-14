@@ -139,9 +139,10 @@ def sync_file_to_supabase(
             for chunk_data in chunk_payloads:
                 client.table("document_chunks").upsert(chunk_data, on_conflict="file_path,chunk_index").execute()
 
-            # 3. Upsert parent metadata (no file-level embedding stored to save DB size)
+            # 3. Upsert parent metadata (store empty content + no embedding to save DB quota;
+            #    chunk text and halfvec(3072) embeddings live in document_chunks)
             parent_data = {
-                "content": content,
+                "content": "",
                 "file_path": db_path,
                 "title": meta.get("title", abs_file.name),
             }
