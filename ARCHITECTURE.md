@@ -10,64 +10,45 @@
 ## Workspace Structure
 
 ```
-Athena/
-├── .agent/                        # Agent configuration
-│   ├── skills/                    #   44 active skills (43 with context_trigger)
-│   │   └── protocols/             #   410 active + 51 archived = 461 total, 26 categories
-│   │       └── archive/           #     51 archived protocols (read-only, see README)
-│   ├── workflows/                 #   57 root + 21 _domain = 78 slash-command workflows
-│   │   └── _domain/               #     Domain-scoped, conditionally activated
-│   ├── scripts/                   #   290 automation scripts
-│   ├── telemetry/                 #   Retrieval instrumentation logs + tier maps
-│   ├── config/                    #   Agent manifests + CAPS.json (canonical counts)
-│   ├── CLUSTER_INDEX.md           #   15 cognitive clusters (routing map)
-│   ├── WORKFLOW_INDEX.md          #   Workflow registry
-│   ├── graphrag/                  #   [REMOVED 2026-06-06] Knowledge graph formally retired
-│   ├── swarms/                    #   Multi-agent swarm definitions
-│   └── archive_skills/            #   17 sunset skills (read-only, see README)
-│
-├── .context/                      # Personal knowledge base
-│   ├── memories/                  #   5,991 memory files (session logs + case studies + profile)
-│   │   ├── session_logs/          #     Dated session records
-│   │   ├── case_studies/          #     629 documented patterns (14 domains)
-│   │   ├── profile/               #     Core profile, psychology, voice DNA
-│   │   └── observations/          #     Session insights
-│   ├── memory_bank/               #   10 boot files (activeContext, userContext,
-│   │                              #     productContext, threatPlaybooks,
-│   │                              #     sessionArchive, decisionLog, etc.)
-│   ├── CANONICAL.md               #   Canonical memory (compacted truths)
-│   ├── PROJECTS.md                #   Active project switchboard (supersedes legacy project_state.md)
-│   ├── PROTOCOL_SUMMARIES.md      #   All-protocol index
-│   ├── PROTOCOL_HEATMAP.md        #   Protocol usage heatmap
-│   ├── KNOWLEDGE_GRAPH.md         #   Concept relationships
-│   ├── TECH_DEBT.md               #   Technical debt tracker
-│   ├── CASE_STUDY_INDEX.md        #   Case study domain taxonomy (14 domains)
-│   └── archive/                   #   Retired indexes (TAG_INDEX_*, project_state_legacy)
-│
-├── .athena/                       # Runtime state (daemon, PID, crash reports)
-├── .framework/                    # v8.2-stable modules + protocols (frozen 2026-02-01; reference-only)
-│   └── archive/                   #   v7 / v8.0 / v8.1 codex archive (historical)
-├── .projects/                     # Isolated project workspaces
-│
-├── src/                           # Athena SDK source (111 Python files across 11 modules)
-├── tests/                         # Test suite (57 Python files)
-├── supabase/                      # Cloud vector store migrations
-│
-├── docs/                          # Documentation (89 files)
-│
-├── README.md                      # Public repository README
-├── ARCHITECTURE.md                # System Architecture Reference
-├── pyproject.toml                 # Python packaging
-└── .env.example                   # Environment template
+Athena-Public/                       # Clean-lobby repository (32 tracked root entries)
+├── .agent/                          # Core runtime configuration
+│   ├── config/                      #   CAPS.json, ag_middleware.json, gate_config.json, harness_scorecard.yaml
+│   └── scripts/lib/                 #   Compatibility shims (jsonl_tail.py -> athena.core)
+├── .context/                        # Reference context & architecture templates
+├── .framework/                      # v8.2-stable core reference modules (frozen)
+├── .github/                         # CI workflows, templates, CODEOWNERS & governance docs
+├── data/                            # Static reference datasets
+├── docker/                          # Containerized deployment & sandbox configs
+├── docs/                            # 50 top-level guides (89 files)
+├── examples/                        # Reference workflows, protocols, skills, case studies & scripts
+│   ├── workflows/                   #   78 slash-command workflow templates (minmax, ultrastart, ultraend, ...)
+│   ├── scripts/                     #   Reference automation & audit scripts (ucds_audit.py, wargame_runner.py, ...)
+│   ├── skills/ & protocols/         #   44 skills & 410 active protocols (26 categories)
+│   └── case_studies/, demos/, templates/
+├── scripts/                         # 50 curated public runtime scripts (boot_status.py, hook_stop_verify.py, harness_score.py, ...)
+├── src/                             # Athena SDK source (113 Python files across 11 subpackages)
+│   └── athena/                      #   auditors, boot, cli, core, eval, generators, intelligence, lifecycle, memory, templates, tools
+├── supabase/                        # Cloud vector store schema & RPC migrations
+├── tests/                           # Public test suite (59 Python files)
+├── AGENTS.md                        # System boot & governance entrypoint
+├── CLAUDE.md                        # Symlink -> AGENTS.md
+├── ARCHITECTURE.md                  # This file
+├── CHANGELOG.md                     # Release history
+├── DATA_CONTRACT.md                 # Data governance & schema contract
+├── SAFETY.md                        # Life-safety, ruin prevention & crisis guardrails
+├── README.md                        # Public repository overview
+├── athena.yaml / pyproject.toml     # SDK & runtime manifests
+└── Makefile / LICENSE / llms.txt    # Build targets, MIT license & LLM index
 ```
 
+> **Canonical Counts (`CAPS.json`)**: `410 active + 51 archived = 461 protocols (26 categories)`, `44 active skills (17 archived)`, `78 workflows (57 root + 21 _domain/)`, `629 case studies`, `199 CANONICAL entries`. See [`.agent/config/CAPS.json`](.agent/config/CAPS.json).
 > **Decoupled Workspaces (External)**:
-> - **FX Trading Desk**: Isolated at `~/Desktop/FX Daytrading/` (independent repository). Athena supplies cognitive governance, risk gates (`trading-risk-gate`, `structural-trading-gate`), and variance shields (Law #1), while trade execution, MT4/MT5 scripts, and tick logs remain isolated.
-> - **Media Production**: Centralized in `~/.remotion-studio` and Vertex AI studio tools (`imagen-studio`, `veo-choreographer`). Binary renders and audio assets are never tracked in the core cognitive repository.
+> - **FX Trading Desk**: Isolated external workspace. Athena supplies cognitive governance, risk gates (`trading-risk-gate`, `structural-trading-gate`, `trade_guardian.py`), and variance shields (Law #1), while execution scripts and tick logs stay separate.
+> - **Media Production**: Centralized external pipelines (`imagen-studio`, `veo-choreographer`, Remotion). Binary renders and audio assets are excluded from the core repository.
 
 ---
 
-### Cognitive Stack — Perception Model (v9.9.9)
+### Cognitive Stack — Perception Model (v10.0.6)
 
 > Modeled after human sensory processing: **Parallel Activation → Attention Gate → Executive Function → Response**.
 > The brain doesn't classify-then-route; it activates-then-filters. Athena's runtime works the same way.
@@ -170,10 +151,10 @@ Full cluster details: `CLUSTER_INDEX.md` (private workspace — see table above 
 
 ### Inventory
 
-| Layer | Count | Description |
-|:------|------:|:------------|
-| Cognitive Domains | 8 | Memory activation targets (priority-ordered for tie-breaking) |
-| Cognitive Clusters | 15 | Co-activating procedural memory bundles |
+| Layer | Count |
+|:------|------:|
+| Cognitive Domains | 8 |
+| Cognitive Clusters | 15 |
 | Skills | 44 active (17 archived) |
 | Protocols | 410 active (51 archived; 461 total) |
 | Workflows | 78 (57 root + 21 _domain/) |
@@ -234,50 +215,55 @@ The proactive layer can **inject context** into the reactive layer — e.g., whe
 
 ## Boot Sequence
 
-```
-/start → ~10K tokens, <5s
+```text
+/start (MinMax v2.0 default)     → ~8–12K tokens, <2s (batched boot_status.py <1.0s)
+/ultrastart (MaxMax v4.0 curated) → <=40K tokens (<20% of 200K ECL ceiling)
 ```
 
-1. Load core identity (Laws #0–#4) — **primes top-down context** for attention gate
-2. Load memory bank (userContext, productContext, activeContext) — **seeds episodic memory**
-3. Run `boot.py` (session recall, semantic prime, daemon health check, COS init)
-4. JIT activation replaces static routing — Protocol 530 (conditional skill loading) activates relevant procedural memory on demand
+1. **Identity & Context Priming**: Core Identity (Laws #0–#4) + surgical `activeContext.md` checkpoint **prime top-down attention**. Under `/ultrastart`, curated slices (`CANONICAL.md` L1-185, `PROJECTS.md` switchboard) + Frame/Decision gates pre-load within a strict `<=40K` token ceiling, paired with explicit `/ultraend` session close.
+2. **Parallel Status Aggregation**: Single-shot `scripts/boot_status.py` (or `.agent/scripts/athena-py scripts/boot_status.py`) replaces sequential subprocesses with concurrent status, frame, due-decision, and index-health collection (`<1.0s`).
+3. **JIT Procedural Activation**: Protocol 530 (conditional skill loading) injects matching skills/protocols only on demand rather than loading the entire registry at boot.
 
 ### Loading Strategy (Progressive Disclosure)
 
-| Layer | Trigger | Tokens |
-|:------|:--------|-------:|
+| Layer | Trigger | Tokens / Size |
+|:------|:--------|--------------:|
 | Core Identity | `/start` | ~2K |
-| Memory Bank (3 files) | `/start` | ~3.5K |
-| Boot orchestrator | `/start` | ~2K |
-| CANONICAL Tier 1 (always boot) | `/start` | ~16K (29 entries) |
-| CANONICAL Tier 2 (domain-triggered) | Query match | ~41K (140 entries, loaded on demand) |
-| Protocol (on-demand) | Attention gate pass | ~3-7K each |
-| Skill cluster (on-demand) | `context_trigger` match | ~5-15K per cluster |
-| Full context | `/fullload` | ~28K |
+| Memory Bank (surgical slices) | `/start` | ~3.5K |
+| `boot_status.py` + Sentinel | `/start` | ~2K |
+| CANONICAL Tier 1 (always boot) | `/start` | ~4K (40 entries, ~16KB) |
+| CANONICAL Tier 2 (domain-triggered) | Query match | ~10K (156 entries, ~40KB on demand) |
+| CANONICAL Tier 3 (on-demand) | Explicit search hit | ~0.3K (3 entries, ~1KB) |
+| Protocol / Skill cluster (on-demand) | `context_trigger` / Attention gate | ~3–15K per bundle |
+| MaxMax v4.0 curated boot | `/ultrastart` | <=40K (`<20%` of 200K ECL) |
 
 ---
 
 ## Retrieval Stack
 
-```
-src/athena/tools/search.py (12s God Mode timeout + grep fallback)
-├── Full SDK search (parallel hybrid RRF + semantic cache)
+```text
+src/athena/tools/search.py (vector_mode: "local" | "auto" | "always" + grep fallback)
+├── Tiered Vector Escalation (MinMax v2.0)
+│   ├── "local"  — SNIPER (<10) / explicit local lookup: FTS5 + canonical + filenames (<1s, zero remote embedding block)
+│   ├── "auto"   — STANDARD (10-30): speculative local + ONNX cross-encoder overlap with quality-floor vector escalation (<=5s wall cap)
+│   └── "always" — ULTRA (>30) / deep queries: full Supabase pgvector RPC fan-out + parallel reranking
+├── Hybrid Activation Channels
 │   ├── Canonical search (CANONICAL.md keyword matching, min 2-hit)
-│   ├── Vector search (Supabase pgvector, 11 parallel RPCs, threshold ≥0.3)
-│   ├── Filename search (find across project root, keyword OR logic)
+│   ├── Vector search (Supabase pgvector, parallel RPCs, threshold >=0.3)
+│   ├── Filename search (workspace path matching, keyword OR logic)
 │   ├── Framework docs search (keyword matching in .framework/ + memory_bank/)
-│   ├── SQLite search (local athena.db — files + tags)
+│   ├── SQLite FTS5 / DB search (local .athena/athena.db or .agent/inputs/athena.db via athena.core.db.connect_sqlite)
 │   └── Web search [opt-in, auto via needs_web()] (provider layer: Serper/Brave/DDG)
-├── Fusion: Weighted RRF (k=60, per-type weights in search.py::WEIGHTS, dynamic score modifiers)
-│   └── Weights live in search.py::WEIGHTS — do not mirror elsewhere
-├── Reranker: ONNX Cross-Encoder (top-50 → limit, crash-safe no-op if unavailable)
+├── Caching & Unified SQLite (athena.core.db.connect_sqlite: WAL + busy_timeout)
+│   ├── QueryCache (src/athena/core/cache.py) — zero-write on cache hit, decoupled search_cache_vecs.db SQLite sidecar
+│   └── PersistentEmbeddingCache (src/athena/memory/vectors.py) — serialized thread-safe embedding SQLite cache
+├── Fusion & Attention Gate
+│   ├── Weighted RRF (k=60, weights in search.py::WEIGHTS) + ONNX Cross-Encoder reranker (top-50 -> limit)
+│   └── mcp_server.py::context_gate — parallel Meta-Pattern fan-out + deduplicated personalisation context
 ├── Telemetry: retrieval_log.jsonl (quality: hit/partial/miss, source distribution)
-└── Grep fallback (runs if full search times out)
-    ├── CANONICAL.md (keyword content matching)
-    ├── PROTOCOL_SUMMARIES.md (keyword content matching)
-    ├── Session log filenames (find -iname)
-    ├── Session log content (grep last 200 files by mtime — P3.3)
+└── Grep fallback (runs automatically on timeout or degraded network)
+    ├── CANONICAL.md & PROTOCOL_SUMMARIES.md
+    ├── Session log filenames & content (bounded tail by mtime)
     └── Memory bank files
 ```
 
@@ -285,11 +271,11 @@ src/athena/tools/search.py (12s God Mode timeout + grep fallback)
 
 ## Risk-Proportional Response (Law #6)
 
-| Level | Λ Score | Protocol | Latency |
-|:------|--------:|:---------|--------:|
-| SNIPER | < 10 | Direct answer. Search exempt. | ~1s |
-| STANDARD | 10-30 | Triple-Lock (Search → Save → Speak) | ~5-10s |
-| ULTRA | > 30 | Triple-Lock + Triple Crown reasoning | Unbounded |
+| Level | Lambda Score | Protocol | Latency |
+|:------|-------------:|:---------|--------:|
+| SNIPER | < 10 | Direct answer. Search exempt (`vector_mode="local"` when used). | ~1s |
+| STANDARD | 10-30 | Triple-Lock (`context_gate` / `vector_mode="auto"` -> `quicksave` -> Speak) | ~2-5s |
+| ULTRA | > 30 | Triple-Lock + MaxMax v4.0 (`vector_mode="always"`, `<=40K` curated boot, Frame/Decision gates) | Deep / Curated |
 
 ---
 
@@ -297,7 +283,7 @@ src/athena/tools/search.py (12s God Mode timeout + grep fallback)
 
 | Index | Path | Purpose |
 |:------|:-----|:--------|
-| `CLUSTER_INDEX.md` | `.agent/CLUSTER_INDEX.md` | Routing map (16 clusters + 8 systems) |
+| `CLUSTER_INDEX.md` | `.agent/CLUSTER_INDEX.md` | Routing map (15 clusters + 8 systems) |
 | `WORKFLOW_INDEX.md` | `.agent/WORKFLOW_INDEX.md` | Workflow registry (root + `_domain/`) |
 | `SKILL_INDEX.md` | `.agent/skills/SKILL_INDEX.md` | Active skills + protocol tree registry |
 | `PROTOCOL_SUMMARIES.md` | `.context/PROTOCOL_SUMMARIES.md` | All-protocol quick-lookup |
@@ -344,9 +330,14 @@ src/athena/tools/search.py (12s God Mode timeout + grep fallback)
 ### 2. Contextual ATX Heading Breadcrumb Chunker (`src/athena/memory/`)
 - **`contextual_chunker.py`**: Pure standard-library hierarchical parser that extracts Markdown ATX heading hierarchy (`# Title > ## Section > ### Subheading`) and prepends structured breadcrumbs to every text chunk prior to vector embedding. Eliminates orphan context loss across RAG queries (shipped S1053).
 
-### 3. Verification & Guard Tooling (`src/athena/tools/` & `examples/scripts/`)
-- **`citation_verifier.py`**: Automated Crossref API client with title similarity scoring and DOI metadata verification (shipped S1032).
-- **`contrast_check.py`**: Deterministic W3C WCAG 2.1 relative luminance checker with built-in reference self-tests (shipped S1055).
+### 3. Runtime Infrastructure, Verification & Guard Tooling (`src/athena/`, `scripts/` & `examples/scripts/`)
+- **`src/athena/core/db.py`**: Unified SQLite connection factory (`connect_sqlite` with `WAL` journal mode, `busy_timeout`, and validated `synchronous` PRAGMA) and database path resolver (`resolve_athena_db_path`), backing `QueryCache` (`cache.py`) and `PersistentEmbeddingCache` (`vectors.py`).
+- **`src/athena/core/jsonl_tail.py`**: Shared O(1) bounded EOF-seek JSONL tail reader and gzip log rotator (`read_jsonl_tail_lines`, `read_tail_jsonl_records`, `read_latest_jsonl_record`, `rotate_jsonl_if_oversized`), re-exported via `.agent/scripts/lib/jsonl_tail.py` and `examples/scripts/lib/jsonl_tail.py`.
+- **`scripts/boot_status.py`**: Single-pass parallel boot status aggregator replacing legacy sequential shell calls (`<1.0s` target wall time).
+- **`src/athena/tools/trade_guardian.py`**: Deterministic FX trade holding-duration guardrail (`TradeGuardian` with sweet-spot, optimal, and danger holding thresholds).
+- **Governance & Stop Audit Gates**: `scripts/hook_stop_verify.py` & `examples/scripts/stop_governance_gate.py` (O(1) tail-scan Stop hooks) paired with non-blocking `audit_warnings` in `src/athena/mcp_server.py::quicksave` (`_has_raw_latex_delimiters` + bounded-tail `read_tail_jsonl_records` + `find_unreceipted_engine_claims`).
+- **`src/athena/tools/citation_verifier.py`**: Automated Crossref API client with title similarity scoring and DOI metadata verification (shipped S1032).
+- **`scripts/contrast_check.py`**: Deterministic W3C WCAG 2.1 relative luminance checker with built-in reference self-tests (shipped S1055).
 
 ---
 

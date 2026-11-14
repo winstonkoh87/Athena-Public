@@ -29,7 +29,6 @@ import contextlib
 import hashlib
 import json
 import math
-import sqlite3
 import time
 from array import array
 from collections import OrderedDict
@@ -38,6 +37,7 @@ from pathlib import Path
 from typing import Any
 
 from athena.core.config import AGENT_DIR
+from athena.core.db import connect_sqlite
 
 
 @dataclass
@@ -121,7 +121,9 @@ class QueryCache:
         if not self._vec_db_file.exists():
             return vecs
         try:
-            with contextlib.closing(sqlite3.connect(str(self._vec_db_file))) as conn:
+            with contextlib.closing(
+                connect_sqlite(self._vec_db_file, wal=False, synchronous=None)
+            ) as conn:
                 rows = conn.execute("SELECT key, vec FROM cache_vecs").fetchall()
             for key, blob in rows:
                 if isinstance(blob, (bytes, bytearray)) and len(blob) % 8 == 0:
@@ -136,9 +138,7 @@ class QueryCache:
         """Persist decoupled embeddings cleanly in SQLite without bloating search_cache.json."""
         try:
             self._vec_db_file.parent.mkdir(parents=True, exist_ok=True)
-            with contextlib.closing(sqlite3.connect(str(self._vec_db_file))) as conn:
-                conn.execute("PRAGMA journal_mode=WAL")
-                conn.execute("PRAGMA synchronous=NORMAL")
+            with contextlib.closing(connect_sqlite(self._vec_db_file)) as conn:
                 conn.execute(
                     "CREATE TABLE IF NOT EXISTS cache_vecs "
                     "(key TEXT PRIMARY KEY, vec BLOB NOT NULL)"

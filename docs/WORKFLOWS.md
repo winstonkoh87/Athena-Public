@@ -1,6 +1,6 @@
 # Workflows in Project Athena
 
-> **Last Updated**: 13 November 2026
+> **Last Updated**: 14 November 2026
 
 Workflows are slash commands that trigger predefined sequences of actions. They're the backbone of Athena's session management and deep reasoning capabilities.
 
@@ -12,6 +12,9 @@ Workflows are slash commands that trigger predefined sequences of actions. They'
 |---------|---------|------------|
 | [`/start`](../examples/workflows/start.md) | Boot session, load identity | Low |
 | [`/end`](../examples/workflows/end.md) | Close session, commit to memory | Low |
+| [`/minmax`](../examples/workflows/minmax.md) | Default MinMax v2.0 fast-boot & bounded-search routing | Low |
+| [`/ultrastart`](../examples/workflows/ultrastart.md) | MaxMax v4.0 curated high-reasoning boot (`<=40K`, `<20% of 200K ECL`) | High |
+| [`/ultraend`](../examples/workflows/ultraend.md) | MaxMax v4.0 full harvest, calibration close & audit | High |
 | [`/tutorial`](../examples/workflows/tutorial.md) | Guided first-session walkthrough | Low |
 | [`/save`](../examples/workflows/save.md) | Mid-session checkpoint | Low |
 | [`/think`](../examples/workflows/think.md) | Deep reasoning (all phases) | Medium |
@@ -35,8 +38,11 @@ Workflows are slash commands that trigger predefined sequences of actions. They'
 
 | Workflow | When to Use |
 |----------|-------------|
-| **`/start`** | Beginning of every session. Loads identity, recalls context from previous sessions. |
+| **`/start`** | Beginning of every session. Fast MinMax v2.0 boot (`scripts/boot_status.py`) & context recovery. |
 | **`/end`** | End of every session. Commits insights to memory, updates indexes. |
+| **`/ultrastart`** | Deep MaxMax v4.0 boot (`<=40K` curated token ceiling, surgical `CANONICAL.md` & `PROJECTS.md` slices). |
+| **`/ultraend`** | MaxMax v4.0 session close with full calibration scoring, memory sync & verification audit. |
+| **`/minmax`** | Configure or audit default MinMax v2.0 latency-vs-depth scaling across turns. |
 | **`/tutorial`** | Your very first session. Guided walkthrough of all features, includes profile interview. |
 | **`/save`** | Mid-session when you want to checkpoint without closing. Use before risky experiments. |
 
@@ -44,10 +50,12 @@ Workflows are slash commands that trigger predefined sequences of actions. They'
 
 | Workflow | Depth | Token Budget | Use Case |
 |----------|-------|--------------|----------|
+| **`/minmax`** | Adaptive (Default) | Latency-bounded | Everyday execution (`vector_mode` local/auto routing, `<2s` boot) |
 | **`/think`** | High | ~2000 tokens | Important decisions, complex problems |
-| **`/ultrathink`** | Maximum | ~5000+ tokens | Life-altering decisions, multi-stakeholder analysis |
+| **`/ultrastart`** | Curated Deep | `<=40K` (`<20% ECL`) | Complex strategy/research sessions requiring deep pre-loaded state |
+| **`/ultrathink`** | Maximum | ~5000+ output / gated | Life-altering decisions, multi-stakeholder analysis |
 
-> **Rule**: Default to normal mode. Escalate to `/think` for $10K+ decisions. Use `/ultrathink` only for maximum-depth analysis.
+> **Rule**: Default to MinMax v2.0 normal mode. Escalate to `/think` for $10K+ decisions. Use `/ultrastart` + `/ultrathink` + `/ultraend` only for high-stakes MaxMax v4.0 analysis.
 
 ### Research & Search
 

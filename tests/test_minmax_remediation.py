@@ -446,3 +446,113 @@ def test_maxmax_workflows_curated_boot_and_athena_py_wiring():
     assert total_bytes <= 24_000, f"Combined MaxMax workflows total {total_bytes} bytes (> 24,000 byte budget)"
 
 
+def test_sdk_jsonl_tail_and_db_connect_sqlite(tmp_path):
+    """Canonical athena.core.jsonl_tail and athena.core.db helpers must unify tail reads & WAL SQLite."""
+    from athena.core.db import connect_sqlite, resolve_athena_db_path
+    from athena.core.jsonl_tail import (
+        read_jsonl_tail_lines,
+        read_latest_jsonl_record,
+        read_tail_jsonl_records,
+        rotate_jsonl_if_oversized,
+    )
+
+    # 1. Verify scripts/lib/jsonl_tail.py is a re-export shim bound to canonical SDK functions
+    shim_dir = str(REPO_ROOT / ".agent" / "scripts")
+    if shim_dir not in sys.path:
+        sys.path.insert(0, shim_dir)
+    from lib import jsonl_tail as shim_mod
+
+    assert shim_mod.read_tail_jsonl_records is read_tail_jsonl_records
+    assert shim_mod.read_latest_jsonl_record is read_latest_jsonl_record
+    assert shim_mod.read_jsonl_tail_lines is read_jsonl_tail_lines
+    assert shim_mod.rotate_jsonl_if_oversized is rotate_jsonl_if_oversized
+
+    # 2. Verify read_tail_jsonl_records skips corrupted JSON lines and respects max_lines
+    log_path = tmp_path / "receipts.jsonl"
+    log_path.write_text(
+        '\n'.join(
+            [
+                json.dumps({"receipt_id": "GTO-00000001"}),
+                "{corrupted-json",
+                json.dumps({"receipt_id": "GTO-00000002"}),
+                json.dumps({"receipt_id": "GTO-00000003"}),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    recs = read_tail_jsonl_records(log_path, max_lines=3)
+    assert [r["receipt_id"] for r in recs] == ["GTO-00000002", "GTO-00000003"]
+    assert read_latest_jsonl_record(log_path) == {"receipt_id": "GTO-00000003"}
+
+    # 3. Verify connect_sqlite sets WAL + busy_timeout, and resolve_athena_db_path prefers .athena/athena.db
+    db_file = tmp_path / ".agent" / "inputs" / "athena.db"
+    db_file.parent.mkdir(parents=True, exist_ok=True)
+    with connect_sqlite(db_file, timeout=3.5) as conn:
+        mode = conn.execute("PRAGMA journal_mode").fetchone()[0]
+        busy = conn.execute("PRAGMA busy_timeout").fetchone()[0]
+        assert str(mode).lower() == "wal"
+        assert int(busy) == 3500
+
+    assert resolve_athena_db_path(tmp_path) == db_file
+
+    primary_db = tmp_path / ".athena" / "athena.db"
+    primary_db.parent.mkdir(parents=True, exist_ok=True)
+    with connect_sqlite(primary_db) as conn:
+        conn.execute("CREATE TABLE t (id INTEGER PRIMARY KEY)")
+    assert resolve_athena_db_path(tmp_path) == primary_db
+
+
+def test_mcp_quicksave_surfaces_audit_warnings(tmp_path, monkeypatch):
+    """quicksave must surface non-blocking audit_warnings for LaTeX delimiters and unreceipted GTO claims."""
+    import athena.core.governance as gov_mod
+    import athena.sessions as sessions_mod
+    from athena.mcp_server import quicksave
+
+    receipts_file = tmp_path / "decision_receipts.jsonl"
+    receipts_file.write_text(
+        json.dumps({"receipt_id": "GTO-11223344"}) + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("ATHENA_RECEIPTS_PATH", str(receipts_file))
+
+    class _DummyPerms:
+        def gate(self, _tool):
+            return None
+
+    class _DummyGov:
+        def evaluate_triple_lock(self):
+            return {"compliant": True, "missing": []}
+
+        def verify_exchange_integrity(self):
+            return None
+
+    fake_log = tmp_path / "session.md"
+    monkeypatch.setattr("athena.mcp_server.get_permissions", lambda: _DummyPerms())
+    monkeypatch.setattr(gov_mod, "get_governance", lambda: _DummyGov())
+    monkeypatch.setattr(sessions_mod, "append_checkpoint", lambda s, b=None: fake_log)
+
+    # 1. Clean currency + valid GTO receipt -> 0 warnings, fast (<50ms in test process)
+    t0 = time.perf_counter()
+    clean_res = quicksave(
+        "Booked S$1,300 EV target; GTO confirmed via GTO-11223344",
+        bullets=["EV = +10.45% (95% CI [+4.00%, +16.98%])"],
+    )
+    elapsed_ms = (time.perf_counter() - t0) * 1000
+    assert clean_res["status"] == "ok"
+    assert clean_res["audit_warnings"] == []
+    assert elapsed_ms < 200
+
+    # 2. Raw LaTeX delimiter + unreceipted GTO claim -> both warnings surfaced without blocking save
+    latex_expr = r"\(" + "x^2 + y^2" + r"\)"
+    dirty_res = quicksave(
+        f"GTO verified win rate {latex_expr}",
+        bullets=["guarantee survival under drawdown"],
+    )
+    assert dirty_res["status"] == "ok"
+    joined = " | ".join(dirty_res["audit_warnings"])
+    assert "LATEX_LEAK" in joined
+    assert "UNRECEIPTED_GTO_CLAIM" in joined
+
+
+

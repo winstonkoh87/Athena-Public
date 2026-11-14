@@ -26,6 +26,8 @@
 | Script | Description |
 |--------|-------------|
 | `boot.py` | Session orchestrator — integrity checks, context loading, protocol injection |
+| [`boot_status.py`](../scripts/boot_status.py) | Single-pass parallel boot status aggregator targeting `<1.0s` wall time |
+| [`jsonl_tail.py`](../src/athena/core/jsonl_tail.py) | Bounded EOF-seek JSONL tail reader and gzip log rotator (`read_tail_jsonl_records`, `rotate_jsonl_if_oversized`) |
 | `shutdown.py` | Session close — harvest check, git commit, compliance report |
 | `quicksave.py` | Automatic session logging with hot-sync to vector DB |
 | `resume_session.py` | Context recovery for interrupted sessions |
@@ -59,6 +61,8 @@
 | `protocol_compliance.py` | Track protocol violations per session |
 | `harvest_check.py` | Ensure insights are captured before session close |
 | `pre_commit_check.py` | Pre-commit gate for quality enforcement |
+| [`ucds_audit.py`](../examples/scripts/ucds_audit.py) | Deterministic Universal Counterparty Dossier Standard (UCDS) gate validator |
+| [`wargame_runner.py`](../examples/scripts/wargame_runner.py) | Two-turn adversarial wargaming and Red Cell adjudication CLI |
 
 ### Context Engineering
 

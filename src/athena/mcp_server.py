@@ -37,6 +37,7 @@ else:
 
 import json
 import logging
+import re
 from datetime import datetime, timezone
 
 from fastmcp import FastMCP
@@ -196,6 +197,76 @@ def agentic_search(
 # TOOL: quicksave
 # ---------------------------------------------------------------------------
 
+_LATEX_EXPLICIT_RE = re.compile(r"\\text\{|\\\(|\\\[|\$\$[\s\S]+?\$\$")
+_LATEX_DOLLAR_PAIR_RE = re.compile(r"\$([^$\n]+)\$")
+_CURRENCY_RE = re.compile(r"(?:[A-Za-z]{1,3}\$?|\$)?-?\$?[0-9]+[\d.,]*(?:k|K|m|M)?")
+_CURRENCY_RATE_RE = re.compile(r"\$/(?:hr|h|day|month|year|lot|pip|MTok)\b")
+
+
+def _has_raw_latex_delimiters(text: str) -> bool:
+    """Currency-safe check for raw LaTeX/KaTeX delimiters outside code blocks."""
+    cleaned = re.sub(r"```[\s\S]*?```", "", text)
+    cleaned = re.sub(r"`[^`\n]+`", "", cleaned)
+    if _LATEX_EXPLICIT_RE.search(cleaned):
+        return True
+    stripped = _CURRENCY_RE.sub("", cleaned)
+    stripped = _CURRENCY_RATE_RE.sub("", stripped)
+    for inner in _LATEX_DOLLAR_PAIR_RE.findall(stripped):
+        tok = inner.strip()
+        if not tok or re.match(r"^[A-Z0-9_]+$", tok):
+            continue
+        if tok.startswith("\\") or any(ch in tok for ch in r"\^_=()"):
+            return True
+    return False
+
+
+def _collect_quicksave_audit_warnings(text: str) -> list[str]:
+    """Run non-blocking <5ms governance checks on quicksave content (LaTeX + GTO receipts)."""
+    warnings: list[str] = []
+    if not text:
+        return warnings
+
+    if _has_raw_latex_delimiters(text):
+        warnings.append(
+            "LATEX_LEAK: Raw LaTeX/KaTeX delimiters detected; use plain ASCII/Unicode math and currency."
+        )
+
+    try:
+        from athena.core.jsonl_tail import read_tail_jsonl_records
+        from athena.intelligence.gto_engine import (
+            find_unreceipted_engine_claims,
+            get_receipts_path,
+        )
+
+        rpath = get_receipts_path()
+        tail_records = read_tail_jsonl_records(rpath, max_bytes=131_072, max_lines=500)
+        void_ids = {
+            str(rec["void_receipt_id"])
+            for rec in tail_records
+            if "void_receipt_id" in rec
+        }
+        valid_ids = {
+            str(rec["receipt_id"])
+            for rec in tail_records
+            if "receipt_id" in rec and str(rec["receipt_id"]) not in void_ids
+        }
+        cited_ids = re.findall(r"\b(GTO-[0-9a-fA-F]{8})\b", text)
+        if not any(rid in valid_ids for rid in cited_ids):
+            # Receipts are pre-verified via bounded tail read above; pass a dummy path so
+            # find_unreceipted_engine_claims never O(N)-scans a multi-MB receipt log.
+            unreceipted = find_unreceipted_engine_claims(
+                text, Path("/nonexistent/decision_receipts.jsonl")
+            )
+            if unreceipted:
+                warnings.append(
+                    f"UNRECEIPTED_GTO_CLAIM: {', '.join(unreceipted)} "
+                    "(cite valid GTO-xxxxxxxx receipt or tag [agent-estimate])."
+                )
+    except Exception:
+        pass
+
+    return warnings
+
 
 @mcp.tool(
     tags={"write", "session", "checkpoint"},
@@ -206,14 +277,15 @@ def quicksave(
 ) -> dict:
     """
     Save a checkpoint to the current session log. Appends a timestamped
-    block with a summary and optional bullet points.
+    block with a summary and optional bullet points. Also attaches non-blocking
+    audit_warnings for raw LaTeX leaks or unreceipted GTO engine claims.
 
     Args:
         summary: Brief description of what was accomplished/decided.
         bullets: Optional list of specific items to record.
 
     Returns:
-        dict with 'status', 'log_file', and 'timestamp'.
+        dict with 'status', 'log_file', 'timestamp', 'governance', and 'audit_warnings'.
     """
     from athena.core.governance import get_governance
     from athena.sessions import append_checkpoint
@@ -233,11 +305,14 @@ def quicksave(
 
     try:
         log_path = append_checkpoint(summary, bullets)
+        payload_text = summary if not bullets else f"{summary}\n" + "\n".join(bullets)
+        audit_warnings = _collect_quicksave_audit_warnings(payload_text)
         return {
             "status": "ok",
             "log_file": str(log_path),
             "timestamp": datetime.now().isoformat(),
             "governance": violation or "COMPLIANT",
+            "audit_warnings": audit_warnings,
         }
     except FileNotFoundError as e:
         return {

@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from athena.core.config import PROJECT_ROOT
+from athena.core.db import connect_sqlite
 
 # This module's stdout belongs to callers that parse it. run_search(json_output=
 # True) pipes stdout straight into json.loads, so a single diagnostic line here
@@ -212,12 +213,8 @@ class PersistentEmbeddingCache:
         self.lock = threading.Lock()
         # check_same_thread=False: the cache is shared across the sync's worker threads;
         # every access is serialized by self.lock, so single-connection use stays safe.
-        self._conn = sqlite3.connect(
-            str(self.db_path), check_same_thread=False, timeout=5.0
-        )
+        self._conn = connect_sqlite(self.db_path, check_same_thread=False)
         with self.lock:
-            self._conn.execute("PRAGMA journal_mode=WAL")
-            self._conn.execute("PRAGMA synchronous=NORMAL")
             self._conn.execute(
                 "CREATE TABLE IF NOT EXISTS embeddings "
                 "(hash TEXT PRIMARY KEY, vec TEXT NOT NULL)"
@@ -258,11 +255,7 @@ class PersistentEmbeddingCache:
         with contextlib.suppress(Exception):
             if hasattr(self, "_conn") and self._conn:
                 self._conn.close()
-        self._conn = sqlite3.connect(
-            str(self.db_path), check_same_thread=False, timeout=5.0
-        )
-        self._conn.execute("PRAGMA journal_mode=WAL")
-        self._conn.execute("PRAGMA synchronous=NORMAL")
+        self._conn = connect_sqlite(self.db_path, check_same_thread=False)
 
     def _archive_legacy(self):
         with contextlib.suppress(Exception):
