@@ -129,7 +129,7 @@ def recount_assets() -> dict:
     case_studies = 0
     case_studies_dir = memories_dir / "case_studies"
     if case_studies_dir.exists():
-        for p in case_studies_dir.rglob("*"):
+        for p in case_studies_dir.glob("CS-*.md"):
             if p.is_file():
                 case_studies += 1
     counts["case_studies"] = case_studies
@@ -149,8 +149,45 @@ def recount_assets() -> dict:
         for p in tests_dir.rglob("*.py"):
             tests_count += 1
     counts["source_tests"] = tests_count
+    counts["canonical"] = _recount_canonical_tiers()
 
     return counts
+
+
+def _recount_canonical_tiers() -> dict:
+    """Compute live Section 4 tier breakdown and full byte size of CANONICAL.md."""
+    import sys
+
+    scripts_dir = str(Path(__file__).resolve().parent)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    from canonical_tier_analysis import parse_section_4
+
+    canonical_path = Path(__file__).resolve().parent.parent.parent / ".context" / "CANONICAL.md"
+    entries = parse_section_4()
+    full_bytes = canonical_path.stat().st_size
+    sec4_bytes = sum(e["chars"] for e in entries)
+    t1 = [e for e in entries if e["tier"] == 1]
+    t2 = [e for e in entries if e["tier"] == 2]
+    t3 = [e for e in entries if e["tier"] == 3]
+    t1_bytes = sum(e["chars"] for e in t1)
+    t2_bytes = sum(e["chars"] for e in t2)
+    t3_bytes = sum(e["chars"] for e in t3)
+    deferred_bytes = t2_bytes + t3_bytes
+    boot_savings_pct = round((deferred_bytes / sec4_bytes) * 100) if sec4_bytes else 0
+    return {
+        "total_entries": len(entries),
+        "sec4_bytes": sec4_bytes,
+        "full_bytes": full_bytes,
+        "tier_1_count": len(t1),
+        "tier_1_bytes": t1_bytes,
+        "tier_2_count": len(t2),
+        "tier_2_bytes": t2_bytes,
+        "tier_3_count": len(t3),
+        "tier_3_bytes": t3_bytes,
+        "deferred_bytes": deferred_bytes,
+        "boot_savings_pct": boot_savings_pct,
+    }
 
 
 def update_caps_json(counts: dict) -> dict:
@@ -173,6 +210,26 @@ def update_caps_json(counts: dict) -> dict:
 
     caps["scripts"] = counts["scripts"]
     caps["memories"]["total_files"] = counts["memories"]
+    if "case_studies" in caps and isinstance(caps["case_studies"], dict):
+        caps["case_studies"]["total_files"] = counts["case_studies"]
+        caps["case_studies"]["uppercase_convention"] = counts["case_studies"]
+
+    canon_meta = counts.get("canonical")
+    if canon_meta and isinstance(caps.get("canonical"), dict):
+        canon = caps["canonical"]
+        canon["total_entries"] = canon_meta["total_entries"]
+        canon["current_bytes"] = canon_meta["sec4_bytes"]
+        canon["full_file_bytes"] = canon_meta["full_bytes"]
+        ceiling = canon.get("attention_budget_ceiling_bytes") or 0
+        if ceiling > 0:
+            canon["current_utilization_pct"] = round(
+                canon_meta["sec4_bytes"] / ceiling * 100, 1
+            )
+        canon["tier_1_always_boot"] = canon_meta["tier_1_count"]
+        canon["tier_2_domain_triggered"] = canon_meta["tier_2_count"]
+        canon["tier_3_on_demand"] = canon_meta["tier_3_count"]
+        canon["boot_savings_pct"] = canon_meta["boot_savings_pct"]
+
     caps["_generated"] = datetime.now().strftime("%Y-%m-%d")
 
     if not DRY_RUN:
@@ -365,11 +422,16 @@ def patch_readme(content: str, counts: dict, system_ver: str) -> tuple[str, int]
             content = content.replace(cs_cats.group(0), new_str, 1)
             patches += 1
 
-    # 4. Bottom Metrics Table
+    # 4. Bottom Metrics Table & Verification Claims
     # Pattern matching lines in the metrics section
     lines = content.splitlines()
     for idx, line in enumerate(lines):
-        if "| Protocols (total) |" in line:
+        if "Compounding personalization" in line and "case studies by the author" in line:
+            new_line = re.sub(r"\b\d+ case studies by the author\b", f"{counts['case_studies']} case studies by the author", line)
+            if line != new_line:
+                lines[idx] = new_line
+                patches += 1
+        elif "| Protocols (total) |" in line:
             new_line = f"| Protocols (total) | {counts['protocols_total']} ({counts['protocols_active']} active + {counts['protocols_archived']} archived) |"
             if line != new_line:
                 lines[idx] = new_line
@@ -410,7 +472,7 @@ def patch_readme(content: str, counts: dict, system_ver: str) -> tuple[str, int]
                 lines[idx] = new_line
                 patches += 1
         elif "| Version |" in line:
-            new_line = f"| Version | v{system_ver} |"
+            new_line = f"| Version | v{system_ver.lstrip(chr(118))} |"  # tolerate v-prefixed CAPS value
             if line != new_line:
                 lines[idx] = new_line
                 patches += 1
@@ -523,6 +585,8 @@ def patch_arch(content: str, counts: dict, system_ver: str) -> tuple[str, int]:
                 lines[idx] = new_line
                 patches += 1
 
+    content = "\n".join(lines)
+
     # 4. Node Legend
     legend_skills = re.search(r"\|\s*⚔️ SKILLS\s*\|\s*\d+\s*active\s*Protocols\s*\(\d+\s*total\),\s*\d+\s*active\s*Skills\s*\|", content)
     if legend_skills:
@@ -541,18 +605,89 @@ def patch_arch(content: str, counts: dict, system_ver: str) -> tuple[str, int]:
     # 5. Workflow index index line
     wf_idx = re.search(r"## 4\. Workflow Index\s*\(\d+\s*registered:\s*\d+\s*root\s*\+\s*\d+\s*`_domain/`\)", content)
     if wf_idx:
-        new_str = f"## 4. Workflow Index ({counts['workflows_total']} registered: {counts['workflows_root']} root + {counts['workflows_domain']} `_domain/` SGT)"
-        # Note: replace carefully
-        content = content.replace(wf_idx.group(0), f"## 4. Workflow Index ({counts['workflows_total']} registered: {counts['workflows_root']} root + {counts['workflows_domain']} `_domain/`)", 1)
-        patches += 1
+        new_str = f"## 4. Workflow Index ({counts['workflows_total']} registered: {counts['workflows_root']} root + {counts['workflows_domain']} `_domain/`)"
+        if wf_idx.group(0) != new_str:
+            content = content.replace(wf_idx.group(0), new_str, 1)
+            patches += 1
 
     wf_state = re.search(r"reflect\s*the\s*\d+-workflow\s*state", content)
     if wf_state:
         new_str = f"reflect the {counts['workflows_total']}-workflow state"
-        content = content.replace(wf_state.group(0), new_str, 1)
-        patches += 1
+        if wf_state.group(0) != new_str:
+            content = content.replace(wf_state.group(0), new_str, 1)
+            patches += 1
 
-    content = "\n".join(lines)
+    content, tier_patches = _patch_arch_canonical_tiers(content, counts)
+    patches += tier_patches
+
+    return content, patches
+
+
+def _fmt_kb(byte_count: int) -> str:
+    return f"~{byte_count // 1024}KB" if byte_count >= 1024 else "<1KB"
+
+
+def _fmt_tok(byte_count: int) -> str:
+    tokens_k = byte_count / 4096
+    return f"~{round(tokens_k)}K" if tokens_k >= 0.95 else f"~{max(0.1, round(tokens_k, 1)):.1f}K"
+
+
+def _patch_arch_canonical_tiers(content: str, counts: dict) -> tuple[str, int]:
+    """Patch CANONICAL attention budget and Section 4 progressive disclosure tables."""
+    c = counts.get("canonical")
+    if not c:
+        return content, 0
+
+    patches = 0
+    t1_kb, t2_kb, t3_kb = _fmt_kb(c["tier_1_bytes"]), _fmt_kb(c["tier_2_bytes"]), _fmt_kb(c["tier_3_bytes"])
+    sec4_kb, full_kb = _fmt_kb(c["sec4_bytes"]), _fmt_kb(c["full_bytes"])
+    saved_kb = _fmt_kb(c["deferred_bytes"])
+    t1_tok, t2_tok, t3_tok = _fmt_tok(c["tier_1_bytes"]), _fmt_tok(c["tier_2_bytes"]), _fmt_tok(c["tier_3_bytes"])
+    t3_label = "entry" if c["tier_3_count"] == 1 else "entries"
+
+    replacements = [
+        (
+            r"\|\s*CANONICAL Tier 1 \(always boot\)\s*\|\s*`/start`\s*\|[^\n|]+\|",
+            f"| CANONICAL Tier 1 (always boot) | `/start` | {t1_tok} ({c['tier_1_count']} entries, {t1_kb}) |",
+        ),
+        (
+            r"\|\s*CANONICAL Tier 2 \(domain-triggered\)\s*\|\s*Query match\s*\|[^\n|]+\|",
+            f"| CANONICAL Tier 2 (domain-triggered) | Query match | {t2_tok} ({c['tier_2_count']} entries, {t2_kb} on demand) |",
+        ),
+        (
+            r"\|\s*CANONICAL Tier 3 \(on-demand\)\s*\|\s*Explicit search hit\s*\|[^\n|]+\|",
+            f"| CANONICAL Tier 3 (on-demand) | Explicit search hit | {t3_tok} ({c['tier_3_count']} {t3_label}, {t3_kb}) |",
+        ),
+        (
+            r"(?:CANONICAL memory|Section 4 \(Strategic Frameworks\)) contains [^\n]+Progressive disclosure tiers:",
+            (
+                f"Section 4 (Strategic Frameworks) contains {c['total_entries']} entries, "
+                f"{sec4_kb} (full `CANONICAL.md`: {full_kb}). Progressive disclosure tiers:"
+            ),
+        ),
+        (
+            r"\|\s*Tier 1 \(Always Boot\)\s*\|\s*\d+\s*\|\s*[^|]+\|\s*Loaded on every `/start`",
+            f"| Tier 1 (Always Boot) | {c['tier_1_count']} | {t1_kb} | Loaded on every `/start`",
+        ),
+        (
+            r"\|\s*Tier 2 \(Domain-Triggered\)\s*\|\s*\d+\s*\|\s*[^|]+\|\s*Loaded when query matches",
+            f"| Tier 2 (Domain-Triggered) | {c['tier_2_count']} | {t2_kb} | Loaded when query matches",
+        ),
+        (
+            r"\|\s*Tier 3 \(On-Demand\)\s*\|\s*\d+\s*\|\s*[^|]+\|\s*Loaded only via explicit search hit",
+            f"| Tier 3 (On-Demand) | {c['tier_3_count']} | {t3_kb} | Loaded only via explicit search hit",
+        ),
+        (
+            r"\*\*Boot savings\*\*: [^\n]+",
+            f"**Boot savings**: {c['boot_savings_pct']}% of CANONICAL Section 4 deferred ({saved_kb} saved per session).",
+        ),
+    ]
+    for pattern, repl in replacements:
+        new_content, n = re.subn(pattern, repl, content, count=1)
+        if n and new_content != content:
+            content = new_content
+            patches += 1
+
     return content, patches
 
 
@@ -596,6 +731,9 @@ def patch_docs_arch(content: str, counts: dict, system_ver: str) -> tuple[str, i
         if scripts_old.group(0) != new_str:
             content = content.replace(scripts_old.group(0), new_str, 1)
             patches += 1
+
+    content, tier_patches = _patch_arch_canonical_tiers(content, counts)
+    patches += tier_patches
 
     return content, patches
 

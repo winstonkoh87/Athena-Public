@@ -28,18 +28,19 @@
     "cap_policy": "Workflows are uncapped as of v9.8.0. Domain workflows are dormant by default (_domain/ tier) and only activate on query match. The constraint is attention budget, not inventory size. TD-017 is now structurally resolved."
   },
   "canonical": {
-    "total_entries": 199,
+    "total_entries": 177,
     "cap": "uncapped",
     "cap_policy": "Entry count is uncapped as of 2026-05-07 (GTO alignment with protocols/workflows). The constraint is boot-load attention budget (~35K token ceiling / ~140KB), not entry count. Staleness thresholds (3mo/6mo) + quarterly /audit-canonical are the quality gates. Tiered loading ensures only relevant entries enter context per session.",
     "attention_budget_ceiling_tokens": 35000,
     "attention_budget_ceiling_bytes": 140000,
-    "current_bytes": 57458,
-    "current_utilization_pct": 41,
-    "tier_1_always_boot": 40,
-    "tier_2_domain_triggered": 156,
-    "tier_3_on_demand": 3,
-    "boot_savings_pct": 69,
-    "tier_map_path": ".agent/telemetry/tier_map.json"
+    "current_bytes": 103969,
+    "current_utilization_pct": 74.3,
+    "tier_1_always_boot": 66,
+    "tier_2_domain_triggered": 110,
+    "tier_3_on_demand": 1,
+    "boot_savings_pct": 51,
+    "tier_map_path": ".agent/telemetry/tier_map.json",
+    "full_file_bytes": 419722
   },
   "context_files": {
     "glossary": ".context/glossary.md",
@@ -51,9 +52,9 @@
     "retrieval_audit_script": ".agent/scripts/retrieval_audit.py",
     "canonical_tier_analysis": ".agent/scripts/canonical_tier_analysis.py"
   },
-  "scripts": 290,
+  "scripts": 291,
   "memories": {
-    "total_files": 5991,
+    "total_files": 6005,
     "path": ".context/memories/"
   },
   "paths": {

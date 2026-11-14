@@ -41,7 +41,7 @@ Athena-Public/                       # Clean-lobby repository (32 tracked root e
 └── Makefile / LICENSE / llms.txt    # Build targets, MIT license & LLM index
 ```
 
-> **Canonical Counts (`CAPS.json`)**: `410 active + 51 archived = 461 protocols (26 categories)`, `44 active skills (17 archived)`, `78 workflows (57 root + 21 _domain/)`, `629 case studies`, `199 CANONICAL entries`. See [`.agent/config/CAPS.json`](.agent/config/CAPS.json).
+> **Canonical Counts (`CAPS.json`)**: `410 active + 51 archived = 461 protocols (26 categories)`, `44 active skills (17 archived)`, `78 workflows (57 root + 21 _domain/)`, `629 case studies`, `177 CANONICAL Section 4 entries`. See [`.agent/config/CAPS.json`](.agent/config/CAPS.json).
 > **Decoupled Workspaces (External)**:
 > - **FX Trading Desk**: Isolated external workspace. Athena supplies cognitive governance, risk gates (`trading-risk-gate`, `structural-trading-gate`, `trade_guardian.py`), and variance shields (Law #1), while execution scripts and tick logs stay separate.
 > - **Media Production**: Centralized external pipelines (`imagen-studio`, `veo-choreographer`, Remotion). Binary renders and audio assets are excluded from the core repository.
@@ -93,7 +93,7 @@ Athena-Public/                       # Clean-lobby repository (32 tracked root e
 
 | Stage | Human Analog | Athena Implementation | Epistemic Status |
 |:------|:-------------|:----------------------|:-----------------|
-| **① Transduction** | Sensory receptors fire simultaneously | `search.py` fires 5 local channels (Canonical, Vectors, FTS BM25, Tags, Filenames) + optional Web Search | `code-enforced` |
+| **① Transduction** | Sensory receptors fire simultaneously | Agent-pull via `context_gate` / `search.py` across 5 local channels (Canonical, Vectors, FTS BM25, Tags, Filenames) + conditional Web Search, verified at turn end by `stop_governance_gate.py` | `code-enforced` |
 | **② Attention Gate** | Thalamus filters — only relevant signals pass | Weighted RRF fusion (k=60) + FlashRank cross-encoder reranker | `code-enforced` |
 | **③ Executive Function** | Prefrontal cortex — plan, inhibit, decide | Law #1 gates ruin (`block_ruin.py`); P509 crisis referral (`hook_crisis_gate.py`, `hook_stop_verify.py`); Circuit breaker (`circuit-breaker`); Λ scores risk (suppresses SNIPER web in code; depth is agent discretion) | Mixed (`code-enforced` gates + `agent-discretion`) |
 | **Response** | Motor cortex — act | Agent generates output, Stop verification gate checks formatting/hotlines/secrets | `code-enforced` Stop gate |
@@ -201,14 +201,16 @@ The two layers are **complementary, not nested**:
 
 The proactive layer can **inject context** into the reactive layer — e.g., when `/start` surfaces an active BEH accountability trigger, that context enters the Attention Gate's top-down priming for the rest of the session.
 
-### Implementation (Operational, Not Coded)
+### Implementation (Hybrid: Hook-Enforced Boot + Operational Workflows)
 
 | Touchpoint | How It Works |
 |:-----------|:-------------|
+| `SessionStart` hook (`.agents/hooks.json` + `.agent/scripts/hook_auto_start.py`) | Code-enforced boot injection (`/start` directive on Antigravity `injectSteps` & Claude Code `hookSpecificOutput`) |
+| `scripts/boot_status.py` | Runtime boot telemetry — session sync, BEH-601 hiatus alerts, and Maintenance vs Output split |
 | `/start` | Behavioral Accountability Surface — surfaces active BEH protocols, day-aware prompts |
 | `/end` | Behavioral Accountability Close — BEH-602 trigger log gate, weekly execution audit |
 | `/ultrastart` | Deep BEH context load, schema trigger pre-load |
-| `daemon-loop` skill | Autonomous recurring background checks |
+| `daemon-loop` skill | Autonomous recurring background checks (`/schedule` & `launchd` plists) |
 | `circuit-breaker` skill | Ruin-proximity inhibition |
 
 ---
@@ -231,9 +233,9 @@ The proactive layer can **inject context** into the reactive layer — e.g., whe
 | Core Identity | `/start` | ~2K |
 | Memory Bank (surgical slices) | `/start` | ~3.5K |
 | `boot_status.py` + Sentinel | `/start` | ~2K |
-| CANONICAL Tier 1 (always boot) | `/start` | ~4K (40 entries, ~16KB) |
-| CANONICAL Tier 2 (domain-triggered) | Query match | ~10K (156 entries, ~40KB on demand) |
-| CANONICAL Tier 3 (on-demand) | Explicit search hit | ~0.3K (3 entries, ~1KB) |
+| CANONICAL Tier 1 (always boot) | `/start` | ~13K (66 entries, ~50KB) |
+| CANONICAL Tier 2 (domain-triggered) | Query match | ~13K (110 entries, ~50KB on demand) |
+| CANONICAL Tier 3 (on-demand) | Explicit search hit | ~0.2K (1 entry, <1KB) |
 | Protocol / Skill cluster (on-demand) | `context_trigger` / Attention gate | ~3–15K per bundle |
 | MaxMax v4.0 curated boot | `/ultrastart` | <=40K (`<20%` of 200K ECL) |
 
@@ -274,7 +276,7 @@ src/athena/tools/search.py (vector_mode: "local" | "auto" | "always" + grep fall
 | Level | Lambda Score | Protocol | Latency |
 |:------|-------------:|:---------|--------:|
 | SNIPER | < 10 | Direct answer. Search exempt (`vector_mode="local"` when used). | ~1s |
-| STANDARD | 10-30 | Triple-Lock (`context_gate` / `vector_mode="auto"` -> `quicksave` -> Speak) | ~2-5s |
+| STANDARD | 10-30 | Triple-Lock (`context_gate` / `vector_mode="auto"` -> Speak, `stop_governance_gate.py` verified; `quicksave` at milestones / `/end`) | ~2-5s |
 | ULTRA | > 30 | Triple-Lock + MaxMax v4.0 (`vector_mode="always"`, `<=40K` curated boot, Frame/Decision gates) | Deep / Curated |
 
 ---
@@ -343,15 +345,15 @@ src/athena/tools/search.py (vector_mode: "local" | "auto" | "always" + grep fall
 
 ## CANONICAL Progressive Disclosure (v10.0.6)
 
-CANONICAL memory contains 199 entries, ~57KB. Progressive disclosure tiers:
+Section 4 (Strategic Frameworks) contains 177 entries, ~101KB (full `CANONICAL.md`: ~409KB). Progressive disclosure tiers:
 
 | Tier | Count | Size | Loading Strategy |
 |:-----|------:|-----:|:-----------------|
-| Tier 1 (Always Boot) | 40 | ~16KB | Loaded on every `/start` — universal laws, identity truths |
-| Tier 2 (Domain-Triggered) | 156 | ~40KB | Loaded when query matches domain keywords (trading, pricing, etc.) |
-| Tier 3 (On-Demand) | 3 | ~1KB | Loaded only via explicit search hit |
+| Tier 1 (Always Boot) | 66 | ~50KB | Loaded on every `/start` — universal laws, identity truths |
+| Tier 2 (Domain-Triggered) | 110 | ~50KB | Loaded when query matches domain keywords (trading, pricing, etc.) |
+| Tier 3 (On-Demand) | 1 | <1KB | Loaded only via explicit search hit |
 
-**Boot savings**: 69% of CANONICAL memory deferred = ~39KB saved per session.
+**Boot savings**: 51% of CANONICAL Section 4 deferred (~51KB saved per session).
 
 Tier map: `.agent/telemetry/tier_map.json` (generated by `canonical_tier_analysis.py`).
 

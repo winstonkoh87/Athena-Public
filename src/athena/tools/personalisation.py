@@ -25,6 +25,12 @@ def build_user_state_snapshot() -> dict[str, Any]:
     snapshot: dict[str, Any] = {
         "rate_floor": "S$150/hr",
         "financial_constraints": "Cash buffer & active float discipline, 0 unhedged risk",
+        "net_financial_position": "Unconfigured",
+        "monthly_burn_tiers": "Tiers: $500 / $1,000 / $1,500",
+        "active_engines": [
+            "Engine 1 (Internal Capital)",
+            "Engine 2 (External Cashflow)",
+        ],
         "key_man_risk": "CRITICAL — Single operator dependency",
         "strategic_priorities": [],
         "behavioral_anchors": [
@@ -60,6 +66,21 @@ def build_user_state_snapshot() -> dict[str, Any]:
                         f"[STATE_FIELD_FALLBACK] raw='{raw_rate}' failed shape check"
                     )
 
+            # 1b. Net financial position & monthly burn tiers
+            net_match = re.search(
+                r"\|\s*\*\*Net Financial Position\*\*\s*\|\s*\*\*([^|]+?)\*\*\s*\|",
+                content,
+            )
+            if net_match:
+                snapshot["net_financial_position"] = net_match.group(1).strip()
+
+            burn_match = re.search(
+                r"\|\s*\*\*Monthly Burn Rate\*\*\s*\|\s*\*\*([^|]+?)\*\*\s*\|",
+                content,
+            )
+            if burn_match:
+                snapshot["monthly_burn_tiers"] = burn_match.group(1).strip()
+
             # 2. Financial constraints: target Runway or Key-Man rows
             for line in content.splitlines():
                 line_str = line.strip()
@@ -75,6 +96,23 @@ def build_user_state_snapshot() -> dict[str, Any]:
         except Exception:
             pass
 
+
+    # Extract active engines from userContext if available (keeps public defaults generic)
+    user_ctx_path = PROJECT_ROOT / ".context" / "memory_bank" / "userContext.md"
+    if user_ctx_path.exists():
+        try:
+            uctx_text = user_ctx_path.read_text(encoding="utf-8")
+            engines = re.findall(
+                r"^\*\s+\*\*(Engine\s+\d+\s*\([^)]+\))\*\*:\s+\*\*([^*]+)\*\*",
+                uctx_text,
+                flags=re.MULTILINE,
+            )
+            if engines:
+                snapshot["active_engines"] = [
+                    f"{name.strip()} — {role.strip()}" for role, name in engines
+                ]
+        except Exception:
+            pass
 
     # Extract active tasks from activeContext if available
     active_ctx_path = PROJECT_ROOT / ".context" / "memory_bank" / "activeContext.md"

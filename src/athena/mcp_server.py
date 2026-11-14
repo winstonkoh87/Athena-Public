@@ -1277,28 +1277,29 @@ def context_gate(
         if isinstance(r, dict) and "meta_pattern_projection" in r
     )
     personalisation = None
-    user_state = None
+    user_state = pre_user_state
+    if user_state is None:
+        try:
+            from athena.tools.personalisation import build_user_state_snapshot
+
+            user_state = build_user_state_snapshot()
+        except Exception as e:
+            import sys
+            print(f"   ⚠️ User state snapshot failed: {e}", file=sys.stderr)
+            user_state = None
     if intent == "PERSONALISED_DECISION":
         if pre_personalisation and pre_user_state is not None and mp_projected_count == 0:
             personalisation = pre_personalisation
-            user_state = pre_user_state
         else:
             try:
                 from athena.core.models import SearchResult as _SR
-                from athena.tools.personalisation import (
-                    build_personalisation_prompt,
-                    build_user_state_snapshot,
-                )
+                from athena.tools.personalisation import build_personalisation_prompt
+
                 raw_results = search_results.get("results", [])
                 sr_objects = [
                     _SR(**r) if isinstance(r, dict) else r
                     for r in raw_results
                 ]
-                user_state = (
-                    pre_user_state
-                    if pre_user_state is not None
-                    else build_user_state_snapshot()
-                )
                 personalisation = build_personalisation_prompt(
                     query, sr_objects, user_state=user_state
                 )
@@ -1454,7 +1455,7 @@ def context_gate(
     has_dashboard_reconcile = "dashboard" in q_lower and any(
         k in q_lower for k in ("reconcil", "statement", "csv", "sql", "audit")
     )
-    if any(m in q_lower for m in tier2_markers) or has_dashboard_reconcile or lambda_res["score"] >= 30:
+    if any(m in q_lower for m in tier2_markers) or has_dashboard_reconcile:
         compute_tier = "TIER_2_SWARM"
         directive_parts.append(
             "SWARM DIRECTIVE (Tier 2 Native Swarm): Multi-stream or high-stakes verification trigger matched — "
