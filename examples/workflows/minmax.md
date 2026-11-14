@@ -1,7 +1,7 @@
 ---
-description: Token Economy Mode — maximize output quality while minimizing token expenditure
+description: MinMax Protocol v2.0 — Default latency + token + quality optimization architecture
 created: 2026-03-28
-last_updated: 2026-07-22
+last_updated: 2026-11-14
 model: default
 temperature: 0.5
 tools:
@@ -11,219 +11,41 @@ tools:
   search: true
 ---
 
-# /minmax — Token Economy Mode v1.0
+# /minmax — MinMax Protocol v2.0 (Default Architecture)
 
-> **Latency Profile**: ULTRA-LOW (~1K token activation)
-> **Philosophy**: Maximum signal per token. Every token must earn its place.
-> **Use When**: Pay-per-token pricing, context window pressure, low-complexity sessions, or deliberate efficiency training.
-> **Composable**: Activate BEFORE `/start` or `/ultrastart` to constrain their boot behavior.
+> **Status**: Active by default in [`/start`](start.md). Reconciles token economy (`v1.0`) with wall-clock latency SLOs and mechanical quality floors (`v2.0`). Use `/ultrastart` (`MaxMax`) only for deliberate full-corpus deep audits.
 
-> [!IMPORTANT]
-> This is an **inverted optimization** from the default Maximum Compute Doctrine (CANONICAL §216).
->
-> | Mode | Optimization Function | When |
-> |:-----|:---------------------|:-----|
-> | **Normal** | `maximize(quality)` — tokens are free | Flat-rate subscription |
-> | **Minmax** | `maximize(quality / tokens)` — every token has a cost | Pay-per-token, context pressure, efficiency drill |
->
-> The doctrine doesn't change: depth still matters. What changes is the
-> **willingness to spend tokens on speculative loads**. In Normal mode,
-> speculative loading is free so you load everything. In Minmax mode,
-> speculative loading has a cost so you load only what you'll USE.
+## Core Optimization Function
 
----
+`maximize(quality / (latency_s * token_cost))` subject to **hard non-negotiable safety and quality floors**:
+- Never skip Law #1 ruin checks (`trading-risk-gate`), Protocol 509 crisis hotlines, Protocol 574 substance decode, or Lambda >= 10 verification (`stop_governance_gate.py`).
+- Reduce redundant I/O, serial blocking, duplicate payloads, and unread boilerplate — never reduce reasoning accuracy.
 
-## Phase 1: Activation (~500 tokens)
+## Mechanical Latency & Token SLO Matrix
 
-When the user invokes `/minmax`:
+| Subsystem | Default MinMax v2.0 Path | Latency / Size SLO | Fallback / Escalation |
+|:---|:---|:---|:---|
+| **Turn-1 Boot Docs** | `AGENTS.md` + `_shared.md` + `start.md` (UI/routing split into `references/_shared_extended.md`) | `<= 16,000 bytes` (~4K tokens) | JIT-load `_shared_extended.md` on task match |
+| **Boot Status Telemetry** | Single concurrent `.agent/scripts/athena-py scripts/boot_status.py` | `< 1.0s`, zero `RuntimeWarning` | Local FTS/sync fallback if API probe `> 0.85s` |
+| **SNIPER Retrieval (`Lambda < 10`) & Meta-Patterns** | `vector_mode="local"` (FTS BM25 + Canonical + File/Framework) | `< 50 ms`, zero remote embedding HTTP call | Direct file read or upgrade to `context_gate` if ambiguity rises |
+| **STANDARD Light (`Lambda 10-14`, non-personal/non-web)** | `vector_mode="auto"` speculative parallel Local+ONNX vs Remote Vector | `< 0.5s` when >= 2 non-boot hits & ONNX `top_logit >= 1.0` (`>= 2.5` for `< 3` words) | Automatically awaits parallel remote vector if local quality floor fails |
+| **STANDARD Deep (`Lambda >= 15` / Personal) & ULTRA (`> 30`)** | `vector_mode="always"` single-wave parallel Local + Vector + conditional Web | `< 2.0s` cold; `< 20 ms` cache hit | Degraded-recall explicit warning + retry on API error |
+| **QueryCache & Vectors** | Read-only RAM lookup on hit; embeddings offloaded to SQLite `search_cache_vecs.db` | Zero disk write on read hit | Writes only on cache miss / store |
+| **JSONL Telemetry & Stop Hooks** | Tail-seek reader (`<= 64 KB`) + size-based rotation in `shutdown.py` | `O(1)`, `< 15 ms` | Automatic archive rotation when logs exceed threshold |
+| **CLI Search (`smart_search.py`)** | In-process execution with `ThreadPoolExecutor` timeout guard | Eliminates ~0.6s subprocess spawn overhead | Timeout message identifies stalled stage |
 
-### Step 1: Classify Session Objective
+## Behavioral Rules
 
-Before loading ANYTHING, ask one question:
-
-> **"What's the one thing this session needs to accomplish?"**
-
-If the user already stated it (or `@seeded` from last session is clear), skip the question and infer.
-
-### Step 2: Set Mode Flag
-
-Confirm activation with:
-
-```
-⚡ Minmax Mode Active.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Objective: [inferred or stated]
-Boot: Selective (task-aware)
-Search: Surgical (--limit 3)
-Output: Dense (signal > prose)
-Close: Micro-default
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-**That's it.** Phase 1 is the entire "workflow" — the rest of this file defines behavioral rules that persist for the session.
-
----
-
-## Behavioral Rules (Active for entire session)
-
-### Rule 1: Selective Boot
-
-When `/start` or `/ultrastart` follows `/minmax`:
-
-**For `/start`** (already lean — minimal changes):
-- Skip `productContext.md` unless session is about Athena identity/philosophy
-- Load only the `@pending` + `@seeded` lines from `activeContext.md`, not the full header block
-- Skip Protocol 528 scan (execution awareness) — defer to `/end`
-
-**For `/ultrastart`** (major savings — this is where the big wins are):
-
-Instead of loading all 11 framework modules (~29K tokens), use this task-routing table:
-
-| Session Objective | Load These Modules Only | Skip | Est. Tokens |
-|:-----------------|:-----------------------|:-----|:------------|
-| Client deliverable (capstone, code) | Core_Identity, Output_Standards | 9 others | ~5K |
-| Consulting / business strategy | Core_Identity, System_Principles, Operating_Principles | 8 others | ~8K |
-| Trading / risk analysis | Core_Identity, System_Principles | 9 others | ~5K |
-| Therapy / IFS / psychology | Core_Identity, Athena_Profile, User_Profile_Core | 8 others | ~6K |
-| System maintenance / refactor | Core_Identity, System_Manifest | 9 others | ~4K |
-| Research / deep analysis | Core_Identity, Output_Standards, System_Principles | 8 others | ~8K |
-| General / mixed | Core_Identity + let JIT handle the rest | 10 others | ~3K |
-
-> **Core_Identity is ALWAYS loaded.** It contains the Laws. Everything else is conditional.
-
-**CANONICAL.md**: Load Sections 2 (Laws) + 3 (Active Decisions) only. Skip Sections 4-5 (Strategic Frameworks, User Profile) — retrievable via Exocortex if needed.
-
-**Semantic Bridge**: Run ONE targeted search query (not two broad ones). Max `--limit 3`.
-
-**Threat Playbooks**: Skip entirely unless session objective involves crisis/risk.
-
-### Rule 2: Per-Turn Token Discipline
-
-| Dimension | Normal Mode | Minmax Mode |
-|:----------|:-----------|:------------|
-| **Λ default** | STANDARD (robustness bias) | SNIPER (efficiency bias) — upgrade to STANDARD only when Λ ≥ 15 |
-| **Search** | `--limit 5-15` per query | `--limit 3` per query, max 1 search per turn |
-| **Output format** | Full prose + reasoning | Tables > bullets > prose. Same signal, fewer words. |
-| **Co-activation** | Auto-cascade downstream clusters | One cluster at a time. No speculative pre-loading. |
-| **Reflexion journaling** | Every error | Only on errors that cost > 2 turns to fix |
-| **Quicksave** | After every STANDARD+ turn | After session, not per-turn |
-| **Adaptive loading** | Load full file when triggered | Load surgical excerpt (start/end lines) when possible |
-| **Code output** | Full files with comments | Minimal diff — change only what's needed, skip explanatory comments |
-
-### Rule 3: Response Density Standard
-
-In Minmax mode, every response should follow the **Dense Output Protocol**:
-
-1. **Lead with the answer.** No preamble, no "Let me think about this."
-2. **Use tables for structured data.** A 5-row table < 50 words of prose saying the same thing.
-3. **Use diffs for code changes.** Don't rewrite entire files.
-4. **One search per turn max.** If you need more context, ask the user — they might already know.
-5. **No restating what the user said.** They know what they said.
-6. **No hedging unless genuinely uncertain.** "This might work" wastes tokens. "Do X" doesn't.
-
-> **Quality floor**: Minmax mode reduces TOKEN volume, not REASONING quality.
-> A 200-token response with the right answer > a 2,000-token response with the right answer + 1,800 tokens of explanation nobody asked for.
-> If the user wants depth, they'll ask. Default to concise.
-
-### Rule 4: Session Close (Minmax Override)
-
-When closing a Minmax session:
-
-- **Default to MICRO close** (Phase 1A of `/end`) unless 3+ decisions were made
-- **Skip**: CANONICAL check, Decision Log Gate, Context Hygiene Gate
-- **Skip**: PROJECTS.md update IF session didn't touch any active project
-- **Always write**: Session log + checkpoint block (minimum viable state preservation)
-- **Defer**: `shutdown.py` full pipeline → run `--micro` variant only
-
-**Checkpoint format** (compressed):
-
-```markdown
-## S[N] (Minmax): [TOPIC]
-
-- [One-line summary]
-
-[[ S__ |
-@focus: [topic]
-@status: Closed (Minmax)
-@decided: [decisions, if any]
-@pending: [carry from previous]
-@seeded: [next focus]
-!checkpoint ]]
-```
-
-> No `## Session Learnings` block unless a genuine reusable insight emerged.
-> No `## Session Closed` ceremony — the checkpoint IS the close.
-
----
-
-## Token Budget Reference
-
-Estimated token usage under Minmax mode vs Normal:
-
-| Activity | Normal (/start) | Normal (/ultrastart) | Minmax (/start) | Minmax (/ultrastart) |
-|:---------|:----------------|:--------------------|:----------------|:--------------------|
-| **Boot** | ~2K | ~60K | ~1K | ~8-12K |
-| **Per-turn (avg)** | ~3-5K | ~5-8K | ~1-2K | ~2-4K |
-| **Close** | ~600 | ~2K | ~100 | ~300 |
-| **10-turn session** | ~35K | ~115K | ~12K | ~30K |
-
-> **Savings**: ~65-75% reduction vs normal mode. Quality floor maintained via surgical loading + JIT fallback.
-
----
-
-## Anti-Patterns (Minmax-Specific)
-
-| ❌ Don't | ✅ Do |
-|:---------|:------|
-| Load a file "just in case" | Load only when the current turn needs it |
-| Run 3 parallel searches to "be thorough" | Run 1 targeted search with specific query |
-| Write 500-word explanations for simple changes | Write the diff + one sentence of rationale |
-| Default to STANDARD Λ for everything | Default to SNIPER, upgrade only when complexity demands it |
-| Restate the user's question before answering | Answer directly |
-| Load CANONICAL §4-5 at boot | Let JIT retrieve specific frameworks when referenced |
-| Run full `shutdown.py` pipeline | Run `--micro` unless the session was substantive |
-
----
-
-## Deactivation
-
-Minmax mode deactivates automatically at session close. No carry-over to next session.
-
-To deactivate mid-session: user says "normal mode" or "/fullload" — immediately revert to standard behavioral rules.
-
----
-
-## Design Rationale
-
-> **Why a standalone workflow instead of flags on existing workflows?**
->
-> Law #4 (Modular Architecture): New capability = new protocol file, not monolith expansion.
-> Existing workflows (`/start`, `/end`, `/ultrastart`, `/ultraend`) are already well-tuned
-> for their contexts. Injecting conditional `--lean` logic into all four creates coupling
-> and maintenance burden. A standalone mode toggle is composable, reversible, and zero-cost
-> when unused.
->
-> **Core Principle — Token Economy Doctrine**:
->
-> On pay-per-token pricing, the optimization function inverts:
-> - Normal: `cost(under-thinking) >> cost(over-thinking)` → load everything
-> - Minmax: `cost(over-loading) >> cost(under-loading)` → load surgically
->
-> Both modes maintain the same QUALITY floor. The difference is signal DENSITY —
-> how much quality you extract per token spent.
-
----
+1. **Surgical State Boot (`/start`)**: Read `userContext.md`, `productContext.md`, and surgical `activeContext.md` (header + latest checkpoint only). Never bulk-load `CANONICAL_TIER2.md` unless domain matches.
+2. **Targeted Slicing**: Read exact line ranges (`<= 150 lines` around symbol matches via `grep -n`) rather than loading whole files or multi-MB logs into context.
+3. **Dense Signal Output**: Lead with the answer/diff; prefer compact tables over prose walls; render all formulas, intervals, and currency in ASCII/Unicode (zero LaTeX delimiters).
+4. **Coordinated Parallelism**: Launch independent reads/checks/subagents in parallel (`context_gate` Meta-Patterns, `search.py` channels, `boot_status.py`), never serially.
+5. **Micro Close Default (`/end`)**: Use compressed checkpoint closes (`shutdown.py --micro`) when sessions involve narrow fixes without new `CANONICAL.md` or `PROJECTS.md` state transitions.
 
 ## References
 
-- [/start](start.md) — Standard boot (modified by Minmax Rule 1)
-- [/ultrastart](ultrastart.md) — Deep boot (most savings from Minmax Rule 1)
-- [/end](end.md) — Standard close (modified by Minmax Rule 4)
-- [Maximum Compute Doctrine](../../.context/CANONICAL.md) — §216 (the inverse of this workflow)
-- [Context Density](../../.context/CANONICAL.md) — §194 (Dense Signal > Padded Context)
+- [`/start`](start.md) — Fast boot execution workflow
+- [`_shared_extended.md`](references/_shared_extended.md) — JIT UI, Anti-Abstraction, Swarm, and Cluster Routing specs
+- `CANONICAL.md` §194 (Context Density) & §216 (Suggest, Never Impose)
 
----
-
-## Tagging
-
-`#workflow` `#automation` `#minmax` `#token-economy` `#efficiency`
+`#workflow` `#minmax` `#performance` `#latency`

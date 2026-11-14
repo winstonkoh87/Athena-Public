@@ -45,6 +45,23 @@ BOLD = "\033[1m"
 DIM = "\033[2m"
 RESET = "\033[0m"
 
+# Optional tokenizer loaded once at import time (never per-query inside telemetry write)
+try:
+    import tiktoken as _tiktoken_mod
+    _TIKTOKEN_ENC = _tiktoken_mod.get_encoding("cl100k_base")
+except Exception:
+    _TIKTOKEN_ENC = None
+
+
+def _estimate_tokens(text: str) -> int:
+    if _TIKTOKEN_ENC is not None:
+        try:
+            return len(_TIKTOKEN_ENC.encode(text))
+        except Exception:
+            pass
+    return max(1, len(text) // 4)
+
+
 # God Mode: Aggressive latency optimization
 GOD_MODE = True
 
@@ -1258,6 +1275,7 @@ def run_search(
     intent: str | None = None,
     web: bool | None = None,  # None = auto via needs_web(); True/False = explicit override
     print_output: bool = True,  # When False, suppresses printing to stdout and returns payload directly
+    vector_mode: str = "always",  # "always" | "auto" (speculative local-first w/ quality floor) | "local"
 ):
     import time
     t0 = time.time()
@@ -1316,8 +1334,10 @@ def run_search(
         "web": effective_web,
         "corpus_fp": canonical_mtime,
     }
+    if vector_mode != "always":
+        search_scope["vector_mode"] = vector_mode
 
-    # 0. Check cache first
+    # 0. Check cache first (exact match: zero network overhead)
     cache = get_search_cache()
     cached_results = cache.get(query, scope=search_scope) if search_cache_enabled else None
 
@@ -1327,91 +1347,89 @@ def run_search(
             print("=" * 60)
         fused_results = cached_results
     else:
-        # 0.5. Check Semantic Cache (if miss on exact)
+        # 0.5. Check Semantic Cache ONLY from offline SQLite cache (no blocking remote HTTP call)
         query_embedding = None
-        if not json_output:
-            print("   ⚡ Checking semantic cache...")
-
-        try:
-            # We need the embedding for semantic check
-            # This corresponds to "Step 2: Fetch embedding" in the plan
-            import signal
-
-            from athena.memory.vectors import get_embedding
-
-            # Timeout wrapper for get_embedding (Gemini API rate limit or network timeout)
-            def handler(signum, frame):
-                raise TimeoutError("Embedding fetch timed out")
-
-            # Set the signal handler and a 15-second alarm (main thread only; worker threads bypass signal)
-            is_main = threading.current_thread() is threading.main_thread()
-            if is_main:
-                signal.signal(signal.SIGALRM, handler)
-                signal.alarm(15)
-
+        semantic_hit = None
+        has_semantic_candidates = (
+            search_cache_enabled and cache.has_semantic_entries(scope=search_scope)
+        )
+        if has_semantic_candidates:
             try:
-                query_embedding = get_embedding(query, task_type="RETRIEVAL_QUERY")
-            finally:
-                if is_main:
-                    signal.alarm(0)  # Disable alarm
+                from athena.memory.vectors import get_cached_embedding
 
-            semantic_hit = (
-                cache.get_semantic(query_embedding, scope=search_scope)
-                if search_cache_enabled
-                else None
-            )
-
-            if semantic_hit:
-                if not json_output:
-                    print(f'🔥 SEMANTIC CACHE HIT: "{query}"')
-                    print("=" * 60)
-                fused_results = semantic_hit
-                # Proceed to display (skip collection)
+                query_embedding = get_cached_embedding(query, task_type="RETRIEVAL_QUERY")
+                if query_embedding:
+                    semantic_hit = cache.get_semantic(query_embedding, scope=search_scope)
+            except Exception:
                 pass
-            else:
-                raise ValueError("Semantic Miss")
-        except Exception as e:
-            # Embedding failed or semantic miss - continue with hybrid search
-            # Make embedding optional for non-vector search methods
-            err_str = str(e)
-            if any(term in err_str for term in ("404", "429", "402", "Payment", "QuotaExhausted", "GOOGLE_API_KEY", "timed out", "Timeout")):
-                if not json_output:
-                    print(
-                        f"\n   {YELLOW}⚠️  FALLBACK [DEGRADED]: Vector search unavailable ({e}){RESET}",
-                        file=sys.stderr,
-                    )
-                    print(
-                        f"   {DIM}Local channels active (FTS, recency, graph). [DEGRADED: vector channel failed — {e}]{RESET}\n",
-                        file=sys.stderr,
-                    )
-                query_embedding = None  # Proceed without vectors
-                vector_failed = True  # FIX-03: Flag degraded recall
-                _record_channel_health("vector", "depleted" if ("429" in err_str or "402" in err_str or "Quota" in err_str) else "failed", err_str)
 
-            # Fallback to full search
+        early_local_resolved = False
+
+        if semantic_hit:
+            if not json_output:
+                print(f'🔥 SEMANTIC CACHE HIT: "{query}"')
+                print("=" * 60)
+            fused_results = semantic_hit
+        else:
             if not json_output:
                 print(
                     f'\n🔍 SMART SEARCH (Parallel Hybrid RRF{" + Rerank" if rerank else ""}): "{query}"'
                 )
                 print("=" * 60)
 
-            # 1. Collect (Parallel execution)
-            # Wrapper for robust execution
-
-            # 1. Collect (Parallel execution)
+            # 1. Collect (Single-wave parallel execution across local, vector, and web)
             exclude_domains = [] if effective_personal else ["personal"]
+            abandoned = threading.Event()
 
-            # Helper to create safe lambdas
             def safe_exec(name, func):
                 try:
                     return func()
                 except Exception as e:
-                    print(f"   ⚠️ {name} task failed: {e}", file=sys.stderr)
+                    if not abandoned.is_set():
+                        print(f"   ⚠️ {name} task failed: {e}", file=sys.stderr)
+                        if name == "vector":
+                            _record_channel_health("vector", "failed", str(e))
                     return []
 
-            # Live channels (2026-06-19): "tags" and "exocortex" retired — both were
-            # dead on disk (TAG_INDEX moved to .context/archive/; exocortex.db absent).
-            # Vector is the ONLY semantic channel; the rest are lexical. See TECH_DEBT.md.
+            def _vector_task():
+                nonlocal query_embedding, semantic_hit, vector_failed
+                from athena.memory.vectors import get_embedding
+
+                if query_embedding is None:
+                    try:
+                        query_embedding = get_embedding(query, task_type="RETRIEVAL_QUERY")
+                    except Exception as emb_err:
+                        if not abandoned.is_set():
+                            err_str = str(emb_err)
+                            is_depleted = any(
+                                t in err_str
+                                for t in ("429", "402", "Payment", "Quota", "QuotaExhausted")
+                            )
+                            _record_channel_health(
+                                "vector",
+                                "depleted" if is_depleted else "failed",
+                                err_str,
+                            )
+                            vector_failed = True
+                            if not json_output:
+                                print(
+                                    f"\n   {YELLOW}⚠️  FALLBACK [DEGRADED]: Vector search unavailable ({emb_err}){RESET}",
+                                    file=sys.stderr,
+                                )
+                        return []
+
+                if abandoned.is_set():
+                    return []
+
+                if has_semantic_candidates and query_embedding:
+                    hit = cache.get_semantic(query_embedding, scope=search_scope)
+                    if hit:
+                        semantic_hit = hit
+                        return []
+
+                return collect_vectors(
+                    query, embedding=query_embedding, exclude_domains=exclude_domains
+                )
 
             # P1.6: Privacy guard — redact personal info from web queries
             web_query = query
@@ -1419,93 +1437,127 @@ def run_search(
             if effective_web and detected_intent == "PERSONALISED_DECISION":
                 web_query, web_redacted = redact_query_for_web(query, detected_intent)
 
-            collection_tasks = {
+            local_tasks = {
                 "canonical": lambda: collect_canonical(query),
-                "vector": lambda: collect_vectors(
-                    query, embedding=query_embedding, exclude_domains=exclude_domains
-                ),
                 "fts_bm25": lambda: collect_fts_bm25(query),
                 "filename": lambda: collect_filenames(query),
                 "framework_docs": lambda: collect_framework_docs(query),
             }
+            extra_tasks: dict[str, Any] = {}
+            if vector_mode != "local":
+                extra_tasks["vector"] = _vector_task
             if effective_web:
-                collection_tasks["web_search"] = lambda: collect_web_search_v2(web_query, limit=limit)
+                extra_tasks["web_search"] = lambda: collect_web_search_v2(web_query, limit=limit)
 
-            lists = {}
-            with ThreadPoolExecutor(max_workers=len(collection_tasks)) as executor:
-                # 1. Start all non-vector, non-web tasks in parallel
-                future_to_source = {
+            lists: dict[str, list] = {}
+            max_workers = max(4, len(local_tasks) + len(extra_tasks))
+            executor = ThreadPoolExecutor(max_workers=max_workers)
+            wait_on_exit = True
+            try:
+                # Launch local, vector, and web channels simultaneously at t=0
+                local_futures = {
                     executor.submit(safe_exec, source, func): source
-                    for source, func in collection_tasks.items()
-                    if source not in ["vector", "web_search"]
+                    for source, func in local_tasks.items()
+                }
+                extra_futures = {
+                    source: executor.submit(safe_exec, source, func)
+                    for source, func in extra_tasks.items()
                 }
 
-                # 2. Wait for non-vector tasks to complete (local processes are very fast)
-                done, not_done = wait(
-                    future_to_source.keys(), timeout=5, return_when=ALL_COMPLETED
+                # Collect fast local tasks first
+                done_local, not_done_local = wait(
+                    local_futures.keys(), timeout=5, return_when=ALL_COMPLETED
                 )
-
-                # Collect non-vector results
-                for future in done:
-                    source = future_to_source[future]
+                for future in done_local:
+                    source = local_futures[future]
                     try:
                         lists[source] = future.result()
                     except Exception:
                         lists[source] = []
-
-                # Report timeouts for non-vector tasks
-                for future in not_done:
-                    source = future_to_source[future]
+                for future in not_done_local:
+                    source = local_futures[future]
                     if not json_output:
                         print(f"   ⚠️ {source} timed out (Tier 1 limit)", file=sys.stderr)
 
-                # 3. Vector channel: ALWAYS fire.
-                # The old "low entropy + local hits → skip vectors" heuristic was
-                # the #1 recall-killer: short conceptual queries ("Relational Proxy
-                # Fallacy") matched a keyword in PROJECTS.md, bypassed the only
-                # semantic channel, and missed the session log that coined the term.
-                # Vectors are the sole paraphrase/synonym channel — skipping them
-                # on short queries is skipping them on exactly the queries that need
-                # them most.  Removed 2026-09-03 (S876, P0.3 strike).
-                needs_vector = True
+                # Speculative Local+ONNX quality-floor gate ("auto" mode, CS-464)
+                vector_fut = extra_futures.get("vector")
+                if (
+                    vector_mode == "auto"
+                    and not effective_web
+                    and vector_fut is not None
+                    and not vector_fut.done()
+                ):
+                    local_fused = weighted_rrf(dict(lists), intent=detected_intent)
+                    non_boot_hits = [r for r in local_fused if r.source != "framework_docs"]
+                    if len(non_boot_hits) >= min(2, limit) and local_fused:
+                        if rerank:
+                            from athena.tools.reranker import rerank_results
 
-                if needs_vector or ("web_search" in collection_tasks):
-                    futures = {}
-                    if needs_vector:
-                        futures["vector"] = executor.submit(safe_exec, "vector", collection_tasks["vector"])
-                    if "web_search" in collection_tasks:
-                        futures["web_search"] = executor.submit(safe_exec, "web_search", collection_tasks["web_search"])
+                            local_reranked = rerank_results(
+                                query, local_fused[:25], top_k=limit
+                            )
+                            # Re-check if remote vector finished cleanly while ONNX ran
+                            if not vector_fut.done():
+                                top_logit = (
+                                    local_reranked[0].signals.get("reranker", {}).get("score", -99.0)
+                                    if (local_reranked and local_reranked[0].signals)
+                                    else -99.0
+                                )
+                                min_logit = 1.0 if len(query.split()) >= 3 else 2.5
+                                if local_reranked and top_logit >= min_logit:
+                                    fused_results = local_reranked
+                                    if any(
+                                        r.signals and "reranker" in r.signals
+                                        for r in fused_results
+                                    ):
+                                        rerank_used = True
+                                    early_local_resolved = True
+                        elif local_fused[0].rrf_score >= CONFIDENCE_HIGH:
+                            fused_results = local_fused[:limit]
+                            early_local_resolved = True
 
-                    for source, fut in futures.items():
+                if early_local_resolved:
+                    abandoned.set()
+                    wait_on_exit = False
+                elif extra_futures:
+                    extra_timeout = 15 if GOD_MODE else 18
+                    for source, fut in extra_futures.items():
                         try:
-                            timeout = 10 if GOD_MODE else 12
-                            lists[source] = fut.result(timeout=timeout)
+                            lists[source] = fut.result(timeout=extra_timeout)
                         except Exception as e:
                             if not json_output:
                                 print(f"   ⚠️ {source} timed out or failed: {e}", file=sys.stderr)
                             lists[source] = []
                             if source == "vector":
-                                vector_failed = True  # FIX-03: Flag degraded recall
+                                vector_failed = True
+            finally:
+                executor.shutdown(wait=wait_on_exit, cancel_futures=not wait_on_exit)
 
-            if effective_web and len(lists.get("web_search", [])) >= 1:
-                from athena.core.governance import get_governance
-                get_governance().mark_web_search_performed(query)
+            if semantic_hit:
+                if not json_output:
+                    print(f'🔥 SEMANTIC CACHE HIT: "{query}"')
+                    print("=" * 60)
+                fused_results = semantic_hit
+            elif not early_local_resolved:
+                if effective_web and len(lists.get("web_search", [])) >= 1:
+                    from athena.core.governance import get_governance
 
-            # 2. Fuse
-            # Split vector results by their type-specific source for correct
-            # per-type RRF weighting (e.g., case_study=3.0, session=3.0, protocol=2.8)
-            vector_items = lists.pop("vector", [])
-            for item in vector_items:
-                type_key = item.source  # e.g., "case_study", "session", "protocol"
-                if type_key not in lists:
-                    lists[type_key] = []
-                lists[type_key].append(item)
+                    get_governance().mark_web_search_performed(query)
 
-            fused_results = weighted_rrf(lists, intent=detected_intent)
+                # 2. Fuse
+                # Split vector results by their type-specific source for correct
+                # per-type RRF weighting (e.g., case_study=3.0, session=3.0, protocol=2.8)
+                vector_items = lists.pop("vector", [])
+                for item in vector_items:
+                    type_key = item.source  # e.g., "case_study", "session", "protocol"
+                    if type_key not in lists:
+                        lists[type_key] = []
+                    lists[type_key].append(item)
+
+                fused_results = weighted_rrf(lists, intent=detected_intent)
 
         # 3. Rerank
-        rerank_used = False
-        if rerank and fused_results:
+        if rerank and fused_results and not early_local_resolved and cached_results is None and not semantic_hit:
             # 50-candidate pool (was 25): the reranker can't rescue what fusion
             # buried below the cutoff; 50→top-k is the 2025-consensus shape.
             candidates = fused_results[:50]
@@ -1525,7 +1577,14 @@ def run_search(
         # Cache the result (Exact + Semantic) with explicit scope isolation
         # Do not cache degraded results (vector channel failed or any channel degraded/depleted)
         channel_failures = [k for k, v in _channel_health.items() if v.get("status") not in HEALTHY_STATUSES]
-        if fused_results and not vector_failed and not channel_failures and search_cache_enabled:
+        if (
+            cached_results is None
+            and not semantic_hit
+            and fused_results
+            and not vector_failed
+            and not channel_failures
+            and search_cache_enabled
+        ):
             if query_embedding:
                 cache.set(
                     query,
@@ -1696,14 +1755,8 @@ def run_search(
         for r in top_results:
             source_counts[r.source] += 1
 
-        # Estimate tokens
-        tokens = len(query.split())
-        try:
-            import tiktoken
-            encoding = tiktoken.get_encoding("cl100k_base")
-            tokens = len(encoding.encode(query))
-        except Exception:
-            pass
+        # Estimate tokens cleanly without per-query failing import
+        tokens = _estimate_tokens(query)
 
         latency_ms = int((time.time() - t0) * 1000)
 

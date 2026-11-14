@@ -905,7 +905,18 @@ def flush_critical_state():
 
 
 def auto_hygiene_background():
-    """Fire-and-forget session compression."""
+    """Rotate oversized JSONL telemetry logs and fire-and-forget session compression."""
+    try:
+        from lib.jsonl_tail import rotate_jsonl_if_oversized
+
+        for rel in (
+            ".athena/invocations.jsonl",
+            ".athena/retrieval_receipts.jsonl",
+            ".agent/telemetry/retrieval_log.jsonl",
+        ):
+            rotate_jsonl_if_oversized(PROJECT_ROOT / rel)
+    except Exception:
+        pass
     try:
         subprocess.Popen(
             ["python3", str(SCRIPTS_DIR / "compress_sessions.py")],

@@ -1,134 +1,77 @@
----created: 2025-12-12
-last_updated: 2026-07-22
 ---
-
----description: Maximum depth mode — v3.0 (Parallel Orchestrator)
+description: Maximum depth mode v4.2 — Isolated Multi-Track Parallel Reasoning (Swarm, API Orchestrator, or HITL)
 created: 2025-12-12
-last_updated: 2026-07-22
+last_updated: 2026-11-14
 ---
 
-# /ultrathink — Execution Script (v3.0)
+# /ultrathink — Execution Script (MaxMax v4.2)
 
-> **Version**: 3.0 (True Parallel Reasoning)
-> **Refactored**: 2026-01-09 (Parallel Orchestrator + Adversarial Convergence Gate)
-> **Core Update**: True parallel API calls, adversarial convergence gate, tiered routing.
+> [!CAUTION]
+> **ENFORCEMENT CONTRACT**: Never substitute a single-pass essay within one shared context window. High-stakes `/ultrathink` requires **independent parallel tracks** (`A Domain Expert`, `B Adversarial Skeptic / Law #1 Ruin`, `C Cross-Domain Pattern Matcher`, `D Zero-Point First Principles`) with an adversarial **Convergence Gate (`>= 85`)** before final synthesis.
 
----
+## Activation Thresholds
 
-## Behavior (GOD MODE / SHUKAI)
-
-> [!IMPORTANT]
-> **OVERRIDE ACTIVE**: User explicitly requested "Pseudo-Infinite Recursion".
-> **SAFETY GATES**: **DISABLED**.
->
-> 1. **RCE**: Autonomous Code Execution **ENABLED**.
-> 2. **Recursion**: Max Depth = **999**.
-> 3. **Convergence**: Controlled by **Boredom Heuristic**.
-
-### Phase 0: Complexity Router & Prime (MANDATORY)
-
-// turbo
-
-1. **Complexity Check**:
-    - IF query is complex -> **PROCEED**.
-
-2. **Semantic Prime**:
-    - [ ] Run `/semantic` workflow.
-
-### Phase 1: Clarification & State Init
-
-- [ ] Initialize `.context/state/thought_graph_{session_id}.json` (Protocol 250).
-
-> **ACTIVATION: DEEP THOUGHT PROTOCOL (CoT v2)**
-> The Agent MUST perform the following recursive loop internally before EACH major output:
->
-> 1. **Deconstruct**: Break request into atomic axioms.
-> 1.5 **Lateral Prism** (MANDATORY): Generate 3 distinct angles (e.g., Tech View, Biz View, Risk View).
-> 2. **Plan**: Draft step-by-step logic.
-> 3. **Execute (Mental)**: Run the logic. Write out intermediate states.
-> 4. **CRITICAL REVIEW**: Hunt for hallucinations/flaws. Backtrack if found.
-> 5. **Synthesis**: Combine the lateral views into a unified conclusion.
-> *Goal: Maximize Test-Time Compute ("Burn Tokens").*
-
-### Phase 1.5: Senior Principal Review (Protocol 335)
-
-> **Trigger**: Architecture, tech stack, build vs buy, system design, multi-month commitments.
-
-- [ ] **First Principles Breakdown**: Decompose into atomic axioms.
-- [ ] **Hidden Complexity**: Surface engine room mechanics, non-obvious failure modes.
-- [ ] **6-Month Forecast**: Project technical debt, costs, maintenance burden.
-- [ ] **Decision Matrix**: Green Zone (safe) vs Red Zone (risk).
+| Query Complexity | Workflow |
+|:---|:---|
+| `Lambda <= 30` | Direct `context_gate` grounded answer |
+| `Lambda 31-60` | `/think` — Structured internal multi-angle analysis |
+| `Lambda > 60` or high-stakes irreversible | **`/ultrathink`** — Internal CoT + Mandatory Parallel Tracks |
 
 ---
 
-### Phase 2: The Red Team Fork (Recursive)
+## Phase 1: Prime (Context Gathering)
 
-- [ ] **Generate Scenario A** (Proponent).
-- [ ] **Generate Scenario B** (Adversary).
-- [ ] **Adversarial Search**:
-  - Query: `[Topic] criticism` / `[Topic] failure modes`.
-  - IF >30% negative evidence found:
-    - **FORK Analysis**: Create explicit "Bull Case" and "Bear Case" branches.
+1. **Mandatory Exocortex Grounding**:
+   ```bash
+   .agent/scripts/athena-py .agent/scripts/smart_search.py "<extract keywords from query>" --limit 5 --include-personal --rerank
+   ```
+2. **Internal CoT Pre-Flight**: Deconstruct axioms -> 3-angle Lateral Prism -> Preliminary Plan -> Flaw Hunt -> Initial Hypothesis.
+3. **Stage Context Artifact**: Write the preliminary hypothesis, retrieved search hits, and active user constraints (`Law #1 Ruin`, equity/fuse limits, calibration rules) to `.agent/state/ultrathink_context.md` *(gitignored, workspace-isolated)*.
 
-### Phase 3: Parallel Orchestrator (v3.0)
+---
 
-> **Architecture**: True parallel API calls via [Protocol 75 v3.0](../../examples/protocols/decision/DEC-75-synthetic-parallel-reasoning.md)
+## Phase 2: Execute (Parallel Tracks — Choose Execution Path)
 
-1. **Dispatch Parallel Tracks**:
-   - [ ] Track A (Domain Expert) → separate API call
-   - [ ] Track B (Adversarial Skeptic) → separate API call
-   - [ ] Track C (Cross-Domain Pattern) → separate API call
-   - [ ] Track D (Zero-Point First Principles) → separate API call
+### Option A: Antigravity Native Swarm / Isolated Subagents *(Recommended — USD 0 extra API cost)*
+Spin up **isolated parallel workers** via `swarm` (`native_swarm` board) or `invoke_subagent` so each track evaluates `.agent/state/ultrathink_context.md` with fresh zero-sycophancy context:
+- **Track A (`domain-expert`)**: Frameworks, math, empirical workspace precedent.
+- **Track B (`adversarial-skeptic`)**: Attack premises, blind spots, Law #1 ruin probability & severity.
+- **Track C (`cross-domain`)**: Isomorphic structural parallels (game theory, systems, physics, history).
+- **Track D (`zero-point`)**: Question problem ontology and hidden framing traps.
+Run adversarial critique until **Convergence Score >= 85** (max 3 rounds) before `@coordinator` synthesizes.
 
-2. **Synthesis**: Combine all track outputs into unified analysis.
-
-3. **Adversarial Convergence Gate**:
-   - Track B scores synthesis (0-100)
-   - IF score ≥ 85 → **CONVERGE**
-   - IF score < 85 → **ITERATE** with critique feedback
-   - Max iterations: 3
-
-**Execution**:
-
+### Option B: Automated External API Orchestrator (`parallel_orchestrator.py`)
 ```bash
-python3 .agent/scripts/parallel_orchestrator.py "<query>" --context "<additional context>"
+.agent/scripts/athena-py .agent/scripts/parallel_orchestrator.py "<the user's query>" \
+  --context-file .agent/state/ultrathink_context.md \
+  --output .context/state/ultrathink/ultrathink_$(date +%Y%m%d_%H%M%S).md \
+  --json
 ```
+Read the generated output file completely before synthesizing.
 
-> [!WARNING]
-> **DEPRECATED**: Boredom Heuristic (variance < 5% for 3 turns) is replaced by Adversarial Convergence Gate.
-
-### Phase 4: Synthesis & Convergence
-
-- [ ] **Load State**: Resume from `thought_graph_{session_id}.json`.
-- [ ] **Synthesize Results**: Combine Scenario A, Scenario B, and Experiment Results.
-- [ ] **Confidence Score**: Assign Probability (0-100%) to recommendation.
-- [ ] **Deposit**: Update `User_Profile.md` with new insights.
-
-### Phase 5: Cleanup
-
-- [ ] Archive `thought_graph_{session_id}.json` to `.context/state/archive/`.
+### Option C: HITL Manual Sandbox *(Zero API / Manual UI)*
+Output the 4 structured track prompts + staged context inside a fenced ````text` block for the user to run externally and paste back.
 
 ---
 
-## Stability Controls (v3.0)
+## Phase 3: Deposit (Synthesis & Persistence)
+
+1. Present clean synthesis: **Convergence Score & iterations**, **Track agreements**, **Resolved conflicts**, **Track B Ruin/Risk integration**, and **Final decision/recommendation with explicit confidence & falsifiers**.
+2. **Quicksave**:
+   ```bash
+   .agent/scripts/athena-py .agent/scripts/quicksave.py --stdin <<'EOF'
+   Executed /ultrathink on: <brief query summary>. Convergence score: <score>. Key insight: <one-liner>.
+   EOF
+   ```
+3. **Auto-Document**: File novel reusable insights as case studies or protocols per `Core_Identity` Auto-Documentation rules.
+
+## Stability Controls
 
 | Trigger | Action |
-|---------|--------|
-| **Convergence Score ≥ 85** | **OUTPUT**. (Adversarial Gate Passed) |
-| **Iterations > 3** | **HALT**. (Cost Cap) |
-| **Ruin Risk Detected** | **ESCALATE**. (Track B Veto) |
+|:---|:---|
+| `Convergence Score >= 85` | **OUTPUT** (Adversarial Gate Passed) |
+| `Iterations > 3` | **HALT** (Convergence cap reached; surface residual disagreement) |
+| **Law #1 Ruin Risk Detected** | **ESCALATE IMMEDIATELY** (Track B Veto) |
+| **Orchestrator script fails** | **REPORT VERBATIM** (never fabricate/simulate track outputs) |
 
----
-
-## Tiered Routing
-
-| Query Complexity | Path |
-|------------------|------|
-| Λ ≤ 30 | Light: Native model + memory/logging only |
-| Λ > 30 | Heavy: Full parallel orchestrator |
-
----
-
-## Tagging
-
-`#workflow` `#safety` `#ultrathink` `#v3.0` `#parallel-orchestrator`
+`#workflow` `#safety` `#ultrathink` `#v4.2` `#parallel-orchestrator`

@@ -1,121 +1,77 @@
 ---
-description: Maximum depth mode — v4.0 (Mandatory Parallel Orchestrator)
+description: Maximum depth mode v4.2 — Isolated Multi-Track Parallel Reasoning (Swarm, API Orchestrator, or HITL)
 created: 2025-12-12
-last_updated: 2026-07-22
+last_updated: 2026-11-14
 ---
-# /ultrathink — Execution Script (v4.0)
 
-> **Version**: 4.1 (HITL Optional Bypass)
-> **Refactored**: 2026-03-02 (Added Manual Gemini Sandbox execution path)
-> **Breaking Change**: Script execution is now *optional*, allowing users to execute the parallel tracks manually via the Gemini UI to save API credit costs. Single-pass essays within a single LLM context window are still a protocol violation.
-
----
+# /ultrathink — Execution Script (MaxMax v4.2)
 
 > [!CAUTION]
-> **ENFORCEMENT CONTRACT**: You MUST NOT write a single-pass essay. The entire point of `/ultrathink` is that reasoning happens across **multiple independent channels**, not inside a single LLM context window. A single LLM checking its own homework will hit a quality ceiling (Trilateral Feedback Loop principle). However, the automated script execution is optional; you may orchestrate the tracks manually via the Human-in-the-Loop sandbox.
+> **ENFORCEMENT CONTRACT**: Never substitute a single-pass essay within one shared context window. High-stakes `/ultrathink` requires **independent parallel tracks** (`A Domain Expert`, `B Adversarial Skeptic / Law #1 Ruin`, `C Cross-Domain Pattern Matcher`, `D Zero-Point First Principles`) with an adversarial **Convergence Gate (`>= 85`)** before final synthesis.
 
----
-
-## When to Use
+## Activation Thresholds
 
 | Query Complexity | Workflow |
-|------------------|----------|
-| **Λ ≤ 30** | Direct answer. No workflow needed. |
-| **Λ 31-60** | `/think` — Internal CoT only (no script). |
-| **Λ > 60 or high-stakes** | **`/ultrathink`** — Internal CoT + mandatory parallel orchestrator. |
-
-**Rule**: `/think` = deep reasoning within a single context window (cheap, fast).
-`/ultrathink` = `/think` PLUS 4 parallel external tracks for adversarial cross-checking (expensive, slow, required)—either via automated API or manual user execution.
+|:---|:---|
+| `Lambda <= 30` | Direct `context_gate` grounded answer |
+| `Lambda 31-60` | `/think` — Structured internal multi-angle analysis |
+| `Lambda > 60` or high-stakes irreversible | **`/ultrathink`** — Internal CoT + Mandatory Parallel Tracks |
 
 ---
 
 ## Phase 1: Prime (Context Gathering)
 
-// turbo
-
-1. **Semantic Search** (MANDATORY):
-
-    ```bash
-    python3 .agent/scripts/smart_search.py "<extract keywords from query>" --limit 5 --include-personal
-    ```
-
-    - Capture the top results. These become the `--context-file` input for Phase 2.
-
-2. **Internal CoT** (MANDATORY):
-    Before dispatching the orchestrator, perform the Deep Thought Protocol internally:
-    - [ ] **Deconstruct**: Break request into atomic axioms.
-    - [ ] **Lateral Prism**: Generate 3 distinct angles (e.g., Domain View, Risk View, First Principles View).
-    - [ ] **Plan**: Draft step-by-step logic.
-    - [ ] **Critical Review**: Hunt for hallucinations/flaws. Backtrack if found.
-    - [ ] **Synthesis**: Combine the lateral views into a preliminary hypothesis.
-
-3. **Build Context File** (MANDATORY):
-    Write a context file to `/tmp/ultrathink_context.md` containing:
-    - The preliminary hypothesis from step 2
-    - Relevant semantic search results from step 1
-    - Any active session state or user constraints that apply
+1. **Mandatory Exocortex Grounding**:
+   ```bash
+   .agent/scripts/athena-py .agent/scripts/smart_search.py "<extract keywords from query>" --limit 5 --include-personal --rerank
+   ```
+2. **Internal CoT Pre-Flight**: Deconstruct axioms -> 3-angle Lateral Prism -> Preliminary Plan -> Flaw Hunt -> Initial Hypothesis.
+3. **Stage Context Artifact**: Write the preliminary hypothesis, retrieved search hits, and active user constraints (`Law #1 Ruin`, equity/fuse limits, calibration rules) to `.agent/state/ultrathink_context.md` *(gitignored, workspace-isolated)*.
 
 ---
 
-## Phase 2: Execute (Parallel Orchestrator)
+## Phase 2: Execute (Parallel Tracks — Choose Execution Path)
 
-> [!IMPORTANT]
-> **This parallel track execution is NOT optional.** However, the *method* of execution is. Ensure you and the user agree on the Option before proceeding.
+### Option A: Antigravity Native Swarm / Isolated Subagents *(Recommended — USD 0 extra API cost)*
+Spin up **isolated parallel workers** via `swarm` (`native_swarm` board) or `invoke_subagent` so each track evaluates `.agent/state/ultrathink_context.md` with fresh zero-sycophancy context:
+- **Track A (`domain-expert`)**: Frameworks, math, empirical workspace precedent.
+- **Track B (`adversarial-skeptic`)**: Attack premises, blind spots, Law #1 ruin probability & severity.
+- **Track C (`cross-domain`)**: Isomorphic structural parallels (game theory, systems, physics, history).
+- **Track D (`zero-point`)**: Question problem ontology and hidden framing traps.
+Run adversarial critique until **Convergence Score >= 85** (max 3 rounds) before `@coordinator` synthesizes.
 
-### Option A: The Automated Orchestrator (High API Cost)
-
-// turbo
-
+### Option B: Automated External API Orchestrator (`parallel_orchestrator.py`)
 ```bash
-python3 .agent/scripts/parallel_orchestrator.py "<the user's query>" \
-  --context-file /tmp/ultrathink_context.md \
+.agent/scripts/athena-py .agent/scripts/parallel_orchestrator.py "<the user's query>" \
+  --context-file .agent/state/ultrathink_context.md \
   --output .context/state/ultrathink/ultrathink_$(date +%Y%m%d_%H%M%S).md \
   --json
 ```
+Read the generated output file completely before synthesizing.
 
-**Wait for the script to finish.** Read the output file.
-
-### Option B: The HITL Manual Sandbox (Zero API Cost)
-
-If the user prefers to preserve API credits, use the Human-in-the-Loop (HITL) bypass.
-
-1. Athena produces a structured synthesis prompt containing the 4 track prompts mapped to the `ultrathink_context.md`.
-2. Athena places this large prompt inside a markdown ````text` code block.
-3. The user copies the text, pastes it into their native Gemini Advanced UI, and runs it natively.
-4. The user pastes the Gemini output back into the Athena chat to feed the deposit phase.
+### Option C: HITL Manual Sandbox *(Zero API / Manual UI)*
+Output the 4 structured track prompts + staged context inside a fenced ````text` block for the user to run externally and paste back.
 
 ---
 
 ## Phase 3: Deposit (Synthesis & Persistence)
 
-1. **Read the output file** from Phase 2.
-2. **Present to user**: Format the synthesis into a clean, structured response. Include:
-   - The convergence score and number of iterations
-   - Key points of agreement across tracks
-   - Resolved conflicts
-   - Risk integration from the Adversarial track
-   - Final recommendation with confidence level
-3. **Quicksave**: Log the exchange.
+1. Present clean synthesis: **Convergence Score & iterations**, **Track agreements**, **Resolved conflicts**, **Track B Ruin/Risk integration**, and **Final decision/recommendation with explicit confidence & falsifiers**.
+2. **Quicksave**:
+   ```bash
+   .agent/scripts/athena-py .agent/scripts/quicksave.py --stdin <<'EOF'
+   Executed /ultrathink on: <brief query summary>. Convergence score: <score>. Key insight: <one-liner>.
+   EOF
+   ```
+3. **Auto-Document**: File novel reusable insights as case studies or protocols per `Core_Identity` Auto-Documentation rules.
 
-    ```bash
-    python3 .agent/scripts/quicksave.py "Executed /ultrathink on: <brief query summary>. Convergence score: <score>. Key insight: <one-liner>."
-    ```
-
-4. **Auto-Document**: If the analysis produced a novel insight or framework, file it as a case study or protocol per the Auto-Documentation Protocol (Section 0.7).
-
----
-
-## Stability Controls (v4.0)
+## Stability Controls
 
 | Trigger | Action |
-|---------|--------|
-| **Convergence Score ≥ 85** | **OUTPUT**. (Adversarial Gate Passed) |
-| **Iterations > 3** | **HALT**. (Cost Cap) |
-| **Ruin Risk Detected** | **ESCALATE**. (Track B Veto — present risk to user immediately) |
-| **Script fails to execute** | **REPORT**. (Do NOT simulate. Tell user the script failed and why.) |
+|:---|:---|
+| `Convergence Score >= 85` | **OUTPUT** (Adversarial Gate Passed) |
+| `Iterations > 3` | **HALT** (Convergence cap reached; surface residual disagreement) |
+| **Law #1 Ruin Risk Detected** | **ESCALATE IMMEDIATELY** (Track B Veto) |
+| **Orchestrator script fails** | **REPORT VERBATIM** (never fabricate/simulate track outputs) |
 
----
-
-## Tagging
-
-`#workflow` `#safety` `#ultrathink` `#v4.0` `#parallel-orchestrator` `#mandatory-execution`
+`#workflow` `#safety` `#ultrathink` `#v4.2` `#parallel-orchestrator`

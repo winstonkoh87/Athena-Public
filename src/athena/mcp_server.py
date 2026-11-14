@@ -1125,6 +1125,22 @@ def context_gate(
     except ImportError:
         pass
 
+    # Choose MinMax retrieval posture:
+    # - SNIPER -> local-only (<0.5s)
+    # - Low-complexity STANDARD (Lambda < 15, non-personalised, no web) -> speculative local+ONNX ("auto") w/ quality-floor escalation
+    # - High-complexity STANDARD / Decision / Web / ULTRA -> full parallel vector + lexical ("always")
+    if risk_level == RiskLevel.SNIPER:
+        primary_vector_mode = "local"
+    elif (
+        risk_level == RiskLevel.STANDARD
+        and lambda_res["score"] < 15
+        and intent != "PERSONALISED_DECISION"
+        and not effective_web
+    ):
+        primary_vector_mode = "auto"
+    else:
+        primary_vector_mode = "always"
+
     # Execute search directly without stdout hijacking (WS3.1 / M-1 fix)
     search_results = run_search(
         query,
@@ -1134,18 +1150,22 @@ def context_gate(
         web=effective_web,
         intent=intent,
         print_output=False,
+        vector_mode=primary_vector_mode,
     )
     if not isinstance(search_results, dict):
         search_results = {"results": [], "error": "Failed to obtain search output"}
 
-    # Secondary multi-hop retrieval for matched Meta-Patterns
+    # Secondary multi-hop retrieval for matched Meta-Patterns (parallelized, local-fast)
     if latent_patterns:
+        from concurrent.futures import ThreadPoolExecutor
+
         existing_ids = {
             r.get("id") for r in search_results.get("results", []) if isinstance(r, dict)
         }
-        for mp in latent_patterns:
+
+        def _fetch_mp(mp: dict) -> tuple[dict, dict]:
             try:
-                mp_results = run_search(
+                mp_res = run_search(
                     mp["search_terms"],
                     limit=2,
                     json_output=True,
@@ -1153,40 +1173,63 @@ def context_gate(
                     web=False,
                     intent="SYSTEM_KNOWLEDGE",
                     print_output=False,
+                    vector_mode="local",
                 )
+                return mp, (mp_res if isinstance(mp_res, dict) else {})
             except Exception:
-                mp_results = {}
-            if isinstance(mp_results, dict):
-                for item in mp_results.get("results", []):
-                    if isinstance(item, dict) and item.get("id") not in existing_ids:
-                        item["meta_pattern_projection"] = {
-                            "id": mp["id"],
-                            "name": mp["name"],
-                            "rationale": mp["description"],
-                        }
-                        search_results.setdefault("results", []).append(item)
-                        existing_ids.add(item.get("id"))
+                return mp, {}
 
-    # 4. Build personalisation frame (when relevant)
+        with ThreadPoolExecutor(max_workers=len(latent_patterns)) as mp_pool:
+            mp_outputs = list(mp_pool.map(_fetch_mp, latent_patterns))
+
+        for mp, mp_results in mp_outputs:
+            for item in mp_results.get("results", []):
+                if isinstance(item, dict) and item.get("id") not in existing_ids:
+                    item["meta_pattern_projection"] = {
+                        "id": mp["id"],
+                        "name": mp["name"],
+                        "rationale": mp["description"],
+                    }
+                    search_results.setdefault("results", []).append(item)
+                    existing_ids.add(item.get("id"))
+
+    # 4. Build personalisation frame (when relevant) & strip duplicate copy from res["context"]
+    pre_personalisation = search_results.pop("personalisation_context", None)
+    pre_user_state = search_results.pop("user_state", None)
+    mp_projected_count = sum(
+        1
+        for r in search_results.get("results", [])
+        if isinstance(r, dict) and "meta_pattern_projection" in r
+    )
     personalisation = None
     user_state = None
     if intent == "PERSONALISED_DECISION":
-        try:
-            from athena.core.models import SearchResult as _SR
-            from athena.tools.personalisation import (
-                build_personalisation_prompt,
-                build_user_state_snapshot,
-            )
-            raw_results = search_results.get("results", [])
-            sr_objects = [
-                _SR(**r) if isinstance(r, dict) else r
-                for r in raw_results
-            ]
-            personalisation = build_personalisation_prompt(query, sr_objects)
-            user_state = build_user_state_snapshot()
-        except Exception as e:
-            import sys
-            print(f"   ⚠️ Personalisation frame construction failed: {e}", file=sys.stderr)
+        if pre_personalisation and pre_user_state is not None and mp_projected_count == 0:
+            personalisation = pre_personalisation
+            user_state = pre_user_state
+        else:
+            try:
+                from athena.core.models import SearchResult as _SR
+                from athena.tools.personalisation import (
+                    build_personalisation_prompt,
+                    build_user_state_snapshot,
+                )
+                raw_results = search_results.get("results", [])
+                sr_objects = [
+                    _SR(**r) if isinstance(r, dict) else r
+                    for r in raw_results
+                ]
+                user_state = (
+                    pre_user_state
+                    if pre_user_state is not None
+                    else build_user_state_snapshot()
+                )
+                personalisation = build_personalisation_prompt(
+                    query, sr_objects, user_state=user_state
+                )
+            except Exception as e:
+                import sys
+                print(f"   ⚠️ Personalisation frame construction failed: {e}", file=sys.stderr)
 
     # 5. Check for strong local hit (threshold must be reachable under RRF normalization)
     local_first = False

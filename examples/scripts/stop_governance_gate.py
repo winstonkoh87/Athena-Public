@@ -28,6 +28,9 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
 GATE_DECISIONS_PATH: Path = REPO_ROOT / ".athena" / "gate_decisions.jsonl"
 LOOP_GUARD_PATH: Path = REPO_ROOT / ".agent" / "state" / "gate_loop_guard.json"
 RETRIEVAL_RECEIPTS_PATH: Path = REPO_ROOT / ".athena" / "retrieval_receipts.jsonl"
@@ -305,15 +308,9 @@ def evaluate_turn_governance(transcript_path: str) -> dict[str, str]:
     receipts_file = RETRIEVAL_RECEIPTS_PATH
     if receipts_file.exists() and any(t in ("context_gate", "smart_search") for t in tools_called):
         try:
-            latest_receipt = None
-            with open(receipts_file, encoding="utf-8") as rf:
-                for rline in rf:
-                    rline = rline.strip()
-                    if rline:
-                        try:
-                            latest_receipt = json.loads(rline)
-                        except Exception:
-                            pass
+            from lib.jsonl_tail import read_latest_jsonl_record
+
+            latest_receipt = read_latest_jsonl_record(receipts_file, max_bytes=65_536)
             if latest_receipt and latest_receipt.get("quality") == "degraded":
                 web_verified = (
                     "search_web" in tools_called

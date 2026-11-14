@@ -10,7 +10,6 @@ GTO Fix: 2026-03-26 — Resolves retrieval hang bottleneck.
 """
 
 import argparse
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -314,51 +313,62 @@ def run_temporal_grep(query: str, as_of: str, limit: int = 10) -> None:
 
 def run_full_search(query: str, limit: int, strict: bool, rerank: bool,
                     debug: bool, json_output: bool, include_personal: bool) -> None:
-    """Run the full SDK search engine in a subprocess with a hard timeout."""
-    # Build the command to run the SDK search directly
-    src_path = str(PROJECT_ROOT / "src")
-    cmd = [
-        sys.executable, "-c",
-        f"""
-import sys
-sys.path.insert(0, {src_path!r})
-from athena.tools.search import run_search
-run_search(
-    query={query!r},
-    limit={limit},
-    strict={strict},
-    rerank={rerank},
-    debug={debug},
-    json_output={json_output},
-    include_personal={include_personal},
-)
-"""
-    ]
+    """Run the full SDK search engine in-process with a thread timeout guard."""
+    from concurrent.futures import ThreadPoolExecutor
+    from concurrent.futures import TimeoutError as FutureTimeout
 
-    # Reranking normally uses the ONNX fast path (~0.4s load) and fits the default
-    # budget. Only the torch CrossEncoder FALLBACK (ONNX assets missing) cold-loads
-    # ~20-60s; give headroom only in that case.
+    src_path = str(PROJECT_ROOT / "src")
+    if src_path not in sys.path:
+        sys.path.insert(0, src_path)
+
     onnx_present = (PROJECT_ROOT / ".agent" / "models" / "reranker-onnx" / "tokenizer.json").exists()
     effective_timeout = max(TIMEOUT_SECONDS, 75) if (rerank and not onnx_present) else TIMEOUT_SECONDS
+    stage_state = {"stage": "import"}
 
-    try:
-        proc = subprocess.run(
-            cmd,
-            timeout=effective_timeout,
-            capture_output=False,  # Let stdout/stderr pass through
-            env={**os.environ, "PYTHONPATH": src_path},
+    def _invoke():
+        stage_state["stage"] = "import_search"
+        from athena.tools.search import run_search
+
+        stage_state["stage"] = "search_pipeline"
+        return run_search(
+            query=query,
+            limit=limit,
+            strict=strict,
+            rerank=rerank,
+            debug=debug,
+            json_output=json_output,
+            include_personal=include_personal,
         )
-        if proc.returncode != 0:
-            raise RuntimeError(f"Search exited with code {proc.returncode}")
-    except subprocess.TimeoutExpired:
+
+    executor = ThreadPoolExecutor(max_workers=1)
+    future = executor.submit(_invoke)
+    try:
+        future.result(timeout=effective_timeout)
+        executor.shutdown(wait=True)
+    except FutureTimeout:
+        executor.shutdown(wait=False, cancel_futures=True)
         print(
-            f"\n⚠️  Full search timed out after {effective_timeout}s (usually a cold "
-            "start — imports + first network call; warm runs complete in seconds). "
+            f"\n⚠️  Full search timed out after {effective_timeout}s "
+            f"(stalled in stage={stage_state['stage']}). "
             "Falling back to grep...",
             file=sys.stderr,
         )
         run_grep_fallback(query, limit)
     except Exception as e:
+        executor.shutdown(wait=False, cancel_futures=True)
+        err_msg = str(e)
+        if "402" in err_msg or "depleted" in err_msg.lower():
+            print(
+                "\n🚨 [API BALANCE DEPLETED]: Google AI Studio prepay balance is USD 0.00.\n"
+                "   Please top up at: https://aistudio.google.com\n",
+                file=sys.stderr,
+            )
+        elif "429" in err_msg or "quota" in err_msg.lower():
+            print(
+                "\n🚨 [API QUOTA EXHAUSTED]: Gemini API rate limit or daily quota reached (HTTP 429).\n"
+                "   Please check quota at: https://aistudio.google.com\n",
+                file=sys.stderr,
+            )
         print(f"\n⚠️  Full search failed: {e}. Falling back to grep...", file=sys.stderr)
         run_grep_fallback(query, limit)
 

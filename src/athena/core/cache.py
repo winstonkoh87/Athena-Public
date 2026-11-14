@@ -29,7 +29,9 @@ import contextlib
 import hashlib
 import json
 import math
+import sqlite3
 import time
+from array import array
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -97,6 +99,7 @@ class QueryCache:
         self.ttl_seconds = ttl_hours * 3600
         self.max_size = max_size
         self._cache_file = cache_dir / "search_cache.json"
+        self._vec_db_file = cache_dir / "search_cache_vecs.db"
         self._cache: OrderedDict[str, CacheEntry] = OrderedDict()
         self._load_from_disk()
 
@@ -112,16 +115,73 @@ class QueryCache:
         combined = f"{normalized}{scope_str}"
         return hashlib.md5(combined.encode()).hexdigest()[:16]
 
+    def _load_vecs_from_db(self) -> dict[str, list[float]]:
+        """Load decoupled query embeddings from compact SQLite sidecar."""
+        vecs: dict[str, list[float]] = {}
+        if not self._vec_db_file.exists():
+            return vecs
+        try:
+            with contextlib.closing(sqlite3.connect(str(self._vec_db_file))) as conn:
+                rows = conn.execute("SELECT key, vec FROM cache_vecs").fetchall()
+            for key, blob in rows:
+                if isinstance(blob, (bytes, bytearray)) and len(blob) % 8 == 0:
+                    arr = array("d")
+                    arr.frombytes(blob)
+                    vecs[key] = arr.tolist()
+        except Exception:
+            pass
+        return vecs
+
+    def _save_vecs_to_db(self, *, clear_all: bool = False) -> None:
+        """Persist decoupled embeddings cleanly in SQLite without bloating search_cache.json."""
+        try:
+            self._vec_db_file.parent.mkdir(parents=True, exist_ok=True)
+            with contextlib.closing(sqlite3.connect(str(self._vec_db_file))) as conn:
+                conn.execute("PRAGMA journal_mode=WAL")
+                conn.execute("PRAGMA synchronous=NORMAL")
+                conn.execute(
+                    "CREATE TABLE IF NOT EXISTS cache_vecs "
+                    "(key TEXT PRIMARY KEY, vec BLOB NOT NULL)"
+                )
+                if clear_all:
+                    conn.execute("DELETE FROM cache_vecs")
+                else:
+                    live_keys = list(self._cache.keys())
+                    if live_keys:
+                        placeholders = ",".join("?" for _ in live_keys)
+                        conn.execute(
+                            f"DELETE FROM cache_vecs WHERE key NOT IN ({placeholders})",
+                            live_keys,
+                        )
+                    else:
+                        conn.execute("DELETE FROM cache_vecs")
+                    rows = []
+                    for k, e in self._cache.items():
+                        if e.embedding:
+                            blob = array("d", (float(x) for x in e.embedding)).tobytes()
+                            rows.append((k, blob))
+                    if rows:
+                        conn.executemany(
+                            "INSERT OR REPLACE INTO cache_vecs (key, vec) VALUES (?, ?)",
+                            rows,
+                        )
+                conn.commit()
+        except Exception:
+            pass
+
     def _load_from_disk(self):
         """Load cache from disk on initialization."""
         if not self._cache_file.exists():
             return
         try:
             data = json.loads(self._cache_file.read_text())
+            vec_map = self._load_vecs_from_db()
             now = time.time()
             for key, entry_data in data.items():
                 if now - entry_data["timestamp"] < self.ttl_seconds:
-                    if "embedding" not in entry_data:
+                    if key in vec_map:
+                        entry_data["embedding"] = vec_map[key]
+                    elif "embedding" not in entry_data:
                         entry_data["embedding"] = None
                     if "scope" not in entry_data:
                         entry_data["scope"] = None
@@ -133,7 +193,7 @@ class QueryCache:
             pass
 
     def _save_to_disk(self):
-        """Persist cache to disk (atomic write via temp + rename)."""
+        """Persist cache metadata/results to JSON and vectors to SQLite sidecar."""
         import os
         import tempfile
 
@@ -144,7 +204,6 @@ class QueryCache:
                     "value": _serialize_value(e.value),
                     "timestamp": e.timestamp,
                     "hits": e.hits,
-                    "embedding": e.embedding,
                     "scope": _normalize_scope(e.scope),
                 }
                 for k, e in self._cache.items()
@@ -162,6 +221,7 @@ class QueryCache:
                 with contextlib.suppress(OSError):
                     os.unlink(tmp_path)
                 raise
+            self._save_vecs_to_db(clear_all=(len(self._cache) == 0))
         except Exception:
             pass
 
@@ -185,8 +245,7 @@ class QueryCache:
             return None
 
         entry.hits += 1
-        self._cache.move_to_end(key)  # LRU update
-        self._save_to_disk()
+        self._cache.move_to_end(key)  # In-memory LRU update only; zero disk write on hit
         return entry.value
 
     # -------------------------------------------------------------------------
@@ -228,11 +287,14 @@ class QueryCache:
         best_sim = -1.0
         best_entry = None
         best_key = None
+        now = time.time()
 
         norm_scope = _normalize_scope(scope)
-        for key, entry in self._cache.items():
+        for key, entry in list(self._cache.items()):
             # Scope matching: Do not match across differing sensitivity/domain scopes
             if norm_scope != _normalize_scope(entry.scope):
+                continue
+            if now - entry.timestamp > self.ttl_seconds:
                 continue
 
             if entry.embedding:
@@ -245,10 +307,20 @@ class QueryCache:
         if best_sim >= threshold and best_entry and best_key:
             best_entry.hits += 1
             self._cache.move_to_end(best_key)
-            self._save_to_disk()
             return best_entry.value
 
         return None
+
+    def has_semantic_entries(self, scope: dict[str, Any] | None = None) -> bool:
+        """Return True if any non-expired semantic cache entries match the normalized scope."""
+        now = time.time()
+        norm_scope = _normalize_scope(scope)
+        return any(
+            e.embedding
+            and (now - e.timestamp <= self.ttl_seconds)
+            and _normalize_scope(e.scope) == norm_scope
+            for e in self._cache.values()
+        )
 
     # -------------------------------------------------------------------------
     # Cache Management

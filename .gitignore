@@ -114,6 +114,7 @@ search_results.txt
 
 # Daemon-written runtime telemetry — never track (jams pushes)
 .agent/telemetry/retrieval_log.jsonl
+.agent/telemetry/*.archive.gz
 .agent/telemetry/api_usage.jsonl
 .athena/invocations.jsonl
 .athena/retrieval_receipts.jsonl

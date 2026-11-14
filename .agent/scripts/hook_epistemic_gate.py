@@ -110,31 +110,34 @@ def has_recent_grounding(max_age_seconds: float = 180.0, invocations_path: Path 
     now_utc = datetime.now(timezone.utc).timestamp()
     now_local = datetime.now().timestamp()
     try:
-        with open(path, encoding="utf-8") as f:
-            lines = f.readlines()
-            for line in reversed(lines[-30:]):  # Scan last 30 entries
-                try:
-                    data = json.loads(line)
-                    t_str = data.get("timestamp", "")
-                    if not t_str:
-                        continue
-                    if t_str.endswith("Z"):
-                        t_str = t_str[:-1] + "+00:00"
-                    t = datetime.fromisoformat(t_str)
-                    if t.tzinfo is None:
-                        age = now_local - t.timestamp()
-                    else:
-                        age = now_utc - t.timestamp()
+        scripts_dir = str(Path(__file__).resolve().parent)
+        if scripts_dir not in sys.path:
+            sys.path.insert(0, scripts_dir)
+        from lib.jsonl_tail import read_jsonl_tail_lines
 
-                    if 0 <= age <= max_age_seconds:
-                        inv_type = data.get("type", "")
-                        status = data.get("grounding_status", "")
-                        if inv_type in ("web_search", "web_search_external") and status != "tool_error":
-                            return True
-                        if inv_type in ("tool", "skill") and data.get("name") in ("smart_search", "search_web"):
-                            return True
-                except Exception:
+        for line in reversed(read_jsonl_tail_lines(path, max_bytes=65_536, max_lines=30)):
+            try:
+                data = json.loads(line)
+                t_str = data.get("timestamp", "")
+                if not t_str:
                     continue
+                if t_str.endswith("Z"):
+                    t_str = t_str[:-1] + "+00:00"
+                t = datetime.fromisoformat(t_str)
+                if t.tzinfo is None:
+                    age = now_local - t.timestamp()
+                else:
+                    age = now_utc - t.timestamp()
+
+                if 0 <= age <= max_age_seconds:
+                    inv_type = data.get("type", "")
+                    status = data.get("grounding_status", "")
+                    if inv_type in ("web_search", "web_search_external") and status != "tool_error":
+                        return True
+                    if inv_type in ("tool", "skill") and data.get("name") in ("smart_search", "search_web"):
+                        return True
+            except Exception:
+                continue
     except Exception:
         return False
 
@@ -191,6 +194,8 @@ def main():
                 try:
                     payload = json.loads(stdin_data)
                     if isinstance(payload, dict):
+                        if payload.get("stop_hook_active"):
+                            sys.exit(0)
                         transcript_path = payload.get("transcript_path")
                         if transcript_path and os.path.exists(transcript_path):
                             with open(transcript_path, encoding="utf-8") as tf:

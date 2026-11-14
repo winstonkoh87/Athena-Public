@@ -212,7 +212,9 @@ class PersistentEmbeddingCache:
         self.lock = threading.Lock()
         # check_same_thread=False: the cache is shared across the sync's worker threads;
         # every access is serialized by self.lock, so single-connection use stays safe.
-        self._conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+        self._conn = sqlite3.connect(
+            str(self.db_path), check_same_thread=False, timeout=5.0
+        )
         with self.lock:
             self._conn.execute("PRAGMA journal_mode=WAL")
             self._conn.execute("PRAGMA synchronous=NORMAL")
@@ -256,7 +258,9 @@ class PersistentEmbeddingCache:
         with contextlib.suppress(Exception):
             if hasattr(self, "_conn") and self._conn:
                 self._conn.close()
-        self._conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+        self._conn = sqlite3.connect(
+            str(self.db_path), check_same_thread=False, timeout=5.0
+        )
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("PRAGMA synchronous=NORMAL")
 
@@ -351,6 +355,18 @@ def _hash_text(
     dims_str = str(dims) if dims else "default"
     namespace = f"{model}:{task_type}:{dims_str}:{text}"
     return hashlib.sha256(namespace.encode("utf-8")).hexdigest()
+
+
+def get_cached_embedding(
+    text: str,
+    task_type: str = "RETRIEVAL_QUERY",
+    dims: int | None = None,
+) -> list[float] | None:
+    """Zero-network SQLite lookup for a previously cached query embedding."""
+    text_hash = _hash_text(
+        text, model="gemini-embedding-001", task_type=task_type, dims=dims
+    )
+    return get_embedding_cache().get(text_hash)
 
 
 def get_embedding(
