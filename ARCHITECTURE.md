@@ -21,9 +21,9 @@ Athena-Public/                       # Clean-lobby repository (32 tracked root e
 ├── docker/                          # Containerized deployment & sandbox configs
 ├── docs/                            # 50 top-level guides (89 files)
 ├── examples/                        # Reference workflows, protocols, skills, case studies & scripts
-│   ├── workflows/                   #   78 slash-command workflow templates (minmax, ultrastart, ultraend, ...)
+│   ├── workflows/                   #   74 public workflow templates (of 78 canonical: 57 root + 21 _domain)
 │   ├── scripts/                     #   Reference automation & audit scripts (ucds_audit.py, wargame_runner.py, ...)
-│   ├── skills/ & protocols/         #   44 skills & 410 active protocols (26 categories)
+│   ├── skills/ & protocols/         #   Curated public subset (of 44 skills & 410 active protocols, 26 categories)
 │   └── case_studies/, demos/, templates/
 ├── scripts/                         # 50 curated public runtime scripts (boot_status.py, hook_stop_verify.py, harness_score.py, ...)
 ├── src/                             # Athena SDK source (113 Python files across 11 subpackages)
@@ -41,7 +41,7 @@ Athena-Public/                       # Clean-lobby repository (32 tracked root e
 └── Makefile / LICENSE / llms.txt    # Build targets, MIT license & LLM index
 ```
 
-> **Canonical Counts (`CAPS.json`)**: `410 active + 51 archived = 461 protocols (26 categories)`, `44 active skills (17 archived)`, `78 workflows (57 root + 21 _domain/)`, `629 case studies`, `177 CANONICAL Section 4 entries`. See [`.agent/config/CAPS.json`](.agent/config/CAPS.json).
+> **Canonical Counts (`CAPS.json`)**: `410 active + 51 archived = 461 protocols (26 categories)`, `44 active skills (17 archived)`, `78 workflows (57 root + 21 _domain/)`, `630 case studies`, `177 CANONICAL Section 4 entries`. See [`.agent/config/CAPS.json`](.agent/config/CAPS.json).
 > **Decoupled Workspaces (External)**:
 > - **FX Trading Desk**: Isolated external workspace. Athena supplies cognitive governance, risk gates (`trading-risk-gate`, `structural-trading-gate`, `trade_guardian.py`), and variance shields (Law #1), while execution scripts and tick logs stay separate.
 > - **Media Production**: Centralized external pipelines (`imagen-studio`, `veo-choreographer`, Remotion). Binary renders and audio assets are excluded from the core repository.
@@ -59,8 +59,8 @@ Athena-Public/                       # Clean-lobby repository (32 tracked root e
   Prompt ──────────▶│  ① TRANSDUCTION [code-enforced]         │
   (Stimulus)        │  ├── Semantic Memory    (Vectors)       │
                     │  ├── Lexical / FTS      (BM25)          │
-                    │  ├── Structured Memory  (CANONICAL, KB) │
-                    │  ├── Entity / Tags      (Index files)   │
+                    │  ├── Structured Memory  (CANONICAL.md)  │
+                    │  ├── Framework / KB     (Protocols, MB) │
                     │  └── Filesystem         (Filenames)     │
                     │  5 channels (+ opt web) fire via RRF    │
                     └──────────────┬──────────────────────────┘
@@ -93,7 +93,7 @@ Athena-Public/                       # Clean-lobby repository (32 tracked root e
 
 | Stage | Human Analog | Athena Implementation | Epistemic Status |
 |:------|:-------------|:----------------------|:-----------------|
-| **① Transduction** | Sensory receptors fire simultaneously | Agent-pull via `context_gate` / `search.py` across 5 local channels (Canonical, Vectors, FTS BM25, Tags, Filenames) + conditional Web Search, verified at turn end by `stop_governance_gate.py` | `code-enforced` |
+| **① Transduction** | Sensory receptors fire simultaneously | Agent-pull via `context_gate` / `search.py` across 5 hybrid channels (4 local: Canonical, FTS5 BM25, Framework/KB Docs, Filenames + 1 remote: Supabase pgvector) + conditional Web Search, verified at turn end by `stop_governance_gate.py` | `code-enforced` |
 | **② Attention Gate** | Thalamus filters — only relevant signals pass | Weighted RRF fusion (k=60) + FlashRank cross-encoder reranker | `code-enforced` |
 | **③ Executive Function** | Prefrontal cortex — plan, inhibit, decide | Law #1 gates ruin (`block_ruin.py`); P509 crisis referral (`hook_crisis_gate.py`, `hook_stop_verify.py`); Circuit breaker (`circuit-breaker`); Λ scores risk (suppresses SNIPER web in code; depth is agent discretion) | Mixed (`code-enforced` gates + `agent-discretion`) |
 | **Response** | Motor cortex — act | Agent generates output, Stop verification gate checks formatting/hotlines/secrets | `code-enforced` Stop gate |

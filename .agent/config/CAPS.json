@@ -18,7 +18,7 @@
     "active": 44,
     "archived": 17,
     "conditional_count": 43,
-    "always_on_count": 10
+    "always_on_count": 1
   },
   "workflows": {
     "root": 57,
@@ -80,8 +80,8 @@
     "scripts": "find .agent/scripts -type f | wc -l"
   },
   "case_studies": {
-    "total_files": 629,
-    "uppercase_convention": 629,
-    "note": "498 CS-*.md + 6 legacy cs-*.md (now renamed). 7 indexed without files, 3 unindexed. See CASE_STUDY_INDEX.md."
+    "total_files": 630,
+    "uppercase_convention": 630,
+    "note": "630 CS-*.md files across 14 domains. See CASE_STUDY_INDEX.md."
   }
 }
