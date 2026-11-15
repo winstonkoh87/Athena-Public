@@ -707,3 +707,64 @@ def test_t33_calibrate_counts_only_user_origin_frames(tmp_path: Path):
         assert pstats["frames_opened"] == 2
         assert pstats["user_frames_opened"] == 0
         assert pstats["audit_frames_opened"] == 2
+
+
+def test_frame_abandon_and_due_frames(tmp_path: Path):
+    """Frames can be abandoned cleanly without inflating resolved counts, and overdue open frames surface."""
+    ledger_path = tmp_path / "frames.jsonl"
+    ledger = FrameLedger(ledger_path)
+    due = frame_from(id="FRM-20260901-001", review_date="2020-01-01")
+    future = frame_from(id="FRM-20260901-002", review_date="2099-12-31")
+    abandoned = frame_from(id="FRM-20260901-003", review_date="2020-01-01")
+    assert ledger.open(due).ok
+    assert ledger.open(future).ok
+    assert ledger.open(abandoned).ok
+
+    abandon_ev = ledger.abandon("FRM-20260901-003", reason="Superseded by direct telemetry")
+    assert abandon_ev["reason"] == "Superseded by direct telemetry"
+
+    reloaded = FrameLedger(ledger_path)
+    by_id = {f.id: f for f in reloaded.frames()}
+    assert by_id["FRM-20260901-003"].status == "abandoned"
+
+    overdue_ids = [f.id for f in reloaded.due_frames(as_of="2026-11-15")]
+    assert overdue_ids == ["FRM-20260901-001"]
+
+    stats = score_frames(reloaded.frames())
+    assert stats["abandoned_frames"] == 1
+    assert stats["frames_resolved"] == 0
+    assert stats["overdue_frames"] == 1
+
+
+def test_frame_resolve_receipt_refs_and_partial_observation(tmp_path: Path):
+    """Resolved frames link to decision receipts, evidence refs, and separate full vs partial outcomes."""
+    ledger_path = tmp_path / "frames.jsonl"
+    ledger = FrameLedger(ledger_path)
+    assert ledger.open(frame_from(id="FRM-20261101-001", review_date="2099-12-31")).ok
+    assert ledger.open(frame_from(id="FRM-20261101-002", review_date="2099-12-31")).ok
+
+    res_partial = ledger.resolve(
+        "FRM-20261101-001",
+        supported=["H1"],
+        killed=["H2"],
+        decision_receipt_id="DEC-20261115-001",
+        evidence_refs=["docs/audit.md", "DEC-20261115-001"],
+        partially_observed=True,
+    )
+    assert res_partial["decision_receipt_id"] == "DEC-20261115-001"
+    assert res_partial["evidence_refs"] == ["docs/audit.md", "DEC-20261115-001"]
+    assert res_partial["partially_observed"] is True
+
+    res_full = ledger.resolve(
+        "FRM-20261101-002",
+        supported=["H1"],
+        killed=["H2"],
+        decision_receipt_id="DEC-20261115-002",
+        partially_observed=False,
+    )
+    assert res_full["partially_observed"] is False
+
+    stats = score_frames(ledger.frames())
+    assert stats["frames_resolved"] == 2
+    assert stats["partially_resolved_count"] == 1
+    assert stats["full_resolved"] == 1

@@ -17,7 +17,7 @@ from typing import Any
 
 from athena.core.governance import RiskLevel
 
-__all__ = ["compute_lambda", "LambdaResult", "CRISIS_REFERRAL_TEXT"]
+__all__ = ["compute_lambda", "LambdaResult", "CRISIS_REFERRAL_TEXT", "assess_intel_posture"]
 
 CRISIS_REFERRAL_TEXT = (
     "🚨 HARD STOP — Referral Gate (Protocol 509)\n\n"
@@ -301,4 +301,104 @@ def compute_lambda(
         "features": features,
         "is_crisis": is_crisis,
         "crisis_referral": CRISIS_REFERRAL_TEXT if is_crisis else None,
+    }
+
+
+_MULTI_OPTION_RE = re.compile(
+    r"\b(?:or|vs\.?|versus|compare|comparison|option|options|alternative|alternatives|"
+    r"trade[-\s]?off|tradeoff|choice|launch|should (?:i|we)|which|better to|strategy)\b",
+    re.I,
+)
+_HIGH_STAKES_RE = re.compile(
+    r"\b(?:irreversible|lock[-\s]?up|lockup|capital|ruin|kelly|drawdown|leverage|contract|"
+    r"lawsuit|legal|equity|retaliation|competitor|pricing|deploy|migration|production)\b|S?\$[0-9,]+",
+    re.I,
+)
+_RECON_NEEDED_RE = re.compile(
+    r"\b(?:latest|current|recent|today|202[56]|osint|research|investigate|check online|competitor|pricing|market)\b",
+    re.I,
+)
+
+
+def assess_intel_posture(
+    query: str,
+    lambda_res: LambdaResult | dict[str, Any] | None = None,
+    intent: str = "GENERAL",
+) -> dict[str, Any]:
+    """Classify 3-stage Intel Officer posture deterministically (< 0.5 ms, zero I/O).
+
+    Stage 1 (Recon/OSINT) -> Stage 2 (Meta-Frame check) -> Stage 3 (MCDA/Pairwise Recommendation).
+    Fast SNIPER_DIRECT bypasses heavy stages for trivial or simple baseline lookups.
+    """
+    cleaned = query.strip()
+    lam = lambda_res if lambda_res is not None else compute_lambda(cleaned, intent=intent)
+    score = int(lam.get("score", 0))
+    tier = str(lam.get("tier", "STANDARD"))
+    is_crisis = bool(lam.get("is_crisis", False))
+    features = lam.get("features") or []
+
+    multi_option = bool(_MULTI_OPTION_RE.search(cleaned))
+    high_stakes = bool(_HIGH_STAKES_RE.search(cleaned))
+    recon_needed = bool(_RECON_NEEDED_RE.search(cleaned))
+    non_base_risk = any(
+        isinstance(f, dict) and f.get("name") != "base_standard" and int(f.get("weight", 0)) > 0
+        for f in features
+    )
+
+    reasons: list[str] = [f"lambda_tier:{tier}", f"lambda_score:{score}", f"intent:{intent}"]
+    if multi_option:
+        reasons.append("multi_option")
+    if high_stakes:
+        reasons.append("high_stakes")
+    if recon_needed:
+        reasons.append("recon_needed")
+
+    if is_crisis:
+        reasons.append("crisis_override")
+        return {
+            "posture": "CRISIS_HARD_STOP",
+            "recon_required": False,
+            "meta_frame_required": False,
+            "recommend_required": False,
+            "reasons": reasons,
+        }
+
+    is_baseline_lookup = (
+        score <= 10
+        and not non_base_risk
+        and not multi_option
+        and not high_stakes
+        and not recon_needed
+        and intent in ("GENERAL", "SYSTEM_KNOWLEDGE")
+    )
+    if (tier == "SNIPER" and not (multi_option and high_stakes)) or is_baseline_lookup:
+        if is_baseline_lookup:
+            reasons.append("baseline_factual_direct")
+        return {
+            "posture": "SNIPER_DIRECT",
+            "recon_required": False,
+            "meta_frame_required": False,
+            "recommend_required": False,
+            "reasons": reasons,
+        }
+
+    if score >= 25 or tier == "ULTRA" or (multi_option and high_stakes):
+        return {
+            "posture": "STRATEGIC_INTEL_OFFICER",
+            "recon_required": True,
+            "meta_frame_required": True,
+            "recommend_required": True,
+            "reasons": reasons,
+        }
+
+    meta_frame_required = bool(
+        score >= 15 or multi_option or high_stakes or intent in ("RESEARCH", "PERSONALISED_DECISION")
+    )
+    recommend_required = bool(score >= 15 or multi_option)
+    return {
+        "posture": "RECON_AND_FRAME",
+        "recon_required": True,
+        "meta_frame_required": meta_frame_required,
+        "recommend_required": recommend_required,
+        "reasons": reasons,
     }

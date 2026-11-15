@@ -317,7 +317,8 @@ def _format_digest(status: dict[str, Any]) -> str:
         f"   Maintenance    : {mr.get('summary', 'unknown')}",
         (
             f"   Frame Ledger   : opened={fl.get('frames_opened', 0)} "
-            f"(resolved={fl.get('frames_resolved', 0)}) | {fl.get('kill_switch_status', 'n/a')}"
+            f"(resolved={fl.get('frames_resolved', 0)}, overdue={fl.get('overdue_frames', 0)}) | "
+            f"{fl.get('kill_switch_status', 'n/a')}"
         ),
         f"   Decisions Due  : {dd.get('summary', 'unknown')}",
         f"   Index Health   : {ih.get('summary', 'unknown')}",

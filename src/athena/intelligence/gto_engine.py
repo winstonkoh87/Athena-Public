@@ -506,6 +506,8 @@ class MCDAResult:
     vetoed_candidates: dict[str, list[str]] = field(default_factory=dict)
     veto_screen_applied: bool = False
     ruin_exemptions: dict[str, str] = field(default_factory=dict)
+    pairwise_matrix: dict[str, dict[str, float]] = field(default_factory=dict)
+    condorcet_winner: str | None = None
 
     def to_ascii_table(self) -> str:
         lines = [
@@ -517,6 +519,7 @@ class MCDAResult:
             f"  Winning Margin            : +{self.margin_abs:.3f} (+{self.margin_pct:.1f}%)",
             f"  Sensitivity (±10% Weights): {self.stability_verdict}",
             f"  Strategic Verdict         : {self.verdict}",
+            f"  Pairwise Condorcet Winner : {self.condorcet_winner or 'NONE (cycle/tie)'}",
         ]
         if not self.veto_screen_applied:
             lines.append("  ⚠ WARNING                 : NO HARD-CONSTRAINT SCREEN APPLIED (DEC-500 §3A SKIPPED)")
@@ -1920,6 +1923,30 @@ def compute_mcda(
         for other in feasible_candidates if other != winner
     )
 
+    # Weighted pairwise comparison matrix & Condorcet winner detection
+    pairwise_matrix: dict[str, dict[str, float]] = {c: {} for c in feasible_candidates}
+    for c1 in feasible_candidates:
+        for c2 in feasible_candidates:
+            if c1 == c2:
+                pairwise_matrix[c1][c2] = 0.0
+                continue
+            win_share = sum(
+                normalized_weights[crit]
+                if score_matrix[c1][crit] > score_matrix[c2][crit]
+                else (0.5 * normalized_weights[crit] if score_matrix[c1][crit] == score_matrix[c2][crit] else 0.0)
+                for crit in criteria
+            )
+            pairwise_matrix[c1][c2] = round(win_share, 6)
+
+    condorcet_winner: str | None = None
+    if len(feasible_candidates) == 1:
+        condorcet_winner = feasible_candidates[0]
+    else:
+        for cand in feasible_candidates:
+            if all(pairwise_matrix[cand][other] > 0.5 for other in feasible_candidates if other != cand):
+                condorcet_winner = cand
+                break
+
     # Sensitivity testing: ±10% perturbation
     perturbation_flips: list[str] = []
     is_stable = True
@@ -1970,6 +1997,12 @@ def compute_mcda(
                         f"Weight drift on {crit} ({direction}) flips winner from '{winner}' to '{p_winner}'"
                     )
 
+        if condorcet_winner is not None and condorcet_winner != winner:
+            is_stable = False
+            perturbation_flips.append(
+                f"Condorcet divergence: pairwise Condorcet winner is '{condorcet_winner}', whereas weighted-sum winner is '{winner}'"
+            )
+
     if is_stable:
         if len(feasible_candidates) == 1:
             stability_verdict = "ROBUST (Sole surviving feasible candidate after hard-constraint screen)"
@@ -2008,6 +2041,8 @@ def compute_mcda(
         vetoed_candidates=vetoed_candidates,
         veto_screen_applied=veto_screen_applied,
         ruin_exemptions=dict(ruin_exemptions) if ruin_exemptions else {},
+        pairwise_matrix=pairwise_matrix,
+        condorcet_winner=condorcet_winner,
     )
 
 
@@ -2501,6 +2536,7 @@ def log_decision_receipt(
     review_date: str | None = None,
     prediction: str | None = None,
     cal_ledger_path: Path | None = None,
+    frame_id: str | None = None,
 ) -> dict[str, Any]:
     """Append a verified decision receipt to .athena/decision_receipts.jsonl.
 
@@ -2537,6 +2573,7 @@ def log_decision_receipt(
         "real_decision": bool(real_decision),
         "review_date": review_date if review_date else None,
         "prediction": prediction if prediction else None,
+        "frame_id": frame_id if frame_id else None,
     }
 
     path = receipts_path or get_receipts_path()
@@ -2598,6 +2635,7 @@ def execute_decision_action(
     no_receipt: bool = False,
     receipts_path: Path | None = None,
     cal_ledger_path: Path | None = None,
+    frame_id: str | None = None,
 ) -> tuple[Any, dict[str, Any] | None]:
     """Execute a strategic decision action and optionally log a decision receipt."""
     res: Any
@@ -2760,6 +2798,7 @@ def execute_decision_action(
             review_date=review_date,
             prediction=prediction,
             cal_ledger_path=cal_ledger_path,
+            frame_id=frame_id,
         )
 
     return res, receipt

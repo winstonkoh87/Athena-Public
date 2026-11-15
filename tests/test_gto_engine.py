@@ -914,6 +914,47 @@ def test_unreceipted_claim_patterns_widened():
     assert "hard-vetoed" in claims_excerpt
 
 
+def test_compute_mcda_pairwise_matrix_and_condorcet():
+    """MCDA exposes pairwise weighted matrix and detects weighted-sum vs Condorcet divergence."""
+    from athena.intelligence.gto_engine import compute_mcda
+
+    candidates = ["A_Extreme", "B_Balanced", "C_Tail"]
+    criteria = ["Upside", "Robustness", "Execution"]
+    weights = [0.40, 0.30, 0.30]
+    scores = {
+        "A_Extreme": [5, 2, 2],   # Weighted sum = 3.20 (additive winner)
+        "B_Balanced": [2, 3, 3],  # Weighted sum = 2.60, beats A on 0.60 and C on 0.70 (Condorcet winner)
+        "C_Tail": [1, 1, 5],      # Weighted sum = 2.20
+    }
+    res = compute_mcda(candidates, criteria, weights, scores)
+    assert res.winner == "A_Extreme"
+    assert res.condorcet_winner == "B_Balanced"
+    assert pytest.approx(res.pairwise_matrix["B_Balanced"]["A_Extreme"], abs=1e-6) == 0.6
+    assert pytest.approx(res.pairwise_matrix["B_Balanced"]["C_Tail"], abs=1e-6) == 0.7
+    assert any("Condorcet" in flip for flip in res.perturbation_flips)
+
+
+def test_assess_intel_posture_tiers():
+    """3-stage Intel Officer posture routes direct queries fast and strategic queries to full framing."""
+    from athena.core.lambda_scorer import assess_intel_posture, compute_lambda
+
+    direct = assess_intel_posture("What is the path of boot_status.py?")
+    assert direct["posture"] == "SNIPER_DIRECT"
+    assert direct["recon_required"] is False
+    assert direct["meta_frame_required"] is False
+
+    strategic_query = (
+        "Should we launch the Singapore trading advisory product or keep consulting? "
+        "We face S$50,000 irreversible lockup, competitor retaliation, and unclear market pricing."
+    )
+    lam = compute_lambda(strategic_query)
+    strategic = assess_intel_posture(strategic_query, lambda_res=lam, intent="RESEARCH")
+    assert strategic["posture"] in {"RECON_AND_FRAME", "STRATEGIC_INTEL_OFFICER"}
+    assert strategic["recon_required"] is True
+    assert strategic["meta_frame_required"] is True
+    assert strategic["recommend_required"] is True
+
+
 
 
 

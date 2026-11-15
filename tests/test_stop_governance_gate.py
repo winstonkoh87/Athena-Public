@@ -262,6 +262,77 @@ The current local time is: 2026-09-14T00:53:17+08:00.
             f"CodeQL incomplete-url-substring-sanitization pattern detected in {script_path}: {visitor.violations}",
         )
 
+    def test_stale_retrieval_receipt_from_prior_turn_blocks(self):
+        """Healthy retrieval receipt timestamped before USER_INPUT.created_at is stale and must block."""
+        stop_governance_gate.RETRIEVAL_RECEIPTS_PATH.write_text(
+            json.dumps({
+                "schema": "retrieval-receipt-v2",
+                "ts": "2026-11-15T09:50:00+00:00",
+                "completed_at": "2026-11-15T09:50:01+00:00",
+                "query": "prior turn",
+                "quality": "ok",
+            }) + "\n",
+            encoding="utf-8",
+        )
+        fixture = self.tmp_dir / "stale_receipt_transcript.jsonl"
+        fixture.write_text(
+            json.dumps({
+                "source": "USER",
+                "type": "USER_INPUT",
+                "created_at": "2026-11-15T10:00:00+00:00",
+                "content": "<USER_REQUEST>Evaluate our short-gamma risk in FX trading.</USER_REQUEST>",
+            }) + "\n"
+            + json.dumps({
+                "source": "MODEL",
+                "type": "PLANNER_RESPONSE",
+                "tool_calls": [{"name": "context_gate", "args": {"query": "FX short-gamma"}}],
+            }) + "\n"
+            + json.dumps({
+                "source": "MODEL",
+                "type": "PLANNER_RESPONSE",
+                "content": "Risk is bounded by the fuse.",
+            }) + "\n",
+            encoding="utf-8",
+        )
+        res = evaluate_turn_governance(str(fixture))
+        self.assertEqual(res["decision"], "continue")
+        self.assertIn("stale", res["reason"].lower())
+
+    def test_current_turn_retrieval_receipt_allows(self):
+        """Fresh retrieval receipt from the current user turn satisfies the stop gate."""
+        stop_governance_gate.RETRIEVAL_RECEIPTS_PATH.write_text(
+            json.dumps({
+                "schema": "retrieval-receipt-v2",
+                "ts": "2026-11-15T10:00:01+00:00",
+                "completed_at": "2026-11-15T10:00:02+00:00",
+                "query": "FX short-gamma",
+                "quality": "ok",
+            }) + "\n",
+            encoding="utf-8",
+        )
+        fixture = self.tmp_dir / "fresh_receipt_transcript.jsonl"
+        fixture.write_text(
+            json.dumps({
+                "source": "USER",
+                "type": "USER_INPUT",
+                "created_at": "2026-11-15T10:00:00+00:00",
+                "content": "<USER_REQUEST>Evaluate our short-gamma risk in FX trading.</USER_REQUEST>",
+            }) + "\n"
+            + json.dumps({
+                "source": "MODEL",
+                "type": "PLANNER_RESPONSE",
+                "tool_calls": [{"name": "context_gate", "args": {"query": "FX short-gamma"}}],
+            }) + "\n"
+            + json.dumps({
+                "source": "MODEL",
+                "type": "PLANNER_RESPONSE",
+                "content": "Risk is bounded by the fuse.",
+            }) + "\n",
+            encoding="utf-8",
+        )
+        res = evaluate_turn_governance(str(fixture))
+        self.assertEqual(res["decision"], "allow")
+
 
 if __name__ == "__main__":
     unittest.main()

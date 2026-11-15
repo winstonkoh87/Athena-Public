@@ -808,6 +808,9 @@ class FrameLedger:
                 rec = records[ev["id"]]
                 rec.resolution = ev.get("resolution", {})
                 rec.status = "resolved"
+            elif ev.get("kind") == "abandon" and ev.get("id") in records:
+                rec = records[ev["id"]]
+                rec.status = "abandoned"
         return sorted(records.values(), key=lambda r: r.created)
 
     def get(self, frame_id: str) -> FrameRecord | None:
@@ -846,6 +849,31 @@ class FrameLedger:
             raise ValidationError(f"unknown frame {frame_id}")
         self._append({"kind": "pivot", "id": frame_id, "reason": reason})
 
+    def abandon(self, frame_id: str, reason: str = "") -> dict[str, Any]:
+        """Abandon an unviable or superseded frame cleanly without counting it as resolved."""
+        if self.get(frame_id) is None:
+            raise KeyError(f"Unknown frame id: {frame_id}")
+        event = {
+            "kind": "abandon",
+            "id": frame_id,
+            "abandoned_at": _now_iso(),
+            "reason": reason.strip(),
+        }
+        self._append(event)
+        return event
+
+    def due_frames(self, as_of: str | None = None) -> list[FrameRecord]:
+        """Return open/locked frames whose review_date is on or before `as_of` (YYYY-MM-DD)."""
+        cutoff = (as_of or _now_iso())[:10]
+        due: list[FrameRecord] = []
+        for rec in self.frames():
+            if rec.status in ("resolved", "abandoned"):
+                continue
+            rev = (rec.review_date or "").strip()[:10]
+            if rev and rev <= cutoff:
+                due.append(rec)
+        return due
+
     def resolve(
         self,
         frame_id: str,
@@ -857,6 +885,9 @@ class FrameLedger:
         decided_action: str = "",
         classification: str = "",
         observed_value: float | None = None,
+        decision_receipt_id: str = "",
+        evidence_refs: Iterable[str] = (),
+        partially_observed: bool = False,
     ) -> dict[str, Any]:
         """Record the observed outcome. Never edits the original frame."""
         rec = self.get(frame_id)
@@ -910,6 +941,9 @@ class FrameLedger:
             "decided_action": decided_action,
             "classification": norm_class,
             "observed_value": observed_value,
+            "decision_receipt_id": decision_receipt_id.strip(),
+            "evidence_refs": [str(r).strip() for r in evidence_refs if str(r).strip()],
+            "partially_observed": bool(partially_observed),
         }
         self._append({"kind": "resolution", "id": frame_id, "resolution": resolution})
         return resolution
@@ -958,11 +992,27 @@ def score_frames(frames: list[FrameRecord]) -> dict[str, Any]:
     else:
         kill_switch = f"PAST KILL SWITCH (skill {skill:.2%} over {len(resolved)} resolved frames)."
 
+    today_iso = _now_iso()[:10]
+    partially_resolved = [f for f in resolved if f.resolution.get("partially_observed")]
+    full_resolved = [f for f in resolved if not f.resolution.get("partially_observed")]
+    abandoned_count = sum(1 for f in frames if f.status == "abandoned")
+    overdue_count = sum(
+        1
+        for f in frames
+        if f.status not in ("resolved", "abandoned")
+        and f.review_date
+        and f.review_date[:10] <= today_iso
+    )
+
     return {
         "frames_opened": opened,
         "user_frames_opened": user_opened,
         "audit_frames_opened": audit_opened,
         "frames_resolved": len(resolved),
+        "full_resolved": len(full_resolved),
+        "partially_resolved_count": len(partially_resolved),
+        "abandoned_frames": abandoned_count,
+        "overdue_frames": overdue_count,
         "pending_rot": opened - len(resolved),
         "frame_hit_rate": round(sum(hits) / len(hits), 4) if hits else None,
         "mean_brier": brier,

@@ -115,9 +115,6 @@ def smart_search(
     perms = get_permissions()
     perms.gate("smart_search")
 
-    # Governance: Mark search as performed
-    get_governance().mark_search_performed(query)
-
     # Execute search directly without stdout hijacking (WS3.1 / M-1 fix)
     results = run_search(
         query=query,
@@ -130,6 +127,10 @@ def smart_search(
     )
     if not isinstance(results, dict):
         results = {"results": [], "error": "Search returned invalid payload"}
+
+    # Governance: Mark search as performed ONLY after clean completion
+    if isinstance(results, dict) and not results.get("error"):
+        get_governance().mark_search_performed(query)
 
     return {
         "results": results if isinstance(results, list) else results,
@@ -832,10 +833,14 @@ def classify_turn(
     # Set the governance risk level (this is what makes SNIPER/ULTRA reachable)
     gov.set_risk_level(risk_level)
 
+    from athena.core.lambda_scorer import assess_intel_posture
+    intel_posture = assess_intel_posture(query, lambda_res=lambda_res, intent=intent)
+
     return {
         "risk_level": risk_level.name,
         "lambda_score": lambda_res["score"],
         "lambda_features": lambda_res["features"],
+        "intel_posture": intel_posture,
         "is_crisis": is_crisis,
         "crisis_referral": crisis_referral,
         "web_required": web_required,
@@ -972,6 +977,11 @@ def frame_resolve(
     regret: float | None = None,
     note: str = "",
     action: str = "",
+    classification: str = "",
+    observed_value: float | None = None,
+    decision_receipt_id: str = "",
+    evidence_refs: str = "",
+    partially_observed: bool = False,
 ) -> dict:
     """Score a locked frame against reality at its REVIEW date.
 
@@ -988,6 +998,11 @@ def frame_resolve(
             signal (not as evidence for the diagnosis).
         note: one-line evidence note.
         action: what was actually done.
+        classification: optional outcome classification ('PROCESS', 'INFORMATION', or 'LUCK').
+        observed_value: optional numeric outcome value (required for 'LUCK').
+        decision_receipt_id: optional GTO decision receipt id linking decision to frame.
+        evidence_refs: optional comma-separated file paths or receipt ids supporting resolution.
+        partially_observed: True if resolving early/partially without full horizon observation.
 
     Returns:
         dict with the resolution record.
@@ -1000,11 +1015,16 @@ def frame_resolve(
     ledger = FrameLedger(DEFAULT_LEDGER)
     resolution = ledger.resolve(
         frame_id,
-        supported=[s for s in supported.split(",") if s],
-        killed=[k for k in killed.split(",") if k],
+        supported=[s.strip() for s in supported.split(",") if s.strip()],
+        killed=[k.strip() for k in killed.split(",") if k.strip()],
         regret=regret,
         note=note,
         decided_action=action,
+        classification=classification,
+        observed_value=observed_value,
+        decision_receipt_id=decision_receipt_id,
+        evidence_refs=[e.strip() for e in evidence_refs.split(",") if e.strip()],
+        partially_observed=partially_observed,
     )
     return {"frame_id": frame_id, "resolution": resolution}
 
@@ -1049,6 +1069,7 @@ def decision_screen(
     real: bool = False,
     review_date: str = "",
     prediction: str = "",
+    frame_id: str = "",
 ) -> dict:
     """Execute a strategic decision evaluation via the GTO numerical engine.
 
@@ -1063,6 +1084,7 @@ def decision_screen(
         real: True if this evaluation backs a consequential real-world decision.
         review_date: Calibration review date (YYYY-MM-DD) for real decisions.
         prediction: Anticipated outcome / hypothesis for calibration tracking.
+        frame_id: Optional pre-registered problem frame id linking this decision receipt.
 
     Returns:
         dict containing receipt_id, action, verdict, top, ascii_table, and result data.
@@ -1084,6 +1106,7 @@ def decision_screen(
         real=real,
         review_date=review_date or None,
         prediction=prediction or None,
+        frame_id=frame_id or None,
     )
 
     result_dict = _serialize_for_json(asdict(res)) if hasattr(res, "__dataclass_fields__") else {"result": res}
@@ -1094,6 +1117,7 @@ def decision_screen(
 
     return {
         "receipt_id": receipt_id,
+        "frame_id": frame_id or None,
         "action": action,
         "verdict": receipt["verdict"] if receipt else getattr(res, "verdict", "N/A"),
         "top": receipt["top"] if receipt else getattr(res, "top_candidate", "N/A"),
@@ -1190,8 +1214,6 @@ def context_gate(
     effective_web = web if web is not None else web_required
 
     # 3. Run search (captures JSON output)
-    gov.mark_search_performed(query)  # Mark semantic leg
-
     # Latent Meta-Pattern projection (GTO Upgrade: cross-domain expansion)
     latent_patterns = []
     try:
@@ -1229,6 +1251,10 @@ def context_gate(
     )
     if not isinstance(search_results, dict):
         search_results = {"results": [], "error": "Failed to obtain search output"}
+
+    # Mark semantic leg verified ONLY after search completes cleanly without error
+    if not search_results.get("error"):
+        gov.mark_search_performed(query)
 
     # Secondary multi-hop retrieval for matched Meta-Patterns (parallelized, local-fast)
     if latent_patterns:
@@ -1514,6 +1540,9 @@ def context_gate(
     else:
         sufficiency = 1.0 if (local_first or (len(results_list) >= 3 and not is_degraded) or web_count > 0) else 0.75
 
+    from athena.core.lambda_scorer import assess_intel_posture
+    intel_posture = assess_intel_posture(query, lambda_res=lambda_res, intent=intent)
+
     return {
         "context": search_results,
         "lambda": {
@@ -1521,6 +1550,7 @@ def context_gate(
             "tier": lambda_res["tier"],
             "features": lambda_res["features"],
         },
+        "intel_posture": intel_posture,
         "evidence_checklist": evidence_checklist,
         "sufficiency": sufficiency,
         "latent_meta_patterns": latent_patterns,

@@ -295,12 +295,32 @@ class _ChannelHealthDict(dict):
 # Module-level channel health tracking (Fix for silent degradation TD-064)
 HEALTHY_STATUSES = frozenset({"ok"})
 FAILURE_STATUSES = frozenset({"failed", "degraded", "depleted", "timeout", "empty", "circuit_broken"})
+_health_lock = threading.RLock()
+_request_health_tls = threading.local()
 _channel_health: dict[str, dict] = _ChannelHealthDict()
+
+
+def _utc_now_iso() -> str:
+    """Return UTC ISO-8601 timestamp using module-level datetime."""
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _snapshot_request_health(req_health: dict[str, dict] | None = None) -> dict[str, dict]:
+    """Return a shallow copy of active request channel health (or global fallback)."""
+    with _health_lock:
+        target = req_health if req_health is not None else getattr(_request_health_tls, "active", None)
+        if target is not None:
+            return dict(target)
+        return dict(_channel_health)
 
 
 def reset_channel_health() -> None:
     """Clear channel health records for a new query execution."""
-    _channel_health.clear()
+    with _health_lock:
+        _channel_health.clear()
+        req = getattr(_request_health_tls, "active", None)
+        if req is not None:
+            req.clear()
 
 
 def _record_channel_health(
@@ -309,7 +329,7 @@ def _record_channel_health(
     error: str | None = None,
 ) -> None:
     """Record channel health state for degradation tracking."""
-    now = datetime.now(timezone.utc).isoformat()
+    now = _utc_now_iso()
     record = {
         "channel": channel,
         "name": channel,
@@ -319,12 +339,16 @@ def _record_channel_health(
         "timestamp": now,
         "ts": now,
     }
-    _channel_health[channel] = record
+    with _health_lock:
+        _channel_health[channel] = record
+        req = getattr(_request_health_tls, "active", None)
+        if req is not None:
+            req[channel] = record
 
 
 def get_channel_health() -> dict[str, dict]:
     """Return the current health status of all channels."""
-    return _channel_health.copy()
+    return _snapshot_request_health()
 
 
 # --- Collection Functions ---
@@ -1313,8 +1337,11 @@ def run_search(
     channel_failures: list[str] = []
     rerank_used: bool = False
 
-    # Reset channel health per query execution to prevent stale global pollution (F-01 fix)
-    _channel_health.clear()
+    # Isolate channel health per query execution to prevent concurrent pollution (F-01 fix)
+    request_started_at = _utc_now_iso()
+    request_health: dict[str, dict] = {}
+    _prev_request_health = getattr(_request_health_tls, "active", None)
+    _request_health_tls.active = request_health
 
     search_cache_enabled = (
         os.environ.get("ATHENA_SEARCH_CACHE", "").strip().lower()
@@ -1382,6 +1409,8 @@ def run_search(
             abandoned = threading.Event()
 
             def safe_exec(name, func):
+                prev_active = getattr(_request_health_tls, "active", None)
+                _request_health_tls.active = request_health
                 try:
                     return func()
                 except Exception as e:
@@ -1390,6 +1419,8 @@ def run_search(
                         if name == "vector":
                             _record_channel_health("vector", "failed", str(e))
                     return []
+                finally:
+                    _request_health_tls.active = prev_active
 
             def _vector_task():
                 nonlocal query_embedding, semantic_hit, vector_failed
@@ -1569,14 +1600,15 @@ def run_search(
             if fused_results and any(r.signals and "reranker" in r.signals for r in fused_results):
                 rerank_used = True
 
-        # Sync vector failure with module channel health tracker (C-2 & F-01 fix)
-        vector_status = _channel_health.get("vector", {}).get("status")
+        # Sync vector failure with request-scoped channel health tracker (C-2 & F-01 fix)
+        health_snapshot = _snapshot_request_health(request_health)
+        vector_status = health_snapshot.get("vector", {}).get("status")
         if vector_status and vector_status not in HEALTHY_STATUSES:
             vector_failed = True
 
         # Cache the result (Exact + Semantic) with explicit scope isolation
         # Do not cache degraded results (vector channel failed or any channel degraded/depleted)
-        channel_failures = [k for k, v in _channel_health.items() if v.get("status") not in HEALTHY_STATUSES]
+        channel_failures = [k for k, v in health_snapshot.items() if v.get("status") not in HEALTHY_STATUSES]
         if (
             cached_results is None
             and not semantic_hit
@@ -1726,7 +1758,6 @@ def run_search(
     # Retrieval Telemetry — A7 Instrumentation (MCDA Rank #1)
     # Logs every search invocation to enable data-driven pruning.
     with contextlib.suppress(Exception):
-        import datetime
         import hashlib
 
         from athena.core.config import PROJECT_ROOT
@@ -1759,9 +1790,10 @@ def run_search(
         tokens = _estimate_tokens(query)
 
         latency_ms = int((time.time() - t0) * 1000)
+        telemetry_health = _snapshot_request_health(request_health)
 
         entry = {
-            "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "ts": _utc_now_iso(),
             "query": query,
             "limit": limit,
             "strict": strict,
@@ -1769,7 +1801,7 @@ def run_search(
             "total_results": len(fused_results),
             "quality": quality,
             "degraded_recall": vector_failed,
-            "channel_health": dict(_channel_health),
+            "channel_health": telemetry_health,
             "confidence": {"high": high_count, "med": med_count, "low": low_count},
             "sources": dict(source_counts),
             "top_rrf": round(top_results[0].rrf_score, 5) if top_results else 0,
@@ -1795,7 +1827,7 @@ def run_search(
                 session_id = log_file.stem
 
         inv_entry = {
-            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "timestamp": _utc_now_iso(),
             "type": "skill",
             "name": "smart_search",
             "trigger": "search tool call",
@@ -1811,21 +1843,31 @@ def run_search(
         # WS2.1: Write structured retrieval receipt for Stop Gate verification
         receipts_path = PROJECT_ROOT / ".athena" / "retrieval_receipts.jsonl"
         receipts_path.parent.mkdir(parents=True, exist_ok=True)
+        completed_at = _utc_now_iso()
+        result_ids = [str(getattr(r, "id", "")) for r in fused_results[:limit]]
+        result_hash = hashlib.sha256("|".join(result_ids).encode("utf-8")).hexdigest()[:16]
         receipt = {
-            "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "schema": "retrieval-receipt-v2",
+            "ts": completed_at,
+            "started_at": request_started_at,
+            "completed_at": completed_at,
             "session_id": session_id,
             "query": query,
             "query_hash": hashlib.sha256(query.encode("utf-8")).hexdigest()[:16],
             "intent": detected_intent,
             "tier": lambda_info["tier"] if lambda_info else "STANDARD",
-            "channels_ok": [k for k, v in _channel_health.items() if v.get("status") in HEALTHY_STATUSES],
-            "channels_failed": [k for k, v in _channel_health.items() if v.get("status") not in HEALTHY_STATUSES],
+            "channels_ok": [k for k, v in telemetry_health.items() if v.get("status") in HEALTHY_STATUSES],
+            "channels_failed": [k for k, v in telemetry_health.items() if v.get("status") not in HEALTHY_STATUSES],
             "result_count": len(fused_results),
+            "result_ids": result_ids,
+            "result_hash": result_hash,
+            "reranker": "cross_encoder" if rerank_used else "rrf_only",
             "quality": quality,
         }
         with open(receipts_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(receipt) + "\n")
 
+    _request_health_tls.active = _prev_request_health
     return json_payload if json_output else fused_results[:limit]
 
 

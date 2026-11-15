@@ -23,7 +23,7 @@ import json
 import re
 import sys
 import urllib.parse
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -207,10 +207,12 @@ def evaluate_turn_governance(transcript_path: str) -> dict[str, str]:
     # Find the index of the most recent USER_INPUT
     last_user_idx = -1
     last_user_content = ""
+    last_user_created_at: Any = None
     for i, step in enumerate(steps):
         if step.get("type") == "USER_INPUT":
             last_user_idx = i
             last_user_content = step.get("content", "")
+            last_user_created_at = step.get("created_at")
 
     if last_user_idx == -1:
         turn_key = f"no_user_{transcript_path}"
@@ -306,11 +308,44 @@ def evaluate_turn_governance(transcript_path: str) -> dict[str, str]:
 
     # WS2.1: Verify retrieval receipt when local retrieval was called
     receipts_file = RETRIEVAL_RECEIPTS_PATH
-    if receipts_file.exists() and any(t in ("context_gate", "smart_search") for t in tools_called):
+    retrieval_called = any(
+        t in ("context_gate", "smart_search", "mcp_athena_context_gate", "mcp_athena_smart_search")
+        for t in tools_called
+    )
+    non_retrieval_verified = any(
+        t in ("search_web", "read_url_content", "run_command_verified", "swarm_active")
+        for t in tools_called
+    )
+    if receipts_file.exists() and retrieval_called:
         try:
             from lib.jsonl_tail import read_latest_jsonl_record
 
+            def _parse_iso_utc(raw: Any) -> datetime | None:
+                if not isinstance(raw, str) or not raw.strip():
+                    return None
+                try:
+                    dt = datetime.fromisoformat(raw.strip().replace("Z", "+00:00"))
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    return dt.astimezone(timezone.utc)
+                except ValueError:
+                    return None
+
             latest_receipt = read_latest_jsonl_record(receipts_file, max_bytes=65_536)
+            user_ts = _parse_iso_utc(last_user_created_at)
+            if latest_receipt and user_ts is not None and not non_retrieval_verified:
+                rec_ts = _parse_iso_utc(latest_receipt.get("completed_at") or latest_receipt.get("ts"))
+                if rec_ts is None or rec_ts < user_ts - timedelta(seconds=2):
+                    reason = (
+                        "STOP BLOCKED by Stale Receipt Guard: Latest retrieval receipt predates "
+                        "the current user turn (stale receipt from prior turn). Re-run context_gate(query) "
+                        "or smart_search(query) cleanly so a fresh current-turn receipt is emitted."
+                    )
+                    log_gate_decision(1, "continue", reason, transcript_sha1)
+                    return {
+                        "decision": "continue",
+                        "reason": reason,
+                    }
             if latest_receipt and latest_receipt.get("quality") == "degraded":
                 web_verified = (
                     "search_web" in tools_called
