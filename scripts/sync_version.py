@@ -144,8 +144,14 @@ EXEMPTIONS: list[tuple[str, str, str]] = [
      "cap_policy prose mentions the version caps were lifted — historical marker"),
     (".agent/config/accountability_status.template.json", r".",
      "template with example entries quoting past session versions"),
+    (".agent/config/tier_map.json", r".",
+     "generated from CANONICAL.md Section 4 entries, which quote historical milestone versions"),
+    (".agent/telemetry/*", r".",
+     "generated telemetry and tier_map snapshots quoting historical milestone versions"),
     (".agent/state/*", r".",
      "state files carry decision history referencing past versions"),
+    (".athena/*", r".",
+     "append-only runtime telemetry, crash reports, and operational memory ledgers quoting session versions"),
 
     # Script internals — version strings in code that reference other software or
     # fallback defaults, not the project's own version.

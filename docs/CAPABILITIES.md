@@ -9,17 +9,17 @@
 
 | Metric | Count |
 |--------|-------|
-| **Automation Scripts** | 290 |
+| **Automation Scripts** | 291 |
 | **Decision Protocols** | 461 (410 active + 51 archived, 26 categories) |
 | **Orchestration Workflows** | 78 (57 root + 21 domain) |
 | **Skills** | 44 active (43 with context_trigger), 17 archived |
-| **Case Studies** | 629 |
+| **Case Studies** | 630 |
 | **Total Sessions** | 2,100+ |
-| **Memory Files** | 5,991 |
+| **Memory Files** | 6,030 |
 
 ---
 
-## 🔧 Automation Scripts (290)
+## 🔧 Automation Scripts (291)
 
 ### Session Management
 
@@ -227,7 +227,7 @@ athena/
 
 ---
 
-## 📖 Case Study Categories (629 total)
+## 📖 Case Study Categories (630 total)
 
 | Category | Examples |
 |----------|----------|
