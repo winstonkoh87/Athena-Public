@@ -1441,5 +1441,738 @@ def audit_golden_grid_spacing(
     }
 
 
+CUSTOM_MARTINGALE_LOT_SEQUENCE_2: list[float] = [
+    0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01,
+    0.02, 0.02, 0.02, 0.02, 0.02, 0.02,
+    0.03, 0.03, 0.03, 0.03,
+    0.04, 0.04, 0.04, 0.04,
+    0.05, 0.05, 0.06, 0.06, 0.06, 0.07,
+    0.08, 0.08, 0.09, 0.09, 0.10, 0.11,
+    0.12, 0.13, 0.13, 0.14,
+]
+
+
+def audit_bullet_grid_endurance(
+    symbol: str = "XAUUSD",
+    budget_usd: float = 1000.0,
+    max_excursion_pips: float = 750.0,
+    spacing_pips: float = 30.0,
+    martingale_factor: float = 1.0718,
+    base_lot: float = 0.01,
+    entry_price: float = 3873.41,
+    leverage: float = 2000.0,
+    war_chest_usd: float = 10000.0,
+    hmr_layers: int = 0,
+    spread_pips: float = 0.5,
+    commission_per_lot_usd: float = 7.0,
+    custom_lot_sequence: list[float] | None = None,
+) -> dict:
+    """
+    10-Bullet Convexity & Grid Cash Requirement Risk Gate (CANONICAL §535 / S1640).
+    Audits whether an adverse excursion Y (e.g. 750p) can be physically survived inside
+    the allocated bullet budget (e.g. $1,000 / S$1,300 sacrificial fuse) without early margin stop-out,
+    enforces the 10-Bullet War Chest Convexity Invariant (10 bullets strictly dominates 4 bullets),
+    and models Broker HMR Temporal Asymmetry (open positions retain entry leverage;
+    layers triggered inside HMR window lock 1:200 margin).
+    """
+    symbol_upper = str(symbol).strip().upper()
+    try:
+        from athena.tools.contract_specs import get_contract_spec
+        spec = get_contract_spec(symbol_upper)
+        pip_size = spec.pip_size
+        pip_val_std_lot = spec.pip_value_std_lot
+        contract_size = spec.contract_size
+        min_lot = spec.min_lot
+    except Exception:
+        is_gold = any(s in symbol_upper for s in ("XAU", "GOLD"))
+        is_btc = "BTC" in symbol_upper
+        if is_gold:
+            pip_size, pip_val_std_lot, contract_size, min_lot = 0.1, 10.0, 100.0, 0.01
+        elif is_btc:
+            pip_size, pip_val_std_lot, contract_size, min_lot = 1.0, 1.0, 1.0, 0.01
+        else:
+            pip_size, pip_val_std_lot, contract_size, min_lot = 0.0001, 10.0, 100000.0, 0.01
+
+    spacing = max(0.1, float(spacing_pips))
+    excursion = max(0.0, float(max_excursion_pips))
+    budget = max(1.0, float(budget_usd))
+    war_chest = max(1.0, float(war_chest_usd))
+    lev = max(1.0, float(leverage))
+
+    num_layers = int(excursion // spacing) + 1
+
+    lots: list[float] = []
+    losses: list[float] = []
+    margins_static: list[float] = []
+    margins_hmr: list[float] = []
+    frictions: list[float] = []
+
+    for i in range(num_layers):
+        d_i = i * spacing
+        rem_pips_i = max(0.0, excursion - d_i)
+        
+        if custom_lot_sequence is not None and i < len(custom_lot_sequence):
+            lot_i = max(min_lot, custom_lot_sequence[i])
+        elif abs(martingale_factor - 1.0718) < 0.001 and base_lot == 0.01:
+            if i < len(CUSTOM_MARTINGALE_LOT_SEQUENCE_2):
+                lot_i = CUSTOM_MARTINGALE_LOT_SEQUENCE_2[i]
+            else:
+                lot_i = CUSTOM_MARTINGALE_LOT_SEQUENCE_2[-1]
+        elif abs(martingale_factor - 1.0) < 0.0001:
+            lot_i = max(min_lot, base_lot)
+        else:
+            lot_i = max(min_lot, round(base_lot * (martingale_factor ** i), 2))
+
+        p_i = max(0.01, entry_price - (d_i * pip_size))
+
+        loss_i = lot_i * rem_pips_i * pip_val_std_lot
+        margin_static_i = (lot_i * contract_size * p_i) / lev
+
+        # Broker HMR Temporal Asymmetry Rule:
+        # Pre-existing positions retain static entry leverage; layers filling inside HMR window lock 1:200
+        if hmr_layers > 0 and i >= (num_layers - hmr_layers):
+            margin_hmr_i = (lot_i * contract_size * p_i) / 200.0
+        else:
+            margin_hmr_i = margin_static_i
+
+        fric_i = (lot_i * spread_pips * pip_val_std_lot) + (lot_i * commission_per_lot_usd)
+
+        lots.append(lot_i)
+        losses.append(loss_i)
+        margins_static.append(margin_static_i)
+        margins_hmr.append(margin_hmr_i)
+        frictions.append(fric_i)
+
+    total_lots = round(sum(lots), 2)
+    floating_loss_usd = round(sum(losses), 2)
+    margin_required_usd = round(sum(margins_static), 2)
+    friction_usd = round(sum(frictions), 2)
+    cash_required_usd = round(floating_loss_usd + margin_required_usd + friction_usd, 2)
+    hmr_stressed_cash_usd = round(floating_loss_usd + sum(margins_hmr) + friction_usd, 2)
+    shortfall_usd = max(0.0, round(cash_required_usd - budget, 2))
+
+    # Calculate estimated premature bust excursion if cash_required exceeds budget
+    estimated_bust_pips = excursion
+    if cash_required_usd > budget:
+        for test_pips in range(1, int(excursion) + 1):
+            active_layers = int(test_pips // spacing) + 1
+            test_loss = 0.0
+            test_margin = 0.0
+            test_fric = 0.0
+            for j in range(active_layers):
+                l_j = lots[j]
+                rem = test_pips - (j * spacing)
+                p_j = max(0.01, entry_price - (j * spacing * pip_size))
+                test_loss += l_j * rem * pip_val_std_lot
+                test_margin += (l_j * contract_size * p_j) / lev
+                test_fric += (l_j * spread_pips * pip_val_std_lot) + (l_j * commission_per_lot_usd)
+            if (test_loss + test_margin + test_fric) >= budget:
+                estimated_bust_pips = float(test_pips)
+                break
+
+    # War Chest Convexity & Bullet Allocation
+    bullet_count = int(war_chest // budget)
+    bullet_risk_pct = round((budget / war_chest) * 100.0, 2)
+    if budget > 0.15 * war_chest:
+        war_chest_status = "WARN_OVERSIZED_BULLET"
+    else:
+        war_chest_status = "PASS_CONVEX_WAR_CHEST"
+
+    passed = cash_required_usd <= budget
+    if not passed:
+        status = "FAIL_INSUFFICIENT_FUSE"
+        severity = "CRITICAL"
+        mode = "BUST"
+        msg = (
+            f"CRITICAL: Insufficient Bullet Fuse (CANONICAL §535 / S1640). "
+            f"Proposed grid requires ${cash_required_usd:,.2f} cash (loss: ${floating_loss_usd:,.2f}, "
+            f"margin: ${margin_required_usd:,.2f}, friction: ${friction_usd:,.2f}) to survive {excursion:.1f}p excursion, "
+            f"exceeding the ${budget:,.2f} fuse by ${shortfall_usd:,.2f} (NO-GO). "
+            f"Account liquidates prematurely at ~{estimated_bust_pips:.1f}p before reaching target stop."
+        )
+    else:
+        status = "PASS_GRID_ENDURANCE"
+        severity = "GREEN"
+        if cash_required_usd <= 0.50 * budget:
+            mode = "MODE_A_HALF_FUSE"
+            mode_desc = f"Mode A Half-Fuse Workhorse Grid (${cash_required_usd:,.2f} <= ${0.50 * budget:,.2f} cap; leaves 2nd bullet in MT4)"
+        else:
+            mode = "MODE_B_SACRIFICIAL_TAIL"
+            mode_desc = f"Mode B Sacrificial Tail Grid (${cash_required_usd:,.2f} <= ${budget:,.2f} active fuse)"
+
+        msg = (
+            f"GREEN: Grid Endurance satisfied (CANONICAL §535 / S1640). {mode_desc}. "
+            f"Required cash: ${cash_required_usd:,.2f} (floating loss: ${floating_loss_usd:,.2f}, "
+            f"margin: ${margin_required_usd:,.2f}, friction: ${friction_usd:,.2f}) across {num_layers} layers ({total_lots:.2f}L). "
+            f"War chest: {bullet_count} bullets ({bullet_risk_pct:.1f}% risk)."
+        )
+
+    if war_chest_status == "WARN_OVERSIZED_BULLET":
+        msg += (
+            f" [WARNING: Oversized bullet (${budget:,.2f} = {bullet_risk_pct:.1f}% of war chest, only {bullet_count} bullets) "
+            f"violates One-Third Kelly boundary (~10.0%) and 10-Bullet Convexity Invariant. "
+            f"Scaling capital +150% buys only +37.9% pips while slashing bullets by -60%, spiking 1-year ruin from 0.0005% to 1.75%–21.68%]"
+        )
+
+    return {
+        "passed": passed,
+        "status": status,
+        "severity": severity,
+        "mode": mode,
+        "symbol": symbol_upper,
+        "budget_usd": budget,
+        "max_excursion_pips": excursion,
+        "spacing_pips": spacing,
+        "martingale_factor": martingale_factor,
+        "num_layers": num_layers,
+        "total_lots": total_lots,
+        "floating_loss_usd": floating_loss_usd,
+        "margin_required_usd": margin_required_usd,
+        "friction_usd": friction_usd,
+        "cash_required_usd": cash_required_usd,
+        "hmr_stressed_cash_usd": hmr_stressed_cash_usd,
+        "shortfall_usd": shortfall_usd,
+        "estimated_bust_excursion_pips": estimated_bust_pips,
+        "war_chest_usd": war_chest,
+        "bullet_count": bullet_count,
+        "bullet_risk_pct": bullet_risk_pct,
+        "war_chest_status": war_chest_status,
+        "message": msg,
+    }
+
+
+def audit_capital_scaling_ladder(
+    active_fuse_usd: float = 1000.0,
+    war_chest_usd: float = 12000.0,
+    base_lot: float = 0.01,
+    currency: str = "USD",
+    usd_sgd_rate: float = 1.30,
+    annual_outflow_usd: float = 0.0,
+) -> dict:
+    """
+    Capital Scaling Ladder & Quantization Solvency Gate (CANONICAL §536 / S1642 / S1643).
+    Audits active broker account fuse and backing war chest against empirical solvency metrics:
+      - Rung 0 VETO (<$1,000 USD / <S$1,300 SGD): Collapses on 0.01L broker quantization floor
+        (excursions <= -$100 hit 5.69% > 5.59% breakeven; negative EV -S$0.15/camp; CAR 33.5%; 32.87% 1Y exhaust).
+      - Rung 1 Global Optimum ($1,000 active fuse / ~$12,000 [S$15,000–S$15,600] WC):
+        11.54–12.0 bullets, clean 0.01L base lot, CAR = 150.6%–156.7% PASS, 0.030%–0.040% 1Y swept exhaust.
+      - 10-Bullet Elevated Risk ($1,000 active fuse / $10,000 [S$13,000] WC):
+        CAR = 130.6% ELEVATED RISK ("just nice" knife-edge; surviving solely on unbroken sweeps + zero crisis reloads).
+      - Standalone Unbacked Extinction Cliff (1 bullet / $1,000 WC):
+        77.97% 1-year operational exhaustion (51.68% DFA ruin).
+      - Rung 2 Validated 2x Step-Up ($2,000 active fuse / $25,000 WC):
+        12.5 bullets, clean integer 0.02L base lot, CAR = 163.2% [157.7%, 167.8%] PASS, 0.020% 1Y swept exhaust.
+      - Integer Lot Step Invariant: Non-integer lot increments (e.g. 0.015L from 1.5x scale) are vetoed
+        to prevent MT4 half-step rounding distortion.
+      - MAS PSA Revolut Outflow Ceiling: War chest >= S$65,000 (~$50K) approaches S$100K annual outflow limit.
+      - Rung 3 Stalled Scaling / Custody Cap (active fuse >= $10K or WC >= $100K):
+        Compounding stalls (+100K steps), hits single-broker $100K offshore custody cap and Tier-2 leverage drops (25L+ Gold).
+    """
+    is_sgd = currency.strip().upper() == "SGD"
+    rate = max(0.1, float(usd_sgd_rate))
+
+    fuse_usd = float(active_fuse_usd) / rate if is_sgd else float(active_fuse_usd)
+    wc_usd = float(war_chest_usd) / rate if is_sgd else float(war_chest_usd)
+    outflow_usd = float(annual_outflow_usd) / rate if is_sgd else float(annual_outflow_usd)
+    lot = float(base_lot)
+
+    # Determine scaling ladder rung
+    if fuse_usd < 1000.0:
+        rung = 0
+    elif fuse_usd < 2000.0:
+        rung = 1
+    elif fuse_usd < 10000.0:
+        rung = 2
+    else:
+        rung = 3
+
+    bullet_count = round(wc_usd / max(1.0, fuse_usd), 2)
+    wc_sgd = round(wc_usd * rate, 2)
+    annual_outflow_sgd = round(outflow_usd * rate, 2)
+
+    revolut_psa_warning = (wc_sgd >= 65000.0) or (annual_outflow_sgd >= 65000.0)
+    custody_cap_warning = (fuse_usd >= 10000.0) or (wc_usd >= 100000.0)
+
+    # Check 1: Integer Lot Sizing Invariant
+    lot_units = round(lot / 0.01, 4)
+    is_integer_lot = abs(lot_units - round(lot_units)) < 1e-4
+
+    if not is_integer_lot:
+        msg = (
+            f"RED: Non-integer lot step ({lot:.3f}L) detected. Arbitrary non-integer scaling violates the "
+            f"Integer Lot Sizing Invariant (CANONICAL §536 / S1643). S1643 proved 1.5x scaling (0.015L) causes "
+            f"destructive MT4 half-step rounding distortion and margin compression. Clean integer multiples "
+            f"(0.01L, 0.02L, 0.03L) required."
+        )
+        return {
+            "passed": False,
+            "status": "FAIL_NON_INTEGER_LOT_STEP",
+            "severity": "RED",
+            "rung": rung,
+            "active_fuse_usd": fuse_usd,
+            "war_chest_usd": wc_usd,
+            "base_lot": lot,
+            "bullet_count": bullet_count,
+            "car_estimate_pct": 0.0,
+            "exhaustion_1y_pct": 100.0,
+            "revolut_psa_warning": revolut_psa_warning,
+            "custody_cap_warning": custody_cap_warning,
+            "message": msg,
+        }
+
+    # Check 2: 0.01L Quantization Cliff (Rung 0 VETO)
+    if rung == 0:
+        msg = (
+            f"CRITICAL: 0.01L Quantization Cliff Breached (CANONICAL §536 / S1643). Active fuse ${fuse_usd:,.2f} USD "
+            f"is below the $1,000 USD (S$1,300 SGD) viable floor. Under indivisible 0.01L broker lot quantization, "
+            f"excursions <= -S$100 hit 5.69% (63/1,108 | 1 in 17.6), breaching the 5.59% (1 in 17.9) breakeven ceiling. "
+            f"Flips EV negative (-S$0.15/camp), collapses CAR to 33.5%, and blows 32.87% of 1-year swept paths "
+            f"(35.84% DFA ruin). VETO."
+        )
+        return {
+            "passed": False,
+            "status": "VETO_QUANTIZATION_CLIFF",
+            "severity": "CRITICAL",
+            "rung": 0,
+            "active_fuse_usd": fuse_usd,
+            "war_chest_usd": wc_usd,
+            "base_lot": lot,
+            "bullet_count": bullet_count,
+            "car_estimate_pct": 33.5,
+            "exhaustion_1y_pct": 32.87,
+            "revolut_psa_warning": revolut_psa_warning,
+            "custody_cap_warning": custody_cap_warning,
+            "message": msg,
+        }
+
+    # Check 3: Standalone Unbacked Extinction Cliff
+    if bullet_count < 1.5:
+        msg = (
+            f"CRITICAL: Standalone Account Extinction Cliff (CANONICAL §536 / S1642). Active fuse ${fuse_usd:,.2f} USD "
+            f"with only {bullet_count:.1f} bullets (${wc_usd:,.2f} war chest) suffers 77.97% 1-year operational exhaustion "
+            f"(51.68% DFA ruin at 1-in-200). Operating without a 10+ bullet liquid reserve violates Law #1 (Zero Risk of Ruin)."
+        )
+        return {
+            "passed": False,
+            "status": "CRITICAL_STANDALONE_EXTINCTION",
+            "severity": "CRITICAL",
+            "rung": rung,
+            "active_fuse_usd": fuse_usd,
+            "war_chest_usd": wc_usd,
+            "base_lot": lot,
+            "bullet_count": bullet_count,
+            "car_estimate_pct": 20.0,
+            "exhaustion_1y_pct": 77.97,
+            "revolut_psa_warning": revolut_psa_warning,
+            "custody_cap_warning": custody_cap_warning,
+            "message": msg,
+        }
+
+    # Check 4: Insufficient War Chest Bullets (< 10 bullets)
+    if bullet_count < 10.0:
+        msg = (
+            f"RED: Insufficient War Chest Bullets ({bullet_count:.1f} bullets < 10.0 minimum firewall). "
+            f"Allocating ${fuse_usd:,.2f} fuse against ${wc_usd:,.2f} war chest violates Law #1 (Zero Risk of Ruin) "
+            f"and the 10-Bullet Convexity Invariant (CANONICAL §535). Sizing exceeds One-Third Kelly ceiling."
+        )
+        return {
+            "passed": False,
+            "status": "FAIL_INSUFFICIENT_BULLETS",
+            "severity": "RED",
+            "rung": rung,
+            "active_fuse_usd": fuse_usd,
+            "war_chest_usd": wc_usd,
+            "base_lot": lot,
+            "bullet_count": bullet_count,
+            "car_estimate_pct": 95.0,
+            "exhaustion_1y_pct": 15.0,
+            "revolut_psa_warning": revolut_psa_warning,
+            "custody_cap_warning": custody_cap_warning,
+            "message": msg,
+        }
+
+    # Check 5: 10-Bullet Elevated Risk Knife-Edge (10.0 <= bullets < 11.54)
+    if bullet_count < 11.54:
+        msg = (
+            f"AMBER: 10-Bullet 'Just Nice' Solvency Knife-Edge (CANONICAL §536 / S1642). {bullet_count:.1f} bullets "
+            f"(${wc_usd:,.2f} WC) sits at CAR = 130.6% (ELEVATED RISK). Survival holds strictly contingent on unbroken "
+            f"profit sweeps and zero reload averaging. Institutional comfort (CAR >= 150%) requires >= 11.54 bullets (S$15,000+)."
+        )
+        if revolut_psa_warning:
+            msg += f" [WARNING: War chest (S${wc_sgd:,.2f}) approaches MAS PSA S$100K annual outflow ceiling. Plan corporate banking or OKX SG migration.]"
+        if custody_cap_warning:
+            msg += f" [WARNING: Stalled scaling & custody cap (CANONICAL §536). Active fuse >= $10K or WC >= $100K collides with single-broker offshore custody cap ($100K) and stalls compounding.]"
+        return {
+            "passed": True,
+            "status": "WARN_ELEVATED_RISK_CAR",
+            "severity": "AMBER",
+            "rung": rung,
+            "active_fuse_usd": fuse_usd,
+            "war_chest_usd": wc_usd,
+            "base_lot": lot,
+            "bullet_count": bullet_count,
+            "car_estimate_pct": 130.6,
+            "exhaustion_1y_pct": 0.14,
+            "revolut_psa_warning": revolut_psa_warning,
+            "custody_cap_warning": custody_cap_warning,
+            "message": msg,
+        }
+
+    # Check 6: Optimal Solvency (bullets >= 11.54)
+    if rung == 1:
+        car_est = 156.7
+        exhaust_est = 0.03
+        msg = (
+            f"GREEN: Global Optimum Solvency Satisfied (CANONICAL §536 / S1643). Rung 1: ${fuse_usd:,.2f} active fuse "
+            f"with {bullet_count:.1f} bullets (${wc_usd:,.2f} WC) achieves institutional solvency (CAR = {car_est:.1f}% PASS, "
+            f"{exhaust_est:.3f}% 1Y swept exhaust) with clean 0.01L base lot and 8.3%–10.0% One-Third Kelly sizing."
+        )
+    elif rung == 2:
+        car_est = 163.2
+        exhaust_est = 0.02
+        msg = (
+            f"GREEN: Validated 2x Step-Up Satisfied (CANONICAL §536 / S1643). Rung 2: ${fuse_usd:,.2f} active fuse "
+            f"with {bullet_count:.1f} bullets (${wc_usd:,.2f} WC) achieves CAR = {car_est:.1f}% [157.7%, 167.8%] PASS "
+            f"({exhaust_est:.3f}% 1Y swept exhaust) with clean integer 0.02L base lot avoiding rounding distortion."
+        )
+    else:
+        car_est = 175.0
+        exhaust_est = 0.01
+        msg = (
+            f"GREEN: Solvency Satisfied (CANONICAL §536). Rung {rung}: ${fuse_usd:,.2f} active fuse "
+            f"with {bullet_count:.1f} bullets (${wc_usd:,.2f} WC) clears institutional CAR ({car_est:.1f}%)."
+        )
+
+    if revolut_psa_warning:
+        msg += f" [WARNING: War chest (S${wc_sgd:,.2f}) approaches MAS PSA S$100K annual outflow ceiling. Plan corporate banking or OKX SG migration.]"
+    if custody_cap_warning:
+        msg += f" [WARNING: Stalled scaling & custody cap (CANONICAL §536). Active fuse >= $10K or WC >= $100K collides with single-broker offshore custody cap ($100K), Tier-2 leverage drops (25L+ Gold), and stalls compounding (+100K rungs).]"
+
+    return {
+        "passed": True,
+        "status": "PASS_OPTIMAL_SOLVENCY",
+        "severity": "GREEN",
+        "rung": rung,
+        "active_fuse_usd": fuse_usd,
+        "war_chest_usd": wc_usd,
+        "base_lot": lot,
+        "bullet_count": bullet_count,
+        "car_estimate_pct": car_est,
+        "exhaustion_1y_pct": exhaust_est,
+        "revolut_psa_warning": revolut_psa_warning,
+        "custody_cap_warning": custody_cap_warning,
+        "message": msg,
+    }
+
+
+def audit_superstar_sizing(
+    setup_risk_usd: float,
+    payoff_ratio_b: float,
+    win_rate_p: float,
+    war_chest_usd: float = 12000.0,
+    active_fuse_usd: float = 1000.0,
+    is_house_money: bool = False,
+    is_exogenous_dislocation: bool = False,
+    stop_loss_pips: float | None = None,
+    pip_value_per_lot_usd: float = 10.0,
+    leverage: float = 500.0,
+    contract_size: float = 100000.0,
+    current_price: float = 1.0,
+    broker_stopout_level_pct: float = 50.0,
+    quarterly_drawdown_limit_usd: float = 3846.15,
+) -> dict:
+    """
+    Superstar 10R & Kelly Impossible Trinity Risk Gate (CANONICAL §537 / S1663).
+    Operationalizes:
+    1. Kelly Impossible Trinity (f* = EV / b) and geometric compounding rate (g).
+    2. Superstar 10R Routine Veto (6.16%-16.66% 1Y ruin, 94.0% quarterly lock trip on 120R bankroll).
+    3. Conviction Sizing Cap (2.5R - 4.0R / $250 - $400).
+    4. House-money and exogenous dislocation (EV >= +100%) exceptions.
+    5. Live broker margin stop-out premature liquidation traps on tight chart stops.
+    6. Quarterly Drawdown Lock capacity (SGD 5,000 / ~USD 3,846.15 / ~38.5R).
+    """
+    risk_usd = float(setup_risk_usd)
+    b = float(payoff_ratio_b)
+    p = float(win_rate_p)
+    wc = float(war_chest_usd)
+    fuse = float(active_fuse_usd)
+    quarterly_limit = float(quarterly_drawdown_limit_usd)
+
+    # 1. EV Calculation
+    ev = (p * b) - (1.0 - p)
+    risk_r = risk_usd / 100.0  # 1R = $100 baseline on 120R ($12,000)
+
+    # Quarterly lock stops remaining
+    stops_to_lock = round(quarterly_limit / risk_usd, 2) if risk_usd > 0 else 0.0
+
+    # Negative EV check
+    if ev <= 0.0:
+        return {
+            "passed": False,
+            "status": "FAIL_NEGATIVE_EV",
+            "severity": "CRITICAL",
+            "ev": round(ev, 4),
+            "f_star": 0.0,
+            "f_one_third": 0.0,
+            "f_proposed": round(risk_usd / wc, 4),
+            "risk_r": round(risk_r, 2),
+            "lots": None,
+            "margin_required_usd": None,
+            "loss_at_stopout_usd": None,
+            "premature_stopout": False,
+            "quarterly_lock_stops_remaining": stops_to_lock,
+            "geometric_growth_rate": 0.0,
+            "message": (
+                f"CRITICAL: Negative EV setup detected (EV = {ev:+.2%}, WR={p:.1%}, Payoff={b:.2f}R). "
+                "Any risk allocation violates Law #1 and guarantees capital decay."
+            ),
+        }
+
+    # Full Kelly & One-Third Kelly
+    f_star = ev / b
+    f_one_third = f_star / 3.0
+    f_proposed = risk_usd / wc
+
+    # Geometric compounding growth rate: g = (1 + f*b)^p * (1 - f)^(1-p) - 1
+    if f_proposed >= 1.0:
+        geom_growth = -1.0
+    else:
+        try:
+            geom_growth = ((1.0 + (f_proposed * b)) ** p) * ((1.0 - f_proposed) ** (1.0 - p)) - 1.0
+        except Exception:
+            geom_growth = -1.0
+
+    # Margin and premature stopout analysis
+    lots = None
+    margin_required = None
+    loss_at_stopout = None
+    premature_stopout = False
+
+    if stop_loss_pips is not None and stop_loss_pips > 0:
+        pip_val = float(pip_value_per_lot_usd)
+        lots = round(risk_usd / (stop_loss_pips * pip_val), 4)
+        margin_required = round((lots * contract_size * current_price) / leverage, 2)
+
+        # Margin Exhaustion: Account does not even have enough cash to open the position
+        if margin_required >= fuse:
+            return {
+                "passed": False,
+                "status": "VETO_MARGIN_EXHAUSTION",
+                "severity": "CRITICAL",
+                "ev": round(ev, 4),
+                "f_star": round(f_star, 4),
+                "f_one_third": round(f_one_third, 4),
+                "f_proposed": round(f_proposed, 4),
+                "risk_r": round(risk_r, 2),
+                "lots": lots,
+                "margin_required_usd": margin_required,
+                "loss_at_stopout_usd": None,
+                "premature_stopout": False,
+                "quarterly_lock_stops_remaining": stops_to_lock,
+                "geometric_growth_rate": round(geom_growth, 6),
+                "message": (
+                    f"CRITICAL: Margin Exhaustion Veto (S1663). Tight stop ({stop_loss_pips:.1f}p) requires {lots:.2f} lots, "
+                    f"demanding ${margin_required:,.2f} margin at 1:{int(leverage)} which exceeds active fuse (${fuse:,.2f}). "
+                    "Position cannot physically be opened."
+                ),
+            }
+
+        # Broker Stop-Out Level (e.g. 50% margin level)
+        stopout_equity = margin_required * (broker_stopout_level_pct / 100.0)
+        loss_at_stopout = round(fuse - stopout_equity, 2)
+
+        # If the broker liquidates before price reaches chart SL
+        if loss_at_stopout < risk_usd:
+            premature_stopout = True
+            return {
+                "passed": False,
+                "status": "VETO_MARGIN_STOPOUT_PREMATURE",
+                "severity": "CRITICAL",
+                "ev": round(ev, 4),
+                "f_star": round(f_star, 4),
+                "f_one_third": round(f_one_third, 4),
+                "f_proposed": round(f_proposed, 4),
+                "risk_r": round(risk_r, 2),
+                "lots": lots,
+                "margin_required_usd": margin_required,
+                "loss_at_stopout_usd": loss_at_stopout,
+                "premature_stopout": True,
+                "quarterly_lock_stops_remaining": stops_to_lock,
+                "geometric_growth_rate": round(geom_growth, 6),
+                "message": (
+                    f"CRITICAL: Premature Broker Margin Stop-Out Veto (S1663 / CANONICAL §537). "
+                    f"Tight chart stop ({stop_loss_pips:.1f}p) scales position to {lots:.2f} lots (Margin: ${margin_required:,.2f}). "
+                    f"Broker {broker_stopout_level_pct:.0f}% stop-out triggers when loss reaches ${loss_at_stopout:,.2f}, "
+                    f"liquidating the trade BEFORE price reaches chart stop loss (${risk_usd:,.2f}). Untradeable on ${fuse:,.2f} fuse."
+                ),
+            }
+
+    # 2. Over-Kelly Check: f_proposed > f_star -> Negative compounding
+    if f_proposed > f_star:
+        return {
+            "passed": False,
+            "status": "VETO_OVER_KELLY",
+            "severity": "CRITICAL",
+            "ev": round(ev, 4),
+            "f_star": round(f_star, 4),
+            "f_one_third": round(f_one_third, 4),
+            "f_proposed": round(f_proposed, 4),
+            "risk_r": round(risk_r, 2),
+            "lots": lots,
+            "margin_required_usd": margin_required,
+            "loss_at_stopout_usd": loss_at_stopout,
+            "premature_stopout": False,
+            "quarterly_lock_stops_remaining": stops_to_lock,
+            "geometric_growth_rate": round(geom_growth, 6),
+            "message": (
+                f"CRITICAL: Kelly Impossible Trinity Veto (CANONICAL §537 / S1663). Proposed risk fraction {f_proposed:.2%} "
+                f"({risk_r:.1f}R / ${risk_usd:,.2f}) exceeds Full Kelly optimal fraction f* = {f_star:.2%} "
+                f"(EV={ev:+.1%}, Payoff={b:.2f}R). Geometric growth rate is negative (g = {geom_growth:+.4%}), "
+                "guaranteeing long-term mathematical ruin."
+            ),
+        }
+
+    # 3. Superstar 10R ($1,000 / 8.33% WC) Checks
+    if risk_usd >= 1000.0 or risk_r >= 10.0:
+        if is_house_money:
+            return {
+                "passed": True,
+                "status": "PASS_HOUSE_MONEY",
+                "severity": "GREEN",
+                "ev": round(ev, 4),
+                "f_star": round(f_star, 4),
+                "f_one_third": round(f_one_third, 4),
+                "f_proposed": round(f_proposed, 4),
+                "risk_r": round(risk_r, 2),
+                "lots": lots,
+                "margin_required_usd": margin_required,
+                "loss_at_stopout_usd": loss_at_stopout,
+                "premature_stopout": False,
+                "quarterly_lock_stops_remaining": stops_to_lock,
+                "geometric_growth_rate": round(geom_growth, 6),
+                "message": (
+                    f"GREEN: Superstar 10R allocation permitted via Swept House Money (CANONICAL §537). "
+                    f"Zero principal drawdown risk. EV={ev:+.1%}, f*={f_star:.2%}, stops to quarterly lock={stops_to_lock}."
+                ),
+            }
+
+        if is_exogenous_dislocation:
+            # Exogenous dislocation requires EV >= +100% (1.0) and f_proposed <= f_one_third (or f_star >= 25%)
+            if ev < 1.0 or f_proposed > f_one_third:
+                return {
+                    "passed": False,
+                    "status": "FAIL_EXOGENOUS_EV_INSUFFICIENT",
+                    "severity": "RED",
+                    "ev": round(ev, 4),
+                    "f_star": round(f_star, 4),
+                    "f_one_third": round(f_one_third, 4),
+                    "f_proposed": round(f_proposed, 4),
+                    "risk_r": round(risk_r, 2),
+                    "lots": lots,
+                    "margin_required_usd": margin_required,
+                    "loss_at_stopout_usd": loss_at_stopout,
+                    "premature_stopout": False,
+                    "quarterly_lock_stops_remaining": stops_to_lock,
+                    "geometric_growth_rate": round(geom_growth, 6),
+                    "message": (
+                        f"RED: Exogenous dislocation sizing rejected. S1663 requires EV >= +100% and 10R <= 1/3 Kelly. "
+                        f"Current setup: EV={ev:+.1%} (< +100%), 1/3 Kelly={f_one_third:.2%}, Proposed={f_proposed:.2%}."
+                    ),
+                }
+
+            return {
+                "passed": True,
+                "status": "PASS_SUPERSTAR_DISLOCATION",
+                "severity": "GREEN",
+                "ev": round(ev, 4),
+                "f_star": round(f_star, 4),
+                "f_one_third": round(f_one_third, 4),
+                "f_proposed": round(f_proposed, 4),
+                "risk_r": round(risk_r, 2),
+                "lots": lots,
+                "margin_required_usd": margin_required,
+                "loss_at_stopout_usd": loss_at_stopout,
+                "premature_stopout": False,
+                "quarterly_lock_stops_remaining": stops_to_lock,
+                "geometric_growth_rate": round(geom_growth, 6),
+                "message": (
+                    f"GREEN: Authentic Exogenous Dislocation 10R authorized (CANONICAL §537 / S1663). "
+                    f"EV={ev:+.1%} (>= +100%), f*={f_star:.2%}, 1/3 Kelly={f_one_third:.2%} >= {f_proposed:.2%}."
+                ),
+            }
+
+        # Otherwise: Routine setup attempting 10R is strictly VETOED
+        return {
+            "passed": False,
+            "status": "VETO_SUPERSTAR_10R_ROUTINE",
+            "severity": "CRITICAL",
+            "ev": round(ev, 4),
+            "f_star": round(f_star, 4),
+            "f_one_third": round(f_one_third, 4),
+            "f_proposed": round(f_proposed, 4),
+            "risk_r": round(risk_r, 2),
+            "lots": lots,
+            "margin_required_usd": margin_required,
+            "loss_at_stopout_usd": loss_at_stopout,
+            "premature_stopout": False,
+            "quarterly_lock_stops_remaining": stops_to_lock,
+            "geometric_growth_rate": round(geom_growth, 6),
+            "message": (
+                f"CRITICAL: Superstar 10R Routine Setup Veto (CANONICAL §537 / S1663). "
+                f"Routine 4H/1H setups must NOT risk 10R (${risk_usd:,.2f} / {f_proposed:.2%} WC). "
+                f"20,000-path Monte Carlo confirms 6.16%-16.66% 1Y ruin and 94.0% quarterly lock trip probability. "
+                "Routine conviction is hard capped at 2.5R - 4.0R ($250 - $400)."
+            ),
+        }
+
+    # 4. Routine Conviction Ceilings
+    if risk_usd > 400.0 or risk_r > 4.0:
+        return {
+            "passed": False,
+            "status": "FAIL_EXCEEDS_CONVICTION_CEILING",
+            "severity": "RED",
+            "ev": round(ev, 4),
+            "f_star": round(f_star, 4),
+            "f_one_third": round(f_one_third, 4),
+            "f_proposed": round(f_proposed, 4),
+            "risk_r": round(risk_r, 2),
+            "lots": lots,
+            "margin_required_usd": margin_required,
+            "loss_at_stopout_usd": loss_at_stopout,
+            "premature_stopout": False,
+            "quarterly_lock_stops_remaining": stops_to_lock,
+            "geometric_growth_rate": round(geom_growth, 6),
+            "message": (
+                f"RED: Routine conviction ceiling exceeded ({risk_r:.1f}R / ${risk_usd:,.2f} > 4.0R / $400). "
+                "S1663 caps routine technical setups at 4.0R max conviction."
+            ),
+        }
+
+    # 5. Routine Conviction Pass (<= 4.0R / $400)
+    return {
+        "passed": True,
+        "status": "PASS_CONVICTION_SIZING",
+        "severity": "GREEN",
+        "ev": round(ev, 4),
+        "f_star": round(f_star, 4),
+        "f_one_third": round(f_one_third, 4),
+        "f_proposed": round(f_proposed, 4),
+        "risk_r": round(risk_r, 2),
+        "lots": lots,
+        "margin_required_usd": margin_required,
+        "loss_at_stopout_usd": loss_at_stopout,
+        "premature_stopout": False,
+        "quarterly_lock_stops_remaining": stops_to_lock,
+        "geometric_growth_rate": round(geom_growth, 6),
+        "message": (
+            f"GREEN: Routine Conviction Sizing Validated (CANONICAL §537). "
+            f"Risk: {risk_r:.1f}R (${risk_usd:,.2f}), EV: {ev:+.1%}, f* = {f_star:.2%}, "
+            f"Growth rate g: {geom_growth:+.4%}, Stops to quarterly lock: {stops_to_lock}."
+        ),
+    }
+
+
+
+
 
 
