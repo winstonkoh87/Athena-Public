@@ -1510,7 +1510,7 @@ def audit_bullet_grid_endurance(
     for i in range(num_layers):
         d_i = i * spacing
         rem_pips_i = max(0.0, excursion - d_i)
-        
+
         if custom_lot_sequence is not None and i < len(custom_lot_sequence):
             lot_i = max(min_lot, custom_lot_sequence[i])
         elif abs(martingale_factor - 1.0718) < 0.001 and base_lot == 0.01:
@@ -1801,7 +1801,7 @@ def audit_capital_scaling_ladder(
         if revolut_psa_warning:
             msg += f" [WARNING: War chest (S${wc_sgd:,.2f}) approaches MAS PSA S$100K annual outflow ceiling. Plan corporate banking or OKX SG migration.]"
         if custody_cap_warning:
-            msg += f" [WARNING: Stalled scaling & custody cap (CANONICAL §536). Active fuse >= $10K or WC >= $100K collides with single-broker offshore custody cap ($100K) and stalls compounding.]"
+            msg += " [WARNING: Stalled scaling & custody cap (CANONICAL §536). Active fuse >= $10K or WC >= $100K collides with single-broker offshore custody cap ($100K) and stalls compounding.]"
         return {
             "passed": True,
             "status": "WARN_ELEVATED_RISK_CAR",
@@ -1846,7 +1846,7 @@ def audit_capital_scaling_ladder(
     if revolut_psa_warning:
         msg += f" [WARNING: War chest (S${wc_sgd:,.2f}) approaches MAS PSA S$100K annual outflow ceiling. Plan corporate banking or OKX SG migration.]"
     if custody_cap_warning:
-        msg += f" [WARNING: Stalled scaling & custody cap (CANONICAL §536). Active fuse >= $10K or WC >= $100K collides with single-broker offshore custody cap ($100K), Tier-2 leverage drops (25L+ Gold), and stalls compounding (+100K rungs).]"
+        msg += " [WARNING: Stalled scaling & custody cap (CANONICAL §536). Active fuse >= $10K or WC >= $100K collides with single-broker offshore custody cap ($100K), Tier-2 leverage drops (25L+ Gold), and stalls compounding (+100K rungs).]"
 
     return {
         "passed": True,
@@ -1946,7 +1946,6 @@ def audit_superstar_sizing(
     lots = None
     margin_required = None
     loss_at_stopout = None
-    premature_stopout = False
 
     if stop_loss_pips is not None and stop_loss_pips > 0:
         pip_val = float(pip_value_per_lot_usd)
@@ -1983,7 +1982,6 @@ def audit_superstar_sizing(
 
         # If the broker liquidates before price reaches chart SL
         if loss_at_stopout < risk_usd:
-            premature_stopout = True
             return {
                 "passed": False,
                 "status": "VETO_MARGIN_STOPOUT_PREMATURE",
