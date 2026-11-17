@@ -10,11 +10,24 @@ rate floors, financial runway, risk models, and behavioral history.
 
 from __future__ import annotations
 
+import copy
+import datetime
 import re
+from pathlib import Path
 from typing import Any
 
 from athena.core.config import CANONICAL_PATH, PROJECT_ROOT
 from athena.core.models import SearchResult
+
+_USER_STATE_SNAPSHOT_CACHE: dict[tuple[Any, ...], dict[str, Any]] = {}
+
+
+def _safe_mtime_ns(path: Path) -> int:
+    """Return st_mtime_ns or 0 if path does not exist."""
+    try:
+        return path.stat().st_mtime_ns if path.exists() else 0
+    except OSError:
+        return 0
 
 
 def build_user_state_snapshot() -> dict[str, Any]:
@@ -22,6 +35,20 @@ def build_user_state_snapshot() -> dict[str, Any]:
     Extract core Tier 1 user metrics and active constraints from CANONICAL.md
     and active memory files into a compact structured dictionary.
     """
+    user_ctx_path = PROJECT_ROOT / ".context" / "memory_bank" / "userContext.md"
+    active_ctx_path = PROJECT_ROOT / ".context" / "memory_bank" / "activeContext.md"
+    cache_key = (
+        str(CANONICAL_PATH),
+        _safe_mtime_ns(CANONICAL_PATH),
+        str(user_ctx_path),
+        _safe_mtime_ns(user_ctx_path),
+        str(active_ctx_path),
+        _safe_mtime_ns(active_ctx_path),
+    )
+    cached = _USER_STATE_SNAPSHOT_CACHE.get(cache_key)
+    if cached is not None:
+        return copy.deepcopy(cached)
+
     snapshot: dict[str, Any] = {
         "rate_floor": "S$150/hr",
         "financial_constraints": "Cash buffer & active float discipline, 0 unhedged risk",
@@ -98,7 +125,6 @@ def build_user_state_snapshot() -> dict[str, Any]:
 
 
     # Extract active engines from userContext if available (keeps public defaults generic)
-    user_ctx_path = PROJECT_ROOT / ".context" / "memory_bank" / "userContext.md"
     if user_ctx_path.exists():
         try:
             uctx_text = user_ctx_path.read_text(encoding="utf-8")
@@ -115,7 +141,6 @@ def build_user_state_snapshot() -> dict[str, Any]:
             pass
 
     # Extract active tasks from activeContext if available
-    active_ctx_path = PROJECT_ROOT / ".context" / "memory_bank" / "activeContext.md"
     if active_ctx_path.exists():
         try:
             ctx_text = active_ctx_path.read_text(encoding="utf-8")
@@ -134,9 +159,10 @@ def build_user_state_snapshot() -> dict[str, Any]:
             pass
 
     # FIX-10: Freshness stamp — lets downstream consumers know how stale the frame is
-    import datetime
-
     snapshot["state_as_of"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    if len(_USER_STATE_SNAPSHOT_CACHE) >= 8:
+        _USER_STATE_SNAPSHOT_CACHE.clear()
+    _USER_STATE_SNAPSHOT_CACHE[cache_key] = copy.deepcopy(snapshot)
 
     return snapshot
 

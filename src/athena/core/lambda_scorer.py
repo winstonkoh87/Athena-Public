@@ -122,6 +122,38 @@ ENTITY_PATTERNS = [
     (r"\b(a\d+|s\d{2,4}|cs-\d+|pat-\d+|td-\d+|cc\d{4})\b", "athena_entity_code"),
 ]
 
+_CURRENCY_AMOUNT_EXTRACT_RE = re.compile(
+    r"(s\$|us\$|\$|usd|sgd|rm|myr|cny|rmb|¥)\s*(\d[\d,]*(?:\.\d+)?)\s*([kmb])?(?!\w)",
+    re.I,
+)
+_MICRO_CURRENCY_THRESHOLD_SGD = 50.0
+
+
+def _extract_max_currency_sgd_equiv(text: str) -> float | None:
+    """Extract maximum currency amount in approximate SGD equivalent (<0.1ms)."""
+    max_val: float | None = None
+    for match in _CURRENCY_AMOUNT_EXTRACT_RE.finditer(text):
+        unit = match.group(1).lower()
+        raw_num = match.group(2).replace(",", "")
+        suffix = (match.group(3) or "").lower()
+        try:
+            val = float(raw_num)
+        except ValueError:
+            continue
+        if suffix == "k":
+            val *= 1_000.0
+        elif suffix == "m":
+            val *= 1_000_000.0
+        elif suffix == "b":
+            val *= 1_000_000_000.0
+        if unit in ("¥", "cny", "rmb"):
+            val *= 0.20
+        elif unit in ("rm", "myr"):
+            val *= 0.32
+        if max_val is None or val > max_val:
+            max_val = val
+    return max_val
+
 
 class LambdaResult(dict):
     score: int
@@ -208,12 +240,23 @@ def compute_lambda(
             features.append({"name": label, "weight": 25})
             break
 
-    # 4. Financial Stakes & Capital (+20)
+    # 4. Financial Stakes & Capital (+20, or +4 for micro currency < SGD 50)
+    micro_currency_matched = False
+    full_financial_matched = False
     for pat, label in FINANCIAL_STAKES_PATTERNS:
         if re.search(pat, query_lower):
+            if label == "currency_amount":
+                max_sgd = _extract_max_currency_sgd_equiv(cleaned)
+                if max_sgd is not None and max_sgd < _MICRO_CURRENCY_THRESHOLD_SGD:
+                    micro_currency_matched = True
+                    continue
             score += 20
             features.append({"name": label, "weight": 20})
+            full_financial_matched = True
             break
+    if micro_currency_matched and not full_financial_matched:
+        score += 4
+        features.append({"name": "micro_currency_amount", "weight": 4})
 
     # 5. Strategic & Adversarial Markers (+15)
     for pat, label in STRATEGIC_PATTERNS:
@@ -311,7 +354,7 @@ _MULTI_OPTION_RE = re.compile(
 )
 _HIGH_STAKES_RE = re.compile(
     r"\b(?:irreversible|lock[-\s]?up|lockup|capital|ruin|kelly|drawdown|leverage|contract|"
-    r"lawsuit|legal|equity|retaliation|competitor|pricing|deploy|migration|production)\b|S?\$[0-9,]+",
+    r"lawsuit|legal|equity|retaliation|competitor|pricing|deploy|migration|production)\b",
     re.I,
 )
 _RECON_NEEDED_RE = re.compile(
@@ -338,7 +381,10 @@ def assess_intel_posture(
     features = lam.get("features") or []
 
     multi_option = bool(_MULTI_OPTION_RE.search(cleaned))
-    high_stakes = bool(_HIGH_STAKES_RE.search(cleaned))
+    max_ccy = _extract_max_currency_sgd_equiv(cleaned)
+    high_stakes = bool(_HIGH_STAKES_RE.search(cleaned)) or (
+        max_ccy is not None and max_ccy >= _MICRO_CURRENCY_THRESHOLD_SGD
+    )
     recon_needed = bool(_RECON_NEEDED_RE.search(cleaned))
     non_base_risk = any(
         isinstance(f, dict) and f.get("name") != "base_standard" and int(f.get("weight", 0)) > 0

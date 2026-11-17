@@ -555,4 +555,130 @@ def test_mcp_quicksave_surfaces_audit_warnings(tmp_path, monkeypatch):
     assert "UNRECEIPTED_GTO_CLAIM" in joined
 
 
+def test_vector_mode_auto_positive_logit_with_strong_rrf_short_circuits(tmp_path):
+    """In vector_mode='auto', >=3-word queries with top_logit in [0.0, 1.0) and RRF >= CONFIDENCE_MED short-circuit fast."""
+    import athena.tools.search as search_mod
+    from athena.core.cache import QueryCache
+    from athena.core.models import SearchResult
+
+    release_vector = threading.Event()
+    vector_called = threading.Event()
+
+    def blocked_embedding(text, **kwargs):
+        vector_called.set()
+        release_vector.wait(timeout=2.0)
+        return [0.1] * 8
+
+    local_hits = [
+        SearchResult(id="doc-rrf-1", content="strong local fts hit", source="fts_bm25", score=0.95),
+        SearchResult(id="doc-rrf-2", content="strong local canonical hit", source="canonical", score=0.92),
+    ]
+
+    def fake_rerank(query, candidates, top_k=10):
+        out = list(candidates[:top_k])
+        for i, item in enumerate(out):
+            item.signals = dict(item.signals or {})
+            item.signals["reranker"] = {"score": 0.38 - (i * 0.1)}
+        return out
+
+    tmp_cache = QueryCache(cache_dir=tmp_path, ttl_hours=1)
+    try:
+        with (
+            patch.object(search_mod, "get_search_cache", return_value=tmp_cache),
+            patch.object(search_mod, "collect_canonical", return_value=[local_hits[1]]),
+            patch.object(search_mod, "collect_fts_bm25", return_value=[local_hits[0]]),
+            patch.object(search_mod, "collect_filenames", return_value=[]),
+            patch.object(search_mod, "collect_framework_docs", return_value=[]),
+            patch.object(search_mod, "collect_vectors", return_value=[]),
+            patch("athena.memory.vectors.get_embedding", side_effect=blocked_embedding),
+            patch("athena.tools.reranker.rerank_results", side_effect=fake_rerank),
+        ):
+            t0 = time.perf_counter()
+            res = search_mod.run_search(
+                "minmax remediation plan verification",
+                limit=3,
+                rerank=True,
+                json_output=True,
+                print_output=False,
+                web=False,
+                vector_mode="auto",
+            )
+            elapsed = time.perf_counter() - t0
+    finally:
+        release_vector.set()
+
+    assert elapsed < 0.5, f"Positive-logit strong-RRF fast path waited too long ({elapsed:.2f}s >= 0.5s)"
+    assert vector_called.is_set()
+    assert res["degraded_recall"] is False
+    assert res["rerank_used"] is True
+    assert {r["id"] for r in res["results"]} == {"doc-rrf-1", "doc-rrf-2"}
+
+
+def test_context_gate_session_delta_and_mp_no_rerank():
+    """Secondary MP hops must pass rerank=False and compact_follow_up must deduplicate repeated chunks."""
+    from athena.mcp_server import context_gate, reset_context_gate_session_state
+
+    reset_context_gate_session_state()
+    mps = [{"id": "MP-A", "name": "Pattern A", "search_terms": "pattern alpha", "description": "desc a"}]
+    mp_rerank_flags = []
+
+    def fake_run_search(query, **kwargs):
+        if query == "pattern alpha":
+            mp_rerank_flags.append(kwargs.get("rerank"))
+            return {"results": [{"id": "mp-doc-1", "content": "mp detail", "rrf_score": 0.04}]}
+        return {
+            "results": [
+                {"id": "chunk-1", "content": "Primary detailed content", "rrf_score": 0.06},
+                {"id": "chunk-2", "content": "Secondary repeated content", "rrf_score": 0.05},
+            ],
+            "user_state": {"rate_floor": "S$150/hr", "state_as_of": "2026-11-17T10:00:00+00:00"},
+        }
+
+    with (
+        patch("athena.tools.meta_pattern_matcher.detect_latent_meta_patterns", return_value=mps),
+        patch("athena.tools.search.run_search", side_effect=fake_run_search),
+    ):
+        first = context_gate("Explain MinMax protocol latency", limit=3, web=False)
+        second = context_gate("Follow up on MinMax protocol latency", limit=3, web=False, compact_follow_up=True)
+
+    assert mp_rerank_flags and all(flag is False for flag in mp_rerank_flags)
+    assert first["session_delta"]["turn_index"] == 1
+    assert first["session_delta"]["user_state_unchanged"] is False
+    assert second["session_delta"]["turn_index"] == 2
+    assert second["session_delta"]["user_state_unchanged"] is True
+    assert second["session_delta"]["compact_applied"] is True
+    assert "chunk-1" in second["session_delta"]["deduplicated_chunk_ids"]
+    assert "chunk-2" in second["session_delta"]["deduplicated_chunk_ids"]
+    assert second["user_state"].get("_delta") == "unchanged"
+    # Top-1 chunk remains readable; idx >= 1 repeated chunks are compacted
+    assert second["context"]["results"][0]["content"] == "Primary detailed content"
+    assert second["context"]["results"][1].get("delta_compacted") is True
+    assert "Delta stub" in second["context"]["results"][1]["content"]
+
+
+def test_boot_status_compact_mode(tmp_path):
+    """scripts/boot_status.py --compact must emit a single-line summary header in < 1.5s."""
+    script = REPO_ROOT / "scripts" / "boot_status.py"
+    athena_py = REPO_ROOT / ".agent" / "scripts" / "athena-py"
+    runner = str(athena_py) if (athena_py.exists() and os.access(athena_py, os.X_OK)) else sys.executable
+    env = {**os.environ, "ATHENA_ROOT": str(tmp_path)}
+
+    t0 = time.perf_counter()
+    proc = subprocess.run(
+        [runner, str(script), "--compact"],
+        cwd=str(REPO_ROOT),
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=5,
+    )
+    elapsed = time.perf_counter() - t0
+    assert proc.returncode == 0, f"boot_status.py --compact failed: {proc.stderr}"
+    assert elapsed < 1.5, f"boot_status.py --compact exceeded budget: {elapsed:.2f}s"
+    first_line = proc.stdout.strip().splitlines()[0]
+    assert first_line.startswith("⚡ Boot Status")
+    assert "Index:" in first_line
+    assert "Maint:" in first_line
+
+
 

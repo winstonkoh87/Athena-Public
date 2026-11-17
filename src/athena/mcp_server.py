@@ -35,9 +35,11 @@ if project_root:
 else:
     load_dotenv()
 
+import hashlib
 import json
 import logging
 import re
+import time
 from datetime import datetime, timezone
 
 from fastmcp import FastMCP
@@ -800,10 +802,16 @@ def classify_turn(
     web_required = False
     web_reason = "none"
     underspec_opt = False
+    in_game_opt_trap = False
     try:
-        from athena.tools.web_triggers import is_underspecified_optimization, needs_web
+        from athena.tools.web_triggers import (
+            is_in_game_optimization_trap,
+            is_underspecified_optimization,
+            needs_web,
+        )
         web_required, web_reason = needs_web(query, intent)
         underspec_opt = is_underspecified_optimization(query)
+        in_game_opt_trap = is_in_game_optimization_trap(query)
     except ImportError:
         # web_triggers not yet available — fall back to intent-based rule
         web_required = intent == "GENERAL"  # Conservative default
@@ -846,6 +854,7 @@ def classify_turn(
         "web_required": web_required,
         "web_reason": web_reason,
         "underspec_opt": underspec_opt,
+        "in_game_opt_trap": in_game_opt_trap,
         "intent": intent,
         "query_words": len(query.strip().split()),
         "timestamp": datetime.now().isoformat(),
@@ -1126,6 +1135,23 @@ def decision_screen(
     }
 
 
+_SESSION_GATE_TTL_S = 600.0
+_SESSION_GATE_STATE: dict[str, object] = {
+    "last_ts": 0.0,
+    "last_user_state_fp": "",
+    "seen_chunk_ids": set(),
+    "turn_index": 0,
+}
+
+
+def reset_context_gate_session_state() -> None:
+    """Reset session-delta state (used on session reset or unit test isolation)."""
+    _SESSION_GATE_STATE["last_ts"] = 0.0
+    _SESSION_GATE_STATE["last_user_state_fp"] = ""
+    _SESSION_GATE_STATE["seen_chunk_ids"] = set()
+    _SESSION_GATE_STATE["turn_index"] = 0
+
+
 @mcp.tool(
     tags={"read", "memory", "governance", "context"},
 )
@@ -1133,6 +1159,7 @@ def context_gate(
     query: str,
     limit: int = 10,
     web: bool | None = None,
+    compact_follow_up: bool = False,
 ) -> dict:
     """Pre-answer context assembly gate. Call this BEFORE answering any
     STANDARD/ULTRA query. Returns the complete retrieval bundle including
@@ -1188,10 +1215,16 @@ def context_gate(
     web_required = False
     web_reason = "none"
     underspec_opt = False
+    in_game_opt_trap = False
     try:
-        from athena.tools.web_triggers import is_underspecified_optimization, needs_web
+        from athena.tools.web_triggers import (
+            is_in_game_optimization_trap,
+            is_underspecified_optimization,
+            needs_web,
+        )
         web_required, web_reason = needs_web(query, intent)
         underspec_opt = is_underspecified_optimization(query)
+        in_game_opt_trap = is_in_game_optimization_trap(query)
     except ImportError:
         pass
 
@@ -1224,13 +1257,13 @@ def context_gate(
 
     # Choose MinMax retrieval posture:
     # - SNIPER -> local-only (<0.5s)
-    # - Low-complexity STANDARD (Lambda < 15, non-personalised, no web) -> speculative local+ONNX ("auto") w/ quality-floor escalation
+    # - Low/Mid-complexity STANDARD (Lambda <= 25, non-personalised, no web) -> speculative local+ONNX ("auto") w/ quality-floor escalation
     # - High-complexity STANDARD / Decision / Web / ULTRA -> full parallel vector + lexical ("always")
     if risk_level == RiskLevel.SNIPER:
         primary_vector_mode = "local"
     elif (
         risk_level == RiskLevel.STANDARD
-        and lambda_res["score"] < 15
+        and lambda_res["score"] <= 25
         and intent != "PERSONALISED_DECISION"
         and not effective_web
     ):
@@ -1256,7 +1289,7 @@ def context_gate(
     if not search_results.get("error"):
         gov.mark_search_performed(query)
 
-    # Secondary multi-hop retrieval for matched Meta-Patterns (parallelized, local-fast)
+    # Secondary multi-hop retrieval for matched Meta-Patterns (parallelized, local-fast, no cross-encoder rerank)
     if latent_patterns:
         from concurrent.futures import ThreadPoolExecutor
 
@@ -1269,6 +1302,7 @@ def context_gate(
                 mp_res = run_search(
                     mp["search_terms"],
                     limit=2,
+                    rerank=False,
                     json_output=True,
                     include_personal=False,
                     web=False,
@@ -1363,7 +1397,11 @@ def context_gate(
     if risk_level == RiskLevel.ULTRA and not effective_web and web_required:
         missing.append("web")
 
-    # 7. Build directive
+    # 7. Assess intel posture and build directive
+    from athena.core.lambda_scorer import assess_intel_posture
+
+    intel_posture = assess_intel_posture(query, lambda_res=lambda_res, intent=intent)
+
     directive_parts = []
     if has_parse_error:
         directive_parts.append(
@@ -1415,6 +1453,25 @@ def context_gate(
             "Expected Value invariance from Utility Profiles (Sharpe/Arbitrage vs "
             "Recreational Comfort vs Tournament Skewness), present the level "
             "hierarchy, and hand the choice back to the user (DEC-180)."
+        )
+
+    # Arena reframe / meta-frame directive (DEC-131 Red/Blue Curve / DEC-501 Q2 / STR-42)
+    if in_game_opt_trap:
+        directive_parts.append(
+            "ARENA REFRAME DIRECTIVE (DEC-131 Red/Blue Curve / DEC-501 Q2 / STR-42): "
+            "In-game L0/L1 optimization detected. Before optimizing costs, wages, or tactics "
+            "inside the stated game, run the 3-Step Red/Blue Curve Gate: (1) Overlap & "
+            "Sharecropping Check (MP-1 / MP-4: does your +1 SD ceiling equal the arena "
+            "owner's -1 SD floor?), (2) Winner's Prize Test (S34: even if you reach the top 5% "
+            "in this arena, is it still a linear Red Curve?), and (3) 4-Path Escape Router "
+            "(Push / Acquire / Exit to a Blue Curve arena / Transactional consumer), plus "
+            "statutory/scale ceiling red-team and 48h micro-probe (S1352)."
+        )
+    elif intel_posture.get("meta_frame_required"):
+        directive_parts.append(
+            "META-FRAME POSTURE (DEC-501 / DEC-131): Audit L2 Arena Physics "
+            "(Red vs Blue Curve distribution, MP-1 Sharecropping, MP-6 Compounding, "
+            "statutory ceiling) alongside L0/L1 execution."
         )
 
     # v3.1: Meta-awareness bridge — cross-harness parity with Claude Code hook.
@@ -1521,7 +1578,7 @@ def context_gate(
     # Build evidence checklist (Phase C1.2)
     evidence_checklist = []
     f_names = [f["name"] for f in lambda_res.get("features", [])]
-    if "currency_amount" in f_names or "financial_concept" in f_names:
+    if "currency_amount" in f_names or "micro_currency_amount" in f_names or "financial_concept" in f_names:
         evidence_checklist.append("Verify numerical quantities and capital boundaries against CANONICAL or account statements.")
     if "irreversible_action" in f_names or "legal_liability" in f_names:
         evidence_checklist.append("Audit contract indemnity, liability exposure, and counterparty recoil boundaries.")
@@ -1540,8 +1597,62 @@ def context_gate(
     else:
         sufficiency = 1.0 if (local_first or (len(results_list) >= 3 and not is_degraded) or web_count > 0) else 0.75
 
-    from athena.core.lambda_scorer import assess_intel_posture
-    intel_posture = assess_intel_posture(query, lambda_res=lambda_res, intent=intent)
+    # Track session-delta deduplication across consecutive turns
+    now_ts = time.time()
+    last_ts = float(_SESSION_GATE_STATE["last_ts"])
+    in_session_window = last_ts > 0.0 and (now_ts - last_ts) <= _SESSION_GATE_TTL_S
+    if not in_session_window:
+        _SESSION_GATE_STATE["seen_chunk_ids"] = set()
+        _SESSION_GATE_STATE["last_user_state_fp"] = ""
+        _SESSION_GATE_STATE["turn_index"] = 0
+
+    if isinstance(user_state, dict):
+        fp_payload = {k: v for k, v in user_state.items() if k != "state_as_of"}
+        user_state_fp = hashlib.sha1(
+            json.dumps(fp_payload, sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()
+    else:
+        user_state_fp = ""
+
+    user_state_unchanged = bool(
+        in_session_window
+        and user_state_fp
+        and user_state_fp == _SESSION_GATE_STATE["last_user_state_fp"]
+    )
+    seen_chunks: set[str] = _SESSION_GATE_STATE["seen_chunk_ids"]  # type: ignore[assignment]
+    deduplicated_chunk_ids: list[str] = []
+    current_chunk_ids: list[str] = []
+    if isinstance(results_list, list):
+        for idx, r in enumerate(results_list):
+            if not isinstance(r, dict):
+                continue
+            r_id = r.get("id")
+            if not r_id:
+                continue
+            r_id_str = str(r_id)
+            current_chunk_ids.append(r_id_str)
+            if r_id_str in seen_chunks:
+                deduplicated_chunk_ids.append(r_id_str)
+                if compact_follow_up and idx >= 1:
+                    results_list[idx] = {
+                        **r,
+                        "content": f"[Delta stub — chunk '{r_id_str}' already delivered in current session]",
+                        "delta_compacted": True,
+                    }
+
+    seen_chunks.update(current_chunk_ids)
+    _SESSION_GATE_STATE["last_ts"] = now_ts
+    _SESSION_GATE_STATE["last_user_state_fp"] = user_state_fp
+    _SESSION_GATE_STATE["turn_index"] = int(_SESSION_GATE_STATE["turn_index"]) + 1
+    if compact_follow_up and user_state_unchanged and isinstance(user_state, dict):
+        user_state = {**user_state, "_delta": "unchanged"}
+
+    session_delta = {
+        "turn_index": int(_SESSION_GATE_STATE["turn_index"]),
+        "user_state_unchanged": user_state_unchanged,
+        "deduplicated_chunk_ids": deduplicated_chunk_ids,
+        "compact_applied": bool(compact_follow_up and (user_state_unchanged or deduplicated_chunk_ids)),
+    }
 
     return {
         "context": search_results,
@@ -1556,11 +1667,13 @@ def context_gate(
         "latent_meta_patterns": latent_patterns,
         "personalisation": personalisation,
         "user_state": user_state,
+        "session_delta": session_delta,
         "web": web_meta,
         "grounding_status": grounding_status,
         "local_first": local_first,
         "missing": missing,
         "underspec_opt": underspec_opt,
+        "in_game_opt_trap": in_game_opt_trap,
         "compute_tier": compute_tier,
         "directive": directive,
         "risk_level": risk_level.name,

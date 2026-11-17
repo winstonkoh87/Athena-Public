@@ -1534,8 +1534,14 @@ def run_search(
                                     if (local_reranked and local_reranked[0].signals)
                                     else -99.0
                                 )
-                                min_logit = 1.0 if len(query.split()) >= 3 else 2.5
-                                if local_reranked and top_logit >= min_logit:
+                                word_len = len(query.split())
+                                min_logit = 1.0 if word_len >= 3 else 2.5
+                                strong_local_rrf = local_fused[0].rrf_score >= CONFIDENCE_MED
+                                passes_logit_floor = (
+                                    top_logit >= min_logit
+                                    or (word_len >= 3 and top_logit >= 0.0 and strong_local_rrf)
+                                )
+                                if local_reranked and passes_logit_floor:
                                     fused_results = local_reranked
                                     if any(
                                         r.signals and "reranker" in r.signals

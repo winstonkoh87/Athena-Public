@@ -25,6 +25,8 @@ META_PATTERN_CATALOG: dict[str, dict[str, Any]] = {
             r"\bplatform\b", r"\bmiddleman\b", r"\btake[\s-]rate\b", r"\bcommission\b",
             r"\blandlord\b", r"\bcarousell\b", r"\bupwork\b", r"\bshopee\b", r"\bgrab\b",
             r"\brent(ing)?\b", r"\bsharecrop(ping)?\b", r"\barena ownership\b",
+            r"\bhawker\b", r"\bkopitiam\b", r"\bcoffee\s?shop\b", r"\bstall\b",
+            r"\bfranchise(e|or)?\b", r"\btenancy\b", r"\blease\s+renewal\b",
         ],
     },
     "MP-2": {
@@ -64,6 +66,16 @@ META_PATTERN_CATALOG: dict[str, dict[str, Any]] = {
             r"\bpress release\b", r"\bwhat does this mean\b",
         ],
     },
+    "MP-6": {
+        "name": "Compounding vs Linear (Hand-Stop-Mouth-Stop)",
+        "description": "Build compounding assets, not linear sweat-equity income streams where stopping for 6 months drops revenue to zero.",
+        "search_terms": "MP-6 Compounding vs Linear hand stop mouth stop sweat equity passive asset",
+        "patterns": [
+            r"\bhand\s+stop\b", r"\bsweat\s+equity\b", r"\blinear\s+(?:income|labor|model|trap)\b",
+            r"\bactive\s+income\b", r"\btrading\s+time\s+for\s+money\b",
+            r"\bcarnot\s+(?:engine|trap|ceiling)\b", r"\bstop\s+working\s+for\s+6\s+months\b",
+        ],
+    },
     "MP-7": {
         "name": "Structural Protection",
         "description": "Survivors are structurally protected, not more talented. Ruin barriers and firewalls.",
@@ -72,6 +84,17 @@ META_PATTERN_CATALOG: dict[str, dict[str, Any]] = {
             r"\bcircuit breaker\b", r"\bfirewall\b", r"\bruin\b", r"\bliabilit(y|ies)\b",
             r"\bindemni(ty|fication)\b", r"\bwarrant(y|ies)\b", r"\bguarantee\b",
             r"\bstructural protection\b", r"\blegal insulation\b",
+        ],
+    },
+    "MP-9": {
+        "name": "Leverage Inversion & Red/Blue Curve Arena Selection",
+        "description": "Everyone pushes hard; the difference is where the fulcrum sits (DEC-131 Red/Blue Curve, STR-42 Serf vs King, PAT-34 Table Selection).",
+        "search_terms": "MP-9 Leverage Inversion DEC-131 Red Curve Blue Curve STR-42 PAT-34 table selection arena shift",
+        "patterns": [
+            r"\bred\s+curve\b", r"\bblue\s+curve\b", r"\bwrong\s+(?:game|table|arena)\b",
+            r"\bright\s+(?:game|table|arena)\b", r"\btable\s+selection\b",
+            r"\barena\s+(?:selection|shift|physics)\b", r"\bboxer'?s?\s+fallacy\b",
+            r"\bserf'?s?\s+fallacy\b", r"\breposition(?:ing)?\s+the\s+lever\b",
         ],
     },
     "MP-10": {

@@ -6,7 +6,12 @@ and utilities for evaluating query redaction viability.
 """
 import re
 
-__all__ = ['needs_web', 'should_abort_web_redaction', 'is_underspecified_optimization']
+__all__ = [
+    "needs_web",
+    "should_abort_web_redaction",
+    "is_underspecified_optimization",
+    "is_in_game_optimization_trap",
+]
 
 INTERNAL_MARKERS = {
     'protocol', 'law #', 'law#', 'p5', 'p4', 'p3', 'p2', 'p1', 'p0',
@@ -139,4 +144,40 @@ def is_underspecified_optimization(query: str) -> bool:
     unprompted, per DEC-180.
     """
     return bool(_UNDERSPEC_OPT_PATTERN.search(query)) and not bool(_PARAM_GUARD.search(query))
+
+
+# --- Arena / Game-Selection Trap Detection (DEC-131 / DEC-501 / STR-42) ---
+# Detects L0/L1 in-game business/cost/wage optimization asks so context_gate can
+# mandate an L2 Arena & Red/Blue Curve audit before optimizing tactics inside a rigged game.
+
+_IN_GAME_OPT_TRAP_PATTERN = re.compile(
+    r"(?:"
+    r"(?:optimi[sz]e|minimi[sz]e|reduce|cut|lower|squeeze|improve|boost|increase)\s+"
+    r"(?:my\s+|our\s+|the\s+)?(?:food\s+costs?|worker\s+wages?|staff\s+wages?|wages?|"
+    r"labour\s+costs?|labor\s+costs?|rental\s+costs?|rent|cogs|overheads?|"
+    r"operating\s+costs?|opex|margins?|profit\s+margins?|table\s+turns?|footfall)"
+    r"|(?:how\s+(?:do\s+i|to|can\s+i|should\s+i))\s+"
+    r"(?:survive|compete|scale|expand|open\s+a\s+second|make\s+money)\s+"
+    r"(?:in|with|running|operating)\s+(?:a\s+|an\s+|my\s+|our\s+)?"
+    r"(?:f&b|fnB|hawker|kopitiam|coffee\s?shop|stall|cafe|restaurant|retail\s+shop|"
+    r"tuition\s+agency|agency|vending|franchise)"
+    r"|\b(?:right\s+game|wrong\s+game|red\s+curve|blue\s+curve|table\s+selection\s+vs|"
+    r"optimis(?:e|ing)\s+within\s+the\s+game|optimize\s+within\s+the\s+game)\b"
+    r")",
+    re.IGNORECASE,
+)
+
+_CODE_OPT_EXCLUSION_GUARD = re.compile(
+    r"\b(?:sql|database|postgres|sqlite|duckdb|python|javascript|typescript|react|"
+    r"css|html|regex|algorithm|compiler|latency|cpu|ram|memory\s+footprint|docker|"
+    r"ci/cd|pytest|unit\s+test|webpack|vite|ast|vector\s+search|onnx)\b",
+    re.IGNORECASE,
+)
+
+
+def is_in_game_optimization_trap(query: str) -> bool:
+    """Detect L0/L1 in-game business optimization or explicit arena-selection asks."""
+    return bool(_IN_GAME_OPT_TRAP_PATTERN.search(query)) and not bool(
+        _CODE_OPT_EXCLUSION_GUARD.search(query)
+    )
 

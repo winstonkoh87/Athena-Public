@@ -326,9 +326,33 @@ def _format_digest(status: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _format_compact(status: dict[str, Any]) -> str:
+    """Render single-line status header plus only active alerts for domain Turn-1 boots."""
+    mr = status.get("maintenance_ratio", {})
+    fl = status.get("frame_ledger", {})
+    dd = status.get("decisions_due", {})
+    ih = status.get("index_health", {})
+
+    maint_pct = f"{mr.get('maintenance_share', 0.0):.0%}" if "maintenance_share" in mr else "n/a"
+    idx_state = "ok" if ih.get("healthy", True) else "degraded"
+    overdue_f = fl.get("overdue_frames", 0)
+    due_d = dd.get("due_count", 0)
+    lines = [
+        f"⚡ Boot Status ({status.get('elapsed_ms', 0)} ms) | Index: {idx_state} | Maint: {maint_pct} | Overdue frames: {overdue_f} | Due decisions: {due_d}"
+    ]
+    if mr.get("advisory"):
+        lines.append(f"   ⚠️ Maintenance advisory: {mr.get('summary', '')}")
+    if due_d > 0:
+        lines.append(f"   ⚠️ Decisions due: {dd.get('summary', '')}")
+    if not ih.get("healthy", True):
+        lines.append(f"   ⚠️ Index health: {ih.get('summary', '')}")
+    return "\n".join(lines)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Athena fast parallel /start status aggregator")
     parser.add_argument("--json", action="store_true", help="Emit structured JSON payload")
+    parser.add_argument("--compact", action="store_true", help="Emit 1-line summary plus active alerts only")
     parser.add_argument("--days", type=int, default=30, help="Commit lookback window for maintenance_ratio")
     parser.add_argument("--force-summaries", action="store_true", help="Force memory bank summary regeneration")
     args = parser.parse_args(argv)
@@ -336,6 +360,8 @@ def main(argv: list[str] | None = None) -> int:
     status = gather_boot_status(days=args.days, force_summaries=args.force_summaries)
     if args.json:
         print(json.dumps(status, indent=2, default=str))
+    elif args.compact:
+        print(_format_compact(status))
     else:
         print(_format_digest(status))
     return 0
