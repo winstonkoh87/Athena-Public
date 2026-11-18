@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: "Project Athena"
+message: "If you use Project Athena in your research or engineering workflows, please cite it using the metadata below."
+type: software
+authors:
+  - family-names: Koh
+    given-names: Winston
+version: 10.0.6
+date-released: "2026-11-17"
+license: MIT
+repository-code: "https://github.com/winstonkoh87/Athena-Public"
+url: "https://winstonkoh87.com"
+abstract: "Local-first memory, decision engine, and governance harness for AI agents — portable across IDEs."
+keywords:
+  - ai-agents
+  - cognitive-architecture
+  - hybrid-rag
+  - mcp-server
+  - decision-engine

@@ -47,6 +47,22 @@ class TestMetaPatternMatcher(unittest.TestCase):
         matched_ids = [m["id"] for m in matches]
         self.assertIn("MP-19", matched_ids)
 
+    def test_compounding_and_leverage_inversion(self):
+        compounding_matches = detect_latent_meta_patterns(
+            "This sweat equity model is trading time for money in a linear carnot trap."
+        )
+        self.assertIn("MP-6", [m["id"] for m in compounding_matches])
+
+        curve_matches = detect_latent_meta_patterns(
+            "Stop committing the boxer fallacy on the red curve vs blue curve table selection."
+        )
+        self.assertIn("MP-9", [m["id"] for m in curve_matches])
+
+        kopitiam_matches = detect_latent_meta_patterns(
+            "My kopitiam hawker stall tenancy is bleeding cash at renewal."
+        )
+        self.assertIn("MP-1", [m["id"] for m in kopitiam_matches])
+
     def test_execution_latency(self):
         start = time.perf_counter()
         for _ in range(100):

@@ -14,7 +14,7 @@ import time
 import unittest
 
 from athena.core.governance import RiskLevel
-from athena.core.lambda_scorer import compute_lambda
+from athena.core.lambda_scorer import assess_intel_posture, compute_lambda
 
 
 class TestLambdaScorer(unittest.TestCase):
@@ -76,6 +76,27 @@ class TestLambdaScorer(unittest.TestCase):
             self.assertIn("995", referral)
             self.assertIn("Athena is an AI assistant, not a clinician", referral)
 
+    def test_crisis_inflections_and_indirect_signs(self):
+        missed = [
+            "thinking about unaliving myself tonight",
+            "giving away my stuff and writing letters to people",
+            "won't be around much longer",
+        ]
+        for q in missed:
+            res = compute_lambda(q)
+            self.assertTrue(res.get("is_crisis"), f"Expected is_crisis=True for '{q}'")
+
+    def test_crisis_decoys_not_flagged(self):
+        decoys = [
+            "this joke is killing me, i'm dead lol",
+            "my trading account got killed today",
+            "neutral control statement about finance",
+        ]
+        for q in decoys:
+            res = compute_lambda(q)
+            self.assertFalse(res.get("is_crisis"), f"Expected is_crisis=False for decoy '{q}'")
+
+
     def test_audit_classifier_misses(self):
         # 1. Past-tense job exit
         res1 = compute_lambda("handed in my notice")
@@ -107,6 +128,36 @@ class TestLambdaScorer(unittest.TestCase):
             compute_lambda(query, web_required=True)
         elapsed_ms = (time.perf_counter() - start) * 1000 / 200
         self.assertLess(elapsed_ms, 5.0)
+
+    def test_micro_currency_amount_threshold_calibration(self):
+        q1 = "Athena, buy the $1.15 one am I correct?"
+        res1 = compute_lambda(q1)
+        feat1 = {f["name"]: f["weight"] for f in res1["features"]}
+        self.assertEqual(res1["score"], 14)
+        self.assertEqual(feat1.get("micro_currency_amount"), 4)
+        self.assertNotIn("currency_amount", feat1)
+        posture1 = assess_intel_posture(q1, lambda_res=res1)
+        self.assertEqual(posture1["posture"], "RECON_AND_FRAME")
+        self.assertNotIn("high_stakes", posture1["reasons"])
+
+        q2 = "Place Order Est. S$2.29 (¥11.72)"
+        res2 = compute_lambda(q2)
+        feat2 = {f["name"]: f["weight"] for f in res2["features"]}
+        self.assertEqual(res2["score"], 14)
+        self.assertEqual(feat2.get("micro_currency_amount"), 4)
+        self.assertNotIn("currency_amount", feat2)
+
+        q3 = "Should I pay S$50 for this tool?"
+        res3 = compute_lambda(q3)
+        feat3 = {f["name"]: f["weight"] for f in res3["features"]}
+        self.assertEqual(feat3.get("currency_amount"), 20)
+        self.assertGreaterEqual(res3["score"], 30)
+
+        q4 = "Contract for S$1,500"
+        res4 = compute_lambda(q4)
+        feat4 = {f["name"]: f["weight"] for f in res4["features"]}
+        self.assertEqual(feat4.get("currency_amount"), 20)
+        self.assertGreaterEqual(res4["score"], 30)
 
 
 if __name__ == "__main__":

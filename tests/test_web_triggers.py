@@ -1,6 +1,11 @@
 import unittest
+from unittest.mock import patch
 
-from athena.tools.web_triggers import is_underspecified_optimization, needs_web
+from athena.tools.web_triggers import (
+    is_in_game_optimization_trap,
+    is_underspecified_optimization,
+    needs_web,
+)
 
 
 class TestWebTriggers(unittest.TestCase):
@@ -137,6 +142,57 @@ class TestUnderspecifiedOptimization(unittest.TestCase):
         self.assertFalse(is_underspecified_optimization(
             "What's the ROI if I bet $500 on each dozen for 100 rounds?"
         ))
+
+
+class TestInGameOptimizationTrap(unittest.TestCase):
+    """Tests for L0/L1 in-game business optimization & arena-selection detector."""
+
+    def test_in_game_cost_and_wage_optimization_fires(self):
+        self.assertTrue(is_in_game_optimization_trap(
+            "How do I optimize food costs and reduce worker wages for my kopitiam stall?"
+        ))
+        self.assertTrue(is_in_game_optimization_trap(
+            "How can I survive running a hawker stall with rising rent?"
+        ))
+        self.assertTrue(is_in_game_optimization_trap(
+            "Should we apply the red curve blue curve protocol to find the right game?"
+        ))
+
+    def test_code_optimization_and_routine_lookup_do_not_fire(self):
+        self.assertFalse(is_in_game_optimization_trap(
+            "How do I optimize SQL query latency and reduce memory footprint in Python?"
+        ))
+        self.assertFalse(is_in_game_optimization_trap("What is Protocol 131?"))
+
+    def test_mcp_context_gate_and_classify_turn_emit_arena_reframe(self):
+        from athena.mcp_server import classify_turn, context_gate
+
+        q = "How do I optimize food costs and reduce worker wages for my kopitiam stall?"
+        ct = classify_turn(q)
+        self.assertTrue(ct["in_game_opt_trap"])
+
+        fake_search = {
+            "results": [{"id": "doc1", "content": "test", "rrf_score": 0.05}],
+            "user_state": {"rate_floor": "S$150/hr"},
+        }
+        with (
+            patch("athena.tools.meta_pattern_matcher.detect_latent_meta_patterns", return_value=[]),
+            patch("athena.tools.search.run_search", return_value=fake_search),
+        ):
+            cg = context_gate(q, limit=3, web=False)
+        self.assertTrue(cg["in_game_opt_trap"])
+        self.assertIn("ARENA REFRAME DIRECTIVE", cg["directive"])
+
+        # Non-trap strategic query with meta_frame_required=True emits META-FRAME POSTURE
+        q2 = "Compare private equity vs dividend stocks for long-term wealth strategy."
+        with (
+            patch("athena.tools.meta_pattern_matcher.detect_latent_meta_patterns", return_value=[]),
+            patch("athena.tools.search.run_search", return_value=fake_search),
+        ):
+            cg2 = context_gate(q2, limit=3, web=False)
+        self.assertFalse(cg2["in_game_opt_trap"])
+        self.assertTrue(cg2["intel_posture"]["meta_frame_required"])
+        self.assertIn("META-FRAME POSTURE", cg2["directive"])
 
 
 if __name__ == '__main__':
