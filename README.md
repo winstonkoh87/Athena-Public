@@ -33,7 +33,7 @@ Athena solves this by separating **intelligence** (the rented model) from **stat
 |:---|:---|:---|
 | **Memory & Context** | Amnesiac: starts from zero; 10-minute prompt prep tax | Continuous: `/start` restores active tasks & invariants in ~3.6K tokens and <1s via batched `boot_status.py` |
 | **Response Depth** | Generic median: broad consensus advice & textbook platitudes | Hyper-nuanced: conditioned on your real stack, balance sheet, & past post-mortems |
-| **Alignment & Rigor** | Sycophantic: agrees with whatever you say, validating bad ideas | Governed: Law #1 blocks ruin; consigliere flags repeated blind spots |
+| **Alignment & Rigor** | Sycophantic: agrees with whatever you say, validating bad ideas | Governed: irreversible-ruin blocker (Law #1); consigliere flags repeated blind spots |
 | **Data Sovereignty** | Vendor lock-in: cloud database fees, wiped on API deprecation | 100% Sovereign: local Git-tracked Markdown & SQLite on your machine |
 | **Model Agility** | Trapped in one chat platform | Portable: switch between Claude Code, Antigravity, Gemini, or Ollama instantly |
 
@@ -89,12 +89,12 @@ Then type `/start` in your IDE's AI chat panel. Work normally. Type `/end` to sa
 | Mode | Lifecycle | Token Budget | Retrieval & Compute Strategy |
 |:-----|:----------|:-------------|:-----------------------------|
 | **Sniper** (`SNIPER`, `Lambda < 10`) | Direct chat -> `/end` | ~500 tokens | `vector_mode="local"` (<50 ms local FTS5/lex/canonical, zero cloud RTT) |
-| **MinMax v2.0 (Default)** (`STANDARD`, `Lambda 10–30`) | `/start` -> work -> `/end` | ~3.6K boot tokens (`14.5 KB`, `-78.1%`) | `<1.0s` concurrent `scripts/boot_status.py`; speculative `"auto"` local+ONNX fast-path (`Lambda 10–14`) escalating to `"always"` hybrid vector+rerank (`Lambda >= 15`) |
-| **MaxMax v4.0 (Curated Compute)** (`ULTRA`, `Lambda > 30`) | `/ultrastart` -> `/ultrathink` -> `/ultraend` | `<= 40K` boot ceiling (`< 20%` of 200K ECL) | Surgical canonical/project slice loading (~145K+ tokens reserved for multi-track synthesis), 3-query parallel adversarial Exocortex pre-warming, and 3-mode `/ultrathink` orchestration (Native Swarm / API / HITL) |
+| **MinMax v2.0 (Default)** (`STANDARD`, `Lambda 10–30`) | `/start` -> work -> `/end` | ~3.6K boot tokens (`14.5 KB`, `-78.1%` vs. uncompacted boot) | `<1.0s` concurrent `scripts/boot_status.py`; speculative `"auto"` local+ONNX fast-path (`Lambda 10–14`) escalating to `"always"` hybrid vector+rerank (`Lambda >= 15`) |
+| **MaxMax v4.0 (Curated Compute)** (`ULTRA`, `Lambda > 30`) | `/ultrastart` -> `/ultrathink` -> `/ultraend` | `<= 40K` boot ceiling (`< 20%` of 200K context window) | Surgical canonical/project slice loading (~145K+ tokens reserved for multi-track synthesis), 3-query parallel adversarial knowledge-base (Exocortex) pre-warming, and 3-mode `/ultrathink` orchestration (Native Swarm / API / HITL) |
 
 ## Repository Structure
 
-Following Protocol 543 clean-lobby repository layout:
+Standardized modular repository layout (Protocol 543):
 
 ```text
 Athena-Public/
@@ -135,7 +135,7 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 | **Adversarial Wargaming Engine** | `intelligence/wargame.py` (`athena-wargame`) | Two-turn sequential Blue vs. Red game trees with intra-turn path-dependent trough ruin, Red best-response optimization, and tamper-evident run receipts (`.athena/wargame_runs.jsonl`) |
 | **Counterparty OSINT & Trade Governance** | `intelligence/ucds_validator.py`, `tools/trade_guardian.py` | Deterministic Universal Counterparty Dossier Standard (`audit_ucds_dossier`) validator (Track A/B bifurcation, knockout gates, cashflow inversion) plus position/drawdown/sizing safety guards |
 | **Local Analytical SQL** | `duckdb_mcp_server.py` (`query`, `profile`, `list_tables`, `export_result`) | Zero-dependency DuckDB engine for profiling and querying large CSV, JSON, and Parquet datasets without exhausting LLM context windows |
-| **Runtime Governance & Batched Telemetry** | `core/governance.py`, `scripts/boot_status.py`, `.agent/scripts/hook_*.py`, `.agent/scripts/lib/jsonl_tail.py` | Concurrent `<1.0s` boot status, `O(1)` 64KB EOF tail verification gates, capability permissions, Protocol 509 crisis safety screen, 14/16 destructive command blocker, and secret egress scanner |
+| **Runtime Governance & Batched Telemetry** | `core/governance.py`, `scripts/boot_status.py`, `.agent/scripts/hook_*.py`, `.agent/scripts/lib/jsonl_tail.py` | Concurrent `<1.0s` boot status, `O(1)` 64KB EOF tail verification gates, capability permissions, crisis life-safety screen (Protocol 509), 14/16 destructive command blocker, and secret egress scanner |
 
 ### What's enforced in code vs. by prompt
 
@@ -148,7 +148,7 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 | **Quantitative decision screening & wargaming** — EEV, 1/3 Kelly, Ruin, MCDA, 2-turn game trees | ✅ Shipped (`code-available`) | [`gto_engine.py`](src/athena/intelligence/gto_engine.py) & [`wargame.py`](src/athena/intelligence/wargame.py) emit SHA-256 receipts (`107` tests); Stop hook blocks unreceipted numeric engine claims |
 | **Pre-registered problem framing** — VOI stop-rule, `R1–R13` commitment & falsifier gates | ✅ Shipped (`code-available`) | [`frame_ledger.py`](src/athena/intelligence/frame_ledger.py) validates falsifiers, loop budgets, and Brier calibration (`57` tests) |
 | **Governed autonomy** — hooks block destructive commands, ungrounded claims, and secrets | ✅ Shipped (partial) | Ruin check blocks 14/16 destructive commands; 2 shell bypasses are [known and tracked](docs/TECH_DEBT.md) |
-| **Compounding personalization** — session 2,000 recalls session 5 | 🟡 N=1 evidence | 2,100+ sessions, 410 active protocols, and 631 case studies by the author; no multi-user study |
+| **Compounding personalization** — session 2,000 recalls session 5 | 🟡 N=1 evidence | 2,100+ sessions, 410 active protocols, and 632 case studies by the author; no multi-user study |
 | **Anti-sycophancy** — personalization doesn't silently increase agreement | 🟡 Partial mitigation | Code-enforced meta-awareness gate (Claude Code hook); agent-discretion in hookless IDEs — see [honest limits](docs/ENGINEERING_DEPTH.md) |
 
 > **Why publish this table?** Because the failure mode of this product category is self-mythologizing — describing aspirations in the present tense. Athena's own convention ([Epistemic Status](examples/workflows/references/_shared_extended.md#1-epistemic-status-convention-s534--anti-self-mythologizing)) requires labeling every mechanism as `code-enforced`, `code-available`, `agent-discretion`, or `aspirational`. This table is that convention applied to the README.
@@ -181,7 +181,7 @@ python examples/scripts/evaluator.py --k 5 --rerank
 | Metric | Value | Verification Command |
 |:-------|:------|:---------------------|
 | **MinMax v2.0 Boot & Warm Gate Latency** | **< 1.0s boot status / < 10 ms warm `context_gate` hit** | `pytest tests/test_minmax_remediation.py -v` |
-| **Local TTFT Scaling (2K Boot)** | **~35x–50x speedup vs 32K** | `python scripts/benchmark_kv_cache.py` |
+| **Local TTFT Scaling (2K–3.6K Boot)** | **~35x–50x speedup vs 32K** | `python scripts/benchmark_kv_cache.py` |
 | **Retrieval Hit@5 (Strict)** | **0.569** (37 / 65) | `python examples/scripts/evaluator.py` |
 | **Retrieval MRR@5 (Strict)** | **0.472** | `python examples/scripts/evaluator.py` |
 | *Retrieval Hit@5 (Lenient)* | *0.892 (deprecated)* | *Partial substring match (inflated)* |
