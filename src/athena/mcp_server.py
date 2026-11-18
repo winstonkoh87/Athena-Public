@@ -41,6 +41,7 @@ import logging
 import re
 import time
 from datetime import datetime, timezone
+from typing import TypedDict
 
 from fastmcp import FastMCP
 
@@ -1136,7 +1137,14 @@ def decision_screen(
 
 
 _SESSION_GATE_TTL_S = 600.0
-_SESSION_GATE_STATE: dict[str, object] = {
+class _SessionGateState(TypedDict):
+    last_ts: float
+    last_user_state_fp: str
+    seen_chunk_ids: set[str]
+    turn_index: int
+
+
+_SESSION_GATE_STATE: _SessionGateState = {
     "last_ts": 0.0,
     "last_user_state_fp": "",
     "seen_chunk_ids": set(),
@@ -1619,7 +1627,7 @@ def context_gate(
         and user_state_fp
         and user_state_fp == _SESSION_GATE_STATE["last_user_state_fp"]
     )
-    seen_chunks: set[str] = _SESSION_GATE_STATE["seen_chunk_ids"]  # type: ignore[assignment]
+    seen_chunks: set[str] = _SESSION_GATE_STATE["seen_chunk_ids"]
     deduplicated_chunk_ids: list[str] = []
     current_chunk_ids: list[str] = []
     if isinstance(results_list, list):
