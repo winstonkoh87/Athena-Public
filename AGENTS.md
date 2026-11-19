@@ -45,5 +45,5 @@
 
 ---
 
-- **System Version**: Consult `pyproject.toml` and `.agent/config/CAPS.json`
+- **System**: v10.0.6
 - **Public Verification**: Run `pytest tests/`, `ruff check src/ scripts/ tests/`, `mypy src/athena/`, and `python3 .github/scripts/privacy_scan.py --all`
