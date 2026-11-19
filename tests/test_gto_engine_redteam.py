@@ -1319,6 +1319,120 @@ class TestPhase4_CalibrationAndHonesty:
         assert "Protocol 330 was merged and superseded by Protocol 330" if False else "Protocol 330 was merged and superseded by Protocol 526" in dec_330
 
 
+class TestWave3_FailClosedMCDAAndProvenance:
+    """Fail-closed real=True MCDA vetting + preference provenance & baseline option checks."""
+
+    def _base_payload(self, with_baseline: bool = False) -> dict:
+        cands = ["OptA", "OptB", "status_quo"] if with_baseline else ["OptA", "OptB"]
+        scores = {
+            "OptA": {"upside": 8.0, "safety": 7.0},
+            "OptB": {"upside": 6.0, "safety": 8.0},
+        }
+        if with_baseline:
+            scores["status_quo"] = {"upside": 5.0, "safety": 9.0}
+        return {
+            "candidates": cands,
+            "criteria": ["upside", "safety"],
+            "weights": {"upside": 0.6, "safety": 0.4},
+            "scores": scores,
+        }
+
+    def test_real_mcda_without_veto_screen_fails_closed(self, tmp_path, monkeypatch):
+        from athena.intelligence.gto_engine import (
+            VetoFloorRequired,
+            execute_decision_action,
+        )
+
+        monkeypatch.setenv("ATHENA_RECEIPTS_PATH", str(tmp_path / "r.jsonl"))
+        monkeypatch.setenv("ATHENA_CAL_LEDGER_PATH", str(tmp_path / "cal.md"))
+
+        with pytest.raises(VetoFloorRequired):
+            execute_decision_action(
+                "mcda",
+                self._base_payload(),
+                real=True,
+                review_date="2026-12-31",
+                prediction="OptA outperforms OptB",
+            )
+
+    def test_real_mcda_requires_review_date_and_prediction(self, tmp_path, monkeypatch):
+        from athena.intelligence.gto_engine import execute_decision_action
+
+        monkeypatch.setenv("ATHENA_RECEIPTS_PATH", str(tmp_path / "r.jsonl"))
+        monkeypatch.setenv("ATHENA_CAL_LEDGER_PATH", str(tmp_path / "cal.md"))
+        payload = self._base_payload()
+        payload["veto_floors"] = {"safety": 6.0}
+
+        with pytest.raises(ValueError, match="review_date.*prediction"):
+            execute_decision_action("mcda", payload, real=True)
+
+    def test_real_mcda_with_veto_and_calibration_succeeds(self, tmp_path, monkeypatch):
+        from athena.intelligence.gto_engine import execute_decision_action
+
+        receipts_file = tmp_path / "r.jsonl"
+        monkeypatch.setenv("ATHENA_RECEIPTS_PATH", str(receipts_file))
+        monkeypatch.setenv("ATHENA_CAL_LEDGER_PATH", str(tmp_path / "cal.md"))
+        payload = self._base_payload(with_baseline=True)
+        payload["veto_floors"] = {"safety": 6.0}
+        payload["preference_provenance"] = "revealed"
+
+        res, receipt = execute_decision_action(
+            "mcda",
+            payload,
+            real=True,
+            review_date="2026-12-31",
+            prediction="OptA remains top choice",
+        )
+        assert res.veto_screen_applied is True
+        assert res.preference_provenance == "revealed"
+        assert res.has_baseline_option is True
+        assert receipt is not None and receipt["receipt_id"].startswith("GTO-")
+
+    def test_real_mcda_with_explicit_ruin_exempt_succeeds(self, tmp_path, monkeypatch):
+        from athena.intelligence.gto_engine import execute_decision_action
+
+        monkeypatch.setenv("ATHENA_RECEIPTS_PATH", str(tmp_path / "r.jsonl"))
+        monkeypatch.setenv("ATHENA_CAL_LEDGER_PATH", str(tmp_path / "cal.md"))
+        payload = self._base_payload()
+        payload["ruin_exempt"] = {
+            "OptA": "Reversible trial capped at 100 dollars",
+            "OptB": "Reversible trial capped at 100 dollars",
+        }
+        res, receipt = execute_decision_action(
+            "mcda",
+            payload,
+            real=True,
+            review_date="2026-12-31",
+            prediction="OptA stays feasible",
+        )
+        assert res.ruin_exemptions == payload["ruin_exempt"]
+        assert receipt is not None
+
+    def test_mcda_preference_provenance_and_baseline_disclosure(self):
+        from athena.intelligence.gto_engine import compute_mcda
+
+        with pytest.raises(ValueError, match="preference_provenance"):
+            compute_mcda(
+                ["OptA", "OptB"],
+                ["upside"],
+                {"upside": 1.0},
+                {"OptA": {"upside": 8.0}, "OptB": {"upside": 6.0}},
+                preference_provenance="guessed",
+            )
+
+        res_no_base = compute_mcda(
+            ["OptA", "OptB"],
+            ["upside"],
+            {"upside": 1.0},
+            {"OptA": {"upside": 8.0}, "OptB": {"upside": 6.0}},
+        )
+        assert res_no_base.preference_provenance == "stated"
+        assert res_no_base.has_baseline_option is False
+        table = res_no_base.to_ascii_table()
+        assert "Preference Provenance" in table
+        assert "ABSENT" in table
+
+
 
 
 

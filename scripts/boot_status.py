@@ -133,6 +133,18 @@ def _run_frame_ledger() -> dict[str, Any]:
         return {"error": str(exc), "kill_switch_status": f"frame_ledger unavailable ({exc})"}
 
 
+def _run_calibration() -> dict[str, Any]:
+    """Compute Brier calibration & overdue predictions without raising."""
+    try:
+        from athena.intelligence.calibration import get_calibration_status
+
+        ledger_path = PROJECT_ROOT / ".context" / "calibration" / "CALIBRATION_LEDGER.md"
+        log_dir = PROJECT_ROOT / ".context" / "memories" / "session_logs"
+        return get_calibration_status(ledger_path=ledger_path, session_log_dir=log_dir)
+    except Exception as exc:
+        return {"status": "error", "error": str(exc), "brier": None, "overdue_ids": []}
+
+
 def _run_decisions_due() -> dict[str, Any]:
     """Scan calibration ledger and decision log for overdue reviews and emit receipt."""
     try:
@@ -257,6 +269,13 @@ def gather_boot_status(days: int = 30, force_summaries: bool = False) -> dict[st
     """Run all boot telemetry checks concurrently within the fast-boot SLO budget."""
     t0 = time.perf_counter()
 
+    # Pre-load shared SDK package before worker threads start to avoid Python import-lock contention
+    try:
+        import athena.intelligence.calibration  # noqa: F401
+        import athena.intelligence.frame_ledger  # noqa: F401
+    except Exception:
+        pass
+
     # Launch daemon thread for index_health (may make 1 HTTP probe) so slow DNS/TLS never blocks exit.
     health_box: dict[str, Any] = {}
     health_done = threading.Event()
@@ -269,13 +288,14 @@ def gather_boot_status(days: int = 30, force_summaries: bool = False) -> dict[st
     health_thread.start()
 
     futures: dict[str, Future[Any]] = {}
-    executor = ThreadPoolExecutor(max_workers=5, thread_name_prefix="boot-local")
+    executor = ThreadPoolExecutor(max_workers=6, thread_name_prefix="boot-local")
     try:
         futures["accountability"] = executor.submit(_run_accountability)
         futures["maintenance_ratio"] = executor.submit(_run_maintenance_ratio, days)
         futures["frame_ledger"] = executor.submit(_run_frame_ledger)
         futures["decisions_due"] = executor.submit(_run_decisions_due)
         futures["context_summaries"] = executor.submit(_run_context_summaries, force_summaries)
+        futures["calibration"] = executor.submit(_run_calibration)
 
         payload: dict[str, Any] = {
             name: fut.result(timeout=2.0)
@@ -309,7 +329,20 @@ def _format_digest(status: dict[str, Any]) -> str:
     mr = status.get("maintenance_ratio", {})
     fl = status.get("frame_ledger", {})
     dd = status.get("decisions_due", {})
+    cal = status.get("calibration", {})
     ih = status.get("index_health", {})
+
+    overdue_f_ids = fl.get("overdue_frame_ids") or []
+    overdue_f_suffix = f" [{', '.join(overdue_f_ids[:5])}]" if overdue_f_ids else ""
+    cal_brier = cal.get("brier")
+    cal_resolved = cal.get("resolved", 0)
+    cal_overdue = cal.get("overdue_ids") or []
+    if cal_brier is not None:
+        cal_line = f"Brier={cal_brier:.4f} (n={cal_resolved}, overdue={len(cal_overdue)})"
+        if cal_overdue:
+            cal_line += f" [{', '.join(cal_overdue[:5])}]"
+    else:
+        cal_line = f"{cal.get('status', 'unconfigured')} (n={cal_resolved})"
 
     lines = [
         f"⚡ Boot Status ({status.get('elapsed_ms', 0)} ms)",
@@ -317,9 +350,10 @@ def _format_digest(status: dict[str, Any]) -> str:
         f"   Maintenance    : {mr.get('summary', 'unknown')}",
         (
             f"   Frame Ledger   : opened={fl.get('frames_opened', 0)} "
-            f"(resolved={fl.get('frames_resolved', 0)}, overdue={fl.get('overdue_frames', 0)}) | "
+            f"(resolved={fl.get('frames_resolved', 0)}, overdue={fl.get('overdue_frames', 0)}{overdue_f_suffix}) | "
             f"{fl.get('kill_switch_status', 'n/a')}"
         ),
+        f"   Calibration    : {cal_line}",
         f"   Decisions Due  : {dd.get('summary', 'unknown')}",
         f"   Index Health   : {ih.get('summary', 'unknown')}",
     ]
@@ -331,19 +365,33 @@ def _format_compact(status: dict[str, Any]) -> str:
     mr = status.get("maintenance_ratio", {})
     fl = status.get("frame_ledger", {})
     dd = status.get("decisions_due", {})
+    cal = status.get("calibration", {})
     ih = status.get("index_health", {})
 
     maint_pct = f"{mr.get('maintenance_share', 0.0):.0%}" if "maintenance_share" in mr else "n/a"
     idx_state = "ok" if ih.get("healthy", True) else "degraded"
     overdue_f = fl.get("overdue_frames", 0)
-    due_d = dd.get("due_count", 0)
+    overdue_f_ids = fl.get("overdue_frame_ids") or []
+    due_d = dd.get("total_due", dd.get("due_count", 0))
+    cal_brier = cal.get("brier")
+    cal_overdue = cal.get("overdue_ids") or []
+    cal_tag = f" | Brier: {cal_brier:.3f}" if cal_brier is not None else ""
     lines = [
-        f"⚡ Boot Status ({status.get('elapsed_ms', 0)} ms) | Index: {idx_state} | Maint: {maint_pct} | Overdue frames: {overdue_f} | Due decisions: {due_d}"
+        f"⚡ Boot Status ({status.get('elapsed_ms', 0)} ms) | Index: {idx_state} | Maint: {maint_pct} | Overdue frames: {overdue_f} | Due decisions: {due_d}{cal_tag}"
     ]
     if mr.get("advisory"):
         lines.append(f"   ⚠️ Maintenance advisory: {mr.get('summary', '')}")
+    if overdue_f > 0 and overdue_f_ids:
+        lines.append(f"   ⚠️ Overdue frames: {', '.join(overdue_f_ids[:5])}")
     if due_d > 0:
         lines.append(f"   ⚠️ Decisions due: {dd.get('summary', '')}")
+    if cal_brier is not None and cal_brier > 0.25:
+        lines.append(
+            f"   ⚠️ Calibration alert: Brier {cal_brier:.4f} > 0.25 (n={cal.get('resolved', 0)})"
+            + (f" | Overdue CAL: {', '.join(cal_overdue[:5])}" if cal_overdue else "")
+        )
+    elif cal_overdue:
+        lines.append(f"   ⚠️ Overdue CAL predictions: {', '.join(cal_overdue[:5])}")
     if not ih.get("healthy", True):
         lines.append(f"   ⚠️ Index health: {ih.get('summary', '')}")
     return "\n".join(lines)

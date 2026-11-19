@@ -50,21 +50,14 @@ def build_user_state_snapshot() -> dict[str, Any]:
         return copy.deepcopy(cached)
 
     snapshot: dict[str, Any] = {
-        "rate_floor": "S$150/hr",
-        "financial_constraints": "Cash buffer & active float discipline, 0 unhedged risk",
+        "rate_floor": "Unconfigured",
+        "financial_constraints": "Unconfigured",
         "net_financial_position": "Unconfigured",
-        "monthly_burn_tiers": "Tiers: $500 / $1,000 / $1,500",
-        "active_engines": [
-            "Engine 1 (Internal Capital)",
-            "Engine 2 (External Cashflow)",
-        ],
-        "key_man_risk": "CRITICAL — Single operator dependency",
+        "monthly_burn_tiers": "Unconfigured",
+        "active_engines": [],
+        "key_man_risk": "Unconfigured",
         "strategic_priorities": [],
-        "behavioral_anchors": [
-            "Pryce Test / Meta-Awareness (PAT-574)",
-            "Law of Ruin & Half-Kelly sizing (Law #1)",
-            "Anti-Procrastination by tool building (TD-045 / DIAG-001)",
-        ],
+        "behavioral_anchors": [],
     }
 
     # Extract metrics from CANONICAL if available — structured table parser
@@ -114,17 +107,24 @@ def build_user_state_snapshot() -> dict[str, Any]:
                 if line_str.startswith("|") and (
                     "runway" in line_str.lower() or "cash buffer" in line_str.lower()
                 ):
-                    # Extract value cell from table row
                     cells = [c.strip() for c in line_str.split("|") if c.strip()]
                     if len(cells) >= 2:
                         snapshot["financial_constraints"] = cells[1].strip("* ")
                         snapshot["_provenance_financial"] = "CANONICAL.md::table row"
                         break
+            for line in content.splitlines():
+                line_str = line.strip()
+                if line_str.startswith("|") and (
+                    "key-man" in line_str.lower() or "key man" in line_str.lower()
+                ):
+                    cells = [c.strip() for c in line_str.split("|") if c.strip()]
+                    if len(cells) >= 2:
+                        snapshot["key_man_risk"] = cells[1].strip("* ")
+                        break
         except Exception:
             pass
 
-
-    # Extract active engines from userContext if available (keeps public defaults generic)
+    # Extract active engines & behavioral anchors from userContext if available (keeps public defaults generic)
     if user_ctx_path.exists():
         try:
             uctx_text = user_ctx_path.read_text(encoding="utf-8")
@@ -137,21 +137,37 @@ def build_user_state_snapshot() -> dict[str, Any]:
                 snapshot["active_engines"] = [
                     f"{name.strip()} — {role.strip()}" for role, name in engines
                 ]
+
+            hardlines_block = re.search(
+                r"###\s*(?:Constraint Hardlines|Behavioral Anchors)[^\n]*\n(.*?)(?=\n###|\n##|\n---|\Z)",
+                uctx_text,
+                flags=re.DOTALL | re.IGNORECASE,
+            )
+            if hardlines_block:
+                anchors: list[str] = []
+                for raw_line in hardlines_block.group(1).splitlines():
+                    cleaned = raw_line.strip()
+                    if cleaned.startswith(("*", "-")):
+                        item = re.sub(r"^[*-]\s*", "", cleaned).replace("**", "").strip()
+                        if item:
+                            anchors.append(item)
+                if anchors:
+                    snapshot["behavioral_anchors"] = anchors[:4]
         except Exception:
             pass
 
-    # Extract active tasks from activeContext if available
+    # Extract active tasks from activeContext if available (use latest checkpoint block)
     if active_ctx_path.exists():
         try:
             ctx_text = active_ctx_path.read_text(encoding="utf-8")
-            pending_match = re.search(r"@pending:\s*([^!\]\n]+)", ctx_text)
-            if pending_match:
-                snapshot["active_pending"] = pending_match.group(1).strip()
-            focus_match = re.search(r"@focus:\s*([^!\]\n]+)", ctx_text)
-            if focus_match:
-                focus_value = focus_match.group(1).strip()
+            pending_matches = re.findall(r"@pending:\s*([^!\]\n]+)", ctx_text)
+            if pending_matches:
+                snapshot["active_pending"] = pending_matches[-1].strip()
+            focus_matches = re.findall(r"@focus:\s*([^!\]\n]+)", ctx_text)
+            if focus_matches:
+                focus_value = focus_matches[-1].strip()
                 snapshot["active_focus"] = focus_value
-                # FIX-10: Populate strategic_priorities from @focus (was declared-but-never-filled)
+                # FIX-10: Populate strategic_priorities from latest @focus
                 snapshot["strategic_priorities"] = [
                     p.strip() for p in focus_value.split(",") if p.strip()
                 ]
@@ -184,9 +200,9 @@ def build_personalisation_prompt(
     lines = [
         f'<personalisation_context intent="{intent}">',
         "=== OPERATOR STATE & CONSTRAINTS ===",
-        f"- Rate Floor & Pricing: {user_state.get('rate_floor', 'S$150/hr minimum')}",
-        f"- Financial & Capital Risk: {user_state.get('financial_constraints', 'Active float discipline')}",
-        f"- Key-Man Risk: {user_state.get('key_man_risk', 'CRITICAL')}",
+        f"- Rate Floor & Pricing: {user_state.get('rate_floor', 'Unconfigured')}",
+        f"- Financial & Capital Risk: {user_state.get('financial_constraints', 'Unconfigured')}",
+        f"- Key-Man Risk: {user_state.get('key_man_risk', 'Unconfigured')}",
     ]
 
     if "active_focus" in user_state:

@@ -288,6 +288,7 @@ class FrameRecord:
     reversibility: int = 3  # 1 (irreversible) .. 5 (trivial to undo)
     ruin_receipt: str = ""
     outcome_band: dict[str, float] = field(default_factory=dict)
+    frame_mode: str = "strict"  # strict | lite
     status: str = "open"  # open | locked | resolved | abandoned
     resolution: dict[str, Any] = field(default_factory=dict)
 
@@ -343,9 +344,15 @@ def deterministic_frame_id(literal_request: str, session: str = "", created: str
     return f"FR-{digest}"
 
 
-def build_frame(payload: dict[str, Any], session: str = "") -> FrameRecord:
+def build_frame(
+    payload: dict[str, Any],
+    session: str = "",
+    *,
+    lite: bool = False,
+) -> FrameRecord:
     """Build a FrameRecord from a JSON payload, filling derived defaults."""
     data = dict(payload)
+    reframe_prior = data.pop("reframe_prior", None)
     data.setdefault("session", session)
     data.setdefault("created", _now_iso())
     if not data.get("id"):
@@ -354,6 +361,35 @@ def build_frame(payload: dict[str, Any], session: str = "") -> FrameRecord:
         )
     data.setdefault("tier", "STANDARD")
     data["tier"] = str(data["tier"]).upper()
+    if lite or str(data.get("frame_mode", "")).lower() == "lite":
+        data["frame_mode"] = "lite"
+    else:
+        data.setdefault("frame_mode", "strict")
+
+    if data["frame_mode"] == "lite" and not data.get("hypotheses"):
+        prior_val = 0.5 if reframe_prior is None else float(reframe_prior)
+        lit = str(data.get("literal_request", "")).strip()
+        ref = str(data.get("candidate_reframe", "")).strip()
+        dtest = str(data.get("discriminating_test", "")).strip()
+        h1_falsifier = f"Disconfirmed by probe: {dtest}" if dtest else ""
+        h0_falsifier = f"Confirmed reframe via probe: {dtest}" if dtest else ""
+        data["hypotheses"] = [
+            {
+                "id": "H1",
+                "statement": ref or "Candidate reframe",
+                "prior": round(prior_val, 4),
+                "falsifier": h1_falsifier,
+                "test": dtest,
+            },
+            {
+                "id": "H0",
+                "statement": f"Literal request holds: {lit}" if lit else "Literal request holds",
+                "prior": round(1.0 - prior_val, 4),
+                "falsifier": h0_falsifier,
+                "test": dtest,
+            },
+        ]
+
     # Budget defaults to the tier cap, which is the most generous legal value;
     # the validator WARNs if it exceeds the cap.
     if not data.get("framing_budget_min"):
@@ -501,15 +537,8 @@ def _criterion_is_measurable(criterion: dict[str, str]) -> bool:
     return bool(_NUMBER_RE.search(prose) or _WORD_NUMBER_RE.search(prose))
 
 
-def validate_frame(frame: FrameRecord) -> ValidationResult:
-    """The machine-checkable frame contract.
-
-    Every rule below exists because its absence is an observed failure mode,
-    not because it is elegant. Codes map to the audit's F-findings.
-    """
-    v: list[Violation] = []
-
-    # R1 - rival hypotheses with normalised priors (F-05: single-narrative lock)
+def _validate_hypotheses_and_basic_fields(frame: FrameRecord, v: list[Violation]) -> None:
+    """Shared R1, R2, R3c, and R10 checks used by both strict and lite frame contracts."""
     if len(frame.hypotheses) < 2:
         v.append(
             Violation(
@@ -538,7 +567,6 @@ def validate_frame(frame: FrameRecord) -> ValidationResult:
             )
         )
 
-    # R2 - falsifiability, and NO self-sealing falsifiers (F-03)
     for h in frame.hypotheses:
         if not h.falsifier.strip():
             v.append(Violation("R2", f"{h.id}: no falsifier. Unfalsifiable.", "BLOCK"))
@@ -563,6 +591,51 @@ def validate_frame(frame: FrameRecord) -> ValidationResult:
                 )
             )
 
+    if not frame.review_date.strip():
+        v.append(Violation("R3c", "no review date/trigger: the frame can never be scored.", "BLOCK"))
+
+    if not frame.discriminating_test.strip():
+        v.append(
+            Violation(
+                "R10",
+                "no frame-level discriminating test: nothing here separates the candidate reframe "
+                "from the literal request.",
+                "BLOCK",
+            )
+        )
+
+
+def validate_frame(frame: FrameRecord) -> ValidationResult:
+    """The machine-checkable frame contract.
+
+    Every rule below exists because its absence is an observed failure mode,
+    not because it is elegant. Codes map to the audit's F-findings.
+    """
+    v: list[Violation] = []
+    _validate_hypotheses_and_basic_fields(frame, v)
+
+    rev = int(frame.reversibility) if isinstance(frame.reversibility, int) else 0
+    if not (1 <= rev <= 5):
+        v.append(
+            Violation(
+                "R13",
+                f"reversibility must be between 1 and 5 (got {frame.reversibility}).",
+                "BLOCK",
+            )
+        )
+
+    if str(frame.frame_mode).lower() == "lite":
+        if (1 <= rev <= 2) or str(frame.tier).upper() == "ULTRA":
+            v.append(
+                Violation(
+                    "R14",
+                    f"Lite frames are restricted to reversible non-ULTRA decisions "
+                    f"(reversibility={frame.reversibility}, tier={frame.tier}); use strict R1-R13 contract.",
+                    "BLOCK",
+                )
+            )
+        return ValidationResult(frame_id=frame.id, violations=v)
+
     # R3 - measurable, pre-registered exit criteria (F-06)
     if not frame.success_criteria:
         v.append(Violation("R3", "no success criteria declared.", "BLOCK"))
@@ -576,8 +649,6 @@ def validate_frame(frame: FrameRecord) -> ValidationResult:
                     "BLOCK",
                 )
             )
-    if not frame.review_date.strip():
-        v.append(Violation("R3c", "no review date/trigger: the frame can never be scored.", "BLOCK"))
 
     # R4 - kill criteria, defined before execution (F-06)
     if not frame.kill_criteria:
@@ -664,17 +735,6 @@ def validate_frame(frame: FrameRecord) -> ValidationResult:
             )
         )
 
-    # R10 - discriminating test at frame level
-    if not frame.discriminating_test.strip():
-        v.append(
-            Violation(
-                "R10",
-                "no frame-level discriminating test: nothing here separates the candidate reframe "
-                "from the literal request.",
-                "BLOCK",
-            )
-        )
-
     # R11 - loop budget present for Loop 2 iteration discipline (2026-10-17 Plan T3.1 / A3)
     lb = frame.loop_budget if isinstance(frame.loop_budget, dict) else {}
     has_cap = float(lb.get("max_rounds", 0) or 0) > 0 or float(lb.get("max_hours", 0) or 0) > 0
@@ -707,17 +767,8 @@ def validate_frame(frame: FrameRecord) -> ValidationResult:
             )
         )
 
-    # R13 - reversibility 1-5; score <= 2 requires verified GTO receipt ID or [agent-estimate] (T3.1 / A1)
-    rev = int(frame.reversibility) if isinstance(frame.reversibility, int) else 0
-    if not (1 <= rev <= 5):
-        v.append(
-            Violation(
-                "R13",
-                f"reversibility must be between 1 and 5 (got {frame.reversibility}).",
-                "BLOCK",
-            )
-        )
-    elif rev <= 2:
+    # R13 - reversibility <= 2 requires verified GTO receipt ID or [agent-estimate] (T3.1 / A1)
+    if (1 <= rev <= 2):
         rec_str = frame.ruin_receipt.strip()
         is_agent_est = (
             "[agent-estimate]" in rec_str.lower()
@@ -996,23 +1047,27 @@ def score_frames(frames: list[FrameRecord]) -> dict[str, Any]:
     partially_resolved = [f for f in resolved if f.resolution.get("partially_observed")]
     full_resolved = [f for f in resolved if not f.resolution.get("partially_observed")]
     abandoned_count = sum(1 for f in frames if f.status == "abandoned")
-    overdue_count = sum(
-        1
+    overdue_frame_ids = sorted(
+        f.id
         for f in frames
         if f.status not in ("resolved", "abandoned")
         and f.review_date
         and f.review_date[:10] <= today_iso
     )
+    overdue_count = len(overdue_frame_ids)
+    lite_opened = sum(1 for f in frames if str(f.frame_mode).lower() == "lite")
 
     return {
         "frames_opened": opened,
         "user_frames_opened": user_opened,
         "audit_frames_opened": audit_opened,
+        "lite_frames_opened": lite_opened,
         "frames_resolved": len(resolved),
         "full_resolved": len(full_resolved),
         "partially_resolved_count": len(partially_resolved),
         "abandoned_frames": abandoned_count,
         "overdue_frames": overdue_count,
+        "overdue_frame_ids": overdue_frame_ids,
         "pending_rot": opened - len(resolved),
         "frame_hit_rate": round(sum(hits) / len(hits), 4) if hits else None,
         "mean_brier": brier,

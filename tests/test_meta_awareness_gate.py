@@ -7,6 +7,7 @@ fire), and the T4-only negative-guard suppression rule.
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -224,10 +225,11 @@ def test_negative_guard_suppresses_t4_only():
 # ------------------------------------------------------------ Hook contract
 def test_hook_never_blocks_and_injects():
     """End-to-end: run as the harness does; malformed input exits 0 silently."""
+    env = {**os.environ, "ATHENA_TELEMETRY_DISABLE": "1"}
     ok = subprocess.run(
         [sys.executable, str(HOOK_PATH)],
         input=json.dumps({"prompt": "should I post this on EDMW?"}),
-        capture_output=True, text=True,
+        capture_output=True, text=True, env=env,
     )
     assert ok.returncode == 0
     assert "META-AWARENESS GATE" in ok.stdout
@@ -235,10 +237,33 @@ def test_hook_never_blocks_and_injects():
 
     bad = subprocess.run(
         [sys.executable, str(HOOK_PATH)],
-        input="not json", capture_output=True, text=True,
+        input="not json", capture_output=True, text=True, env=env,
     )
     assert bad.returncode == 0
     assert bad.stdout == ""
+
+
+def test_telemetry_disable_env_prevents_invocation_log_writes(tmp_path: Path):
+    """ATHENA_TELEMETRY_DISABLE=1 prevents pytest/subprocess fires from polluting invocations.jsonl."""
+    athena_dir = tmp_path / ".athena"
+    athena_dir.mkdir()
+    inv_file = athena_dir / "invocations.jsonl"
+    env = {**os.environ, "ATHENA_TELEMETRY_DISABLE": "1"}
+    res = subprocess.run(
+        [sys.executable, str(HOOK_PATH)],
+        input=json.dumps({"prompt": "should I post this publicly?"}),
+        cwd=str(tmp_path),
+        capture_output=True, text=True, env=env,
+    )
+    assert res.returncode == 0
+    assert "META-AWARENESS GATE" in res.stdout
+    assert not inv_file.exists(), "ATHENA_TELEMETRY_DISABLE=1 must skip writing invocations.jsonl"
+
+
+def test_t1_sla_warranty_cap_and_t4_build_vs_buy_fire():
+    """General structural act-grammar catches SLA caps (T1) and multi-month build bets (T4)."""
+    assert "T4-RESOURCE" in fired("Should I spend 6 months building a custom ERP for our 12-person logistics company?")
+    assert "T1-INBOUND" in fired("Review this vendor SLA: 99.9% uptime with service credits capped at 10% of monthly fees.")
 
 
 def test_reminder_is_question_framed_and_bounded():
@@ -267,7 +292,7 @@ def test_mcp_meta_awareness_check_parity():
 
 
 def test_governance_skip_auditor():
-    """Verify check_governance_skip.py runs without error."""
+    """Verify check_governance_skip.py runs without error and integrates GateTelemetryAnalyzer."""
     script_path = Path(__file__).resolve().parents[1] / ".agent" / "scripts" / "check_governance_skip.py"
     ok = subprocess.run(
         [sys.executable, str(script_path), "--days", "7"],
@@ -275,4 +300,57 @@ def test_governance_skip_auditor():
     )
     assert ok.returncode == 0
     assert "Governance Telemetry Audit" in ok.stdout
+    assert "Compliance Band:" in ok.stdout or "Status:            NO_DATA" in ok.stdout
+
+
+def test_hook_script_ssot_parity_and_execution():
+    """Verify hook_meta_awareness_gate.py has 100% SSOT parity with athena.core.gate_meta (TD-069b)."""
+    import importlib.util
+    import json
+
+    hook_path = Path(__file__).resolve().parents[1] / ".agent" / "scripts" / "hook_meta_awareness_gate.py"
+    spec = importlib.util.spec_from_file_location("hook_meta_awareness_gate", hook_path)
+    hook_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(hook_mod)
+
+    # 1. Structural SSOT identity
+    assert hook_mod.CLASSES is meta_gate.CLASSES
+    assert hook_mod.NEGATIVE is meta_gate.NEGATIVE
+    assert hook_mod.REMINDER_TEMPLATE is meta_gate.REMINDER_TEMPLATE
+    assert hook_mod.classify is meta_gate.classify
+
+    # 2. Subprocess execution verification across all trigger classes + negative guards
+    test_cases = [
+        ("I was let go from my job today", ["T1-INBOUND"]),
+        ("Manager scheduled a 1:1 with no agenda out of the blue", ["T1-INBOUND"]),
+        ("should I post this on LinkedIn?", ["T2-OUTBOUND"]),
+        ("is this acceptable or creepy?", ["T3-VERDICT"]),
+        ("should I buy the ThinkPad T14 Gen 3?", ["T4-RESOURCE"]),
+        ("it feels like the market has to bounce here", ["T5-FELT"]),
+        ("starting a new capstone with an examiner who wants machine vision", ["T6-INTAKE-AUTHORITY"]),
+        ("the client is anxious about presenting and has no background", ["T7-END-USER-CAPABILITY"]),
+        ("patut tandatangan kontrak atau tidak", ["T8-MULTILINGUAL"]),
+        ("老板让我辞职", ["T8-MULTILINGUAL"]),
+        # Negative routine-ops suppression
+        ("reconcile the portfolio balance sheet with pytest", []),
+    ]
+
+    env = {**os.environ, "ATHENA_TELEMETRY_DISABLE": "1"}
+    for prompt, expected_classes in test_cases:
+        res = subprocess.run(
+            [sys.executable, str(hook_path)],
+            input=json.dumps({"prompt": prompt}),
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        assert res.returncode == 0
+        if expected_classes:
+            assert "<system-reminder>" in res.stdout
+            assert "META-AWARENESS GATE" in res.stdout
+            for exp in expected_classes:
+                assert exp in res.stdout
+        else:
+            assert res.stdout == ""
+
 

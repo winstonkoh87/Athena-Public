@@ -60,18 +60,17 @@ Then type `/start` in your IDE's AI chat panel. Work normally. Type `/end` to sa
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  Your IDE (Claude Code / Antigravity / Cursor / Gemini / VS Code)       │
 └───────────────────────────────┬─────────────────────────────────────────┘
-                                │ MCP Servers (19 Athena + 5 DuckDB tools) + Hooks
+                                │ MCP Servers (20 Athena + 5 DuckDB tools) + Hooks
                                 ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  Athena SDK (src/athena/)                                               │
 │  ├── 1. Memory & Hybrid RAG: /start (~3.6K boot), 5-channel parallel    │
 │  │      RRF search, speculative "auto" local+ONNX fast-path, SQLite     │
 │  │      search_cache_vecs.db                                            │
-│  ├── 2. Problem Framing: VOI (EVI) calculator, falsifier & R1-R13       │
-│  │      commitment gates (frame_ledger.py)                              │
-│  ├── 3. Decision, Wargaming & OSINT: EEV, 1/3 Kelly, Ruin, MCDA         │
-│  │      (gto_engine.py), 2-turn Wargame (wargame.py), UCDS OSINT        │
-│  │      (ucds_validator.py)                                             │
+│  ├── 2. Problem Framing & Meta-Triage: Lite/Strict frame_open, VOI      │
+│  │      (EVI), R1-R14 gates, Semantic Meta-Triage in context_gate       │
+│  ├── 3. Decision, Wargaming & Calibration: fail-closed real=True MCDA,  │
+│  │      EEV/Kelly/Ruin (gto_engine.py), Wargame, Brier calibration      │
 │  └── 4. Governance & Telemetry: Lambda risk router, Law #1 ruin blocker,│
 │         Trade Guardian (trade_guardian.py), O(1) 64KB JSONL tail gates  │
 │         (jsonl_tail.py)                                                 │
@@ -130,8 +129,8 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 | Subsystem | Module / MCP Tool | What It Computes / Enforces |
 |:----------|:------------------|:----------------------------|
 | **Hybrid RAG & Speculative Context Gate** | `mcp_server.py` (`smart_search`, `context_gate`), `tools/search.py`, `core/cache.py` | Concurrent 5-channel RRF fusion (BM25 FTS5 + pgvector + filename headers + canonical/graph + ONNX cross-encoder rerank), `"local"`/`"auto"`/`"always"` vector routing, and zero-write-on-hit SQLite `search_cache_vecs.db` |
-| **Problem Framing & VOI Ledger** | `intelligence/frame_ledger.py` (`frame_open`, `frame_validate`, `frame_resolve`, `frame_status`) | Value of Information (`EVI`) stop-rule, falsifiable hypothesis pre-registration, `R1–R13` commitment gates (loop budget, surviving contingency branch, irreversible ruin check), `LUCK` outcome-band gate, and Brier calibration scoring |
-| **Quantitative Decision Engine** | `intelligence/gto_engine.py` (`decision_screen`) | Deterministic evaluators for Expected Economic Value (`eev`), One-Third Kelly (`kelly`), Absorbing-Barrier Ruin (`ruin`), MCDA with ruin vetoes (`mcda`), Decision Monte Carlo (`decision-mc`), Scenario Robustness (`robustness`), Barbell (`barbell`), and SHA-256 receipts (`.athena/decision_receipts.jsonl`) |
+| **Problem Framing & Meta-Triage** | `intelligence/frame_ledger.py` (`frame_open`, `frame_validate`, `frame_resolve`, `frame_status`), `mcp_server.py` (`context_gate`) | Lite (`lite=True`) + Strict framing, `EVI` stop-rule, `reframe_prior`, `R1-R14` commitment gates (low-reversibility/`ULTRA` fail-closed), `LUCK` band gate, and Semantic Meta-Triage |
+| **Quantitative Decision & Calibration** | `intelligence/gto_engine.py` (`decision_screen`), `intelligence/calibration.py` (`calibration_status`) | Fail-closed `real=True` MCDA (`veto_floors`/`ruin_inputs`, `preference_provenance`, `status_quo` baseline check), EEV, 1/3 Kelly, Ruin, Monte Carlo, Brier calibration, and SHA-256 receipts (`.athena/decision_receipts.jsonl`) |
 | **Adversarial Wargaming Engine** | `intelligence/wargame.py` (`athena-wargame`) | Two-turn sequential Blue vs. Red game trees with intra-turn path-dependent trough ruin, Red best-response optimization, and tamper-evident run receipts (`.athena/wargame_runs.jsonl`) |
 | **Counterparty OSINT & Trade Governance** | `intelligence/ucds_validator.py`, `tools/trade_guardian.py` | Deterministic Universal Counterparty Dossier Standard (`audit_ucds_dossier`) validator (Track A/B bifurcation, knockout gates, cashflow inversion) plus position/drawdown/sizing safety guards |
 | **Local Analytical SQL** | `duckdb_mcp_server.py` (`query`, `profile`, `list_tables`, `export_result`) | Zero-dependency DuckDB engine for profiling and querying large CSV, JSON, and Parquet datasets without exhausting LLM context windows |
@@ -146,7 +145,7 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 | **Storage & hybrid retrieval** — memories stored and surfaced when relevant | ✅ Shipped (`code-enforced`) | Hybrid RAG with document-level RRF + cross-encoder rerank, hardened through [logged regressions](docs/CHANGELOG.md) |
 | **Portability** — Markdown and JSONL on your disk, movable across models | ✅ Shipped (`structural`) | Plain files on disk — inspect the repo |
 | **Quantitative decision screening & wargaming** — EEV, 1/3 Kelly, Ruin, MCDA, 2-turn game trees | ✅ Shipped (`code-available`) | [`gto_engine.py`](src/athena/intelligence/gto_engine.py) & [`wargame.py`](src/athena/intelligence/wargame.py) emit SHA-256 receipts (`107` tests); Stop hook blocks unreceipted numeric engine claims |
-| **Pre-registered problem framing** — VOI stop-rule, `R1–R13` commitment & falsifier gates | ✅ Shipped (`code-available`) | [`frame_ledger.py`](src/athena/intelligence/frame_ledger.py) validates falsifiers, loop budgets, and Brier calibration (`57` tests) |
+| **Pre-registered problem framing** — Lite/Strict `frame_open`, `R1–R14` gates & holdout eval | ✅ Shipped (`code-available`) | [`frame_ledger.py`](src/athena/intelligence/frame_ledger.py) & [`tests/test_problem_solving_holdout.py`](tests/test_problem_solving_holdout.py) (30-case holdout + calibration) |
 | **Governed autonomy** — hooks block destructive commands, ungrounded claims, and secrets | ✅ Shipped (partial) | Ruin check blocks 14/16 destructive commands; 2 shell bypasses are [known and tracked](docs/TECH_DEBT.md) |
 | **Compounding personalization** — session 2,000 recalls session 5 | 🟡 N=1 evidence | 2,100+ sessions, 410 active protocols, and 632 case studies by the author; no multi-user study |
 | **Anti-sycophancy** — personalization doesn't silently increase agreement | 🟡 Partial mitigation | Code-enforced meta-awareness gate (Claude Code hook); agent-discretion in hookless IDEs — see [honest limits](docs/ENGINEERING_DEPTH.md) |
@@ -168,8 +167,13 @@ python -m athena.intelligence.gto_engine --action mcda --help
 # Adjudicate a 2-turn adversarial wargame with path-dependent trough ruin screening
 python -m athena.intelligence.wargame --help
 
-# Validate a pre-registered problem frame against R1-R13 commitment gates
+# Validate a pre-registered problem frame and inspect Brier calibration
 python -m athena.intelligence.frame_ledger calibrate
+python3 examples/scripts/calibration_score.py
+
+# Run the 30-case problem-solving holdout gate & dry-run A/B evaluation harness
+pytest tests/test_problem_solving_holdout.py -v
+python3 scripts/eval_problem_solving_ab.py --dry-run
 
 # Run the local KV cache & TTFT benchmark (Ollama / llama.cpp)
 python scripts/benchmark_kv_cache.py --model qwen2.5-coder:14b
@@ -185,7 +189,8 @@ python examples/scripts/evaluator.py --k 5 --rerank
 | **Retrieval Hit@5 (Strict)** | **0.569** (37 / 65) | `python examples/scripts/evaluator.py` |
 | **Retrieval MRR@5 (Strict)** | **0.472** | `python examples/scripts/evaluator.py` |
 | *Retrieval Hit@5 (Lenient)* | *0.892 (deprecated)* | *Partial substring match (inflated)* |
-| **Unit & Red-Team Tests** | **750+ passed (100%)** | `pytest tests/` |
+| **Problem-Solving Holdout Benchmark** | **30 / 30 (20 traps caught, 0 false ULTRA)** | `pytest tests/test_problem_solving_holdout.py -v` |
+| **Unit & Red-Team Tests** | **850+ passed (100% of runnable local suite)** | `pytest tests/` |
 | **Secret Leaks (1,248+ commits)** | **0 detected** | Gitleaks + `privacy_scan.py` in CI |
 | **Code Quality & Lints** | **0 ruff findings** | `ruff check src/ scripts/ tests/` |
 

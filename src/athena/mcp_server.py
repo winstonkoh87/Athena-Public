@@ -865,28 +865,21 @@ def classify_turn(
 @mcp.tool(
     tags={"governance", "reasoning", "cluster15"},
 )
-def frame_open(frame_json: str, session: str = "", lock: bool = False) -> dict:
+def frame_open(
+    frame_json: str,
+    session: str = "",
+    lock: bool = False,
+    lite: bool = False,
+) -> dict:
     """Pre-register a problem frame BEFORE solving (RSN-504 Gate 5b).
 
-    Frames are validated against the machine-checkable R1-R10 contract and the
-    value-of-information stop rule. A frame that cannot be falsified, has no
-    rival hypothesis, no numeric exit criteria, no kill criteria, no baseline
-    counterfactual, or no justification for spending framing time is REJECTED
-    and never recorded.
-
-    Args:
-        frame_json: JSON object of the frame. Required keys: literal_request,
-            candidate_reframe, hypotheses (>=2, priors summing to 1.0, each with
-            a falsifier), discriminating_test, success_criteria (metric +
-            threshold with a number + by-date), review_date, kill_criteria,
-            baseline_counterfactual, framing_budget_min, p_flip, delta_payoff,
-            info_cost, cost_of_delay_per_day.
-        session: session id for provenance.
-        lock: mark the frame locked once registered.
-
-    Returns:
-        dict with frame_id, contract verdict (blockers/warnings), the VOI
-        verdict, and the ledger path.
+    Supports two contract tiers:
+      - strict (default, R1-R13 + VOI stop-rule): mandatory for irreversible
+        (reversibility <= 2) or ULTRA-tier decisions.
+      - lite (lite=True): lightweight 4-field pre-registration (literal_request,
+        candidate_reframe, discriminating_test, review_date + optional reframe_prior)
+        for reversible STANDARD/SNIPER turns. Blocked by R14 if reversibility <= 2
+        or tier == ULTRA.
     """
     from athena.intelligence.frame_ledger import (
         DEFAULT_LEDGER,
@@ -899,23 +892,30 @@ def frame_open(frame_json: str, session: str = "", lock: bool = False) -> dict:
     perms.gate("frame_open")
 
     payload = json.loads(frame_json)
-    frame = build_frame(payload, session=session)
+    frame = build_frame(payload, session=session, lite=lite)
     ledger = FrameLedger(DEFAULT_LEDGER)
     result = ledger.open(frame, lock=lock)
-    voi = compute_evi(
-        frame.p_flip,
-        frame.delta_payoff,
-        frame.info_cost,
-        frame.framing_budget_min,
-        frame.cost_of_delay_per_day,
-    )
+    if frame.frame_mode == "lite":
+        voi_verdict = "LITE_BYPASS"
+        voi_net_evi = None
+    else:
+        voi = compute_evi(
+            frame.p_flip,
+            frame.delta_payoff,
+            frame.info_cost,
+            frame.framing_budget_min,
+            frame.cost_of_delay_per_day,
+        )
+        voi_verdict = voi.verdict
+        voi_net_evi = voi.net_evi
     return {
         "frame_id": frame.id,
+        "frame_mode": frame.frame_mode,
         "ok": result.ok,
         "blockers": [v.to_dict() for v in result.blockers],
         "warnings": [v.to_dict() for v in result.warnings],
-        "voi_verdict": voi.verdict,
-        "voi_net_evi": voi.net_evi,
+        "voi_verdict": voi_verdict,
+        "voi_net_evi": voi_net_evi,
         "ledger": str(DEFAULT_LEDGER),
         "contract_report": result.to_ascii(),
     }
@@ -1068,6 +1068,24 @@ def frame_status() -> dict:
         "scoring": score_frames(frames),
         "adoption": scan_adoption("."),
     }
+
+
+@mcp.tool(
+    tags={"read", "governance", "calibration"},
+)
+def calibration_status() -> dict:
+    """Report pre-registered prediction calibration (Brier score, log-loss,
+    confidence buckets, domain breakdown, and overdue pending predictions).
+
+    Returns:
+        dict with status ('ok' | 'unconfigured'), brier, log_loss, calibration,
+        by_domain, overdue_ids, overdue, upcoming_ids, and pre_registration_warnings.
+    """
+    from athena.intelligence.calibration import get_calibration_status
+
+    perms = get_permissions()
+    perms.gate("calibration_status")
+    return get_calibration_status()
 
 
 @mcp.tool(
@@ -1486,6 +1504,7 @@ def context_gate(
     # When gate_meta.classify() fires, inject a META directive so any MCP client
     # (Antigravity, Gemini, Codex) gets the substance-decode kernel without
     # requiring a Claude Code UserPromptSubmit hook. Never blocks, never errors.
+    meta_classes: list = []
     try:
         from athena.core.gate_meta import classify as meta_classify
         meta_classes = meta_classify(query)
@@ -1498,6 +1517,24 @@ def context_gate(
             )
     except Exception:
         pass  # stdlib-only gate; never block context_gate on import failure
+
+    # Semantic Meta-Triage: on non-trivial STANDARD/ULTRA turns, ensure the reasoning model
+    # evaluates XY, L2 arena, custody/form-vs-substance, and irreversibility even when regexes miss.
+    if risk_level in (RiskLevel.STANDARD, RiskLevel.ULTRA) and (
+        intent != "SYSTEM_KNOWLEDGE"
+        or in_game_opt_trap
+        or underspec_opt
+        or bool(meta_classes)
+    ):
+        directive_parts.append(
+            "META-TRIAGE (Pre-Solve Check): Before executing, verify 4 structural traps — "
+            "(1) XY/Proxy Metric: is the stated task a proxy for a deeper bottleneck? "
+            "(2) Arena/Red-Curve: is this L1 optimization inside a structurally capped/rigged game? "
+            "(3) Custody/Form-vs-Substance: if paper terms/SLAs fail, who holds cash/leverage/enforcement? "
+            "(4) Irreversibility/VOI: if irreversible time/capital is at stake, propose a cheap "
+            "reversible probe or open a Lite frame (`frame_open(..., lite=True)`) first. "
+            "Skip ceremony on clean reversible L1 tasks."
+        )
 
     # 8. Web metadata and tri-state grounding_status
     web_count = len([

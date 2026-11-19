@@ -6,6 +6,19 @@ Intelligence and strategic reasoning modules for Athena.
 Includes deterministic GTO computation engine and sentinel monitoring.
 """
 
+from athena.intelligence.calibration import (
+    compute_scores as compute_calibration_scores,
+)
+from athena.intelligence.calibration import (
+    domain_breakdown as calibration_domain_breakdown,
+)
+from athena.intelligence.calibration import (
+    format_calibration_report,
+    get_calibration_ledger_path,
+    get_calibration_status,
+    parse_ledger,
+    validate_pre_registration,
+)
 from athena.intelligence.evidence_contract import (
     ClaimKind,
     ClaimStatus,
@@ -108,6 +121,13 @@ from athena.intelligence.wargame import (
 )
 
 __all__ = [
+    "calibration_domain_breakdown",
+    "compute_calibration_scores",
+    "format_calibration_report",
+    "get_calibration_ledger_path",
+    "get_calibration_status",
+    "parse_ledger",
+    "validate_pre_registration",
     "GateTelemetryAnalyzer",
     "OutputContractAudit",
     "TelemetrySummary",

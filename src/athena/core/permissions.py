@@ -160,6 +160,11 @@ TOOL_REGISTRY: dict[str, dict[str, Any]] = {
         "sensitivity": Sensitivity.INTERNAL,
         "description": "Execute strategic decision evaluation and append decision receipt",
     },
+    "calibration_status": {
+        "permission": Permission.READ,
+        "sensitivity": Sensitivity.INTERNAL,
+        "description": "Calibration Brier score, bucket accuracy, and overdue predictions",
+    },
     "report_external_web_search": {
         "permission": Permission.READ,
         "sensitivity": Sensitivity.PUBLIC,

@@ -133,3 +133,23 @@ def test_choices_match_handlers() -> None:
         assert f'"{ide}"' in source or f"'{ide}'" in source, (
             f"IDE '{ide}' is in CLI choices but has no handler in _create_ide_config"
         )
+
+
+@pytest.mark.parametrize(
+    "ide",
+    ["antigravity", "claude", "cursor", "gemini", "kilocode", "roocode"],
+)
+def test_init_scaffolds_problem_solving_and_decision_workflow(ide: str, tmp_path: Path) -> None:
+    """Every text-rule IDE scaffold wires context_gate, lite frame_open, decision_screen, and calibration_status."""
+    target = tmp_path / f"workflow-{ide}"
+    target.mkdir()
+    result = subprocess.run(
+        [sys.executable, "-m", "athena", "init", str(target), "--ide", ide],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0
+    rules_text = (target / EXPECTED_FILES[ide]).read_text(encoding="utf-8")
+    for tool_name in ("context_gate", "frame_open", "decision_screen", "calibration_status"):
+        assert tool_name in rules_text, f"{ide} rules missing '{tool_name}'"

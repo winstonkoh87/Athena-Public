@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# pre-commit — Athena-Public local commit gate (privacy, LaTeX/ASCII, Python syntax)
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+# 1. Privacy blocklist / pattern scan on staged files
+if [ -f ".github/scripts/privacy_scan.py" ]; then
+  python3 .github/scripts/privacy_scan.py --staged
+fi
+
+# 2. ASCII-only / zero-LaTeX leak gate on staged Markdown files
+STAGED_MD=()
+while IFS= read -r file; do
+  [ -n "$file" ] && STAGED_MD+=("$file")
+done < <(git diff --cached --name-only --diff-filter=ACM -- '*.md' || true)
+
+if [ ${#STAGED_MD[@]} -gt 0 ] && [ -f ".agent/scripts/check_latex_leak.py" ]; then
+  python3 .agent/scripts/check_latex_leak.py "${STAGED_MD[@]}"
+fi
+
+# 3. Python syntax check on staged Python files
+STAGED_PY=()
+while IFS= read -r file; do
+  [ -n "$file" ] && STAGED_PY+=("$file")
+done < <(git diff --cached --name-only --diff-filter=ACM -- '*.py' || true)
+
+if [ ${#STAGED_PY[@]} -gt 0 ]; then
+  python3 -m py_compile "${STAGED_PY[@]}"
+fi

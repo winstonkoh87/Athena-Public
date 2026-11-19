@@ -13,6 +13,7 @@ Run:  python3 .agent/eval/redteam_meta_probe.py
 """
 from __future__ import annotations
 
+import importlib.util
 import sys
 from pathlib import Path
 
@@ -21,6 +22,19 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from athena.core.lambda_scorer import compute_lambda  # noqa: E402
 from athena.core.gate_meta import classify  # noqa: E402
+
+
+def _load_hook_classify():
+    hook_path = ROOT / ".agent" / "scripts" / "hook_meta_awareness_gate.py"
+    spec = importlib.util.spec_from_file_location("hook_meta_awareness_gate", hook_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load hook script at {hook_path}")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.classify
+
+
+hook_classify = _load_hook_classify()
 
 # (label, keyword-bearing form, semantically identical paraphrase)
 LAMBDA_PAIRS = [
@@ -90,26 +104,36 @@ def main() -> int:
         fails += not ok
         print(f"  {'PASS' if ok else 'FAIL'}  {label:20s} {ta:8s} vs {tb:8s}")
 
-    print("\n[2] META-AWARENESS GATE PARAPHRASE INVARIANCE")
+    print("\n[2] META-AWARENESS GATE PARAPHRASE INVARIANCE (SDK + Hook SSOT)")
     for label, a, b in META_PAIRS:
-        ca, cb = bool(classify(a)), bool(classify(b))
-        ok = ca == cb
+        sa, sb = classify(a), classify(b)
+        ha, hb = hook_classify(a), hook_classify(b)
+        ca, cb = bool(sa), bool(sb)
+        parity_ok = sa == ha and sb == hb
+        ok = (ca == cb) and parity_ok
         fails += not ok
-        print(f"  {'PASS' if ok else 'FAIL'}  {label:20s} fired={ca!s:5s} vs fired={cb!s:5s}")
+        suffix = "" if parity_ok else f" [hook_mismatch: {ha} vs {sa}, {hb} vs {sb}]"
+        print(f"  {'PASS' if ok else 'FAIL'}  {label:20s} fired={ca!s:5s} vs fired={cb!s:5s}{suffix}")
 
     print("\n[3] MIXED-INTENT SUPPRESSION (routine-ops phrase + live stakes)")
     for q in MIXED_INTENT:
         fired = classify(q)
-        ok = bool(fired)
+        hook_fired = hook_classify(q)
+        parity_ok = fired == hook_fired
+        ok = bool(fired) and parity_ok
         fails += not ok
-        print(f"  {'PASS' if ok else 'FAIL'}  fired={fired}  | {q[:58]}")
+        suffix = "" if parity_ok else f" [hook_mismatch: {hook_fired}]"
+        print(f"  {'PASS' if ok else 'FAIL'}  fired={fired}  | {q[:58]}{suffix}")
 
     print("\n[4] NON-ENGLISH HIGH-STAKES COVERAGE")
     for q in NON_ENGLISH:
         t, fired = tier(q), classify(q)
-        ok = t != "STANDARD" or bool(fired)
+        hook_fired = hook_classify(q)
+        parity_ok = fired == hook_fired
+        ok = (t != "STANDARD" or bool(fired)) and parity_ok
         fails += not ok
-        print(f"  {'PASS' if ok else 'FAIL'}  {t:8s} fired={fired} | {q}")
+        suffix = "" if parity_ok else f" [hook_mismatch: {hook_fired}]"
+        print(f"  {'PASS' if ok else 'FAIL'}  {t:8s} fired={fired} | {q}{suffix}")
 
     print("\n[5] FALSE-ULTRA / KEYWORD STUFFING (compute burn)")
     for q in STUFFED:
@@ -118,8 +142,10 @@ def main() -> int:
         fails += not ok
         print(f"  {'PASS' if ok else 'FAIL'}  {t:8s} | {q[:58]}")
 
+    ssot_identity = hook_classify is classify
     total = len(LAMBDA_PAIRS) + len(META_PAIRS) + len(MIXED_INTENT) + len(NON_ENGLISH) + len(STUFFED)
-    print("\n" + "-" * 72)
+    print(f"\n  Hook SSOT Parity: {'PASS' if ssot_identity else 'FAIL'} (classify is gate_meta.classify)")
+    print("-" * 72)
     print(f"  {total - fails}/{total} probes passed   ({fails} failures)")
     print("-" * 72)
     return 0  # diagnostic, never fails CI

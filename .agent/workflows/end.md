@@ -61,7 +61,7 @@ Before any synthesis, classify the session:
 // turbo
 
 ```bash
-python3 .agent/scripts/shutdown.py --micro
+.agent/scripts/athena-py scripts/shutdown.py --micro
 ```
 
 **Done.** No further steps.
@@ -294,7 +294,7 @@ If ANY detected:
 
 **5.7c. Update Accountability State** (every session close):
 
-Write updated values to `.agent/state/accountability_status.json`:
+Write updated values to `.agent/state/accountability_status.json` *(if present in your workspace; skipped safely on fresh setups)*:
 - `last_updated` → current timestamp
 - Increment counters for any tracked commitment with activity this session
 - On audit day → run weekly audit (5.7b), update `weekly_audit.last_audit_date`, calculate `execution_rate`, reset weekly counters
@@ -329,7 +329,7 @@ Write updated values to `.agent/state/accountability_status.json`:
 // turbo
 
 ```bash
-python3 .agent/scripts/shutdown.py
+.agent/scripts/athena-py scripts/shutdown.py
 ```
 
 **What it does** (single call, no subprocesses):

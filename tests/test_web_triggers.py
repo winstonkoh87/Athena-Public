@@ -194,6 +194,22 @@ class TestInGameOptimizationTrap(unittest.TestCase):
         self.assertTrue(cg2["intel_posture"]["meta_frame_required"])
         self.assertIn("META-FRAME POSTURE", cg2["directive"])
 
+    def test_tech_and_saas_business_traps_not_blindly_excluded(self):
+        """Technical keywords paired with churn/CAC/pricing traps must not bypass arena triage."""
+        self.assertTrue(is_in_game_optimization_trap(
+            "My SaaS CAC just doubled after iOS tracking changes; how do I tweak my Meta ads copy?"
+        ))
+        self.assertTrue(is_in_game_optimization_trap(
+            "Write a Python script to scrape competitor prices and match the lowest one automatically."
+        ))
+        self.assertTrue(is_in_game_optimization_trap(
+            "How can I speed up our React dashboard render time? Users are churning."
+        ))
+        # Pure technical optimization without business/churn/pricing trap stays False
+        self.assertFalse(is_in_game_optimization_trap(
+            "How do I speed up a Python loop over 100k integers using list comprehension?"
+        ))
+
 
 if __name__ == '__main__':
     unittest.main()

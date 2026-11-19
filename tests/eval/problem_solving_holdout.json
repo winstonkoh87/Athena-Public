@@ -1,0 +1,206 @@
+{
+  "version": 1,
+  "description": "Frozen 30-case out-of-sample problem-solving holdout benchmark (20 hidden structural traps across 5 categories + 10 clean L1 controls). Zero Athena jargon.",
+  "cases": [
+    {
+      "id": "TRAP-XY-01",
+      "kind": "trap",
+      "category": "xy_proxy_metric",
+      "query": "How can I speed up our React dashboard render time? Users are churning.",
+      "expected_trap_signals": ["XY/Proxy Metric", "churn vs render speed"]
+    },
+    {
+      "id": "TRAP-XY-02",
+      "kind": "trap",
+      "category": "xy_proxy_metric",
+      "query": "Our engineering team missed 3 sprints in a row. Give me a stricter Jira workflow.",
+      "expected_trap_signals": ["root-cause diagnosis", "scope injection vs process theater"]
+    },
+    {
+      "id": "TRAP-XY-03",
+      "kind": "trap",
+      "category": "xy_proxy_metric",
+      "query": "How can we raise unit test coverage to 95% before next release? Production deploys keep failing.",
+      "expected_trap_signals": ["coverage Goodhart proxy", "integration/deploy gate gap"]
+    },
+    {
+      "id": "TRAP-XY-04",
+      "kind": "trap",
+      "category": "xy_proxy_metric",
+      "query": "Should we add Redis caching to our dashboard? Customers complain checkout feels slow.",
+      "expected_trap_signals": ["profile actual bottleneck", "checkout vs dashboard mismatch"]
+    },
+    {
+      "id": "TRAP-ARENA-01",
+      "kind": "trap",
+      "category": "l1_in_l2_arena",
+      "query": "My SaaS CAC just doubled after iOS tracking changes; how do I tweak my Meta ads copy?",
+      "expected_trap_signals": ["channel physics", "Meta auction vs copy micro-tweaks"]
+    },
+    {
+      "id": "TRAP-ARENA-02",
+      "kind": "trap",
+      "category": "l1_in_l2_arena",
+      "query": "Competitors keep undercutting us on this 28% commission marketplace. How do we cut COGS by 3%?",
+      "expected_trap_signals": ["sharecropping/take-rate", "arena exit vs margin squeeze"]
+    },
+    {
+      "id": "TRAP-ARENA-03",
+      "kind": "trap",
+      "category": "l1_in_l2_arena",
+      "query": "Our cold email reply rate dropped to 0.4%. Should we hire 2 more SDRs to double daily volume?",
+      "expected_trap_signals": ["scaling broken channel", "deliverability/offer saturation"]
+    },
+    {
+      "id": "TRAP-ARENA-04",
+      "kind": "trap",
+      "category": "l1_in_l2_arena",
+      "query": "How many SEO backlinks should we buy monthly to regain blog traffic after AI Overviews launched?",
+      "expected_trap_signals": ["structural SERP shift", "zero-click distribution change"]
+    },
+    {
+      "id": "TRAP-CUSTODY-01",
+      "kind": "trap",
+      "category": "form_vs_substance_custody",
+      "query": "Review this vendor SLA: 99.9% uptime with service credits capped at 10% of monthly fees.",
+      "expected_trap_signals": ["Form vs Substance", "capped credits != reliability"]
+    },
+    {
+      "id": "TRAP-CUSTODY-02",
+      "kind": "trap",
+      "category": "form_vs_substance_custody",
+      "query": "The offshore factory wants 100% upfront wire before tooling under a standard PDF agreement. Safe?",
+      "expected_trap_signals": ["custody asymmetry", "cross-border enforcement cost"]
+    },
+    {
+      "id": "TRAP-CUSTODY-03",
+      "kind": "trap",
+      "category": "form_vs_substance_custody",
+      "query": "A contractor signed our generic 2-page NDA. Is it safe to share raw proprietary training datasets?",
+      "expected_trap_signals": ["enforcement friction", "architectural compartmentalization"]
+    },
+    {
+      "id": "TRAP-CUSTODY-04",
+      "kind": "trap",
+      "category": "form_vs_substance_custody",
+      "query": "Founder promised me 2% advisor equity over email without vesting docs. Should I start delivering now?",
+      "expected_trap_signals": ["custody of ledger", "unexecuted promise vs signed grant"]
+    },
+    {
+      "id": "TRAP-IRREV-01",
+      "kind": "trap",
+      "category": "irreversible_build_vs_buy",
+      "query": "Should I spend 6 months building a custom ERP for our 12-person logistics company?",
+      "expected_trap_signals": ["build-vs-buy", "cheap probe vs 6-month lock-up"]
+    },
+    {
+      "id": "TRAP-IRREV-02",
+      "kind": "trap",
+      "category": "irreversible_build_vs_buy",
+      "query": "Should we spend Q1 rewriting our working Django monolith into 12 microservices?",
+      "expected_trap_signals": ["reversibility", "operational tax vs modular bottleneck fix"]
+    },
+    {
+      "id": "TRAP-IRREV-03",
+      "kind": "trap",
+      "category": "irreversible_build_vs_buy",
+      "query": "Should we sign a 3-year non-cancellable office lease at peak hiring before closing Series A?",
+      "expected_trap_signals": ["irreversible fixed burn", "contingent runway"]
+    },
+    {
+      "id": "TRAP-IRREV-04",
+      "kind": "trap",
+      "category": "irreversible_build_vs_buy",
+      "query": "Should we sign an exclusive 2-year regional distributor contract before running a pilot batch?",
+      "expected_trap_signals": ["exclusivity lock-in", "stage-gated reversible pilot"]
+    },
+    {
+      "id": "TRAP-OPS-01",
+      "kind": "trap",
+      "category": "misdiagnosed_ops_root_cause",
+      "query": "Write a Python script to scrape competitor prices and match the lowest one automatically.",
+      "expected_trap_signals": ["race-to-bottom margin trap", "TOS/legal + pricing dynamics"]
+    },
+    {
+      "id": "TRAP-OPS-02",
+      "kind": "trap",
+      "category": "misdiagnosed_ops_root_cause",
+      "query": "Write a script to auto-deny all customer refund requests older than 14 days to cut support load.",
+      "expected_trap_signals": ["chargeback retaliation", "statutory consumer rights"]
+    },
+    {
+      "id": "TRAP-OPS-03",
+      "kind": "trap",
+      "category": "misdiagnosed_ops_root_cause",
+      "query": "Support ticket handle time doubled. Which agents should we put on a PIP first?",
+      "expected_trap_signals": ["system vs operator blame", "check upstream product/bug causes"]
+    },
+    {
+      "id": "TRAP-OPS-04",
+      "kind": "trap",
+      "category": "misdiagnosed_ops_root_cause",
+      "query": "Remote engineers ship fewer PRs this month. Should we mandate daily 90-minute status standups?",
+      "expected_trap_signals": ["maker-schedule tax", "meeting bloat worsens throughput"]
+    },
+    {
+      "id": "CTRL-L1-01",
+      "kind": "control",
+      "category": "clean_l1",
+      "query": "How do I sort a list of dictionaries by key in Python?"
+    },
+    {
+      "id": "CTRL-L1-02",
+      "kind": "control",
+      "category": "clean_l1",
+      "query": "What is the difference between LEFT JOIN and INNER JOIN in SQL?"
+    },
+    {
+      "id": "CTRL-L1-03",
+      "kind": "control",
+      "category": "clean_l1",
+      "query": "Write a regex to match ISO-8601 dates like YYYY-MM-DD."
+    },
+    {
+      "id": "CTRL-L1-04",
+      "kind": "control",
+      "category": "clean_l1",
+      "query": "How do I rename a local git branch?"
+    },
+    {
+      "id": "CTRL-L1-05",
+      "kind": "control",
+      "category": "clean_l1",
+      "query": "Explain how weighted_rrf works in search.py."
+    },
+    {
+      "id": "CTRL-L1-06",
+      "kind": "control",
+      "category": "clean_l1",
+      "query": "What is the HTTP status code for Too Many Requests?"
+    },
+    {
+      "id": "CTRL-L1-07",
+      "kind": "control",
+      "category": "clean_l1",
+      "query": "How do I format a datetime object as an ISO-8601 string in Python?"
+    },
+    {
+      "id": "CTRL-L1-08",
+      "kind": "control",
+      "category": "clean_l1",
+      "query": "What does git cherry-pick do?"
+    },
+    {
+      "id": "CTRL-L1-09",
+      "kind": "control",
+      "category": "clean_l1",
+      "query": "How do I center a flex item vertically in CSS?"
+    },
+    {
+      "id": "CTRL-L1-10",
+      "kind": "control",
+      "category": "clean_l1",
+      "query": "Show me how to read a JSONL file line by line in Python."
+    }
+  ]
+}

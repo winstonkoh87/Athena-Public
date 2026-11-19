@@ -8,6 +8,7 @@ golden benchmark validation.
 """
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -148,20 +149,29 @@ class TestPersonalisationPromptAndSnapshot:
         assert "strategic_priorities" in snapshot
         assert isinstance(snapshot["strategic_priorities"], list)
 
-    def test_rate_floor_exact_currency_shape(self):
-        """Verify rate_floor is a clean currency string and not corrupted markdown prose."""
+    def test_rate_floor_exact_currency_shape(self, monkeypatch, tmp_path):
+        """Verify rate_floor validates clean currency strings and neutral public fallback."""
+        valid_canonical = tmp_path / "CANONICAL.md"
+        valid_canonical.write_text(
+            "| **Consulting Rate** | **$200/hr** |\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr("athena.tools.personalisation.CANONICAL_PATH", valid_canonical)
+        valid_snap = build_user_state_snapshot()
+        assert re.match(r"^S?\$\d+(?:/hr)?$", valid_snap["rate_floor"])
+
+        monkeypatch.undo()
         snapshot = build_user_state_snapshot()
         rate = snapshot.get("rate_floor", "")
-        # Must match clean currency shape (e.g. $150/hr or S$150/hr)
-        import re
-        assert re.match(r"^S?\$\d+(?:/hr)?$", rate), f"rate_floor '{rate}' does not match currency pattern"
-        # Specifically verify it is NOT polluted by line 334 trading paragraph ("noise floor", "Barrier Proximity")
+        assert rate == "Unconfigured" or re.match(r"^S?\$\d+(?:/hr)?$", rate), (
+            f"rate_floor '{rate}' does not match currency pattern or Unconfigured"
+        )
         assert "noise floor" not in rate.lower()
         assert "barrier proximity" not in rate.lower()
         assert "kelly" not in rate.lower()
 
     def test_poisoned_canonical_triggers_fallback(self, monkeypatch, tmp_path):
-        """Verify that malformed CANONICAL rate rows gracefully trigger shape fallback."""
+        """Verify that malformed CANONICAL rate rows gracefully trigger neutral fallback."""
         poisoned_canonical = tmp_path / "CANONICAL.md"
         poisoned_canonical.write_text(
             "| **Consulting Rate** | **This is corrupted text that is not a rate** |\n",
@@ -169,9 +179,44 @@ class TestPersonalisationPromptAndSnapshot:
         )
         monkeypatch.setattr("athena.tools.personalisation.CANONICAL_PATH", poisoned_canonical)
         snapshot = build_user_state_snapshot()
-        # Default safe fallback must be retained
-        assert "S$150/hr" in snapshot["rate_floor"]
+        assert snapshot["rate_floor"] == "Unconfigured"
         assert "[STATE_FIELD_FALLBACK]" in snapshot.get("_provenance_rate_floor", "")
+
+    def test_active_context_recency_uses_latest_checkpoint(self, monkeypatch, tmp_path):
+        """Verify checkpoint parsing selects the latest block rather than the oldest."""
+        mem_dir = tmp_path / ".context" / "memory_bank"
+        mem_dir.mkdir(parents=True)
+        (mem_dir / "activeContext.md").write_text(
+            "\n".join(
+                [
+                    "[[ S1 |",
+                    "@focus: Old",
+                    "@pending: Stale",
+                    "!checkpoint ]]",
+                    "[[ S2 |",
+                    "@focus: Current",
+                    "@pending: Fresh",
+                    "!checkpoint ]]",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        monkeypatch.setattr("athena.tools.personalisation.PROJECT_ROOT", tmp_path)
+        snapshot = build_user_state_snapshot()
+        assert "Current" in snapshot["active_focus"]
+        assert "Old" not in snapshot["active_focus"]
+        assert "Fresh" in snapshot["active_pending"]
+        assert "Stale" not in snapshot["active_pending"]
+
+    def test_blank_workspace_has_no_hardcoded_private_defaults(self, monkeypatch, tmp_path):
+        """Verify blank workspaces default neutrally with no hardcoded private figures."""
+        monkeypatch.setattr("athena.tools.personalisation.CANONICAL_PATH", tmp_path / "missing_CANONICAL.md")
+        monkeypatch.setattr("athena.tools.personalisation.PROJECT_ROOT", tmp_path)
+        snapshot = build_user_state_snapshot()
+        assert snapshot["rate_floor"] == "Unconfigured"
+        assert snapshot["key_man_risk"] == "Unconfigured"
+        assert snapshot["behavioral_anchors"] == []
+        assert "$150" not in json.dumps(snapshot)
 
     def test_build_personalisation_prompt(self):
         res = [SearchResult(id="doc_1", content="Client negotiation history", source="case_study", score=0.9)]

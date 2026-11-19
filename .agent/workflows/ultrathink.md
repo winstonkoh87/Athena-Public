@@ -23,7 +23,7 @@ last_updated: 2026-11-14
 
 1. **Mandatory Exocortex Grounding**:
    ```bash
-   .agent/scripts/athena-py .agent/scripts/smart_search.py "<extract keywords from query>" --limit 5 --include-personal --rerank
+   .agent/scripts/athena-py -m athena.tools.search "<extract keywords from query>" --limit 5 --rerank
    ```
 2. **Internal CoT Pre-Flight**: Deconstruct axioms -> 3-angle Lateral Prism -> Preliminary Plan -> Flaw Hunt -> Initial Hypothesis.
 3. **Stage Context Artifact**: Write the preliminary hypothesis, retrieved search hits, and active user constraints (`Law #1 Ruin`, equity/fuse limits, calibration rules) to `.agent/state/ultrathink_context.md` *(gitignored, workspace-isolated)*.
@@ -40,9 +40,9 @@ Spin up **isolated parallel workers** via `swarm` (`native_swarm` board) or `inv
 - **Track D (`zero-point`)**: Question problem ontology and hidden framing traps.
 Run adversarial critique until **Convergence Score >= 85** (max 3 rounds) before `@coordinator` synthesizes.
 
-### Option B: Automated External API Orchestrator (`parallel_orchestrator.py`)
+### Option B: Automated External API Orchestrator (`scripts/parallel_orchestrator.py`)
 ```bash
-.agent/scripts/athena-py .agent/scripts/parallel_orchestrator.py "<the user's query>" \
+.agent/scripts/athena-py scripts/parallel_orchestrator.py "<the user's query>" \
   --context-file .agent/state/ultrathink_context.md \
   --output .context/state/ultrathink/ultrathink_$(date +%Y%m%d_%H%M%S).md \
   --json
@@ -59,7 +59,7 @@ Output the 4 structured track prompts + staged context inside a fenced ````text`
 1. Present clean synthesis: **Convergence Score & iterations**, **Track agreements**, **Resolved conflicts**, **Track B Ruin/Risk integration**, and **Final decision/recommendation with explicit confidence & falsifiers**.
 2. **Quicksave**:
    ```bash
-   .agent/scripts/athena-py .agent/scripts/quicksave.py --stdin <<'EOF'
+   .agent/scripts/athena-py scripts/quicksave.py --stdin <<'EOF'
    Executed /ultrathink on: <brief query summary>. Convergence score: <score>. Key insight: <one-liner>.
    EOF
    ```

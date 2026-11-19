@@ -163,6 +163,12 @@ _IN_GAME_OPT_TRAP_PATTERN = re.compile(
     r"tuition\s+agency|agency|vending|franchise)"
     r"|\b(?:right\s+game|wrong\s+game|red\s+curve|blue\s+curve|table\s+selection\s+vs|"
     r"optimis(?:e|ing)\s+within\s+the\s+game|optimize\s+within\s+the\s+game)\b"
+    r"|\busers?\s+(?:are|keep)\s+churning\b"
+    r"|(?:tweak|optimi[sz]e|improve|fix|scale)\s+(?:my\s+|our\s+)?(?:meta\s+ads?|ad\s+copy|facebook\s+ads?|google\s+ads?|cold\s+email|seo\s+backlinks?|cac)\b"
+    r"|\bsaas\s+cac\b"
+    r"|\b(?:scrape\s+competitor\s+prices?|match\s+the\s+lowest\s+(?:price|one)|undercut(?:ting)?\s+(?:us|competitors?)|commission\s+marketplace)\b"
+    r"|\b(?:missed\s+\d+\s+sprints?|stricter\s+jira\s+(?:workflow|process)|daily\s+\d+-?minute\s+(?:status\s+)?standups?)\b"
+    r"|(?:custom\s+(?:erp|crm)|rewrite\b.{0,40}\bmonolith\b.{0,20}\bmicroservices)\b"
     r")",
     re.IGNORECASE,
 )
@@ -174,10 +180,16 @@ _CODE_OPT_EXCLUSION_GUARD = re.compile(
     re.IGNORECASE,
 )
 
+_BUSINESS_TRAP_OVERRIDE_RE = re.compile(
+    r"\b(?:churn|churning|cac|conversion|revenue|pricing|competitor|marketplace|"
+    r"commission|undercut|ads?|sprint|jira|erp|refund|chargeback)\b",
+    re.IGNORECASE,
+)
+
 
 def is_in_game_optimization_trap(query: str) -> bool:
     """Detect L0/L1 in-game business optimization or explicit arena-selection asks."""
-    return bool(_IN_GAME_OPT_TRAP_PATTERN.search(query)) and not bool(
-        _CODE_OPT_EXCLUSION_GUARD.search(query)
-    )
+    if not _IN_GAME_OPT_TRAP_PATTERN.search(query):
+        return False
+    return not (_CODE_OPT_EXCLUSION_GUARD.search(query) and not _BUSINESS_TRAP_OVERRIDE_RE.search(query))
 

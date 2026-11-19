@@ -11,7 +11,7 @@ Trigger classes (structural, domain-agnostic):
     T1 INBOUND-NARRATIVE   received story/act with stakes ("why did they…")
     T2 OUTBOUND-COMMIT     audience-facing act about to be (or just) emitted
     T3 THIRD-PARTY-VERDICT forming/broadcasting judgment of someone else's act
-    T4 RESOURCE-COMMIT     novel money/time/reputation deployment (~$100+)
+    T4 RESOURCE-COMMIT     novel money/time/reputation deployment (~S$100+)
     T5 FELT-EVIDENCE       feeling offered as evidence ("feels like the market…")
 
 Why this exists (S545/S583/S601): `auto-invoke: true` frontmatter enforced
@@ -41,200 +41,31 @@ Contract: NEVER blocks (always exit 0), <50ms, stdlib only. Anything printed to
 
 import json
 import os
-import re
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
-# T1 — INBOUND-NARRATIVE: a received story, act, or signal with stakes.
-T1_INBOUND = [
-    r"why (did|would|does|is|are|won'?t|didn'?t|hasn'?t) (he|she|they|it|the|my|this|that|\w+)",
-    r"what does (this|it|that) (mean|say|signal)",
-    r"(real|actual|hidden) (reason|meaning|agenda|motive)",
-    r"reading between the lines",
-    r"am i missing something",
-    r"(he|she|they|the \w+) (said|announced|offered|claims?|promised|assured)",
-    # relational inbound (v2 patterns, retained as T1 members)
-    r"(haven'?t|hasn'?t|didn'?t) (replied|reply|gotten back|responded|texted back)",
-    r"left (me )?on read",
-    r"(no|zero) (reply|response|reaction)",
-    r"reached out",
-    r"ghost(ed|ing|s)?",
-    r"(are we|we'?re) (friends|besties|close|tight)",
-    r"(ignoring|ignored) me",
-    r"seen (but|and) (no|never)",
-    r"do(es)? (he|she|they) (like|want|value|respect) me",
-    # T1b — BARE-NARRATION: institutional/relational act nouns + stakes
-    # context WITHOUT requiring an interrogative. Fires on the high-F register
-    # where the operator narrates acts without framing a question (S545 keyed
-    # blind-spot: the questioning organ is offline when hot).
-    r"\b(pip|retrench\w*|laid off|terminated|restructur\w*|severance)\b",
-    r"\b(HR|human resource)\b.{0,30}\b(call\w*|meet\w*|schedul\w*|chat|talk|letter|email)\b",
-    r"\bboss\b.{0,20}\b(says?|wants?|told|asked|call\w*|meet\w*|chat|talk)\b",
-    r"\b(landlord|tenant|agent)\b.{0,30}\b(says?|wants?|told|asked|renovat\w*|rais\w*|terminat\w*|evict\w*|notice)\b",
-    r"\blawyer\b.{0,20}\b(letter|call\w*|says?|sent|contact\w*)\b",
-    r"\b(notice period|performance review|contract (termination|renewal|end\w*))\b",
-    r"\bmeeting\b.{0,20}\b(no agenda|with (no|without) (context|details))\b",
-    # Present-tense verb conjugation fix (v3.1): "says" / "tells me" / etc.
-    r"(he|she|they|the \w+|my \w+|boss|hr|landlord|lawyer) (says?|tells? me|is asking|wants?|pushed? back|demanded|insisted|warned)",
-    # T1p — COUNTERPARTY-PROBE markers (the Nacho-$20 class, CS-221).
-    r"(came in|paid|payment).{0,15}\b(short|under)\b",
-    r"\bshorted me\b",
-    r"\bpushing back\b.{0,15}\b(on|about|hard)\b",
-    r"\bchanged the (terms|scope|price|deal|agreement)\b",
-    # Relational drift — bare narration without interrogative
-    r"(he|she|they|my \w+).{0,10}\b(been|being|is|are|was) (distant|cold|weird|off|different|avoidant|quiet|silent|strange)\b",
-]
+# SSOT: Delegate classification engine directly to athena.core.gate_meta (TD-069b)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+SDK_PATH = PROJECT_ROOT / "src"
+if str(SDK_PATH) not in sys.path:
+    sys.path.insert(0, str(SDK_PATH))
 
-# T2 — OUTBOUND-COMMIT: an audience-facing act about to be emitted (or
-# narrated after the fact -> retro decode; the act happened un-gated).
-T2_OUTBOUND = [
-    r"should i (post|send|text|reply|message|dm|invite|tell|share|forward|call out|confront|expose|announce|publish|sign|quote|accept|agree to|pitch)",
-    r"before i (send|post|reply|text|message|sign|submit|commit)",
-    r"thinking of (posting|texting|sending|messaging|inviting|reaching out|calling out|confronting|signing|pitching|quoting)",
-    r"how (will|does|would|might) (this|it|that) (look|come across|land|read)",
-    r"how (this|it|that) (will|would|might|is going to) (look|come across|land|read)",
-    r"is it (ok|okay|fine|weird) to (send|post|text|reply|invite|ask|call out|confront|sign|quote)",
-    r"draft (this|a|my|the)",
-    r"about to (post|send|text|message|meet|sign|commit|call out|confront|submit)",
-    r"(plan|planning|going|want|intend)(ing)? to (post|send|text|message|invite|call out|confront|announce|publish|share|gift|sign|pitch)",
-    r"gonna (post|send|text|message|invite|call out|confront|announce|publish|share|gift|sign)",
-    r"\bi (invited|texted|posted|sent|messaged|confronted|called out|shared|dm'?ed|gifted|signed|quoted|pitched)\b",
-    r"call(ing|ed)?[- ]?out\b|\bcall (him|her|them|\w+) out\b",
-    r"\bpsa\b",
-    r"\boptics\b",
-    # T2b — OPEN-VERB OUTBOUND: structural pattern for unstated-but-risky acts
-    r"(should i|thinking (of|about)|about to|gonna|planning to|going to|i want to|i need to) (ask(ing)? for|propos(e|ing)|renegotiat(e|ing)|confront(ing)?|rais(e|ing) it|bring(ing)? it up|approach(ing)?|tell(ing)? .{1,20} how i feel|break(ing)? up|end(ing)? it|quit(ting)?|resign(ing)?|walk(ing)? away|reject(ing)?)",
-    # Singlish outbound
-    r"\b(later|aftwards?)\b.{0,10}\b(i|we)\b.{0,10}\b(reply|text|send|tell|ask|msg)\b",
-    r"\breply (him|her|them)\b.{0,15}\b(or not|ok anot|better|should)\b",
-    r"\bjiak zua\b",
-]
+from athena.core.gate_meta import (
+    CLASSES,
+    NEGATIVE,
+    REMINDER_TEMPLATE,
+    classify,
+)
 
-# T3 — THIRD-PARTY-VERDICT: soliciting/forming a verdict on someone else's
-# act (public-callout class) + self-referential archetype checks.
-T3_VERDICT = [
-    r"(is|was|isn'?t|wasn'?t) (this|that|it|he|she) (ok|okay|not okay|inappropriate|acceptable|out of line|creepy|rude|wrong|cruel)",
-    r"(inappropriate|unprofessional|unacceptable), right\b",
-    r"how (dare|could) (he|she|they)",
-    r"am i being pryce",
-    r"is this a hummer",
-    r"out of context|\booc\b|taboo",
-]
+__all__ = ["CLASSES", "NEGATIVE", "REMINDER_TEMPLATE", "classify", "log_fire"]
 
-# T4 — RESOURCE-COMMIT: novel deployment of money/time/reputation
-# (seed threshold ~$100; capital/position decisions route to trading-risk-gate).
-T4_RESOURCE = [
-    r"should i (buy|purchase|get|order|subscribe|upgrade|renew|book|deposit|top ?up|preorder|enroll|register)",
-    r"(is it|is this|are they|is the \w+) worth",
-    r"worth (it|buying|paying|the (price|money|cost))",
-    r"should i (scale|size|double|add) (up|into|down|the)",
-    r"(good|fair|reasonable) (deal|price|value)\b",
-]
-
-# T5 — FELT-EVIDENCE: a feeling offered as evidence about external reality.
-T5_FELT = [
-    r"i feel like",
-    r"it feels like",
-    r"felt like we (\w+ )?(connected|clicked|bonded|vibed)",
-    r"it seems like (he|she|they|the|this|everyone)",
-    r"obviously (he|she|they|it|nothing|everyone|the)",
-    r"i'?m (sure|certain) (he|she|they|it|the)",
-    r"my gut (says|tells|feeling)",
-    r"vibes? (say|says|is|are|were)",
-    r"(has|have) to (bounce|recover|come back|reverse|moon|pump)",
-    # T5b — FELT-EVIDENCE VARIANTS: "feels off/wrong/weird", "something's not right"
-    r"\bfeels? (off|wrong|weird|sketchy|sus|too good|dodgy)\b",
-    r"\bsomething('s| is) (not right|off|wrong|fishy|weird)\b",
-    r"\bbad vibes?\b",
-    r"\bsomething about (this|it|that|him|her|them) (doesn'?t|does not) (sit|feel|add up)\b",
-]
-
-# T6 — INTAKE-AUTHORITY: prompt narrates a new project with a named authority
-# or open problem space. Mandates Brief Primacy over examiner CV.
-T6_INTAKE = [
-    r"\b(new|start(ing)?|take on|intake|quote) (a |the )?(capstone|assignment|coursework|dissertation|client project)\b",
-    r"\b(the )?(examiner|professor|lecturer|marker|instructor) (is|specializ\w*|teaches|has|wants)\b",
-    r"\b(capstone|assignment|coursework) (for|with) (an?|the) \w+( examiner| professor| lecturer)?\b",
-    r"\bwhat business (idea|plan|model)\b.{0,25}\b(capstone|assignment|coursework|module)\b",
-]
-
-# T7 — END-USER-CAPABILITY: prompt describes a deliverable + a non-expert
-# or anxious operator. Mandates Pilot-in-the-Cockpit & 5th-grader plain English.
-T7_CAPABILITY = [
-    r"\b(presenter|student|client) (is|will|has to) (present|deliver|defend|speak)\b",
-    r"\b(she|he|they|client|student) (doesn'?t know|doesn'?t understand|has no (background|clue|experience))\b",
-    r"\b(anxious|nervous|afraid|scared) (about |of )?(presenting|the presentation|the defense|speaking)\b",
-    r"\b(not so cheem|explain (it )?simply|plain english|in simple terms)\b",
-    r"\b(non-specialist|non-technical) (presenter|client|operator|candidate)\b",
-]
-
-CLASSES = [
-    ("T1-INBOUND", T1_INBOUND),
-    ("T2-OUTBOUND", T2_OUTBOUND),
-    ("T3-VERDICT", T3_VERDICT),
-    ("T4-RESOURCE", T4_RESOURCE),
-    ("T5-FELT", T5_FELT),
-    ("T6-INTAKE-AUTHORITY", T6_INTAKE),
-    ("T7-END-USER-CAPABILITY", T7_CAPABILITY),
-]
-
-# NEGATIVE — routine-ops context. If matched and the ONLY fired class is T4,
-# suppress (reconciliation/maintenance prompts must not gate; SNIPER stays fast).
-# v3.1: extended to also suppress T1-only fires on routine-ops use of
-# institutional noun anchors (HR policy docs, retrenchment stats, etc.).
-NEGATIVE = [
-    r"\breconcil\w*",
-    r"rebuild (the )?(excel|tracker|dashboard)",
-    r"sync (the )?balance",
-    r"compile (the )?(index|tracker|report|case stud)",
-    r"run (the )?tests?",
-    r"fix (the )?(test|lint|ci|typo)",
-    r"update (the )?changelog",
-    r"\bpytest\b",
-    # v3.1: routine-ops contexts for institutional nouns (prevent T1b false fires)
-    r"(update|compile|draft|write|edit|review) (the )?(HR|retrenchment|landlord|contract|performance) (policy|doc|report|stat|template|guide|form|page|section)",
-    r"(search|grep|find|list|index) .{0,20}(HR|retrench|landlord|contract|performance)",
-    r"(rename|refactor|move|delete|archive) .{0,20}(HR|retrench|landlord|contract|performance)",
-]
-
-# Kernel reminder — question-framed ("ask don't tell" beats prohibition for
-# agreement-bias; arXiv 2602.23971 — Dubois et al., verified real 2026-07-21),
-# class-tagged, kept within the 18-line injection-fatigue bound (test-enforced).
-# Step 8 guards partisan loyalty from curdling into paternalism: advisory frame
-# strengthens epistemic independence under personalization (arXiv:2603.00024).
-REMINDER_TEMPLATE = """<system-reminder>
-META-AWARENESS GATE (hook v3, code-enforced) — fired: {classes}
-Interpreter kernel — answer each question before responding (Prior -> Discriminators -> Payoff):
-1. ARENA: What container is this, and what is its IMPLICIT contract (not the stated one)?
-2. PRIOR: What is this arena's base rate? (substance-decode Module 3 library.)
-3. DISCRIMINATORS: Which verifiable details move the prior? List them, or state "none — prior holds".
-4. SIGN CHECK (MP-16): Is the working read inflating (self-flattering) or deflating (self-degrading)?
-   Would I accept this read if the sign were flipped? Correct both with equal rigor.
-5. RECEIVER FRAME (outbound, SimToM order): What does the receiver OBSERVE, intent stripped?
-   What is their worst plausible SELF-referential decode ("what does this say about ME?")?
-6. F != R: Is felt intensity being offered as evidence? It measures the feeler, not the world.
-7. PAYOFF: What does each misread cost? Act on the asymmetry, not the point estimate.
-8. INTAKE / OPERATOR (T6/T7): Does the brief mandate this sector, or are you over-indexing on a CV?
-   Will the actual presenter understand and comfortably defend every technical term in this script?
-9. AGENCY (anti-override): if ranking or advising, weight by the USER'S revealed preferences.
-Guards: capital/position sizing -> trading-risk-gate. Sincere read in payoff table.
-</system-reminder>"""
-
-
-def classify(prompt: str) -> list:
-    p = prompt.lower()
-    fired = []
-    for name, patterns in CLASSES:
-        if any(re.search(pat, p) for pat in patterns):
-            fired.append(name)
-    # Suppress single-class fires on routine-ops context (T4-only, T1-only, or T6-only)
-    if fired in [["T4-RESOURCE"], ["T1-INBOUND"], ["T6-INTAKE-AUTHORITY"]] and any(re.search(pat, p) for pat in NEGATIVE):
-        return []
-    return fired
 
 
 def log_fire(fired: list) -> None:
     """Fire-rate telemetry — reuses .athena/invocations.jsonl. Never raises."""
+    if os.environ.get("ATHENA_TELEMETRY_DISABLE") == "1":
+        return
     try:
         path = os.path.join(os.getcwd(), ".athena", "invocations.jsonl")
         if not os.path.isdir(os.path.dirname(path)):

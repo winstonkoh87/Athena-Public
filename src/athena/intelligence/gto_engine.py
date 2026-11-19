@@ -172,8 +172,8 @@ CAPABILITY_MANIFEST: dict[str, dict[str, Any]] = {
     },
     "compute_mcda": {
         "computes": "Multi-Criteria Decision Analysis with linear normalization and weighted summation",
-        "typed_inputs": ["candidates", "criteria", "weights", "scores", "veto_floors"],
-        "defaults": {"LAW1_MAX_RUIN": 0.05},
+        "typed_inputs": ["candidates", "criteria", "weights", "scores", "veto_floors", "preference_provenance"],
+        "defaults": {"LAW1_MAX_RUIN": 0.05, "preference_provenance": "stated"},
         "does_not": ["non-linear utility interactions", "probabilistic criteria", "adversarial counter-play"],
     },
     "derive_ruin_floors": {
@@ -193,8 +193,8 @@ CAPABILITY_MANIFEST: dict[str, dict[str, Any]] = {
     },
     "gto_screen": {
         "computes": "Integrated fail-closed screening combining Law #1 ruin veto and MCDA ranking",
-        "typed_inputs": ["candidates", "criteria", "weights", "scores", "ruin_estimates", "veto_floors"],
-        "defaults": {"LAW1_MAX_RUIN": 0.05},
+        "typed_inputs": ["candidates", "criteria", "weights", "scores", "ruin_estimates", "veto_floors", "preference_provenance"],
+        "defaults": {"LAW1_MAX_RUIN": 0.05, "preference_provenance": "stated"},
         "does_not": ["causal DAG modeling", "open system equilibrium solving"],
     },
     "compute_dual_vault_barbell": {
@@ -508,6 +508,8 @@ class MCDAResult:
     ruin_exemptions: dict[str, str] = field(default_factory=dict)
     pairwise_matrix: dict[str, dict[str, float]] = field(default_factory=dict)
     condorcet_winner: str | None = None
+    preference_provenance: str = "stated"
+    has_baseline_option: bool = False
 
     def to_ascii_table(self) -> str:
         lines = [
@@ -520,9 +522,13 @@ class MCDAResult:
             f"  Sensitivity (±10% Weights): {self.stability_verdict}",
             f"  Strategic Verdict         : {self.verdict}",
             f"  Pairwise Condorcet Winner : {self.condorcet_winner or 'NONE (cycle/tie)'}",
+            f"  Preference Provenance     : {self.preference_provenance}",
+            f"  Baseline / Exit Option    : {'PRESENT' if self.has_baseline_option else 'ABSENT (check Option D / Exit)'}",
         ]
         if not self.veto_screen_applied:
             lines.append("  ⚠ WARNING                 : NO HARD-CONSTRAINT SCREEN APPLIED (DEC-500 §3A SKIPPED)")
+        if self.preference_provenance == "stated":
+            lines.append("  [INFO] Weights are STATED (unvalidated against revealed behavior)")
         lines.extend([
             "------------------------------------------------------------",
             "  RANKED COMPOSITE SCORES:",
@@ -1701,6 +1707,31 @@ def compute_robustness(
     )
 
 
+_BASELINE_OPTION_TOKENS = (
+    "status_quo",
+    "status quo",
+    "do_nothing",
+    "do nothing",
+    "wait",
+    "exit",
+    "keep",
+    "baseline",
+    "none",
+    "walk_away",
+    "walk away",
+    "pass",
+)
+
+
+def _has_baseline_candidate(candidates: list[str]) -> bool:
+    for cand in candidates:
+        norm = re.sub(r"[^a-z0-9]+", " ", cand.lower()).strip()
+        words = set(norm.split())
+        if any(tok in words or tok in norm for tok in _BASELINE_OPTION_TOKENS):
+            return True
+    return False
+
+
 def compute_mcda(
     candidates: list[str],
     criteria: list[str],
@@ -1711,6 +1742,7 @@ def compute_mcda(
     veto_floors: dict[str, float] | None = None,
     hard_vetoes: dict[str, list[str]] | None = None,
     ruin_exemptions: dict[str, str] | None = None,
+    preference_provenance: str = "stated",
 ) -> MCDAResult:
     """Computes Multiple-Criteria Decision Analysis (MCDA) with deterministic sensitivity and §3A veto screening.
 
@@ -1724,6 +1756,11 @@ def compute_mcda(
     5. ±10% weight perturbation sensitivity testing across each criterion (§3E).
     6. Deterministic stability verification and Path D / Path E routing.
     """
+    if preference_provenance not in ("stated", "revealed"):
+        raise ValueError(
+            f"preference_provenance must be 'stated' or 'revealed', got {preference_provenance!r}"
+        )
+    has_baseline = _has_baseline_candidate(candidates)
     if not candidates:
         raise ValueError("candidates list cannot be empty")
     if not criteria:
@@ -1880,6 +1917,8 @@ def compute_mcda(
             vetoed_candidates=vetoed_candidates,
             veto_screen_applied=True,
             ruin_exemptions=dict(ruin_exemptions) if ruin_exemptions else {},
+            preference_provenance=preference_provenance,
+            has_baseline_option=has_baseline,
         )
 
     def calc_scores(w_map: dict[str, float]) -> dict[str, float]:
@@ -2043,6 +2082,8 @@ def compute_mcda(
         ruin_exemptions=dict(ruin_exemptions) if ruin_exemptions else {},
         pairwise_matrix=pairwise_matrix,
         condorcet_winner=condorcet_winner,
+        preference_provenance=preference_provenance,
+        has_baseline_option=has_baseline,
     )
 
 
@@ -2186,6 +2227,7 @@ def gto_screen(
     ruin_floor: float = 5.0,
     sensitivity_pct: float = 0.10,
     margin_threshold_pct: float = 5.0,
+    preference_provenance: str = "stated",
 ) -> MCDAResult:
     """Fail-closed GTO decision screening entry point.
 
@@ -2228,6 +2270,7 @@ def gto_screen(
         ruin_exemptions=dict(ruin_exempt) if ruin_exempt else None,
         sensitivity_pct=sensitivity_pct,
         margin_threshold_pct=margin_threshold_pct,
+        preference_provenance=preference_provenance,
     )
 
 
@@ -2652,13 +2695,25 @@ def execute_decision_action(
             tail_factor=payload.get("tail_factor", 3.0),
         )
     elif action == "mcda":
+        pref_prov = str(payload.get("preference_provenance", "stated"))
         has_ruin = bool(payload.get("ruin_inputs")) or payload.get("require_veto", False)
+        has_veto_floors = bool(payload.get("veto_floors"))
+        ruin_exempt = payload.get("ruin_exempt")
+        if real:
+            if not (review_date and str(review_date).strip() and prediction and str(prediction).strip()):
+                raise ValueError(
+                    "real=True MCDA requires non-empty review_date and prediction for calibration tracking."
+                )
+            if not (has_ruin or has_veto_floors or ruin_exempt):
+                raise VetoFloorRequired(
+                    "real=True MCDA requires ruin_inputs, veto_floors, or ruin_exempt (Law #1 fail-closed)."
+                )
         extra_kwargs: dict[str, Any] = {}
         if "ruin_criterion" in payload:
             extra_kwargs["ruin_criterion"] = payload["ruin_criterion"]
         if "ruin_floor" in payload:
             extra_kwargs["ruin_floor"] = payload["ruin_floor"]
-        if has_ruin:
+        if has_ruin or (real and has_veto_floors):
             res = gto_screen(
                 candidates=payload["candidates"],
                 criteria=payload["criteria"],
@@ -2668,10 +2723,23 @@ def execute_decision_action(
                 margin_threshold_pct=payload.get("margin_threshold_pct", 5.0),
                 veto_floors=payload.get("veto_floors"),
                 ruin_inputs=payload.get("ruin_inputs"),
-                ruin_exempt=payload.get("ruin_exempt"),
+                ruin_exempt=ruin_exempt,
+                preference_provenance=pref_prov,
                 **extra_kwargs,
             )
         else:
+            if real and ruin_exempt is not None:
+                cands = payload["candidates"]
+                missing_ex = [c for c in cands if c not in ruin_exempt]
+                if missing_ex:
+                    raise VetoFloorRequired(
+                        f"real=True MCDA with ruin_exempt only must cover all candidates; missing {missing_ex}"
+                    )
+                for cand, reason in ruin_exempt.items():
+                    if not isinstance(reason, str) or len(reason.strip()) < 10:
+                        raise ValueError(
+                            f"Exemption reason for candidate '{cand}' must be at least 10 non-space characters"
+                        )
             res = compute_mcda(
                 candidates=payload["candidates"],
                 criteria=payload["criteria"],
@@ -2680,6 +2748,8 @@ def execute_decision_action(
                 sensitivity_pct=payload.get("sensitivity_pct", 0.10),
                 margin_threshold_pct=payload.get("margin_threshold_pct", 5.0),
                 veto_floors=payload.get("veto_floors"),
+                ruin_exemptions=dict(ruin_exempt) if ruin_exempt else None,
+                preference_provenance=pref_prov,
             )
     elif action == "decision-mc":
         raw_states = payload["states"]

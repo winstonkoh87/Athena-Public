@@ -58,6 +58,8 @@ T1_INBOUND = [
     r"\b(psychological|behavioral|fbi) profile\b.{0,25}\b(on|of|for)\b",
     r"\bwhat (kind|type|sort) of (person|guy|girl|client|seller|buyer|counterparty|partner) is\b",
     r"\b(mo|modus operandi) (and|vs\.?|versus) signature\b",
+    # T1f — FORM-VS-SUBSTANCE CONTRACT / SLA CAP MARKERS
+    r"\b(sla|service level|warranty|indemnit\w*|liability cap|service credits?)\b.{0,60}\b(cap(ped)?|limit(ed)?|exclud\w*|waiv\w*|uptime|monthly fees?)\b",
 ]
 
 T2_OUTBOUND = [
@@ -97,7 +99,8 @@ T3_VERDICT = [
 ]
 
 T4_RESOURCE = [
-    r"should i (buy|purchase|get|order|subscribe|upgrade|renew|book|deposit|top ?up|preorder|enroll|register)",
+    r"should i (buy|purchase|get|order|subscribe|upgrade|renew|book|deposit|top ?up|preorder|enroll|register|spend|invest|commit|build|hire)",
+    r"\bbuild (a |our own )?custom\b.{0,25}\b(months?|years?)\b",
     r"(is it|is this|are they|is the \w+) worth",
     r"worth (it|buying|paying|the (price|money|cost))",
     r"should i (scale|size|double|add) (up|into|down|the)",

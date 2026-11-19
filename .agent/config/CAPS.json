@@ -33,14 +33,14 @@
     "cap_policy": "Entry count is uncapped as of 2026-05-07 (GTO alignment with protocols/workflows). The constraint is boot-load attention budget (~35K token ceiling / ~140KB), not entry count. Staleness thresholds (3mo/6mo) + quarterly /audit-canonical are the quality gates. Tiered loading ensures only relevant entries enter context per session.",
     "attention_budget_ceiling_tokens": 35000,
     "attention_budget_ceiling_bytes": 140000,
-    "current_bytes": 103969,
-    "current_utilization_pct": 74.3,
-    "tier_1_always_boot": 66,
-    "tier_2_domain_triggered": 110,
+    "current_bytes": 104651,
+    "current_utilization_pct": 74.8,
+    "tier_1_always_boot": 64,
+    "tier_2_domain_triggered": 112,
     "tier_3_on_demand": 1,
-    "boot_savings_pct": 51,
+    "boot_savings_pct": 52,
     "tier_map_path": ".agent/telemetry/tier_map.json",
-    "full_file_bytes": 422739
+    "full_file_bytes": 423739
   },
   "context_files": {
     "glossary": ".context/glossary.md",
@@ -54,7 +54,7 @@
   },
   "scripts": 288,
   "memories": {
-    "total_files": 6066,
+    "total_files": 6080,
     "path": ".context/memories/"
   },
   "paths": {
