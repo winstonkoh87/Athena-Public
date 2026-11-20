@@ -14,6 +14,7 @@ Usage:
     python3 .agent/scripts/harness_score.py --check    # Exit 1 if score < threshold
 """
 
+import importlib.util
 import json
 import os
 import re
@@ -124,11 +125,9 @@ def probe_ci_hard_fail() -> float:
 
 
 def probe_reranker() -> float:
-    try:
-        import sentence_transformers  # noqa: F401
+    if importlib.util.find_spec("sentence_transformers") is not None:
         return 0.85
-    except ImportError:
-        return 0.50
+    return 0.50
 
 
 def run_probe(probe_name: str, claude_settings: dict) -> float:
