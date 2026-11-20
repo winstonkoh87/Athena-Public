@@ -21,6 +21,7 @@ from typing import Any
 from athena.core import config
 from athena.core.cache import invalidate_search_cache
 from athena.core.permissions import get_permissions
+from athena.core.taint import assert_untainted
 
 
 class SessionService:
@@ -289,6 +290,17 @@ lambda_coverage_d:
 
         return filepath
 
+    def _resolve_root(self) -> Path:
+        if self.sessions_dir == config.SESSIONS_DIR:
+            return config.PROJECT_ROOT
+        if len(self.sessions_dir.parts) >= 3 and self.sessions_dir.parts[-3:] == (
+            ".context",
+            "memories",
+            "session_logs",
+        ):
+            return self.sessions_dir.parents[2]
+        return self.sessions_dir.parent
+
     def append_checkpoint(
         self,
         summary: str,
@@ -298,6 +310,7 @@ lambda_coverage_d:
         """
         Append a structured checkpoint block to the active session log.
         """
+        assert_untainted("append_checkpoint", project_root=self._resolve_root())
         target_path = log_path or self.get_current_session()
         if not target_path or not target_path.exists():
             raise FileNotFoundError(f"Active session log not found at {target_path}")

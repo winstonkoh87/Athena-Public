@@ -26,6 +26,18 @@
         ]
       },
       {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.agent/scripts/athena-py\" .agent/scripts/security/block_tainted_memory.py",
+            "timeout": 5,
+            "onFailure": "block",
+            "statusMessage": "Tainted memory quarantine gate"
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {

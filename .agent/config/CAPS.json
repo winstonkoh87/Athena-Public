@@ -40,7 +40,7 @@
     "tier_3_on_demand": 1,
     "boot_savings_pct": 52,
     "tier_map_path": ".agent/telemetry/tier_map.json",
-    "full_file_bytes": 424755
+    "full_file_bytes": 427624
   },
   "context_files": {
     "glossary": ".context/glossary.md",
@@ -54,7 +54,7 @@
   },
   "scripts": 289,
   "memories": {
-    "total_files": 6093,
+    "total_files": 6097,
     "path": ".context/memories/"
   },
   "paths": {

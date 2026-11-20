@@ -292,6 +292,7 @@ def quicksave(
         dict with 'status', 'log_file', 'timestamp', 'governance', and 'audit_warnings'.
     """
     from athena.core.governance import get_governance
+    from athena.core.taint import TaintBlockedError
     from athena.sessions import append_checkpoint
 
     # Permission gate
@@ -317,6 +318,13 @@ def quicksave(
             "timestamp": datetime.now().isoformat(),
             "governance": violation or "COMPLIANT",
             "audit_warnings": audit_warnings,
+        }
+    except TaintBlockedError as e:
+        return {
+            "status": "blocked",
+            "taint_blocked": True,
+            "error": str(e),
+            "hint": "Session is quarantined due to untrusted input; start a fresh session or clear taint manually with human confirmation.",
         }
     except FileNotFoundError as e:
         return {
@@ -1297,12 +1305,16 @@ def context_gate(
     else:
         primary_vector_mode = "always"
 
+    from athena.core.taint import is_tainted
+
+    tainted_session = is_tainted()
+
     # Execute search directly without stdout hijacking (WS3.1 / M-1 fix)
     search_results = run_search(
         query,
         limit=limit,
         json_output=True,
-        include_personal=True,
+        include_personal=not tainted_session,
         web=effective_web,
         intent=intent,
         print_output=False,
@@ -1363,8 +1375,8 @@ def context_gate(
         if isinstance(r, dict) and "meta_pattern_projection" in r
     )
     personalisation = None
-    user_state = pre_user_state
-    if user_state is None:
+    user_state = None if tainted_session else pre_user_state
+    if not tainted_session and user_state is None:
         try:
             from athena.tools.personalisation import build_user_state_snapshot
 
@@ -1373,7 +1385,7 @@ def context_gate(
             import sys
             print(f"   ⚠️ User state snapshot failed: {e}", file=sys.stderr)
             user_state = None
-    if intent == "PERSONALISED_DECISION":
+    if not tainted_session and intent == "PERSONALISED_DECISION":
         if pre_personalisation and pre_user_state is not None and mp_projected_count == 0:
             personalisation = pre_personalisation
         else:
@@ -1429,6 +1441,11 @@ def context_gate(
     intel_posture = assess_intel_posture(query, lambda_res=lambda_res, intent=intent)
 
     directive_parts = []
+    if tainted_session:
+        directive_parts.append(
+            "TAINT QUARANTINE ACTIVE: untrusted input detected; durable memory writes "
+            "and personal profile recall are blocked for this session."
+        )
     if has_parse_error:
         directive_parts.append(
             f"ERROR [RETRIEVAL PARSE FAILURE]: {search_results.get('error')}. "
@@ -1721,6 +1738,7 @@ def context_gate(
         "in_game_opt_trap": in_game_opt_trap,
         "compute_tier": compute_tier,
         "directive": directive,
+        "tainted": tainted_session,
         "risk_level": risk_level.name,
         "intent": intent,
         "timestamp": datetime.now().isoformat(),

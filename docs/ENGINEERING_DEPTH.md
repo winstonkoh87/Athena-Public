@@ -50,6 +50,13 @@ Park et al. (2023) rank agent memories by a weighted sum of **Recency**, **Impor
 | **Reflection** | End-of-session `/end` distillation, case-study extraction (`CS-*.md`), and `.agent/scripts/compact_learnings.py` | **Shipped (semi-automated)** — requires periodic `/dream` or `/end` sweeps when pending `SYSTEM_LEARNINGS.md` rows accumulate |
 | **Importance (1–10 per memory)** | Approximated via document-type weight priors (`protocol 3.5x` vs. `session 2.0x`), confidence/status bonuses in `learnings.py`, and manual graduation to `CANONICAL.md` / `CS-*.md` | **Intentionally omitted at write time** — avoids an LLM scoring call on every `quicksave`, trading per-episode scalar salience for zero-latency deterministic writes |
 
+### 1.2 Zero-Token TTL, Negative Guardrail Immunity & Role-Scoped Budgets
+
+- **Zero-Token Expiry (`src/athena/memory/learnings.py`)**: Learning notes and rows support optional ISO `expires_at` metadata (YAML field or inline `[expires_at:YYYY-MM-DD]` tag). Expired entries drop deterministically at query and compaction time without an LLM cleanup call; entries expiring within `<= 72h` receive an imminent-expiry priority boost (`+0.03`).
+- **Negative Guardrail Paradox Immunity (`pinned`)**: Usage-based hit counters mistakenly demote critical negative guardrails ("never do X") that appear 0 times precisely because the agent obeyed them. Athena tags pinned invariants (`pinned: true` / `[pinned]`) so they stay immune to expiry and sort above unpinned notes (`+0.04` search boost) with zero hit counting.
+- **Role-Scoped Context Budgets (`src/athena/memory/budgets.py`)**: `assemble_scoped_context()` isolates startup context by worker role: `front_desk` (`12,288 B`, `max_facts_per_topic=3` to prevent errand starvation), `scoped_worker` (`4,915 B`, `0 B` personal data, repo playbook `<= 1,228 B`, matching repo + pinned global invariants), `red_team_auditor` (`4,915 B`, `0 B` personal data), and `tainted` (`0 B`).
+- **Advisory-Locked Atomic Writes (`atomic_write_text`)**: All learning, taint, and erasure mutations write to a same-directory temp file under `fcntl.flock`, flush with `os.fsync`, enforce `0600` permissions, and swap via `os.replace`.
+
 ---
 
 ## 2. Automation & Runtime Governance
@@ -62,8 +69,15 @@ Park et al. (2023) rank agent memories by a weighted sum of **Recency**, **Impor
 
 ### 2.2 Fail-Closed PreToolUse & Diff-Scoped Stop Hooks
 
-- **PreToolUse Security Guards (`.agent/scripts/security/`)**: `block_secrets.py` (blocks reads/edits of `.env`, private keys, and credential files) and `block_ruin.py` (shlex-tokenized Law #1 blocker for destructive shell commands) run with `"onFailure": "block"` and exit `2` on malformed stdin.
+- **PreToolUse Security Guards (`.agent/scripts/security/`)**: `block_secrets.py` (blocks reads/edits of `.env`, private keys, and credential files), `block_tainted_memory.py` (blocks `Edit|Write` to durable memory stores while tainted), and `block_ruin.py` (shlex-tokenized Law #1 blocker for destructive shell commands) run with `"onFailure": "block"` and exit `2` on malformed stdin.
 - **Diff-Scoped Stop Verifier (`.agent/scripts/hook_stop_verify.py`)**: Runs a single `git status` pass plus batched `git diff -U0 HEAD` (`<0.5s`) to enforce Protocol 509 crisis referrals, GTO decision receipts (`GTO-xxxxxxxx`), diff-scoped LaTeX delimiter checks (`check_latex_leak.py --diff-only`), secret scans, and Python syntax compilation before the turn completes.
+
+### 2.3 Monotonic Taint Quarantine, Dream Verifier, Atomic Forget & Health Evals
+
+- **Monotonic Inbound Taint Quarantine (`src/athena/core/taint.py`)**: Once `mark_tainted()` fires (or `ATHENA_TAINTED=1` / corrupt taint state triggers fail-closed), `SessionService.append_checkpoint`, `mcp_server.quicksave`, `.agent/scripts/quicksave.py`, `.agent/scripts/shutdown.py`, and `.agent/scripts/security/block_tainted_memory.py` refuse durable memory writes, while `mcp_server.context_gate` forces `include_personal=False`. Clearing requires explicit `clear_taint(human_confirm=True)`.
+- **Deterministic `/dream` Transcript Verifier (`src/athena/memory/dream_verifier.py`)**: Cross-checks pending `SYSTEM_LEARNINGS.md` rows against session logs and `CANONICAL.md` at zero LLM cost (`PRUNE_EXPIRED`, `UNVERIFIED_CLAIM`, `ALREADY_CODIFIED`, `READY_TO_GRADUATE`, `NEEDS_REVIEW`).
+- **Atomic Cross-Layer Erasure (`src/athena/memory/forget.py`)**: `athena memory forget <phrase>` removes matching entries across local learning stores (and optionally `memory_bank` / `session_logs`) while invalidating search caches and FTS rows.
+- **Zero-Token Memory Health Eval (`src/athena/memory/health.py`, `scripts/memory_eval.py`)**: Audits startup byte caps, 4-gram cross-layer shingle overlap, TTL hygiene, Borges's Map Trap ratio (`curated / raw`), and 4 synthetic isolation/taint CI fixtures (`athena memory eval --fixtures`).
 
 ---
 

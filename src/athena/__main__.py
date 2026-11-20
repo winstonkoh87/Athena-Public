@@ -161,6 +161,10 @@ def main():
         help="Brief summary of the checkpoint",
     )
 
+    from athena.cli.memory import register_memory_subparser
+
+    register_memory_subparser(subparsers)
+
     args = parser.parse_args()
 
     if args.root:
@@ -214,6 +218,11 @@ def main():
         summary = " ".join(args.summary) if args.summary else "Checkpoint"
         success = run_quicksave(summary, project_root=args.root)
         sys.exit(0 if success else 1)
+
+    if args.command == "memory":
+        from athena.cli.memory import run_memory_command
+
+        sys.exit(run_memory_command(args))
 
     # Default action: boot
     from athena.boot.orchestrator import main as boot_main

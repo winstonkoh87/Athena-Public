@@ -277,6 +277,10 @@ def _run_learnings_stats() -> dict[str, Any]:
             "system_dupes": 0,
             "system_pending": 0,
             "system_integrated": 0,
+            "user_expired": 0,
+            "system_expired": 0,
+            "imminent_expiring": 0,
+            "date_bound_missing_ttl": 0,
         }
 
 
@@ -371,10 +375,12 @@ def _format_digest(status: dict[str, Any]) -> str:
     else:
         cal_line = f"{cal.get('status', 'unconfigured')} (n={cal_resolved})"
 
+    expired_total = lrn.get("user_expired", 0) + lrn.get("system_expired", 0)
+    expired_suffix = f", expired={expired_total}" if expired_total > 0 else ""
     lrn_line = (
         f"user={lrn.get('user_unique', 0)} (dupes={lrn.get('user_dupes', 0)}) | "
         f"system={lrn.get('system_unique', 0)} (pending={lrn.get('system_pending', 0)}, "
-        f"dupes={lrn.get('system_dupes', 0)})"
+        f"dupes={lrn.get('system_dupes', 0)}{expired_suffix})"
     )
 
     lines = [
@@ -430,10 +436,12 @@ def _format_compact(status: dict[str, Any]) -> str:
     sys_dupes = lrn.get("system_dupes", 0)
     user_dupes = lrn.get("user_dupes", 0)
     sys_pending = lrn.get("system_pending", 0)
-    if sys_dupes > 0 or user_dupes > 0 or sys_pending >= 200:
+    expired_total = lrn.get("user_expired", 0) + lrn.get("system_expired", 0)
+    if sys_dupes > 0 or user_dupes > 0 or sys_pending >= 200 or expired_total > 0:
+        exp_tag = f", expired={expired_total}" if expired_total > 0 else ""
         lines.append(
             f"   ℹ️ Learnings: {sys_pending} pending in SYSTEM_LEARNINGS.md "
-            f"({lrn.get('user_unique', 0)} user notes) — run /dream to graduate/prune"
+            f"({lrn.get('user_unique', 0)} user notes{exp_tag}) — run /dream to graduate/prune"
         )
     if not ih.get("healthy", True):
         lines.append(f"   ⚠️ Index health: {ih.get('summary', '')}")
