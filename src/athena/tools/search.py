@@ -101,6 +101,7 @@ WEIGHTS = {
     "reference": 1.8,
     "fts_bm25": 1.5,
     "web_search": 2.8,
+    "system_learnings": 1.8,
 }
 
 # SOTA Intent-Specific RRF Weights
@@ -123,6 +124,7 @@ PERSONALISED_DECISION_WEIGHTS = {
     "reference": 1.8,
     "tags": 2.2,
     "vector": 2.0,
+    "system_learnings": 1.4,
 }
 
 SYSTEM_KNOWLEDGE_WEIGHTS = {
@@ -144,6 +146,7 @@ SYSTEM_KNOWLEDGE_WEIGHTS = {
     "reference": 1.8,
     "tags": 2.2,
     "vector": 1.8,
+    "system_learnings": 2.2,
 }
 
 
@@ -415,6 +418,42 @@ def collect_canonical(query: str) -> list[SearchResult]:
     # Sort by score and limit to 3 (was 5 — reducing Canonical dominance)
     results.sort(key=lambda r: r.score, reverse=True)
     return results[:3]
+
+
+def collect_user_learnings(
+    query: str, include_personal: bool = True, limit: int = 3
+) -> list[SearchResult]:
+    """Collect local [U] learnings from USER_PROFILE.yaml when personal mode is enabled."""
+    if not include_personal or limit <= 0:
+        return []
+    try:
+        from athena.memory.learnings import search_learnings
+
+        return search_learnings(
+            query,
+            include_personal=True,
+            limit_user=limit,
+            limit_system=0,
+        )["user_profile"]
+    except Exception:
+        return []
+
+
+def collect_system_learnings(query: str, limit: int = 3) -> list[SearchResult]:
+    """Collect local [S] learnings from SYSTEM_LEARNINGS.md."""
+    if limit <= 0:
+        return []
+    try:
+        from athena.memory.learnings import search_learnings
+
+        return search_learnings(
+            query,
+            include_personal=False,
+            limit_user=0,
+            limit_system=limit,
+        )["system_learnings"]
+    except Exception:
+        return []
 
 
 def collect_tags(query: str) -> list[SearchResult]:
@@ -1041,9 +1080,9 @@ def collect_web_search_v2(query: str, limit: int = 5) -> list[SearchResult]:
 def _normalize_rrf_key(doc: SearchResult) -> str:
     """Extract a canonical identity key for a SearchResult so cross-channel
     results (e.g. FTS + Vector hitting the same file) fuse properly in RRF."""
-    if doc.source == "canonical":
-        return doc.id
-    if doc.source == "tags":
+    if doc.source in {"canonical", "tags", "system_learnings"} or doc.id.startswith(
+        ("UserLearning:", "SystemLearning:")
+    ):
         return doc.id
 
     path_val = (doc.metadata.get("path") if doc.metadata else None) or doc.path
@@ -1349,6 +1388,20 @@ def run_search(
     )
 
     canonical_mtime = int(CANONICAL_PATH.stat().st_mtime) if CANONICAL_PATH.exists() else 0
+    try:
+        import athena.core.config as _cfg
+
+        sys_learn_p = Path(_cfg.SYSTEM_LEARNINGS_FILE)
+        user_prof_p = Path(_cfg.USER_PROFILE_FILE)
+        sys_learn_mtime = int(sys_learn_p.stat().st_mtime) if sys_learn_p.exists() else 0
+        user_prof_mtime = (
+            int(user_prof_p.stat().st_mtime)
+            if (effective_personal and user_prof_p.exists())
+            else 0
+        )
+    except Exception:
+        sys_learn_mtime = 0
+        user_prof_mtime = 0
 
     # Define execution scope for strict cache isolation (F-07 fix: include corpus_fp)
     search_scope = {
@@ -1359,7 +1412,7 @@ def run_search(
         "personal": effective_personal,
         "intent": detected_intent,
         "web": effective_web,
-        "corpus_fp": canonical_mtime,
+        "corpus_fp": f"{canonical_mtime}:{sys_learn_mtime}:{user_prof_mtime}",
     }
     if vector_mode != "always":
         search_scope["vector_mode"] = vector_mode
@@ -1473,7 +1526,12 @@ def run_search(
                 "fts_bm25": lambda: collect_fts_bm25(query),
                 "filename": lambda: collect_filenames(query),
                 "framework_docs": lambda: collect_framework_docs(query),
+                "system_learnings": lambda: collect_system_learnings(query),
             }
+            if effective_personal:
+                local_tasks["user_profile"] = lambda: collect_user_learnings(
+                    query, include_personal=True
+                )
             extra_tasks: dict[str, Any] = {}
             if vector_mode != "local":
                 extra_tasks["vector"] = _vector_task
@@ -1485,14 +1543,15 @@ def run_search(
             executor = ThreadPoolExecutor(max_workers=max_workers)
             wait_on_exit = True
             try:
-                # Launch local, vector, and web channels simultaneously at t=0
-                local_futures = {
-                    executor.submit(safe_exec, source, func): source
-                    for source, func in local_tasks.items()
-                }
+                # Launch slow network tasks (vector/web) first at t=0 so they claim
+                # worker 0 immediately rather than queuing behind fast local channels.
                 extra_futures = {
                     source: executor.submit(safe_exec, source, func)
                     for source, func in extra_tasks.items()
+                }
+                local_futures = {
+                    executor.submit(safe_exec, source, func): source
+                    for source, func in local_tasks.items()
                 }
 
                 # Collect fast local tasks first

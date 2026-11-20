@@ -255,6 +255,31 @@ def _run_context_summaries(force: bool = False) -> dict[str, Any]:
         return {"error": str(exc), "count": 0}
 
 
+def _run_learnings_stats() -> dict[str, Any]:
+    """Read local Bucket C learning store stats cleanly within fast-boot budget."""
+    try:
+        from athena.memory.learnings import get_learnings_stats
+
+        mem_dir = PROJECT_ROOT / ".athena" / "memory"
+        stats = get_learnings_stats(
+            user_path=mem_dir / "USER_PROFILE.yaml",
+            system_path=mem_dir / "SYSTEM_LEARNINGS.md",
+        )
+        return stats
+    except Exception as exc:
+        return {
+            "error": str(exc),
+            "user_total": 0,
+            "user_unique": 0,
+            "user_dupes": 0,
+            "system_total": 0,
+            "system_unique": 0,
+            "system_dupes": 0,
+            "system_pending": 0,
+            "system_integrated": 0,
+        }
+
+
 def _touch_last_boot_log() -> None:
     """Record fast-boot completion timestamp in .agent/state/last_boot.log."""
     try:
@@ -288,7 +313,7 @@ def gather_boot_status(days: int = 30, force_summaries: bool = False) -> dict[st
     health_thread.start()
 
     futures: dict[str, Future[Any]] = {}
-    executor = ThreadPoolExecutor(max_workers=6, thread_name_prefix="boot-local")
+    executor = ThreadPoolExecutor(max_workers=7, thread_name_prefix="boot-local")
     try:
         futures["accountability"] = executor.submit(_run_accountability)
         futures["maintenance_ratio"] = executor.submit(_run_maintenance_ratio, days)
@@ -296,6 +321,7 @@ def gather_boot_status(days: int = 30, force_summaries: bool = False) -> dict[st
         futures["decisions_due"] = executor.submit(_run_decisions_due)
         futures["context_summaries"] = executor.submit(_run_context_summaries, force_summaries)
         futures["calibration"] = executor.submit(_run_calibration)
+        futures["learnings"] = executor.submit(_run_learnings_stats)
 
         payload: dict[str, Any] = {
             name: fut.result(timeout=2.0)
@@ -331,6 +357,7 @@ def _format_digest(status: dict[str, Any]) -> str:
     dd = status.get("decisions_due", {})
     cal = status.get("calibration", {})
     ih = status.get("index_health", {})
+    lrn = status.get("learnings", {})
 
     overdue_f_ids = fl.get("overdue_frame_ids") or []
     overdue_f_suffix = f" [{', '.join(overdue_f_ids[:5])}]" if overdue_f_ids else ""
@@ -344,6 +371,12 @@ def _format_digest(status: dict[str, Any]) -> str:
     else:
         cal_line = f"{cal.get('status', 'unconfigured')} (n={cal_resolved})"
 
+    lrn_line = (
+        f"user={lrn.get('user_unique', 0)} (dupes={lrn.get('user_dupes', 0)}) | "
+        f"system={lrn.get('system_unique', 0)} (pending={lrn.get('system_pending', 0)}, "
+        f"dupes={lrn.get('system_dupes', 0)})"
+    )
+
     lines = [
         f"⚡ Boot Status ({status.get('elapsed_ms', 0)} ms)",
         f"   Accountability : {acc.get('summary', 'unknown')}",
@@ -355,6 +388,7 @@ def _format_digest(status: dict[str, Any]) -> str:
         ),
         f"   Calibration    : {cal_line}",
         f"   Decisions Due  : {dd.get('summary', 'unknown')}",
+        f"   Learnings      : {lrn_line}",
         f"   Index Health   : {ih.get('summary', 'unknown')}",
     ]
     return "\n".join(lines)
@@ -367,6 +401,7 @@ def _format_compact(status: dict[str, Any]) -> str:
     dd = status.get("decisions_due", {})
     cal = status.get("calibration", {})
     ih = status.get("index_health", {})
+    lrn = status.get("learnings", {})
 
     maint_pct = f"{mr.get('maintenance_share', 0.0):.0%}" if "maintenance_share" in mr else "n/a"
     idx_state = "ok" if ih.get("healthy", True) else "degraded"
@@ -392,6 +427,14 @@ def _format_compact(status: dict[str, Any]) -> str:
         )
     elif cal_overdue:
         lines.append(f"   ⚠️ Overdue CAL predictions: {', '.join(cal_overdue[:5])}")
+    sys_dupes = lrn.get("system_dupes", 0)
+    user_dupes = lrn.get("user_dupes", 0)
+    sys_pending = lrn.get("system_pending", 0)
+    if sys_dupes > 0 or user_dupes > 0 or sys_pending >= 200:
+        lines.append(
+            f"   ℹ️ Learnings: {sys_pending} pending in SYSTEM_LEARNINGS.md "
+            f"({lrn.get('user_unique', 0)} user notes) — run /dream to graduate/prune"
+        )
     if not ih.get("healthy", True):
         lines.append(f"   ⚠️ Index health: {ih.get('summary', '')}")
     return "\n".join(lines)
