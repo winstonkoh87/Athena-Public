@@ -159,9 +159,7 @@ def _dedup_system_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             continue
         existing = deduped[existing_idx]
         # Prefer integrated (non-Pending) rows; otherwise prefer the newer entry.
-        if row["integrated"] and not existing["integrated"]:
-            deduped[existing_idx] = row
-        elif row["integrated"] == existing["integrated"]:
+        if row["integrated"] or not existing["integrated"]:
             deduped[existing_idx] = row
     return deduped
 
@@ -333,11 +331,11 @@ def _ensure_idf(bundle: dict[str, Any]) -> None:
 
 
 def _keyword_matches_entry(kw: str, entry_tokens: set[str], text_lower: str) -> bool:
-    if kw in entry_tokens or kw in text_lower:
-        return True
-    if "-" in kw and kw.replace("-", " ") in text_lower:
-        return True
-    return False
+    return (
+        kw in entry_tokens
+        or kw in text_lower
+        or ("-" in kw and kw.replace("-", " ") in text_lower)
+    )
 
 
 def load_system_learnings(path: Path | None = None) -> list[dict[str, Any]]:
