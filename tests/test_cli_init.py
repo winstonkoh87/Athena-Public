@@ -199,15 +199,36 @@ def test_init_profile_hooks_only_preserves_existing_settings(tmp_path: Path) -> 
         timeout=30,
     )
     assert result.returncode == 0, result.stderr
-    assert (target / ".claude" / "settings.json").is_file()
+    settings_file = target / ".claude" / "settings.json"
+    assert settings_file.is_file()
+    import json
+
+    settings_data = json.loads(settings_file.read_text(encoding="utf-8"))
+    for group in settings_data["hooks"]["PreToolUse"]:
+        assert group["hooks"][0]["onFailure"] == "block"
+
     assert (target / ".agent" / "scripts" / "security" / "block_secrets.py").is_file()
     assert (target / ".agent" / "scripts" / "security" / "block_ruin.py").is_file()
     assert not (target / ".framework").exists()
     assert not (target / ".context").exists()
 
+    # Generated standalone hooks must fail closed on malformed stdin
+    for rel in (
+        ".agent/scripts/security/block_secrets.py",
+        ".agent/scripts/security/block_ruin.py",
+    ):
+        malformed = subprocess.run(
+            [sys.executable, str(target / rel)],
+            input="{bad json",
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        assert malformed.returncode == 2, f"{rel} did not fail closed on malformed stdin"
+
     # Existing .claude/settings.json must never be overwritten
     custom = '{"custom": true}\n'
-    (target / ".claude" / "settings.json").write_text(custom, encoding="utf-8")
+    settings_file.write_text(custom, encoding="utf-8")
     rerun = subprocess.run(
         [sys.executable, "-m", "athena", "init", str(target), "--profile", "hooks-only"],
         capture_output=True,

@@ -64,7 +64,13 @@ def main():
             return
 
         data = json.loads(raw)
-        tool_input = data.get("tool_input", {})
+        if not isinstance(data, dict):
+            raise ValueError("Expected JSON object on stdin")
+
+        tool_input = data.get("tool_input") or {}
+        if not isinstance(tool_input, dict):
+            raise ValueError("Expected tool_input JSON object")
+
         command = tool_input.get("command") or tool_input.get("cmd") or ""
 
         if command and not check_command_safe(command):
@@ -74,9 +80,12 @@ def main():
                 file=sys.stderr,
             )
             sys.exit(2)  # Exit 2 tells IDE hook runner to abort tool execution
-    except Exception:
-        # Fail safe: don't crash session on unparseable JSON unless in debug
-        pass
+    except Exception as exc:
+        print(
+            f"🚨 BLOCKED (fail-closed) by Athena Law #1: Ruin gate failed to parse tool input: {exc}",
+            file=sys.stderr,
+        )
+        sys.exit(2)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""PreToolUse (Read|Edit|Write) hook blocking reads/writes to sensitive credential files."""
+
 import json
 import sys
 from pathlib import Path
@@ -15,20 +17,24 @@ SENSITIVE = {
 }
 
 
-def block_secrets():
-    """
-    Reads tool input from stdin (simulated or actual hook input).
-    If a file path in the input matches a sensitive pattern, it exits with status 2.
-    """
+def block_secrets() -> None:
+    """Inspect hook stdin JSON; exit 2 on sensitive files or malformed input (fail-closed)."""
     try:
-        # In a real hook system, input comes via stdin.
-        # For manual testing/running, we might need to handle args or empty stdin.
         if sys.stdin.isatty():
-            # Interactive mode or no input
             return
 
-        data = json.load(sys.stdin)
-        tool_input = data.get("tool_input", {})
+        raw = sys.stdin.read()
+        if not raw.strip():
+            return
+
+        data = json.loads(raw)
+        if not isinstance(data, dict):
+            raise ValueError("Expected JSON object on stdin")
+
+        tool_input = data.get("tool_input") or {}
+        if not isinstance(tool_input, dict):
+            raise ValueError("Expected tool_input JSON object")
+
         file_path = (
             tool_input.get("file_path")
             or tool_input.get("path")
@@ -41,26 +47,26 @@ def block_secrets():
 
         path_obj = Path(file_path)
 
-        # Check filename against sensitive list
         if path_obj.name in SENSITIVE:
             print(
                 f"BLOCKED: Access to {file_path} denied. This file is flagged as SENSITIVE.",
                 file=sys.stderr,
             )
-            sys.exit(2)  # Exit 2 = block
+            sys.exit(2)
 
-        # Check against extension patterns if needed (e.g. *.key)
-        if any(file_path.endswith(ext) for ext in [".pem", ".key", ".p12"]):
+        if any(file_path.endswith(ext) for ext in (".pem", ".key", ".p12")):
             print(
                 f"BLOCKED: Access to {file_path} denied. Sensitive extension detected.",
                 file=sys.stderr,
             )
             sys.exit(2)
 
-    except Exception:
-        # Fail open or closed? Safe is closed, but for a script, maybe just log.
-        # print(f"Hook Error: {e}", file=sys.stderr)
-        sys.exit(0)
+    except Exception as exc:
+        print(
+            f"BLOCKED (fail-closed): Secret protection gate error while inspecting input: {exc}",
+            file=sys.stderr,
+        )
+        sys.exit(2)
 
 
 if __name__ == "__main__":

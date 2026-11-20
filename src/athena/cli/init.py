@@ -180,8 +180,15 @@ def main() -> None:
     try:
         if sys.stdin.isatty():
             return
-        data = json.load(sys.stdin)
-        tool_input = data.get("tool_input", {})
+        raw = sys.stdin.read()
+        if not raw.strip():
+            return
+        data = json.loads(raw)
+        if not isinstance(data, dict):
+            raise ValueError("Expected JSON object on stdin")
+        tool_input = data.get("tool_input") or {}
+        if not isinstance(tool_input, dict):
+            raise ValueError("Expected tool_input JSON object")
         file_path = (
             tool_input.get("file_path")
             or tool_input.get("path")
@@ -199,8 +206,12 @@ def main() -> None:
                 file=sys.stderr,
             )
             sys.exit(2)
-    except Exception:
-        sys.exit(0)
+    except Exception as exc:
+        print(
+            f"BLOCKED (fail-closed): Secret protection gate error while inspecting input: {exc}",
+            file=sys.stderr,
+        )
+        sys.exit(2)
 
 
 if __name__ == "__main__":
@@ -273,7 +284,11 @@ def main() -> None:
         if not raw.strip():
             return
         data = json.loads(raw)
-        tool_input = data.get("tool_input", {})
+        if not isinstance(data, dict):
+            raise ValueError("Expected JSON object on stdin")
+        tool_input = data.get("tool_input") or {}
+        if not isinstance(tool_input, dict):
+            raise ValueError("Expected tool_input JSON object")
         command = tool_input.get("command") or tool_input.get("cmd") or ""
         if command and not is_safe_command(command):
             print(
@@ -281,8 +296,12 @@ def main() -> None:
                 file=sys.stderr,
             )
             sys.exit(2)
-    except Exception:
-        pass
+    except Exception as exc:
+        print(
+            f"BLOCKED (fail-closed) by Law #1: Ruin gate failed to parse tool input: {exc}",
+            file=sys.stderr,
+        )
+        sys.exit(2)
 
 
 if __name__ == "__main__":
@@ -299,6 +318,7 @@ HOOKS_ONLY_SETTINGS_JSON = """{
             "type": "command",
             "command": "python3 \\"$CLAUDE_PROJECT_DIR/.agent/scripts/security/block_secrets.py\\"",
             "timeout": 5,
+            "onFailure": "block",
             "statusMessage": "Secret protection gate"
           }
         ]
@@ -310,6 +330,7 @@ HOOKS_ONLY_SETTINGS_JSON = """{
             "type": "command",
             "command": "python3 \\"$CLAUDE_PROJECT_DIR/.agent/scripts/security/block_ruin.py\\"",
             "timeout": 5,
+            "onFailure": "block",
             "statusMessage": "Ruin protection gate (Law #1)"
           }
         ]

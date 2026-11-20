@@ -125,3 +125,74 @@ def test_hook_stop_verify_cli_emits_warning_without_blocking_on_missing_cited_pa
     data = json.loads(proc.stdout)
     assert data["decision"] == "allow"
     assert any("does_not_exist_xyz.py" in w for w in data.get("warnings", []))
+
+
+def test_claude_settings_pretooluse_security_hooks_fail_closed() -> None:
+    settings_path = REPO_ROOT / ".claude" / "settings.json"
+    data = json.loads(settings_path.read_text(encoding="utf-8"))
+    pre_tool_use = data["hooks"]["PreToolUse"]
+    by_matcher = {group["matcher"]: group["hooks"] for group in pre_tool_use}
+    assert by_matcher["Read|Edit|Write"][0]["onFailure"] == "block"
+    assert by_matcher["Bash"][0]["onFailure"] == "block"
+
+
+def test_block_secrets_fail_closed_behavior() -> None:
+    script = SCRIPTS_DIR / "security" / "block_secrets.py"
+    blocked = subprocess.run(
+        [sys.executable, str(script)],
+        input=json.dumps({"tool_input": {"file_path": ".env"}}),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert blocked.returncode == 2
+
+    malformed = subprocess.run(
+        [sys.executable, str(script)],
+        input="{bad json",
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert malformed.returncode == 2
+    assert "fail-closed" in malformed.stderr
+
+    allowed = subprocess.run(
+        [sys.executable, str(script)],
+        input=json.dumps({"tool_input": {"file_path": "README.md"}}),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert allowed.returncode == 0
+
+
+def test_block_ruin_fail_closed_behavior() -> None:
+    script = SCRIPTS_DIR / "security" / "block_ruin.py"
+    blocked = subprocess.run(
+        [sys.executable, str(script)],
+        input=json.dumps({"tool_input": {"command": "rm -rf .context"}}),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert blocked.returncode == 2
+
+    malformed = subprocess.run(
+        [sys.executable, str(script)],
+        input="{bad json",
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert malformed.returncode == 2
+    assert "fail-closed" in malformed.stderr
+
+    allowed = subprocess.run(
+        [sys.executable, str(script)],
+        input=json.dumps({"tool_input": {"command": "ls -la"}}),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert allowed.returncode == 0

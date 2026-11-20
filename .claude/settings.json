@@ -20,6 +20,7 @@
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR/.agent/scripts/athena-py\" .agent/scripts/security/block_secrets.py",
             "timeout": 5,
+            "onFailure": "block",
             "statusMessage": "Secret protection gate"
           }
         ]
@@ -31,6 +32,7 @@
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR/.agent/scripts/athena-py\" .agent/scripts/security/block_ruin.py",
             "timeout": 5,
+            "onFailure": "block",
             "statusMessage": "Ruin protection gate (Law #1)"
           }
         ]
