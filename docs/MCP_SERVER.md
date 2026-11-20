@@ -1,3 +1,9 @@
+---
+tracks:
+  - src/athena/mcp_server.py
+  - src/athena/duckdb_mcp_server.py
+---
+
 # MCP Tool Server
 
 > **Model Context Protocol integration for Project Athena.**

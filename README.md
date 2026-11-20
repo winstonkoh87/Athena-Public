@@ -46,11 +46,15 @@ git clone https://github.com/winstonkoh87/Athena-Public.git && cd Athena-Public
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[local]"               # local install (no cloud API keys required)
 athena init --ide claude                # or: antigravity, cursor, gemini, vscode, kilocode, roocode
+# Or start small without scaffolding the full tree:
+# athena init --ide claude --profile minimal     # 3 Markdown memory files + AGENTS.md
+# athena init --profile hooks-only               # standalone PreToolUse secret + ruin hooks
 athena doctor                           # verify environment & workspace health
 ```
 
 Then type `/start` in your IDE's AI chat panel. Work normally. Type `/end` to save.
 
+> **No Python / CLI?** Grab the copy-paste [0-code 3-file starter](examples/starter-zero-code/) (`active_context.md`, `rules.md`, `decisions.md`) for regular ChatGPT, Claude, or Gemini web chats.
 > **Full install** (cloud sync + cross-encoder reranking): `pip install -e ".[full]"`
 > See [Getting Started](docs/GETTING_STARTED.md) for Windows, advanced config, and Supabase setup.
 
@@ -147,6 +151,7 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 | **Quantitative decision screening & wargaming** — EEV, 1/3 Kelly, Ruin, MCDA, 2-turn game trees | ✅ Shipped (`code-available`) | [`gto_engine.py`](src/athena/intelligence/gto_engine.py) & [`wargame.py`](src/athena/intelligence/wargame.py) emit SHA-256 receipts (`107` tests); Stop hook blocks unreceipted numeric engine claims |
 | **Pre-registered problem framing** — Lite/Strict `frame_open`, `R1–R14` gates & holdout eval | ✅ Shipped (`code-available`) | [`frame_ledger.py`](src/athena/intelligence/frame_ledger.py) & [`tests/test_problem_solving_holdout.py`](tests/test_problem_solving_holdout.py) (30-case holdout + calibration) |
 | **Governed autonomy** — hooks block destructive commands, ungrounded claims, and secrets | ✅ Shipped (partial) | shlex-tokenized ruin check blocks canonical rm -rf / find -delete / mv / force-push / reset --hard / shutil.rmtree ([tests/test_ruin_structured.py](tests/test_ruin_structured.py)); shell indirection bypasses are [known and tracked](docs/TECH_DEBT.md#p2-bash-guard-shell-indirection-boundaries) |
+| **Claim & citation tracing** — verifying numeric claims, denials, and cited repo paths | 🟡 Partial | GTO `GTO-xxxxxxxx` numeric receipts, opt-in universal-negative gate (`.agent/scripts/hook_epistemic_gate.py`), and non-blocking cited-path checks (`hook_stop_verify.py`); general prose claim-entailment is *not* solved |
 | **Compounding personalization** — session 2,000 recalls session 5 | 🟡 N=1 evidence | 2,100+ sessions, 410 active protocols, and 632 case studies by the author; no multi-user study |
 | **Anti-sycophancy** — personalization doesn't silently increase agreement | 🟡 Partial mitigation | Code-enforced meta-awareness gate (Claude Code hook); agent-discretion in hookless IDEs — see [honest limits](docs/ENGINEERING_DEPTH.md) |
 

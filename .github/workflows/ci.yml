@@ -82,6 +82,9 @@ jobs:
       - name: Check Harness Score & Parity
         run: python .agent/scripts/harness_score.py --check --min=35.0
 
+      - name: Check doc/config drift
+        run: python scripts/check_doc_drift.py --check
+
       - name: Prevent [AUTHOR] Redaction Leaks
         run: |
           if grep -rn '\[AUTHOR\]' src/; then

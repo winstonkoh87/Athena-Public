@@ -6,7 +6,8 @@ This directory houses development utilities, benchmarking tools, demo generators
 
 - [`boot_status.py`](boot_status.py) — Batched concurrent session boot telemetry, index health, and calibration probe (`< 1.0s`).
 - [`shutdown.py`](shutdown.py) — Session close orchestrator with micro checkpointing, safe git commits, and JSONL log rotation.
-- [`harness_score.py`](harness_score.py) — 6-pillar zero-iteration agent harness capability (`C`) and enforcement (`E`) scorer.
+- [`harness_score.py`](../.agent/scripts/harness_score.py) — 6-pillar zero-iteration agent harness capability (`C`) and enforcement (`E`) scorer.
+- [`check_doc_drift.py`](check_doc_drift.py) — Source-bound doc/config drift and broken-link auditor (`--check`, `--fail-on-drift`).
 - [`maintenance_ratio.py`](maintenance_ratio.py) — Output-vs-maintenance commit ratio analyzer and backlog gate.
 - [`decision_ledger.py`](decision_ledger.py) — Decision logging, outcome auditing, and Brier calibration score calculator.
 - [`benchmark_kv_cache.py`](benchmark_kv_cache.py) — Benchmarks KV cache latency, token throughput, and TTFT across supported model providers.

@@ -123,6 +123,13 @@ def main():
         default=None,
         help="Generate IDE-specific configuration files",
     )
+    init_parser.add_argument(
+        "--profile",
+        "-p",
+        choices=["full", "minimal", "hooks-only"],
+        default="full",
+        help="Scaffold profile: full (default), minimal (3 Markdown files + AGENTS.md), or hooks-only (PreToolUse safety guards only)",
+    )
 
     # check subcommand (replaces --doctor)
     subparsers.add_parser("check", help="Run system health check (basic)")
@@ -192,7 +199,7 @@ def main():
         if args.here:
             target = Path.cwd()
 
-        success = init_workspace(target, ide=args.ide)
+        success = init_workspace(target, ide=args.ide, profile=args.profile)
         sys.exit(0 if success else 1)
 
     if args.end:

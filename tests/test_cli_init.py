@@ -153,3 +153,66 @@ def test_init_scaffolds_problem_solving_and_decision_workflow(ide: str, tmp_path
     rules_text = (target / EXPECTED_FILES[ide]).read_text(encoding="utf-8")
     for tool_name in ("context_gate", "frame_open", "decision_screen", "calibration_status"):
         assert tool_name in rules_text, f"{ide} rules missing '{tool_name}'"
+
+
+def test_init_full_excludes_retired_project_state(tmp_path: Path) -> None:
+    """Default full init must not create retired .context/project_state.md."""
+    target = tmp_path / "full-no-retired"
+    target.mkdir()
+    result = subprocess.run(
+        [sys.executable, "-m", "athena", "init", str(target)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0
+    assert not (target / ".context" / "project_state.md").exists()
+
+
+def test_init_profile_minimal_claude_creates_3_files_and_symlink(tmp_path: Path) -> None:
+    """Minimal profile scaffolds 3 Markdown memory files + AGENTS.md + CLAUDE.md without .framework/."""
+    target = tmp_path / "minimal-claude"
+    target.mkdir()
+    result = subprocess.run(
+        [sys.executable, "-m", "athena", "init", str(target), "--profile", "minimal", "--ide", "claude"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    assert (target / ".context" / "memory_bank" / "activeContext.md").is_file()
+    assert (target / ".context" / "memory_bank" / "userContext.md").is_file()
+    assert (target / ".context" / "memory_bank" / "decisions.md").is_file()
+    assert (target / "AGENTS.md").is_file()
+    assert (target / "CLAUDE.md").exists()
+    assert not (target / ".framework").exists()
+
+
+def test_init_profile_hooks_only_preserves_existing_settings(tmp_path: Path) -> None:
+    """Hooks-only profile drops PreToolUse guards without .framework/.context and preserves existing settings."""
+    target = tmp_path / "hooks-only"
+    target.mkdir()
+    result = subprocess.run(
+        [sys.executable, "-m", "athena", "init", str(target), "--profile", "hooks-only"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    assert (target / ".claude" / "settings.json").is_file()
+    assert (target / ".agent" / "scripts" / "security" / "block_secrets.py").is_file()
+    assert (target / ".agent" / "scripts" / "security" / "block_ruin.py").is_file()
+    assert not (target / ".framework").exists()
+    assert not (target / ".context").exists()
+
+    # Existing .claude/settings.json must never be overwritten
+    custom = '{"custom": true}\n'
+    (target / ".claude" / "settings.json").write_text(custom, encoding="utf-8")
+    rerun = subprocess.run(
+        [sys.executable, "-m", "athena", "init", str(target), "--profile", "hooks-only"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert rerun.returncode == 0
+    assert (target / ".claude" / "settings.json").read_text(encoding="utf-8") == custom

@@ -133,6 +133,7 @@ class ExocortexFTS:
             config.AGENT_DIR / "skills",
             config.AGENT_DIR / "workflows",
         ]
+        dirs_to_search.extend(config.get_extra_knowledge_dirs(config.PROJECT_ROOT))
 
         for d in dirs_to_search:
             if d.exists() and d.is_dir():

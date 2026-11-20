@@ -54,7 +54,7 @@
   },
   "scripts": 289,
   "memories": {
-    "total_files": 6088,
+    "total_files": 6093,
     "path": ".context/memories/"
   },
   "paths": {
@@ -80,8 +80,8 @@
     "scripts": "find .agent/scripts -type f | wc -l"
   },
   "case_studies": {
-    "total_files": 632,
-    "uppercase_convention": 632,
-    "note": "632 CS-*.md files across 14 domains. See CASE_STUDY_INDEX.md."
+    "total_files": 633,
+    "uppercase_convention": 633,
+    "note": "633 CS-*.md files across 14 domains. See CASE_STUDY_INDEX.md."
   }
 }

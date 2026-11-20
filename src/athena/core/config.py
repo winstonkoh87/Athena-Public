@@ -267,6 +267,96 @@ EXTENDED_DIRS = [
 ]
 
 
+def _parse_extra_dirs_yaml(yaml_path: Path) -> list[str]:
+    """Extract `memory.extra_dirs` entries from athena.yaml (PyYAML or stdlib fallback)."""
+    if not yaml_path.is_file():
+        return []
+    text = yaml_path.read_text(encoding="utf-8", errors="ignore")
+    try:
+        import yaml
+
+        data = yaml.safe_load(text) or {}
+        if isinstance(data, dict):
+            mem = data.get("memory")
+            if isinstance(mem, dict):
+                raw_dirs = mem.get("extra_dirs")
+                if isinstance(raw_dirs, list):
+                    return [str(d).strip() for d in raw_dirs if str(d).strip()]
+                if isinstance(raw_dirs, str) and raw_dirs.strip():
+                    return [raw_dirs.strip()]
+        return []
+    except ImportError:
+        pass
+
+    # Stdlib fallback for `memory:\n  extra_dirs:` block or inline list
+    dirs: list[str] = []
+    in_memory = False
+    in_extra = False
+    extra_indent = 0
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        indent = len(line) - len(line.lstrip())
+        if indent == 0:
+            in_memory = stripped.startswith("memory:")
+            in_extra = False
+            continue
+        if not in_memory:
+            continue
+        if stripped.startswith("extra_dirs:"):
+            rest = stripped.split(":", 1)[1].split("#", 1)[0].strip()
+            if rest.startswith("[") and rest.endswith("]"):
+                for part in rest[1:-1].split(","):
+                    item = part.strip().strip("'\"")
+                    if item:
+                        dirs.append(item)
+                in_extra = False
+            elif rest:
+                item = rest.strip("'\"")
+                if item:
+                    dirs.append(item)
+                in_extra = False
+            else:
+                in_extra = True
+                extra_indent = indent
+            continue
+        if in_extra:
+            if stripped.startswith("- "):
+                item = stripped[2:].split("#", 1)[0].strip().strip("'\"")
+                if item:
+                    dirs.append(item)
+            elif indent <= extra_indent:
+                in_extra = False
+    return dirs
+
+
+def get_extra_knowledge_dirs(root: Path | None = None) -> list[Path]:
+    """Discover external Markdown vault directories from ATHENA_EXTRA_DIRS and athena.yaml."""
+    base = Path(root).resolve() if root is not None else get_project_root()
+    raw_entries: list[str] = []
+
+    env_val = os.getenv("ATHENA_EXTRA_DIRS", "")
+    if env_val.strip():
+        for chunk in env_val.split(os.pathsep):
+            for part in chunk.split(","):
+                cleaned = part.strip()
+                if cleaned:
+                    raw_entries.append(cleaned)
+
+    raw_entries.extend(_parse_extra_dirs_yaml(base / "athena.yaml"))
+
+    resolved: list[Path] = []
+    seen: set[Path] = set()
+    for raw in raw_entries:
+        p = Path(raw).expanduser()
+        candidate = p.resolve() if p.is_absolute() else (base / p).resolve()
+        if candidate.exists() and candidate.is_dir() and candidate not in seen:
+            seen.add(candidate)
+            resolved.append(candidate)
+    return resolved
+
+
 def get_active_memory_paths():
     """Returns a deduplicated list of all active memory directory Paths."""
     paths = [p for p in CORE_DIRS.values() if p.exists()]

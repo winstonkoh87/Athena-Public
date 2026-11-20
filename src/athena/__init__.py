@@ -19,11 +19,3 @@ Usage:
 """
 
 __version__ = "10.0.6"
-
-# Auto-load environment variables on import
-try:
-    from dotenv import load_dotenv
-
-    load_dotenv()
-except ImportError:
-    pass  # dotenv is optional for minimal installs

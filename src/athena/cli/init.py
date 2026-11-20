@@ -7,12 +7,17 @@ Scaffold a new Athena workspace with directory structure and templates.
 Fulfills the "5-Minute Quickstart" promise.
 
 Usage:
-    athena init .                     # Initialize in current directory
+    athena init .                     # Initialize full workspace in current directory
     athena init --here                # Same as above
     athena init --here --ide cursor   # Init with Cursor-specific config
+    athena init . --profile minimal   # Minimal 3-file Markdown setup + AGENTS.md
+    athena init . --profile hooks-only  # PreToolUse secret + ruin guards only
     athena init my-project            # Create new project directory
 """
 
+import os
+import shutil
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -126,27 +131,192 @@ The save command will append a timestamped checkpoint to the current session log
 """
 
 
-PROJECT_STATE_TEMPLATE = """---
-created: '{date}'
-last_updated: '2026-02-06'
-framework_version: v1.0.0
----
+DECISIONS_TEMPLATE = """# Decision Log
 
-# Project State (Single Source of Truth)
+> **Created**: {date}
+> Append durable architectural choices, rejected dead ends, and invariants you do not want re-litigated.
 
-## 1. System Status
+| Date | Decision | Why / Constraint | Status |
+|:-----|:---------|:-----------------|:-------|
+| {date} | Initialize minimal Athena memory layout | Own plain Markdown state on disk | Active |
+"""
 
-- **Health**: 100%
-- **Session Count**: 0
-- **Last Session**: None
+MINIMAL_AGENTS_TEMPLATE = """# AGENTS.md — Athena Minimal Workspace
 
-## 2. Recent Changes
+> Read `.context/memory_bank/userContext.md` (stable constraints) and `.context/memory_bank/activeContext.md` (current thread) before starting work.
+> Keep answers direct, verify code changes with tests, and use plain ASCII for math and currency.
 
-- [{date}] Initialized Athena workspace via `athena init`.
+## Memory Files (3-File Loop)
 
-## 3. Notes
+1. `.context/memory_bank/activeContext.md` — Active focus, in-flight tasks, and latest checkpoint (rewrite regularly).
+2. `.context/memory_bank/userContext.md` — Stable preferences, stack invariants, and hard constraints (rarely changes).
+3. `.context/memory_bank/decisions.md` — Architectural calls and dead ends not to re-litigate.
 
-_Add project-specific notes here._
+## Session Loop
+
+- **Start**: Read `activeContext.md` + `userContext.md`.
+- **End**: Summarize only new decisions, open tasks, and dead ends into `activeContext.md` (and append durable rules to `decisions.md`).
+"""
+
+HOOK_BLOCK_SECRETS_TEMPLATE = '''#!/usr/bin/env python3
+"""PreToolUse (Read|Edit|Write) guard blocking access to sensitive credential files."""
+
+import json
+import sys
+from pathlib import Path
+
+SENSITIVE = {
+    ".env",
+    ".env.local",
+    "secrets.json",
+    "id_rsa",
+    "id_ed25519",
+    ".pem",
+    ".key",
+}
+
+
+def main() -> None:
+    try:
+        if sys.stdin.isatty():
+            return
+        data = json.load(sys.stdin)
+        tool_input = data.get("tool_input", {})
+        file_path = (
+            tool_input.get("file_path")
+            or tool_input.get("path")
+            or tool_input.get("target_file")
+            or ""
+        )
+        if not file_path:
+            return
+        path_obj = Path(file_path)
+        if path_obj.name in SENSITIVE or any(
+            file_path.endswith(ext) for ext in (".pem", ".key", ".p12")
+        ):
+            print(
+                f"BLOCKED: Access to {file_path} denied. Sensitive credential pattern detected.",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+    except Exception:
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
+'''
+
+HOOK_BLOCK_RUIN_TEMPLATE = '''#!/usr/bin/env python3
+"""PreToolUse (Bash) Law #1 guard blocking canonical destructive shell commands."""
+
+import json
+import re
+import shlex
+import sys
+
+RUIN_PATTERNS = (
+    r"rm\\s+-[a-z]*r[a-z]*f[a-z]*\\s+(?:/(?:\\s|$)|\\*|~|\\.context\\b|\\.agent\\b)",
+    r"rm\\s+-[a-z]*f[a-z]*r[a-z]*\\s+(?:/(?:\\s|$)|\\*|~|\\.context\\b|\\.agent\\b)",
+    r"find\\s+.*(?:\\.context|\\.agent).*\\-(?:delete|exec\\s+rm)",
+    r"mv\\s+.*(?:\\.context|\\.agent)\\b",
+    r"truncate\\s+-s\\s+0\\s+.*(?:\\.context|\\.agent)",
+)
+
+
+def is_safe_command(command: str) -> bool:
+    if not command or not command.strip():
+        return True
+    try:
+        from athena.core.ruin_check import check_command
+
+        return check_command(command)
+    except ImportError:
+        pass
+
+    for pat in RUIN_PATTERNS:
+        if re.search(pat, command, re.IGNORECASE):
+            return False
+
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        tokens = command.split()
+
+    if not tokens:
+        return True
+
+    cmd = tokens[0].lower()
+    if cmd == "git":
+        if "reset" in tokens and any(t in tokens for t in ("--hard", "-hard")):
+            return False
+        if "push" in tokens and any(t in tokens for t in ("--force", "-f", "--force-with-lease")):
+            return False
+        if "clean" in tokens and any(t.startswith("-") and "f" in t for t in tokens):
+            return False
+    if cmd in ("python", "python3") and "-c" in tokens:
+        idx = tokens.index("-c")
+        if idx + 1 < len(tokens):
+            code = tokens[idx + 1]
+            if any(x in code for x in ("shutil.rmtree", "os.remove", "os.unlink")) and any(
+                t in code for t in (".context", ".agent", "/")
+            ):
+                return False
+    return True
+
+
+def main() -> None:
+    try:
+        if sys.stdin.isatty():
+            return
+        raw = sys.stdin.read()
+        if not raw.strip():
+            return
+        data = json.loads(raw)
+        tool_input = data.get("tool_input", {})
+        command = tool_input.get("command") or tool_input.get("cmd") or ""
+        if command and not is_safe_command(command):
+            print(
+                f"BLOCKED by Law #1 (No Irreversible Ruin): {command}",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+    except Exception:
+        pass
+
+
+if __name__ == "__main__":
+    main()
+'''
+
+HOOKS_ONLY_SETTINGS_JSON = """{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \\"$CLAUDE_PROJECT_DIR/.agent/scripts/security/block_secrets.py\\"",
+            "timeout": 5,
+            "statusMessage": "Secret protection gate"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \\"$CLAUDE_PROJECT_DIR/.agent/scripts/security/block_ruin.py\\"",
+            "timeout": 5,
+            "statusMessage": "Ruin protection gate (Law #1)"
+          }
+        ]
+      }
+    ]
+  }
+}
 """
 
 # --- IDE-Specific Templates ---
@@ -396,27 +566,100 @@ SYSTEM_PATTERNS_TEMPLATE = """# System Patterns
 """
 
 
-def init_workspace(target_dir: Path | None = None, ide: str | None = None) -> bool:
-    """
-    Initialize an Athena workspace with the required directory structure.
+VALID_PROFILES = ("full", "minimal", "hooks-only")
 
-    Args:
-        target_dir: Directory to initialize. Defaults to current directory.
-        ide: IDE to generate config for (antigravity, claude, cursor, vscode, gemini, kilocode, roocode, zoocode).
 
-    Returns:
-        True if successful, False otherwise.
-    """
-    root = target_dir or Path.cwd()
-    root = Path(root).resolve()
+def _write_template(
+    root: Path, rel_path: str, content: str, *, executable: bool = False
+) -> None:
+    full_path = root / rel_path
+    full_path.parent.mkdir(parents=True, exist_ok=True)
+    if not full_path.exists():
+        full_path.write_text(content, encoding="utf-8")
+        if executable:
+            os.chmod(full_path, 0o755)
+        print(f"   ✅ {rel_path}")
+    else:
+        print(f"   ⏭️  {rel_path} (already exists)")
 
-    print("🏛️  ATHENA INIT")
 
-    if ide:
-        print(f"   IDE: {ide}")
-    print("=" * 60)
+def _ensure_git_repo(root: Path) -> None:
+    try:
+        git_check = subprocess.run(
+            ["git", "rev-parse", "--git-dir"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+        )
+        if git_check.returncode != 0:
+            subprocess.run(["git", "init"], cwd=root, capture_output=True, text=True)
+            print("   ✅ Git repository initialized")
+    except Exception:
+        pass
 
-    # Define structure
+
+def _init_minimal(root: Path, today: str, ide: str | None) -> None:
+    print("\n📁 Creating minimal memory structure...")
+    (root / ".context" / "memory_bank").mkdir(parents=True, exist_ok=True)
+    print("   ✅ .context/memory_bank/")
+
+    marker_path = root / ".athena_root"
+    marker_path.write_text(
+        f"# Athena Workspace (minimal)\nCreated: {datetime.now().isoformat()}\n",
+        encoding="utf-8",
+    )
+    print("   ✅ .athena_root (workspace marker)")
+
+    print("\n📝 Creating 3-file memory templates...")
+    for rel_path, content in (
+        (".context/memory_bank/activeContext.md", ACTIVE_CONTEXT_TEMPLATE.format(date=today)),
+        (".context/memory_bank/userContext.md", USER_CONTEXT_TEMPLATE.format(date=today)),
+        (".context/memory_bank/decisions.md", DECISIONS_TEMPLATE.format(date=today)),
+        ("AGENTS.md", MINIMAL_AGENTS_TEMPLATE),
+    ):
+        _write_template(root, rel_path, content)
+
+    _ensure_git_repo(root)
+
+    if ide == "claude":
+        print("\n⚙️  Creating claude configuration...")
+        claude_path = root / "CLAUDE.md"
+        if not claude_path.exists() and not claude_path.is_symlink():
+            try:
+                os.symlink("AGENTS.md", claude_path)
+                print("   ✅ CLAUDE.md -> AGENTS.md (symlink)")
+            except OSError:
+                shutil.copy2(root / "AGENTS.md", claude_path)
+                print("   ✅ CLAUDE.md (copied from AGENTS.md)")
+        else:
+            print("   ⏭️  CLAUDE.md (already exists)")
+    elif ide:
+        print(f"\n⚙️  Creating {ide} configuration...")
+        _create_ide_config(root, ide)
+
+
+def _init_hooks_only(root: Path) -> None:
+    print("\n🛡️  Installing standalone PreToolUse safety hooks...")
+    _write_template(
+        root,
+        ".agent/scripts/security/block_secrets.py",
+        HOOK_BLOCK_SECRETS_TEMPLATE,
+        executable=True,
+    )
+    _write_template(
+        root,
+        ".agent/scripts/security/block_ruin.py",
+        HOOK_BLOCK_RUIN_TEMPLATE,
+        executable=True,
+    )
+    _write_template(
+        root,
+        ".claude/settings.json",
+        HOOKS_ONLY_SETTINGS_JSON,
+    )
+
+
+def _init_full(root: Path, today: str, ide: str | None) -> None:
     directories = [
         ".agent/workflows",
         ".agent/scripts",
@@ -427,22 +670,17 @@ def init_workspace(target_dir: Path | None = None, ide: str | None = None) -> bo
         ".context/data",
     ]
 
-    # Create directories
     print("\n📁 Creating directories...")
     for dir_path in directories:
         full_path = root / dir_path
         full_path.mkdir(parents=True, exist_ok=True)
         print(f"   ✅ {dir_path}/")
 
-    # Create root marker (for path discovery)
     marker_path = root / ".athena_root"
     marker_path.write_text(
         f"# Athena Workspace\nCreated: {datetime.now().isoformat()}\n", encoding="utf-8"
     )
     print("   ✅ .athena_root (workspace marker)")
-
-    # Create template files
-    today = datetime.now().strftime("%Y-%m-%d")
 
     templates = [
         (
@@ -452,10 +690,6 @@ def init_workspace(target_dir: Path | None = None, ide: str | None = None) -> bo
         (".agent/workflows/start.md", START_WORKFLOW_TEMPLATE),
         (".agent/workflows/end.md", END_WORKFLOW_TEMPLATE),
         (".agent/workflows/save.md", SAVE_WORKFLOW_TEMPLATE),
-        (
-            ".context/project_state.md",
-            PROJECT_STATE_TEMPLATE.format(date=today),
-        ),
         (
             ".context/memory_bank/activeContext.md",
             ACTIVE_CONTEXT_TEMPLATE.format(date=today),
@@ -476,36 +710,66 @@ def init_workspace(target_dir: Path | None = None, ide: str | None = None) -> bo
 
     print("\n📝 Creating template files...")
     for file_path, content in templates:
-        full_path = root / file_path
-        if not full_path.exists():
-            full_path.write_text(content, encoding="utf-8")
-            print(f"   ✅ {file_path}")
-        else:
-            print(f"   ⏭️  {file_path} (already exists)")
+        _write_template(root, file_path, content)
 
-    # Ensure git repo is initialized for git health
-    import subprocess
-    try:
-        git_check = subprocess.run(["git", "rev-parse", "--git-dir"], cwd=root, capture_output=True, text=True)
-        if git_check.returncode != 0:
-            subprocess.run(["git", "init"], cwd=root, capture_output=True, text=True)
-            print("   ✅ Git repository initialized")
-    except Exception:
-        pass
+    _ensure_git_repo(root)
 
-    # IDE-specific configuration
     if ide:
         print(f"\n⚙️  Creating {ide} configuration...")
         _create_ide_config(root, ide)
+
+
+def init_workspace(
+    target_dir: Path | None = None,
+    ide: str | None = None,
+    profile: str = "full",
+) -> bool:
+    """
+    Initialize an Athena workspace with the required directory structure.
+
+    Args:
+        target_dir: Directory to initialize. Defaults to current directory.
+        ide: IDE to generate config for (antigravity, claude, cursor, vscode, gemini, kilocode, roocode, zoocode).
+        profile: Scaffold profile ('full', 'minimal', or 'hooks-only').
+
+    Returns:
+        True if successful, False otherwise.
+    """
+    if profile not in VALID_PROFILES:
+        print(f"❌ Unknown init profile '{profile}'. Expected one of: {', '.join(VALID_PROFILES)}")
+        return False
+
+    root = target_dir or Path.cwd()
+    root = Path(root).resolve()
+
+    print("🏛️  ATHENA INIT")
+    print(f"   Profile: {profile}")
+    if ide:
+        print(f"   IDE: {ide}")
+    print("=" * 60)
+
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    if profile == "minimal":
+        _init_minimal(root, today, ide)
+    elif profile == "hooks-only":
+        _init_hooks_only(root)
+    else:
+        _init_full(root, today, ide)
 
     # Summary
     print("\n" + "=" * 60)
     print("✅ ATHENA WORKSPACE INITIALIZED")
     print("=" * 60)
-    print("\n🚀 Next steps:")
-    print("   1. Open this folder in your AI IDE")
-    print('   2. Type "/start" to boot your agent')
-    print('   3. Work with your agent, then type "/end" to save')
+    if profile == "hooks-only":
+        print("\n🚀 Next steps:")
+        print("   1. Restart Claude Code to activate .claude/settings.json hooks")
+        print("   2. Customize .agent/scripts/security/ as needed")
+    else:
+        print("\n🚀 Next steps:")
+        print("   1. Open this folder in your AI IDE")
+        print('   2. Type "/start" to boot your agent')
+        print('   3. Work with your agent, then type "/end" to save')
     print("\n📚 Docs: https://github.com/winstonkoh87/Athena-Public")
 
     return True

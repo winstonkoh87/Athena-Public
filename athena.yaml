@@ -76,7 +76,7 @@ workflows:
 # ---------------------------------------------------------------------------
 hooks:
   dir: ".agent/hooks/"
-  # See hooks/hooks.yaml for hook definitions.
+  # See .claude/settings.json (IDE hooks) and .agent/hooks/pre-commit (git hook).
   # Hooks return: { action: allow | block | modify, reason?: string }
 
 # ---------------------------------------------------------------------------
@@ -92,12 +92,13 @@ memory:
     engine: "hybrid-rrf" # Parallel Hybrid RRF
     sources: 5
     include_personal: true
+  # extra_dirs: []  # Optional: local Obsidian/Logseq Markdown vault paths (or set ATHENA_EXTRA_DIRS)
 
 # ---------------------------------------------------------------------------
 # Runtime
 # ---------------------------------------------------------------------------
 runtime:
-  boot_tokens: 10000 # Target boot size
+  boot_tokens: 3600 # MinMax v2.0 target boot size
   boot_command: "/start"
   shutdown_command: "/end"
   max_turns: 50

@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.agent/scripts/hook_meta_awareness_gate.py\"",
+            "command": "\"$CLAUDE_PROJECT_DIR/.agent/scripts/athena-py\" .agent/scripts/hook_meta_awareness_gate.py",
             "timeout": 5,
             "statusMessage": "Meta-awareness gate"
           }
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.agent/scripts/security/block_secrets.py\"",
+            "command": "\"$CLAUDE_PROJECT_DIR/.agent/scripts/athena-py\" .agent/scripts/security/block_secrets.py",
             "timeout": 5,
             "statusMessage": "Secret protection gate"
           }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.agent/scripts/security/block_ruin.py\"",
+            "command": "\"$CLAUDE_PROJECT_DIR/.agent/scripts/athena-py\" .agent/scripts/security/block_ruin.py",
             "timeout": 5,
             "statusMessage": "Ruin protection gate (Law #1)"
           }
@@ -41,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.agent/scripts/hook_stop_verify.py\"",
+            "command": "\"$CLAUDE_PROJECT_DIR/.agent/scripts/athena-py\" .agent/scripts/hook_stop_verify.py",
             "timeout": 8,
             "statusMessage": "Output verifier (LaTeX/ASCII/secrets)"
           }
