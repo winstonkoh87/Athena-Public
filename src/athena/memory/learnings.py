@@ -20,13 +20,14 @@ from typing import Any
 
 from athena.core.models import SearchResult
 
+yaml: Any = None
 try:
-    import yaml
+    import yaml as _yaml
 
+    yaml = _yaml
     _YAML_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
     _HAS_YAML = True
 except ImportError:
-    yaml = None  # type: ignore[assignment]
     _YAML_LOADER = None
     _HAS_YAML = False
 

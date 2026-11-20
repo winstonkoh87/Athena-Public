@@ -48,7 +48,7 @@ def test_fts_indexes_and_searches_external_vault(
     ext_vault.mkdir()
     note = ext_vault / "architecture_notes.md"
     note.write_text(
-        "# External Vault Note\nUnique vault token: XENON_ORBITAL_CALIBRATION_991.\n",
+        "# External Vault Note\nExternal marker phrase: bluebell_lantern_garden.\n",
         encoding="utf-8",
     )
 
@@ -61,6 +61,6 @@ def test_fts_indexes_and_searches_external_vault(
     stats = fts.build()
     assert stats["file_count"] >= 1
 
-    hits = fts.search("XENON_ORBITAL_CALIBRATION_991", limit=5)
+    hits = fts.search("bluebell_lantern_garden", limit=5)
     assert len(hits) == 1
     assert "architecture_notes.md" in hits[0]["file_path"]
