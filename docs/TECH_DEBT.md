@@ -165,6 +165,16 @@ last_updated: 2026-07-22
 
 ## Open Items (Lower Priority)
 
+### P2: Bash Guard Shell-Indirection Boundaries (NEW — Nov 20, 2026)
+
+`block_ruin.py` / `src/athena/core/ruin_structured.py` uses `shlex` tokenization + regex floor patterns to block canonical destructive commands (`rm -rf`, `find -delete`, `mv .context`/`.agent`, `git reset --hard`, `git push --force`, `git clean -fd`, `shutil.rmtree`, truncating redirects — verified in [tests/test_ruin_structured.py](../tests/test_ruin_structured.py)).
+
+**Known bypass classes (seatbelt, not an OS sandbox)**:
+- Shell indirection / dynamic execution (`eval`, base64-decoded pipes, variable expansion hiding target paths)
+- Pipe-to-shell remote execution (`curl ... | sh`) and low-level disk/permission mutations (`dd`, `mkfs`, `chmod -R 000`)
+
+Do not market `block_ruin.py` as an airtight sandbox; use OS/container sandboxing for untrusted execution.
+
 ### P3: Lint scope gaps and a detector that over-reports (NEW — Jul 25, 2026)
 
 Filed after the v9.9.8 guard-integrity sweep. None are correctness bugs — the

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "athena": {
+      "command": "python3",
+      "args": ["-m", "athena.mcp_server"]
+    },
+    "duckdb-local": {
+      "command": "python3",
+      "args": ["-m", "athena.duckdb_mcp_server"]
+    }
+  }
+}

@@ -267,7 +267,10 @@ def run_probe(probe_name: str, claude_settings: dict) -> float:
         return 0.30  # STATIC ESTIMATE — no cron/daemon eval schedule exists
 
     elif probe_name == "tool_search":
-        if claude_settings.get("mcp", {}).get("tool_search"):
+        if (
+            claude_settings.get("env", {}).get("ENABLE_TOOL_SEARCH")
+            or claude_settings.get("mcp", {}).get("tool_search")
+        ):
             return 0.70
         return 0.30
 

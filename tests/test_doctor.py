@@ -80,6 +80,29 @@ class TestDoctorModule:
         assert "Cross-Encoder Reranker" in names
         assert "Embedding Cache" in names
 
+    def test_retrieval_substrate_missing_onnx_weights_warns_not_fails(self, project_root):
+        """Verify missing optional ONNX reranker weights warn instead of failing."""
+        from unittest.mock import patch
+
+        from athena.cli.doctor import WARN, check_16_retrieval_substrate
+
+        unavailable = {
+            "operational": False,
+            "mode": "none",
+            "model_path": None,
+            "has_model_file": False,
+            "has_tokenizer": False,
+            "has_onnxruntime": True,
+            "has_tokenizers": True,
+            "has_torch_fallback": False,
+        }
+        with patch("athena.tools.reranker.check_reranker_health", return_value=unavailable):
+            results = check_16_retrieval_substrate(Path(project_root))
+
+        reranker_result = next(r for r in results if r.name == "Cross-Encoder Reranker")
+        assert reranker_result.status == WARN
+        assert reranker_result.status != "fail"
+
 
 class TestDoctorJson:
     """Test JSON output mode."""

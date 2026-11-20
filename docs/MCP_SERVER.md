@@ -22,14 +22,21 @@ python -m athena.mcp_server --sse --port 8765
 
 ### IDE Configuration
 
-Add to your IDE's MCP settings (e.g., `.agent/mcp_config.json`):
+For **Claude Code**, copy [.mcp.json.example](../.mcp.json.example) to `.mcp.json` at the repo root to expose both `athena.mcp_server` (20 governance/memory/decision tools) and `athena.duckdb_mcp_server` (5 analytical SQL tools).
+
+For other IDEs, add to your IDE's MCP settings (e.g., `.agent/mcp_config.json`):
 
 ```json
 {
   "mcpServers": {
     "athena": {
-      "command": "python",
+      "command": "python3",
       "args": ["-m", "athena.mcp_server"],
+      "cwd": "/path/to/your/athena/workspace"
+    },
+    "duckdb-local": {
+      "command": "python3",
+      "args": ["-m", "athena.duckdb_mcp_server"],
       "cwd": "/path/to/your/athena/workspace"
     }
   }
@@ -38,18 +45,32 @@ Add to your IDE's MCP settings (e.g., `.agent/mcp_config.json`):
 
 ---
 
-## Tools (8)
+## Tools (20)
 
 | Tool | Permission | Sensitivity | Description |
 |------|-----------|-------------|-------------|
-| `smart_search` | read | internal | Hybrid RAG search (Canonical + Tags + Vectors + Filenames) with RRF fusion |
+| `smart_search` | read | internal | Hybrid RAG search (BM25 FTS5 + vectors + canonical/graph + ONNX rerank) |
+| `agentic_search` | read | internal | Multi-step query decomposition with parallel search |
+| `context_gate` | read | internal | Pre-answer context assembly, Meta-Triage, and grounding gate |
 | `quicksave` | write | internal | Save timestamped checkpoint to session log |
 | `health_check` | read | public | Audit Vector API + Database subsystems |
 | `recall_session` | read | internal | Retrieve recent session log content |
 | `governance_status` | read | internal | Check Triple-Lock compliance state |
 | `list_memory_paths` | read | public | List active memory directories |
-| `set_secret_mode` | admin | — | Toggle demo/external mode (blocks internal tools) |
-| `permission_status` | read | — | Show permission state and tool manifest |
+| `set_secret_mode` | admin | public | Toggle demo/external mode (blocks internal tools) |
+| `meta_awareness_check` | read | public | Classify prompt for meta-awareness / interpreter kernel injection |
+| `permission_status` | read | public | Show permission state and caller level |
+| `classify_turn` | read | public | Classify query complexity (`Lambda`) and risk tier |
+| `search_web` | read | public | Live web search via multi-provider failover chain |
+| `report_external_web_search` | read | public | Report external web search compliance |
+| `frame_open` | write | internal | Pre-register a problem frame (Lite/Strict, R1-R14 gates) |
+| `frame_validate` | read | internal | Validate a frame against contract gates + VOI stop rule |
+| `frame_resolve` | write | internal | Score a locked frame against observed outcomes |
+| `frame_status` | read | internal | Report frame quality and protocol adoption |
+| `calibration_status` | read | internal | Report Brier score, log-loss, and overdue predictions |
+| `decision_screen` | read | internal | Evaluate options via GTO engine (EEV / 1/3 Kelly / Ruin / MCDA) with SHA-256 receipts |
+
+> **Analytical SQL (`athena.duckdb_mcp_server`, 5 tools)**: `query`, `profile`, `create_table_from_file`, `list_tables`, and `export_result` run local DuckDB queries over CSV/JSON/Parquet without loading raw datasets into context.
 
 ## Resources (2)
 

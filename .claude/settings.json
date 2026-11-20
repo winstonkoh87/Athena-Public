@@ -49,7 +49,7 @@
       }
     ]
   },
-  "mcp": {
-    "tool_search": "auto:15"
+  "env": {
+    "ENABLE_TOOL_SEARCH": "auto:15"
   }
 }

@@ -743,7 +743,14 @@ def check_16_retrieval_substrate(root: Path, fix: bool = False) -> list[CheckRes
                 f"onnxruntime: {'Installed' if info['has_onnxruntime'] else 'MISSING'}, "
                 f"tokenizers: {'Installed' if info['has_tokenizers'] else 'MISSING'}"
             )
-            results.append(CheckResult("Cross-Encoder Reranker", FAIL, "Reranker unavailable", details))
+            results.append(
+                CheckResult(
+                    "Cross-Encoder Reranker",
+                    WARN,
+                    "Optional reranker weights not installed (FTS5/BM25 lexical search active)",
+                    details,
+                )
+            )
     except Exception as e:
         results.append(CheckResult("Cross-Encoder Reranker", WARN, f"Probe error: {e}"))
 

@@ -44,9 +44,9 @@ Athena moves the **memory, problem-framing, and decision layer to your machine**
 ```bash
 git clone https://github.com/winstonkoh87/Athena-Public.git && cd Athena-Public
 python3 -m venv .venv && source .venv/bin/activate
-pip install -e ".[local]"               # lightweight — no cloud deps
+pip install -e ".[local]"               # local install (no cloud API keys required)
 athena init --ide claude                # or: antigravity, cursor, gemini, vscode, kilocode, roocode
-athena doctor                           # expect 0 failures
+athena doctor                           # verify environment & workspace health
 ```
 
 Then type `/start` in your IDE's AI chat panel. Work normally. Type `/end` to save.
@@ -134,7 +134,7 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 | **Adversarial Wargaming Engine** | `intelligence/wargame.py` (`athena-wargame`) | Two-turn sequential Blue vs. Red game trees with intra-turn path-dependent trough ruin, Red best-response optimization, and tamper-evident run receipts (`.athena/wargame_runs.jsonl`) |
 | **Counterparty OSINT & Trade Governance** | `intelligence/ucds_validator.py`, `tools/trade_guardian.py` | Deterministic Universal Counterparty Dossier Standard (`audit_ucds_dossier`) validator (Track A/B bifurcation, knockout gates, cashflow inversion) plus position/drawdown/sizing safety guards |
 | **Local Analytical SQL** | `duckdb_mcp_server.py` (`query`, `profile`, `list_tables`, `export_result`) | Zero-dependency DuckDB engine for profiling and querying large CSV, JSON, and Parquet datasets without exhausting LLM context windows |
-| **Runtime Governance & Batched Telemetry** | `core/governance.py`, `scripts/boot_status.py`, `.agent/scripts/hook_*.py`, `.agent/scripts/lib/jsonl_tail.py` | Concurrent `<1.0s` boot status, `O(1)` 64KB EOF tail verification gates, capability permissions, crisis life-safety screen (Protocol 509), 14/16 destructive command blocker, and secret egress scanner |
+| **Runtime Governance & Batched Telemetry** | `core/governance.py`, `scripts/boot_status.py`, `.agent/scripts/hook_*.py`, `.agent/scripts/lib/jsonl_tail.py` | Concurrent `<1.0s` boot status, `O(1)` 64KB EOF tail verification gates, capability permissions, crisis life-safety screen (Protocol 509), shlex-tokenized destructive command blocker (ruin_structured.py), and secret egress scanner |
 
 ### What's enforced in code vs. by prompt
 
@@ -146,7 +146,7 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 | **Portability** — Markdown and JSONL on your disk, movable across models | ✅ Shipped (`structural`) | Plain files on disk — inspect the repo |
 | **Quantitative decision screening & wargaming** — EEV, 1/3 Kelly, Ruin, MCDA, 2-turn game trees | ✅ Shipped (`code-available`) | [`gto_engine.py`](src/athena/intelligence/gto_engine.py) & [`wargame.py`](src/athena/intelligence/wargame.py) emit SHA-256 receipts (`107` tests); Stop hook blocks unreceipted numeric engine claims |
 | **Pre-registered problem framing** — Lite/Strict `frame_open`, `R1–R14` gates & holdout eval | ✅ Shipped (`code-available`) | [`frame_ledger.py`](src/athena/intelligence/frame_ledger.py) & [`tests/test_problem_solving_holdout.py`](tests/test_problem_solving_holdout.py) (30-case holdout + calibration) |
-| **Governed autonomy** — hooks block destructive commands, ungrounded claims, and secrets | ✅ Shipped (partial) | Ruin check blocks 14/16 destructive commands; 2 shell bypasses are [known and tracked](docs/TECH_DEBT.md) |
+| **Governed autonomy** — hooks block destructive commands, ungrounded claims, and secrets | ✅ Shipped (partial) | shlex-tokenized ruin check blocks canonical rm -rf / find -delete / mv / force-push / reset --hard / shutil.rmtree ([tests/test_ruin_structured.py](tests/test_ruin_structured.py)); shell indirection bypasses are [known and tracked](docs/TECH_DEBT.md#p2-bash-guard-shell-indirection-boundaries) |
 | **Compounding personalization** — session 2,000 recalls session 5 | 🟡 N=1 evidence | 2,100+ sessions, 410 active protocols, and 632 case studies by the author; no multi-user study |
 | **Anti-sycophancy** — personalization doesn't silently increase agreement | 🟡 Partial mitigation | Code-enforced meta-awareness gate (Claude Code hook); agent-discretion in hookless IDEs — see [honest limits](docs/ENGINEERING_DEPTH.md) |
 
