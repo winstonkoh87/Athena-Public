@@ -212,6 +212,57 @@ def test_temporal_decay_preserves_timeless_protocols():
     assert fused[1].id == "Protocol:001-law-of-ruin.md"
 
 
+def test_temporal_decay_eliminates_jan_1_year_boundary_cliff():
+    """Adjacent dates across New Year's Eve must not suffer a cliff, and newer same-year sessions must win."""
+    from datetime import datetime, timezone
+
+    from athena.tools.search import compute_temporal_decay, weighted_rrf
+
+    ref_now = datetime(2026, 11, 20, tzinfo=timezone.utc)
+    dec_31 = compute_temporal_decay(
+        ".context/memories/session_logs/2025-12-31-session-S500.md", now=ref_now
+    )
+    jan_01 = compute_temporal_decay(
+        ".context/memories/session_logs/2026-01-01-session-S501.md", now=ref_now
+    )
+    assert abs(jan_01 - dec_31) < 0.005, (
+        f"Jan-1 boundary cliff detected: 2025-12-31={dec_31:.4f} vs 2026-01-01={jan_01:.4f}"
+    )
+
+    doc_jan = SearchResult(
+        id="Session:2026-01-02-session-S502.md",
+        content="Early January 2026 session",
+        source="session",
+        score=0.8,
+        metadata={"path": ".context/memories/session_logs/2026-01-02-session-S502.md"},
+    )
+    doc_nov = SearchResult(
+        id="Session:2026-11-18-session-S1690.md",
+        content="Mid November 2026 session",
+        source="session",
+        score=0.8,
+        metadata={"path": ".context/memories/session_logs/2026-11-18-session-S1690.md"},
+    )
+    fused = weighted_rrf({"session": [doc_jan, doc_nov]}, k=60)
+    assert fused[0].id == "Session:2026-11-18-session-S1690.md"
+
+
+def test_temporal_decay_year_only_fallback_and_asymptote_bounds():
+    """Year-only tokens decay smoothly and very old dates never drop below the 0.60 asymptote floor."""
+    from datetime import datetime, timezone
+
+    from athena.tools.search import compute_temporal_decay
+
+    ref_now = datetime(2026, 11, 20, tzinfo=timezone.utc)
+    mod_2024 = compute_temporal_decay("Case Study: 2024-liquidity-audit.md", now=ref_now)
+    mod_2015 = compute_temporal_decay("Session:2015-01-01-session-S01.md", now=ref_now)
+    mod_timeless = compute_temporal_decay("CS-367-high-wr-supremacy.md", now=ref_now)
+
+    assert 0.60 <= mod_2024 < 0.85
+    assert 0.60 <= mod_2015 <= 0.65
+    assert mod_timeless == 1.0
+
+
 def test_weighted_rrf_cross_channel_fusion():
     """When FTS and Vector collectors hit the same file, RRF must fuse their reciprocal ranks."""
     from athena.tools.search import weighted_rrf

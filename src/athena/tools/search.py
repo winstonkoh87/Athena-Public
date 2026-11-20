@@ -1107,6 +1107,54 @@ def _normalize_rrf_key(doc: SearchResult) -> str:
     return doc.id
 
 
+_ISO_DATE_RE = re.compile(
+    r"(?:^|[/_\-\s:])(20\d\d)-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])(?:[/_\-.\s:]|$)"
+)
+_YEAR_ONLY_RE = re.compile(r"(?:^|[/_\-\s:])(20\d\d)(?:[/_\-.\s:]|$)")
+
+
+def compute_temporal_decay(
+    target_str: str,
+    *,
+    now: datetime | None = None,
+    half_life_days: float = 365.25,
+    ceiling: float = 1.15,
+    floor: float = 0.60,
+) -> float:
+    """Compute continuous exponential recency modifier in [floor, ceiling].
+
+    Eliminates the Jan-1 calendar-year cliff of discrete year buckets while
+    preserving the [0.60, 1.15] RRF multiplier range:
+      temporal_mod = floor + (ceiling - floor) * 0.5 ** (age_days / half_life_days)
+    Falls back to year-level age (diff_years * 365.25) when only a 4-digit
+    year is present in target_str, and 1.0 when no date/year token exists.
+    """
+    ref_dt = now or datetime.now(timezone.utc)
+    ref_date = ref_dt.date()
+    age_days: float | None = None
+
+    m_iso = _ISO_DATE_RE.search(target_str)
+    if m_iso:
+        try:
+            doc_date = datetime(
+                int(m_iso.group(1)), int(m_iso.group(2)), int(m_iso.group(3))
+            ).date()
+            age_days = max(0.0, float((ref_date - doc_date).days))
+        except ValueError:
+            age_days = None
+
+    if age_days is None:
+        m_yr = _YEAR_ONLY_RE.search(target_str)
+        if m_yr:
+            diff_years = max(0, ref_date.year - int(m_yr.group(1)))
+            age_days = diff_years * 365.25
+
+    if age_days is None:
+        return 1.0
+
+    return floor + (ceiling - floor) * (0.5 ** (age_days / half_life_days))
+
+
 def weighted_rrf(
     ranked_lists: dict[str, list[SearchResult]], k: int = 60, intent: str = "GENERAL"
 ) -> list[SearchResult]:
@@ -1129,26 +1177,14 @@ def weighted_rrf(
             # Dynamic score modifier: strictly bounded to [0.5, 1.5]
             score_mod = 0.5 + min(max(doc.score, 0.0), 1.0)
 
-            # GTO Temporal Decay Modifier (Recency Weighting):
-            # Apply ONLY to time-series sources (session, case_study) with bounded path/id match.
+            # GTO Temporal Decay Modifier (Continuous Exponential Recency Weighting):
+            # Apply ONLY to time-series sources (session, case_study) with bounded date/year match.
             # Reference sources (protocol, capability, canonical, framework_docs, workflow) remain timeless (1.0x).
             temporal_mod = 1.0
             if source in {"session", "case_study"}:
                 doc_path = doc.metadata.get("path", "") if doc.metadata else ""
                 target_str = f"{doc_path} {doc.id}"
-                curr_year = datetime.now().year
-                year_match = re.search(r"(?:^|[/_\-\s])(20\d\d)(?:[/_\-.\s]|$)", target_str)
-                if year_match:
-                    doc_year = int(year_match.group(1))
-                    diff_years = curr_year - doc_year
-                    if diff_years <= 0:
-                        temporal_mod = 1.15
-                    elif diff_years == 1:
-                        temporal_mod = 0.90
-                    elif diff_years == 2:
-                        temporal_mod = 0.75
-                    else:
-                        temporal_mod = 0.60
+                temporal_mod = compute_temporal_decay(target_str)
 
             # Web result freshness decay (based on fetched_at)
             if source == "web_search" and hasattr(doc, 'metadata') and doc.metadata:
