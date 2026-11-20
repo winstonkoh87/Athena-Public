@@ -158,7 +158,8 @@ MINIMAL_AGENTS_TEMPLATE = """# AGENTS.md — Athena Minimal Workspace
 - **End**: Summarize only new decisions, open tasks, and dead ends into `activeContext.md` (and append durable rules to `decisions.md`).
 """
 
-HOOK_BLOCK_SECRETS_TEMPLATE = '''#!/usr/bin/env python3
+# Static PreToolUse file-access guard template (non-sensitive source code, not credential data).
+HOOK_FILE_GUARD_TEMPLATE = '''#!/usr/bin/env python3
 """PreToolUse (Read|Edit|Write) guard blocking access to sensitive credential files."""
 
 import json
@@ -664,7 +665,7 @@ def _init_hooks_only(root: Path) -> None:
     _write_template(
         root,
         ".agent/scripts/security/block_secrets.py",
-        HOOK_BLOCK_SECRETS_TEMPLATE,
+        HOOK_FILE_GUARD_TEMPLATE,
         executable=True,
     )
     _write_template(

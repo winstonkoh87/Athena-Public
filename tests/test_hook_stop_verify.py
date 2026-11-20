@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import ast
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS_DIR = REPO_ROOT / ".agent" / "scripts"
@@ -54,7 +57,9 @@ def test_crisis_referral_blocks_missing_hotline() -> None:
         }
     )
     assert len(errs) == 1
-    assert "988" in errs[0] and "findahelpline.com" in errs[0]
+    assert "988" in errs[0]
+    urls = re.findall(r"https?://[^\s)]+", errs[0])
+    assert any(urlparse(url).hostname == "findahelpline.com" for url in urls)
 
 
 def test_diff_scoped_latex_ignores_legacy_lines_and_catches_new_leaks(
@@ -196,3 +201,54 @@ def test_block_ruin_fail_closed_behavior() -> None:
         timeout=10,
     )
     assert allowed.returncode == 0
+
+
+def test_hook_stop_verify_has_no_url_substring_checks() -> None:
+    """Guard against CodeQL py/incomplete-url-substring-sanitization (CWE-20)."""
+    common_tlds = r"com|org|edu|gov|uk|net|io"
+    url_regex = re.compile(
+        rf"(?i)^([a-z]*:?//)?\.?([a-z0-9-]+\.)+({common_tlds})(:[0-9]+)?/?$"
+    )
+    http_url_regex = re.compile(r"(?i)^https?://([a-z0-9-]+\.)+([a-z]+)(:[0-9]+)?/?$")
+
+    def looks_like_url(s: str) -> bool:
+        return bool(url_regex.match(s) or http_url_regex.match(s))
+
+    class SubstringSanitizationVisitor(ast.NodeVisitor):
+        def __init__(self) -> None:
+            self.violations: list[tuple[int, str]] = []
+
+        def visit_Compare(self, node: ast.Compare) -> None:
+            left: ast.expr = node.left
+            for op, comparator in zip(node.ops, node.comparators, strict=False):
+                if isinstance(op, (ast.In, ast.NotIn)):
+                    for operand in (left, comparator):
+                        if (
+                            isinstance(operand, ast.Constant)
+                            and isinstance(operand.value, str)
+                            and looks_like_url(operand.value)
+                        ):
+                            self.violations.append((node.lineno, operand.value))
+                left = comparator
+            self.generic_visit(node)
+
+        def visit_Call(self, node: ast.Call) -> None:
+            if (
+                isinstance(node.func, ast.Attribute)
+                and node.func.attr in ("startswith", "endswith")
+                and node.args
+                and isinstance(node.args[0], ast.Constant)
+                and isinstance(node.args[0].value, str)
+                and looks_like_url(node.args[0].value)
+            ):
+                self.violations.append((node.lineno, node.args[0].value))
+            self.generic_visit(node)
+
+    for target_path in (Path(__file__), SCRIPTS_DIR / "hook_stop_verify.py"):
+        tree = ast.parse(target_path.read_text(encoding="utf-8"))
+        visitor = SubstringSanitizationVisitor()
+        visitor.visit(tree)
+        assert visitor.violations == [], (
+            f"CodeQL incomplete-url-substring-sanitization pattern detected in {target_path}: "
+            f"{visitor.violations}"
+        )

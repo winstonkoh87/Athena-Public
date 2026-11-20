@@ -4,6 +4,7 @@ Red Run proof: before this test existed, `athena init --ide claude` crashed
 with `invalid choice: 'claude'` because the CLI parser didn't list it.
 """
 
+import ast
 import subprocess
 import sys
 from pathlib import Path
@@ -237,3 +238,58 @@ def test_init_profile_hooks_only_preserves_existing_settings(tmp_path: Path) -> 
     )
     assert rerun.returncode == 0
     assert (target / ".claude" / "settings.json").read_text(encoding="utf-8") == custom
+
+
+def test_init_templates_avoid_sensitive_identifier_taint() -> None:
+    """Prevent CodeQL py/clear-text-storage-sensitive-data false positives on template names."""
+    init_path = Path(__file__).resolve().parent.parent / "src" / "athena" / "cli" / "init.py"
+    tree = ast.parse(init_path.read_text(encoding="utf-8"))
+
+    sensitive_keywords = (
+        "secret",
+        "password",
+        "passwd",
+        "pwd",
+        "credential",
+        "token",
+        "api_key",
+        "apikey",
+        "private_key",
+        "auth_key",
+        "certificate",
+    )
+
+    offending: list[tuple[int, str]] = []
+
+    def _check_name(lineno: int, name: str) -> None:
+        lower = name.lower()
+        if any(kw in lower for kw in sensitive_keywords):
+            offending.append((lineno, name))
+
+    for stmt in tree.body:
+        if isinstance(stmt, ast.Assign):
+            for target in stmt.targets:
+                if isinstance(target, ast.Name) and target.id.endswith("_TEMPLATE"):
+                    _check_name(stmt.lineno, target.id)
+        elif (
+            isinstance(stmt, ast.AnnAssign)
+            and isinstance(stmt.target, ast.Name)
+            and stmt.target.id.endswith("_TEMPLATE")
+        ):
+            _check_name(stmt.lineno, stmt.target.id)
+
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "_write_template"
+        ):
+            if len(node.args) >= 3 and isinstance(node.args[2], ast.Name):
+                _check_name(node.lineno, node.args[2].id)
+            for kw in node.keywords:
+                if kw.arg == "content" and isinstance(kw.value, ast.Name):
+                    _check_name(node.lineno, kw.value.id)
+
+    assert offending == [], (
+        f"Sensitive-named template identifier(s) written to disk in {init_path}: {offending}"
+    )
