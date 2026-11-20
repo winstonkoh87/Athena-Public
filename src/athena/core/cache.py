@@ -134,7 +134,12 @@ class QueryCache:
             pass
         return vecs
 
-    def _save_vecs_to_db(self, *, clear_all: bool = False) -> None:
+    def _save_vecs_to_db(
+        self,
+        *,
+        clear_all: bool = False,
+        upsert_key: str | None = None,
+    ) -> None:
         """Persist decoupled embeddings cleanly in SQLite without bloating search_cache.json."""
         try:
             self._vec_db_file.parent.mkdir(parents=True, exist_ok=True)
@@ -156,10 +161,18 @@ class QueryCache:
                     else:
                         conn.execute("DELETE FROM cache_vecs")
                     rows = []
-                    for k, e in self._cache.items():
-                        if e.embedding:
-                            blob = array("d", (float(x) for x in e.embedding)).tobytes()
-                            rows.append((k, blob))
+                    if upsert_key is not None:
+                        entry = self._cache.get(upsert_key)
+                        if entry is not None and entry.embedding:
+                            blob = array("d", (float(x) for x in entry.embedding)).tobytes()
+                            rows.append((upsert_key, blob))
+                        else:
+                            conn.execute("DELETE FROM cache_vecs WHERE key = ?", (upsert_key,))
+                    else:
+                        for k, e in self._cache.items():
+                            if e.embedding:
+                                blob = array("d", (float(x) for x in e.embedding)).tobytes()
+                                rows.append((k, blob))
                     if rows:
                         conn.executemany(
                             "INSERT OR REPLACE INTO cache_vecs (key, vec) VALUES (?, ?)",
@@ -192,7 +205,7 @@ class QueryCache:
         except Exception:
             pass
 
-    def _save_to_disk(self):
+    def _save_to_disk(self, *, upsert_key: str | None = None):
         """Persist cache metadata/results to JSON and vectors to SQLite sidecar."""
         import os
         import tempfile
@@ -221,7 +234,7 @@ class QueryCache:
                 with contextlib.suppress(OSError):
                     os.unlink(tmp_path)
                 raise
-            self._save_vecs_to_db(clear_all=(len(self._cache) == 0))
+            self._save_vecs_to_db(clear_all=(len(self._cache) == 0), upsert_key=upsert_key)
         except Exception:
             pass
 
@@ -348,7 +361,7 @@ class QueryCache:
             embedding=embedding,
             scope=norm_scope,
         )
-        self._save_to_disk()
+        self._save_to_disk(upsert_key=key)
 
     def invalidate(self) -> None:
         """Invalidate all cached results (call when underlying data changes)."""

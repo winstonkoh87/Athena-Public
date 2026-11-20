@@ -55,7 +55,8 @@ def get_onnx_dir() -> Path:
 ONNX_DIR = get_onnx_dir()
 # Prefer the arm64-quantized model (4x smaller, faster); fall back to fp32.
 ONNX_MODEL_CANDIDATES = ["model_qint8_arm64.onnx", "model.onnx"]
-MAX_LENGTH = 512
+MAX_LENGTH = 256
+RERANK_BATCH_SIZE = 8
 
 # Lazy-loaded singletons
 _onnx_session = None
@@ -124,7 +125,15 @@ def _get_onnx():
         tokenizer = Tokenizer.from_file(str(tokenizer_path))
         tokenizer.enable_truncation(max_length=MAX_LENGTH)
         tokenizer.enable_padding()
-        session = ort.InferenceSession(str(model_path))
+        opts = ort.SessionOptions()
+        opts.intra_op_num_threads = min(4, max(1, os.cpu_count() or 4))
+        opts.inter_op_num_threads = 1
+        opts.add_session_config_entry("session.intra_op.allow_spinning", "0")
+        session = ort.InferenceSession(
+            str(model_path),
+            sess_options=opts,
+            providers=["CPUExecutionProvider"],
+        )
         _onnx_session, _onnx_tokenizer = session, tokenizer
         return session, tokenizer
     except Exception:
@@ -133,7 +142,9 @@ def _get_onnx():
 
 
 def _predict_onnx(pairs: "list[tuple[str, str]]") -> "list[float] | None":
-    """Score (query, doc) pairs via the ONNX session. Returns None on failure."""
+    """Score (query, doc) pairs via length-sorted mini-batches in the ONNX session."""
+    if not pairs:
+        return []
     loaded = _get_onnx()
     if not loaded:
         return None
@@ -141,14 +152,20 @@ def _predict_onnx(pairs: "list[tuple[str, str]]") -> "list[float] | None":
     try:
         import numpy as np
 
-        encodings = tokenizer.encode_batch(list(pairs))
-        feeds = {
-            "input_ids": np.array([e.ids for e in encodings], dtype=np.int64),
-            "attention_mask": np.array([e.attention_mask for e in encodings], dtype=np.int64),
-            "token_type_ids": np.array([e.type_ids for e in encodings], dtype=np.int64),
-        }
-        logits = session.run(None, feeds)[0]
-        return [float(x) for x in logits.ravel()]
+        indexed = sorted(enumerate(pairs), key=lambda item: len(item[1][1]))
+        scores = [0.0] * len(pairs)
+        for start in range(0, len(indexed), RERANK_BATCH_SIZE):
+            chunk = indexed[start : start + RERANK_BATCH_SIZE]
+            encodings = tokenizer.encode_batch([pair for _, pair in chunk])
+            feeds = {
+                "input_ids": np.array([e.ids for e in encodings], dtype=np.int64),
+                "attention_mask": np.array([e.attention_mask for e in encodings], dtype=np.int64),
+                "token_type_ids": np.array([e.type_ids for e in encodings], dtype=np.int64),
+            }
+            logits = session.run(None, feeds)[0].ravel()
+            for (orig_idx, _), logit in zip(chunk, logits, strict=False):
+                scores[orig_idx] = float(logit)
+        return scores
     except Exception as e:
         print(f"   ⚠️  ONNX rerank failed ({e}); falling back to CrossEncoder.", file=sys.stderr)
         return None

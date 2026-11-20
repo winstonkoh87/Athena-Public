@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import threading
 import time
@@ -448,10 +449,101 @@ def _format_compact(status: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+_CHECKPOINT_RE = re.compile(r"\[\[\s*S\d+\s*\|[\s\S]*?!checkpoint\s*\]\]")
+
+
+def _extract_latest_checkpoint(root: Path) -> str:
+    """Extract only the final [[ S__ | ... !checkpoint ]] block from activeContext.md."""
+    ac_path = root / ".context" / "memory_bank" / "activeContext.md"
+    if not ac_path.exists():
+        return "(activeContext.md absent)"
+    try:
+        text = ac_path.read_text(encoding="utf-8")
+    except Exception as exc:
+        return f"(activeContext.md unreadable: {exc})"
+    matches = _CHECKPOINT_RE.findall(text)
+    if matches:
+        return matches[-1].strip()
+    lines = text.strip().splitlines()
+    return "\n".join(lines[-25:]) if lines else "(activeContext.md empty)"
+
+
+def _read_compact_user_context(root: Path) -> str:
+    """Read userContext.md with excess consecutive blank lines collapsed."""
+    uc_path = root / ".context" / "memory_bank" / "userContext.md"
+    if not uc_path.exists():
+        return "(userContext.md absent)"
+    try:
+        text = uc_path.read_text(encoding="utf-8")
+    except Exception as exc:
+        return f"(userContext.md unreadable: {exc})"
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
+
+
+def _weekday_advisories(status: dict[str, Any]) -> list[str]:
+    """Derive non-blocking weekday & freeze advisories from accountability/maintenance data."""
+    advisories: list[str] = []
+    raw = (status.get("accountability") or {}).get("raw") or {}
+    if not raw:
+        return advisories
+    today = datetime.now().date()
+
+    if today.weekday() == 5:
+        last_comp = (raw.get("beh_601") or {}).get("last_completed")
+        completed_this_week = False
+        if isinstance(last_comp, str) and last_comp:
+            try:
+                comp_date = datetime.strptime(last_comp, "%Y-%m-%d").date()
+                completed_this_week = comp_date.isocalendar()[:2] == today.isocalendar()[:2]
+            except ValueError:
+                pass
+        if not completed_this_week:
+            advisories.append("   ⚠️ Saturday — Solo session target. BEH-601 active.")
+
+    if today.weekday() == 6:
+        last_audit = (raw.get("weekly_audit") or {}).get("last_audit_date")
+        audit_overdue = True
+        if isinstance(last_audit, str) and last_audit:
+            try:
+                audit_date = datetime.strptime(last_audit, "%Y-%m-%d").date()
+                audit_overdue = (today - audit_date).days > 7
+            except ValueError:
+                pass
+        if audit_overdue:
+            advisories.append("   📊 Weekly audit due.")
+
+    mr = status.get("maintenance_ratio") or {}
+    beh_603 = raw.get("beh_603") or {}
+    open_deals = int(beh_603.get("open_deals", beh_603.get("open", 0)) or 0)
+    awaiting = int(beh_603.get("awaiting_payment", 0) or 0)
+    if float(mr.get("maintenance_share", 0.0) or 0.0) > 0.70 and open_deals == 0 and awaiting == 0:
+        advisories.append("   ⚠️ Freeze advisory (TD-045).")
+
+    return advisories
+
+
+def _format_bundle(status: dict[str, Any], root: Path) -> str:
+    """One-shot MinMax v2.2 boot bundle: compact status + advisories + latest checkpoint + userContext."""
+    parts = [_format_compact(status)]
+    advisories = _weekday_advisories(status)
+    if advisories:
+        parts.extend(advisories)
+    parts.append("\n--- LATEST CHECKPOINT ---")
+    parts.append(_extract_latest_checkpoint(root))
+    parts.append("\n--- USER CONTEXT ---")
+    parts.append(_read_compact_user_context(root))
+    return "\n".join(parts)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Athena fast parallel /start status aggregator")
     parser.add_argument("--json", action="store_true", help="Emit structured JSON payload")
     parser.add_argument("--compact", action="store_true", help="Emit 1-line summary plus active alerts only")
+    parser.add_argument(
+        "--bundle",
+        action="store_true",
+        help="Emit compact telemetry + latest activeContext checkpoint + userContext in one call",
+    )
     parser.add_argument("--days", type=int, default=30, help="Commit lookback window for maintenance_ratio")
     parser.add_argument("--force-summaries", action="store_true", help="Force memory bank summary regeneration")
     args = parser.parse_args(argv)
@@ -459,6 +551,8 @@ def main(argv: list[str] | None = None) -> int:
     status = gather_boot_status(days=args.days, force_summaries=args.force_summaries)
     if args.json:
         print(json.dumps(status, indent=2, default=str))
+    elif args.bundle:
+        print(_format_bundle(status, PROJECT_ROOT))
     elif args.compact:
         print(_format_compact(status))
     else:

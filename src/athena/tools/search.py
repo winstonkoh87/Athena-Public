@@ -64,6 +64,26 @@ def _estimate_tokens(text: str) -> int:
 
 # God Mode: Aggressive latency optimization
 GOD_MODE = True
+INTERACTIVE_EXTRA_TIMEOUT_S = 5.5
+INTERACTIVE_EMBED_TIMEOUT_S = 4.0
+
+
+def _embed_query_interactive(query: str) -> list[float]:
+    """Fetch query embedding with interactive latency bounds, compatible with minimal test stubs."""
+    from athena.memory.vectors import get_embedding
+
+    try:
+        return get_embedding(
+            query,
+            task_type="RETRIEVAL_QUERY",
+            max_retries=1,
+            timeout=INTERACTIVE_EMBED_TIMEOUT_S,
+            floor_delay=0.0,
+        )
+    except TypeError as exc:
+        if "unexpected keyword argument" not in str(exc):
+            raise
+        return get_embedding(query)
 
 # Schema version for cache isolation — bump on any ranking/fusion change
 SEARCH_SCHEMA_VERSION = "2026-10-15.1"
@@ -515,9 +535,9 @@ def collect_vectors(
 
     results = []
     try:
-        from athena.memory.vectors import get_client, get_embedding
+        from athena.memory.vectors import get_client
 
-        query_embedding = embedding if embedding else get_embedding(query)
+        query_embedding = embedding if embedding else _embed_query_interactive(query)
 
         # Call the unified database search function
         client = get_client()
@@ -541,7 +561,7 @@ def collect_vectors(
                 break
             except Exception as rpc_err:
                 if attempt < max_attempts - 1:
-                    time.sleep(0.5)
+                    time.sleep(0.25)
                 else:
                     raise rpc_err
 
@@ -1513,11 +1533,10 @@ def run_search(
 
             def _vector_task():
                 nonlocal query_embedding, semantic_hit, vector_failed
-                from athena.memory.vectors import get_embedding
 
                 if query_embedding is None:
                     try:
-                        query_embedding = get_embedding(query, task_type="RETRIEVAL_QUERY")
+                        query_embedding = _embed_query_interactive(query)
                     except Exception as emb_err:
                         if not abandoned.is_set():
                             err_str = str(emb_err)
@@ -1602,6 +1621,8 @@ def run_search(
                         lists[source] = []
                 for future in not_done_local:
                     source = local_futures[future]
+                    wait_on_exit = False
+                    lists[source] = []
                     if not json_output:
                         print(f"   ⚠️ {source} timed out (Tier 1 limit)", file=sys.stderr)
 
@@ -1652,15 +1673,21 @@ def run_search(
                     abandoned.set()
                     wait_on_exit = False
                 elif extra_futures:
-                    extra_timeout = 15 if GOD_MODE else 18
+                    extra_timeout = INTERACTIVE_EXTRA_TIMEOUT_S if GOD_MODE else 18.0
+                    deadline = time.monotonic() + extra_timeout
                     for source, fut in extra_futures.items():
+                        remaining = max(0.05, deadline - time.monotonic())
                         try:
-                            lists[source] = fut.result(timeout=extra_timeout)
+                            lists[source] = fut.result(timeout=remaining)
                         except Exception as e:
+                            abandoned.set()
+                            wait_on_exit = False
                             if not json_output:
                                 print(f"   ⚠️ {source} timed out or failed: {e}", file=sys.stderr)
                             lists[source] = []
                             if source == "vector":
+                                status = "timeout" if isinstance(e, TimeoutError) else "failed"
+                                _record_channel_health("vector", status, str(e))
                                 vector_failed = True
             finally:
                 executor.shutdown(wait=wait_on_exit, cancel_futures=not wait_on_exit)

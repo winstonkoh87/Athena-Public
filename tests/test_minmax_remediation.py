@@ -689,4 +689,164 @@ def test_boot_status_compact_mode(tmp_path):
     assert "Maint:" in first_line
 
 
+def test_search_timeout_does_not_block_executor_shutdown(tmp_path):
+    """When vector future exceeds INTERACTIVE_EXTRA_TIMEOUT_S, executor shutdown must not wait on it."""
+    import athena.tools.search as search_mod
+    from athena.core.cache import QueryCache
+    from athena.core.models import SearchResult
+
+    release_vector = threading.Event()
+
+    def stalled_embedding(text, **kwargs):
+        release_vector.wait(timeout=5.0)
+        return [0.1] * 8
+
+    local_hit = SearchResult(
+        id="local-fallback-1",
+        content="local fallback content",
+        source="canonical",
+        score=0.9,
+    )
+
+    tmp_cache = QueryCache(cache_dir=tmp_path, ttl_hours=1)
+    try:
+        with (
+            patch.object(search_mod, "INTERACTIVE_EXTRA_TIMEOUT_S", 0.25, create=True),
+            patch.object(search_mod, "get_search_cache", return_value=tmp_cache),
+            patch.object(search_mod, "collect_canonical", return_value=[local_hit]),
+            patch.object(search_mod, "collect_fts_bm25", return_value=[]),
+            patch.object(search_mod, "collect_filenames", return_value=[]),
+            patch.object(search_mod, "collect_framework_docs", return_value=[]),
+            patch.object(search_mod, "collect_user_learnings", return_value=[]),
+            patch.object(search_mod, "collect_system_learnings", return_value=[]),
+            patch.object(search_mod, "collect_vectors", return_value=[]),
+            patch("athena.memory.vectors.get_embedding", side_effect=stalled_embedding),
+        ):
+            t0 = time.perf_counter()
+            res = search_mod.run_search(
+                "stalled vector test",
+                limit=3,
+                rerank=False,
+                json_output=True,
+                print_output=False,
+                web=False,
+                vector_mode="always",
+            )
+            elapsed = time.perf_counter() - t0
+    finally:
+        release_vector.set()
+
+    assert elapsed < 1.0, f"run_search blocked executor shutdown on timed-out vector ({elapsed:.2f}s >= 1.0s)"
+    assert isinstance(res, dict)
+    assert res["degraded_recall"] is True
+
+
+def test_interactive_search_passes_fast_embedding_params(tmp_path):
+    """Interactive search must call get_embedding with max_retries=1, floor_delay=0.0, timeout<=5.0."""
+    import athena.tools.search as search_mod
+    from athena.core.cache import QueryCache
+
+    captured_kwargs = {}
+
+    def spy_embedding(text, **kwargs):
+        captured_kwargs.update(kwargs)
+        return [0.1] * 8
+
+    tmp_cache = QueryCache(cache_dir=tmp_path, ttl_hours=1)
+    with (
+        patch.object(search_mod, "get_search_cache", return_value=tmp_cache),
+        patch.object(search_mod, "collect_canonical", return_value=[]),
+        patch.object(search_mod, "collect_fts_bm25", return_value=[]),
+        patch.object(search_mod, "collect_filenames", return_value=[]),
+        patch.object(search_mod, "collect_framework_docs", return_value=[]),
+        patch.object(search_mod, "collect_user_learnings", return_value=[]),
+        patch.object(search_mod, "collect_system_learnings", return_value=[]),
+        patch.object(search_mod, "collect_vectors", return_value=[]),
+        patch("athena.memory.vectors.get_embedding", side_effect=spy_embedding),
+    ):
+        search_mod.run_search(
+            "interactive fast embedding params check",
+            limit=3,
+            rerank=False,
+            json_output=True,
+            print_output=False,
+            web=False,
+            vector_mode="always",
+        )
+
+    assert captured_kwargs.get("max_retries") == 1
+    assert captured_kwargs.get("floor_delay") == 0.0
+    assert captured_kwargs.get("timeout", 60.0) <= 5.0
+
+
+def test_boot_status_bundle_mode(tmp_path):
+    """scripts/boot_status.py --bundle emits status + userContext + only latest checkpoint in <1.5s."""
+    mem_dir = tmp_path / ".context" / "memory_bank"
+    mem_dir.mkdir(parents=True, exist_ok=True)
+    (mem_dir / "userContext.md").write_text("# User Context\n- Rate Floor: $150/hr\n", encoding="utf-8")
+    (mem_dir / "activeContext.md").write_text(
+        "[[ S100 |\n@focus: Old session\n!checkpoint ]]\n\n"
+        "[[ S101 |\n@focus: Latest active session\n!checkpoint ]]\n",
+        encoding="utf-8",
+    )
+
+    script = REPO_ROOT / "scripts" / "boot_status.py"
+    athena_py = REPO_ROOT / ".agent" / "scripts" / "athena-py"
+    runner = str(athena_py) if (athena_py.exists() and os.access(athena_py, os.X_OK)) else sys.executable
+    env = {**os.environ, "ATHENA_ROOT": str(tmp_path)}
+
+    t0 = time.perf_counter()
+    proc = subprocess.run(
+        [runner, str(script), "--bundle"],
+        cwd=str(REPO_ROOT),
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=5,
+    )
+    elapsed = time.perf_counter() - t0
+
+    assert proc.returncode == 0, f"boot_status.py --bundle failed: {proc.stderr}"
+    assert elapsed < 1.5, f"boot_status.py --bundle exceeded budget: {elapsed:.2f}s"
+    assert "⚡ Boot Status" in proc.stdout
+    assert "Rate Floor: $150/hr" in proc.stdout
+    assert "S101" in proc.stdout
+    assert "S100" not in proc.stdout
+
+
+def test_onnx_reranker_50_long_candidates_under_2s():
+    """ONNX reranker must score 50 mixed/long candidates in < 2.0s via length-sorted mini-batches."""
+    import pytest
+
+    from athena.core.models import SearchResult
+    from athena.tools.reranker import check_reranker_health, rerank_results
+
+    health = check_reranker_health()
+    if not health["operational"] or health["mode"] != "onnx":
+        pytest.skip("ONNX reranker model/runtime unavailable")
+
+    long_rel = ("Athena startup boot latency minmax protocol optimization benchmark " * 60)[:3000]
+    short_dist = "unrelated shopping receipt footnote text"
+    docs = [
+        SearchResult(
+            id=f"doc-{i}",
+            content=long_rel if i < 10 else short_dist,
+            source="session" if i < 10 else "fts_bm25",
+            score=0.5,
+        )
+        for i in range(50)
+    ]
+
+    rerank_results("warmup", docs[:2], top_k=2)
+
+    t0 = time.perf_counter()
+    top = rerank_results("Athena startup boot latency minmax protocol", docs, top_k=5)
+    elapsed = time.perf_counter() - t0
+
+    assert elapsed < 2.0, f"ONNX reranker 50-candidate batch stalled ({elapsed:.2f}s >= 2.0s)"
+    assert len(top) == 5
+    assert all("reranker" in (r.signals or {}) for r in top)
+    assert all(int(r.id.split("-")[1]) < 10 for r in top), "Expected relevant long docs to rank above distractors"
+
+
 

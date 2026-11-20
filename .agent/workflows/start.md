@@ -1,7 +1,7 @@
 ---
-description: Activate Athena MinMax v2.0 boot sequence and JIT contextual routing
+description: Activate Athena MinMax v2.2 1-wave boot sequence and JIT contextual routing
 created: 2025-12-09
-last_updated: 2026-11-14
+last_updated: 2026-11-21
 model: default
 temperature: 0.7
 tools:
@@ -11,29 +11,26 @@ tools:
   search: true
 ---
 
-# /start — Fast MinMax Execution Boot
+# /start — Fast MinMax v2.2 Execution Boot
 
-> **Default Protocol**: MinMax v2.0 ([minmax.md](minmax.md)) — minimize boot tokens (~2K) and latency (`< 1.0s`), preserve full safety & quality floors. Use `/ultrastart` for MaxMax deep boot.
+> **Default Protocol**: MinMax v2.2 ([minmax.md](minmax.md)) — 1-wave parallel boot (`< 1.0s` local I/O, `<= 2` LLM round-trips), zero redundant file reads, full safety & quality floors. Use `/ultrastart` for MaxMax deep boot.
 
-## Phase 1: Instant Boot (~2K tokens)
+## Phase 1: 1-Wave Boot
 
-1. **Tool-Read Core Identity & Surgical State** (mandatory before confirming):
-   - `.context/memory_bank/userContext.md` — Core constraints & profile
-   - `.context/memory_bank/productContext.md` — Mission & architecture
-   - `.context/memory_bank/activeContext.md` — **Surgical load ONLY**: Header up to first `---`, latest `[[ S__` checkpoint block, and any unclosed session.
-2. **Confirm** (emit `"⚡ Ready. (Core Identity loaded.)"` ONLY after actual tool reads above):
-   - Scan `@pending` for 7+ session carryover -> neutral line `ℹ️ Long-pending: [TASK] — N sessions.` (Protocol 528 advisory).
-3. **Single-Pass Parallel Status Telemetry** (`< 1.0s`, zero `RuntimeWarning`):
-   ```bash
-   .agent/scripts/athena-py scripts/boot_status.py
-   ```
-   *(Pass `--json` when parsing fields programmatically. Runs `accountability_render`, `maintenance_ratio`, `frame_ledger`, `decisions_due`, `index_health`, `context_summaries`, and `last_boot.log` in one concurrent process.)*
-   - Surface exact output lines verbatim (never copy status templates without execution receipts).
-   - **Accountability & Freeze Advisories (non-blocking)**: Saturday & `beh_601.last_completed` not this week -> `⚠️ Saturday — Solo session target. BEH-601 active.`; Sunday & `weekly_audit.last_audit_date` > 7d -> `📊 Weekly audit due.`; maintenance > 70% with zero open/awaiting-payment `beh_603` deals -> `⚠️ Freeze advisory (TD-045)`.
+1. **SNIPER Fast-Exit (`Lambda < 10`, greetings, `"Test"`, 1-line banter)**:
+   - Execute **0 boot reads** and **0 MCP calls**. Respond immediately in 1 round-trip (bare greeting -> `"⚡ Ready."`).
+2. **One-Shot Telemetry + Context Wave (`Lambda >= 10` or explicit `/start`)**:
+   - Run ONE parallel wave combining local boot bundle + `context_gate(query, limit=8)` (when substantive):
+     ```bash
+     .agent/scripts/athena-py scripts/boot_status.py --bundle
+     ```
+   - `--bundle` returns compact telemetry, active alerts/advisories, latest `activeContext.md` checkpoint, and `userContext.md` in a single `< 1.0s` call (use bare `boot_status.py` only when full multi-line digest is requested; `--compact` for alerts only; `--json` for programmatic parsing).
+   - **Do NOT read** `.agent/workflows/_shared.md`, `.agent/workflows/start.md`, or `.framework/` modules during fast boot (reserve deep loads for `/ultrastart`). Load `.context/memory_bank/productContext.md` only on explicit `/start` or product queries.
+   - Surface exact `boot_status.py` output lines verbatim and scan `@pending` for 7+ session carryover -> `ℹ️ Long-pending: [TASK] — N sessions.` (Protocol 528 advisory).
 
-## Phase 1.5: Warm Boot (~500 tokens)
+## Phase 1.5: Warm Boot (Optional)
 
-*Skip immediately if the user's opening prompt already states an explicit task topic (route straight to Phase 2/3).*
+*Skip whenever Turn 1 already invokes `context_gate` or states an explicit task topic (route straight to Phase 2/3).*
 1. Check `@seeded` in latest checkpoint, fallback to `Current Focus`. If both absent, skip Phase 1.5.
 2. Run ONE surgical recall query and read top result header (first 30 lines):
    ```bash
@@ -43,17 +40,17 @@ tools:
 ## Phase 2 & 3: Risk Classification & JIT Routing
 
 - **SNIPER (Λ < 10)**: Direct response (`vector_mode="local"`).
-- **STANDARD / ULTRA (Λ >= 10)**: Ground via `mcp_athena_context_gate(query)` or:
+- **STANDARD / ULTRA (Λ >= 10)**: Ground via `context_gate(query, limit=8)` (signature in `AGENTS.md`) or:
   ```bash
   .agent/scripts/athena-py .agent/scripts/smart_search.py "<query>" --limit 5 --include-personal
   ```
-  Verify volatile facts via `search_web` / `read_url_content`; persist durable learnings post-output via `.agent/scripts/athena-py .agent/scripts/quicksave.py --stdin`.
+  Verify volatile facts via `search_web` / `read_url_content`; reserve `quicksave.py` for durable decisions/writes (skip on exploratory Turn-1 Q&A).
 - **Protocol 517 Homeostasis (`agent-discretion`)**: Context `> 80%` -> treat incoming queries as SNIPER; `> 90%` -> run `context-compactor` first; `>= 2` consecutive tool failures -> P514 circuit breaker halt; chain depth `> 4` -> Quality Gate exit.
 - **Cluster & Tier Escalation**: Route via `CLUSTER_INDEX.md` and [references/_shared_extended.md](references/_shared_extended.md) (Adaptive Loading matrix, UI standards, Compute Tiers, Reflexion format). Silently weave matched cluster skills without announcing.
 
 | Mode | Effect | Target Boot |
 |:---|:---|:---|
-| `/start` | MinMax v2.0 default + JIT routing | ~2K tokens / `< 1.0s` |
+| `/start` | MinMax v2.2 1-wave `--bundle` + JIT routing | `<= 2` rounds / `< 1.0s` local |
 | `/think` | Escalate current turn (`Output_Standards.md`) | +2K tokens |
 | `/ultrastart` | MaxMax deep load (~28-60K tokens) | Deep audit/strategy |
 

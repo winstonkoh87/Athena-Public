@@ -189,6 +189,15 @@ def get_client() -> Any:
     return _thread_local.client
 
 
+def _is_malformed_sqlite_error(exc: BaseException) -> bool:
+    """Return True when a SQLite exception indicates on-disk database corruption."""
+    msg = str(exc).lower()
+    return any(
+        token in msg
+        for token in ("malformed", "not a database", "file is not a database", "corrupt")
+    )
+
+
 class PersistentEmbeddingCache:
     """SQLite-backed embedding cache (drop-in replacement for the old JSON cache).
 
@@ -211,19 +220,70 @@ class PersistentEmbeddingCache:
         self.legacy_json = state_dir / filename
         self.db_path = state_dir / "embedding_cache.db"
         self.lock = threading.Lock()
+        self._corrupted = False
+        self._conn = None
         # check_same_thread=False: the cache is shared across the sync's worker threads;
         # every access is serialized by self.lock, so single-connection use stays safe.
-        self._conn = connect_sqlite(self.db_path, check_same_thread=False)
-        with self.lock:
+        try:
+            self._conn = connect_sqlite(self.db_path, check_same_thread=False)
+            with self.lock:
+                self._conn.execute(
+                    "CREATE TABLE IF NOT EXISTS embeddings "
+                    "(hash TEXT PRIMARY KEY, vec TEXT NOT NULL)"
+                )
+                self._conn.commit()
+        except (sqlite3.DatabaseError, sqlite3.OperationalError) as exc:
+            if _is_malformed_sqlite_error(exc):
+                with self.lock:
+                    self._quarantine_and_recreate()
+            else:
+                raise
+        self._migrate_legacy_json()
+
+    def _quarantine_and_recreate(self) -> bool:
+        """Quarantine a malformed SQLite file and recreate a clean DB. Caller holds self.lock."""
+        conn = getattr(self, "_conn", None)
+        with contextlib.suppress(Exception):
+            if conn is not None:
+                conn.close()
+        self._conn = None
+
+        db_path = getattr(self, "db_path", None)
+        if not isinstance(db_path, Path) or not db_path.exists():
+            self._corrupted = True
+            return False
+
+        quarantine = db_path.with_name(f"{db_path.name}.corrupt.{int(time.time())}")
+        try:
+            db_path.replace(quarantine)
+            for sidecar in (f"{db_path.name}-wal", f"{db_path.name}-shm"):
+                with contextlib.suppress(Exception):
+                    db_path.with_name(sidecar).unlink(missing_ok=True)
+            print(
+                f"  ⚠️  Quarantined malformed embedding cache -> {quarantine.name}; "
+                "recreating clean SQLite DB.",
+                flush=True,
+            )
+            self._conn = connect_sqlite(db_path, check_same_thread=False)
             self._conn.execute(
                 "CREATE TABLE IF NOT EXISTS embeddings "
                 "(hash TEXT PRIMARY KEY, vec TEXT NOT NULL)"
             )
             self._conn.commit()
-        self._migrate_legacy_json()
+            self._corrupted = False
+            return True
+        except Exception as exc:
+            print(
+                f"  ⚠️  Embedding cache recreation failed ({exc}); disabling cache for process.",
+                flush=True,
+            )
+            self._corrupted = True
+            return False
 
     def _migrate_legacy_json(self):
         """One-time idempotent import of the old monolithic JSON cache, then archive it."""
+        if getattr(self, "_corrupted", False) or self._conn is None:
+            return
         try:
             if not self.legacy_json.exists():
                 return
@@ -263,79 +323,68 @@ class PersistentEmbeddingCache:
                 self.legacy_json.parent / (self.legacy_json.name + ".migrated")
             )
 
-    def get(self, text_hash: str) -> list[float] | None:
+    def _run_sqlite(self, op, default=None):
+        """Execute a locked SQLite operation with instant quarantine on malformed DB."""
+        if getattr(self, "_corrupted", False):
+            return default
         try:
             with self.lock:
-                row = self._conn.execute(
-                    "SELECT vec FROM embeddings WHERE hash = ?", (text_hash,)
-                ).fetchone()
+                if self._conn is None:
+                    return default
+                return op()
+        except (sqlite3.DatabaseError, sqlite3.OperationalError) as exc:
+            with self.lock:
+                if _is_malformed_sqlite_error(exc):
+                    if not self._quarantine_and_recreate():
+                        return default
+                else:
+                    try:
+                        self._reconnect()
+                    except Exception:
+                        return default
+                try:
+                    if self._conn is None:
+                        return default
+                    return op()
+                except Exception:
+                    return default
+        except Exception:
+            return default
+
+    def get(self, text_hash: str) -> list[float] | None:
+        def _op():
+            row = self._conn.execute(
+                "SELECT vec FROM embeddings WHERE hash = ?", (text_hash,)
+            ).fetchone()
             if row is None:
                 return None
-            try:
-                return json.loads(row[0])
-            except Exception:
-                return None
-        except (sqlite3.DatabaseError, sqlite3.OperationalError):
-            # Reconnect attempt for stale connection/locks, otherwise graceful cache miss
-            try:
-                with self.lock:
-                    self._reconnect()
-                    row = self._conn.execute(
-                        "SELECT vec FROM embeddings WHERE hash = ?", (text_hash,)
-                    ).fetchone()
-                if row is not None:
-                    return json.loads(row[0])
-            except Exception:
-                pass
-            return None
-        except Exception:
-            return None
+            return json.loads(row[0])
+
+        return self._run_sqlite(_op, default=None)
 
     def set(self, text_hash: str, embedding: list[float]):
-        try:
-            with self.lock:
-                self._conn.execute(
-                    "INSERT OR REPLACE INTO embeddings (hash, vec) VALUES (?, ?)",
-                    (text_hash, json.dumps(embedding)),
-                )
-                self._conn.commit()
-        except (sqlite3.DatabaseError, sqlite3.OperationalError):
-            try:
-                with self.lock:
-                    self._reconnect()
-                    self._conn.execute(
-                        "INSERT OR REPLACE INTO embeddings (hash, vec) VALUES (?, ?)",
-                        (text_hash, json.dumps(embedding)),
-                    )
-                    self._conn.commit()
-            except Exception:
-                pass
-        except Exception:
-            pass
+        def _op():
+            self._conn.execute(
+                "INSERT OR REPLACE INTO embeddings (hash, vec) VALUES (?, ?)",
+                (text_hash, json.dumps(embedding)),
+            )
+            self._conn.commit()
+
+        self._run_sqlite(_op)
 
     def set_many(self, items: "dict[str, list[float]]"):
         """Bulk insert in one transaction — O(1) per row, no full-file rewrite."""
         if not items:
             return
         rows = [(h, json.dumps(v)) for h, v in items.items()]
-        try:
-            with self.lock:
-                self._conn.executemany(
-                    "INSERT OR REPLACE INTO embeddings (hash, vec) VALUES (?, ?)", rows
-                )
-                self._conn.commit()
-        except (sqlite3.DatabaseError, sqlite3.OperationalError):
-            try:
-                with self.lock:
-                    self._reconnect()
-                    self._conn.executemany(
-                        "INSERT OR REPLACE INTO embeddings (hash, vec) VALUES (?, ?)", rows
-                    )
-                    self._conn.commit()
-            except Exception:
-                pass
-        except Exception:
-            pass
+
+        def _op():
+            self._conn.executemany(
+                "INSERT OR REPLACE INTO embeddings (hash, vec) VALUES (?, ?)", rows
+            )
+            self._conn.commit()
+
+        self._run_sqlite(_op)
 
 
 def _hash_text(
@@ -367,13 +416,15 @@ def get_embedding(
     task_type: str = "RETRIEVAL_QUERY",
     dims: int | None = None,
     max_retries: int = 7,
+    timeout: float = 60.0,
+    floor_delay: float = 1.0,
 ) -> list[float]:
     """Generate embedding with persistent disk caching and exponential backoff.
 
     Uses gemini-embedding-001 (3072 dimensions, or MRL truncated if dims specified).
     Retries on 429 (rate limit) and 5xx (server error) with exponential backoff + jitter.
     Semaphore-gated (1 concurrent) to prevent thundering herd on free-tier Gemini API.
-    Backoff ceiling: 60s. Floor delay: 1s per call to avoid burst patterns.
+    Backoff ceiling: 60s. Floor delay: 1s per call for bulk sync (0s in interactive search).
     """
     model_name = "gemini-embedding-001"
     text_hash = _hash_text(text, model=model_name, task_type=task_type, dims=dims)
@@ -409,7 +460,7 @@ def get_embedding(
     for attempt in range(max_retries):
         with _embedding_semaphore:
             try:
-                response = requests.post(url, json=payload, headers=headers, timeout=60)
+                response = requests.post(url, json=payload, headers=headers, timeout=timeout)
                 record_api_usage("embedContent", 1, len(text), response.status_code)
 
                 # If client error that is not 429, do not retry! It is non-retriable.
@@ -450,8 +501,9 @@ def get_embedding(
                 with _consecutive_429_lock:
                     _consecutive_429_count = 0
                 cache.set(text_hash, embedding)
-                # Floor delay: prevent burst even on success (free-tier courtesy)
-                time.sleep(1)
+                # Floor delay: prevent burst in bulk sync; skipped in interactive queries
+                if floor_delay > 0:
+                    time.sleep(floor_delay)
                 return embedding
 
             except requests.exceptions.RequestException as e:

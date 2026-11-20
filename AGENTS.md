@@ -1,7 +1,7 @@
 # AGENTS.md — Athena Workspace
 
 > **Retrieval-Led Reasoning**: Prefer local retrieval (`context_gate`, `.context/`, `.agent/`, `docs/`) over ungrounded recall.
-> **Session Boot (auto-`/start`)**: Before answering Turn 1, read `.agent/workflows/_shared.md`, run `.agent/workflows/start.md`, and check state via `.agent/scripts/athena-py scripts/boot_status.py`. Bare greeting -> `Ready`.
+> **Session Boot (MinMax v2.2 1-Wave Boot)**: `SNIPER` openers (`Lambda < 10`, greetings, `"Test"`, 1-line banter) -> 0 boot reads, 0 MCP calls, direct answer (bare greeting -> `⚡ Ready.`). `STANDARD`/`ULTRA` (`Lambda >= 10`) or explicit `/start` -> Wave 1 parallel `.agent/scripts/athena-py scripts/boot_status.py --bundle` + `context_gate(query, limit=8)`. Never load `.agent/workflows/_shared.md`, `.agent/workflows/start.md`, or `.framework/` modules on normal Turn 1 (reserve deep loads for `/ultrastart`).
 > **ASCII-Only Math & Currency (hard rule)**: Never emit LaTeX/KaTeX delimiters in responses or written Markdown (zero dollar math pairs, double-dollar display, `\(...\)`, `\[...\]`, or `\text{...}`). Format equations, confidence intervals, Big-O, and currency in plain ASCII/Unicode/code (`EV = +10.45% (95% CI [+4.00%, +16.98%])`, `O(N^2)`, `$1,300`).
 > **Protocol 509 Crisis & Life-Safety (non-negotiable)**: On ANY explicit or implicit self-harm / acute crisis signal, pause agent tasks immediately and surface crisis helplines (`988` US/Canada, `999`/`995`/`1-767` SG, or https://findahelpline.com).
 
@@ -20,10 +20,11 @@
 
 ## Problem-Solving & Decision Workflow
 
-1. **External Verification Mandate**:
-   - `SNIPER (Lambda < 10)`: `vector_mode="local"`.
-   - `STANDARD (Lambda 10-30)`: Call `context_gate(query)` and resolve missing signals before answering.
+1. **External Verification Mandate**: Call `context_gate(query: str, limit: int = 10, web: bool | None = None, compact_follow_up: bool = False)` directly (skip schema-read hops):
+   - `SNIPER (Lambda < 10)`: Exempt (`vector_mode="local"`).
+   - `STANDARD (Lambda 10-30)`: Call `context_gate(query)` and resolve missing signals before answering (`vector_mode="auto"` speculative local+ONNX for `<= 25` non-personal/non-web; `"always"` otherwise).
    - `ULTRA (Lambda > 30)`: Call `context_gate(query)` with semantic search plus verification; isolate tracks in `/ultrathink` for irreversible decisions.
+   - **Round-Trip Budget (MinMax v2.2)**: Target `<= 2` tool waves on Turn-1 Q&A; batch independent calls in parallel; skip `quicksave` on exploratory Turn-1 Q&A.
 2. **Pre-Solve Framing (`frame_open`)**:
    - When `context_gate()` emits `META-TRIAGE`, challenge whether the user's stated sub-problem is the right arena (`MP-9`) before optimizing tactics.
    - Call `frame_open(..., lite=True)` on standard strategic/optimization problems; low reversibility (`<= 2`) or `ULTRA` tier fails closed (`R14`) and requires strict `frame_open` with falsifiers, baseline option, and survival contingency.

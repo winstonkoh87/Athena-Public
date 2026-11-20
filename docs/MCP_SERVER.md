@@ -57,8 +57,8 @@ For other IDEs, add to your IDE's MCP settings (e.g., `.agent/mcp_config.json`):
 |------|-----------|-------------|-------------|
 | `smart_search` | read | internal | Hybrid RAG search (BM25 FTS5 + vectors + canonical/graph + ONNX rerank) |
 | `agentic_search` | read | internal | Multi-step query decomposition with parallel search |
-| `context_gate` | read | internal | Pre-answer context assembly, Meta-Triage, and grounding gate |
-| `quicksave` | write | internal | Save timestamped checkpoint to session log |
+| `context_gate` | read | internal | Pre-answer context assembly, Meta-Triage, taint awareness, and grounding gate |
+| `quicksave` | write | internal | Save timestamped checkpoint to session log (blocked when taint quarantine is active) |
 | `health_check` | read | public | Audit Vector API + Database subsystems |
 | `recall_session` | read | internal | Retrieve recent session log content |
 | `governance_status` | read | internal | Check Triple-Lock compliance state |
@@ -135,6 +135,11 @@ The engine auto-labels content based on pattern matching:
 ### Audit Trail
 
 Every permission check is logged with timestamp, action, target, and outcome. Audit log is bounded at 1,000 entries (auto-truncated to 500).
+
+### Runtime Safety & Latency Bounds (v10.0.6)
+
+- **Monotonic Taint Quarantine (`athena.core.taint`)**: Once untrusted external input taints a session, `context_gate()` strips personal profile recall and blocks durable memory writes (`quicksave`, checkpoint persistence) for the remainder of the session.
+- **Non-Blocking Retrieval Caps (`MinMax v2.2`)**: Interactive vector searches enforce `INTERACTIVE_EXTRA_TIMEOUT_S = 5.5s` (`wait_on_exit = False` so timed-out threads never block `executor.shutdown()`), interactive `get_embedding(..., max_retries=1, timeout=4.0, floor_delay=0.0)`, length-sorted ONNX reranker mini-batches (`MAX_LENGTH = 256`, `RERANK_BATCH_SIZE = 8`), incremental `QueryCache` vector upserts, and automatic quarantine/recreation of malformed SQLite embedding cache files.
 
 ---
 
