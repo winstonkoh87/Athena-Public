@@ -1,16 +1,16 @@
 ---
 created: 2026-02-12
-last_updated: 2026-11-13
+last_updated: 2026-11-20
 tags: #references #apa #academic #citations
 ---
 
 # References
 
-> **Purpose**: Central academic reference list for the Athena framework. All citations follow APA 7th edition format. Documents within this repository use inline citations (Author, Year) that link back to this page.
+> **Purpose**: Central theoretical bibliography and reference list for the Athena framework and protocol library. All citations follow APA 7th edition format. Peer-reviewed and foundational academic works are organized by domain, followed by a separate Practitioner, Industry & Operational Works section.
 >
 > **Why this exists**: Athena synthesizes concepts from cognitive psychology, microeconomics, game theory, adversarial wargaming, intelligence analysis & OSINT, AI/ML research, and decision science. This reference list ensures every claim is traceable to its source — not opinion.
 >
-> **Verification policy**: AI-assembled citations are a known fabrication risk. Every DOI and arXiv ID in this file was programmatically verified against the Crossref API (`citation_verifier.py`) and the arXiv export API on **13 November 2026** — **48/48 DOIs and 39/39 arXiv IDs resolved to the cited works, 0 failures**. New citations are not added without passing the same check.
+> **Verification policy**: AI-assembled citations are a known fabrication risk. Every DOI and arXiv ID in this file was programmatically verified against the Crossref API (`citation_verifier.py`) and the arXiv export API on **20 November 2026** — **50/50 DOIs and 39/39 arXiv IDs resolved to the cited works, 0 failures**. New citations are not added without passing the same check.
 
 ---
 
@@ -18,7 +18,7 @@ tags: #references #apa #academic #citations
 
 Ariely, D. (2008). *Predictably irrational: The hidden forces that shape our decisions*. HarperCollins.
 
-Covey, S. R. (1989). *The 7 habits of highly effective people: Powerful lessons in personal change*. Free Press.
+Cohen, J. (1988). *Statistical power analysis for the behavioral sciences* (2nd ed.). Lawrence Erlbaum Associates.
 
 Gigerenzer, G., & Goldstein, D. G. (1996). Reasoning the fast and frugal way: Models of bounded rationality. *Psychological Review, 103*(4), 650–669. <https://doi.org/10.1037/0033-295X.103.4.650>
 
@@ -38,9 +38,9 @@ Simon, H. A. (1956). Rational choice and the structure of the environment. *Psyc
 
 Simon, H. A. (1972). Theories of bounded rationality. In C. B. McGuire & R. Radner (Eds.), *Decision and organization* (pp. 161–176). North-Holland Publishing Company.
 
-Thaler, R. H. (1980). Toward a positive theory of consumer choice. *Journal of Economic Behavior & Organization, 1*(1), 39–60. <https://doi.org/10.1016/0167-2681(80)90051-7>
-
 Tetlock, P. E., & Gardner, D. (2015). *Superforecasting: The art and science of prediction*. Crown Publishers.
+
+Thaler, R. H. (1980). Toward a positive theory of consumer choice. *Journal of Economic Behavior & Organization, 1*(1), 39–60. <https://doi.org/10.1016/0167-2681(80)90051-7>
 
 Tversky, A., & Kahneman, D. (1974). Judgment under uncertainty: Heuristics and biases. *Science, 185*(4157), 1124–1131. <https://doi.org/10.1126/science.185.4157.1124>
 
@@ -52,33 +52,31 @@ Bernoulli, D. (1738). Specimen theoriae novae de mensura sortis [Exposition of a
 
 > **Note**: Bernoulli's 1738 paper is the origin of *expected utility theory*. He demonstrated that the subjective value of wealth is logarithmic (concave), not linear — resolving the St. Petersburg Paradox. This foundation underlies every utility-based decision framework in the Athena protocol library, including Protocol 330 (EEV).
 
+Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002). A fast and elitist multiobjective genetic algorithm: NSGA-II. *IEEE Transactions on Evolutionary Computation, 6*(2), 182–197. <https://doi.org/10.1109/4235.996017>
+
+> **Note**: NSGA-II is the canonical algorithm for multi-objective Pareto optimization — finding the set of non-dominated solutions along a trade-off frontier. Referenced conceptually in Protocol 49 §49.9 (Pushing the Pareto Frontier) where Athena's architecture shifts the efficiency-robustness frontier outward.
+
+Fishburn, P. C. (1967). Additive utilities with incomplete product sets: Application to priorities and assignments. *Operations Research, 15*(3), 537–542. <https://doi.org/10.1287/opre.15.3.537>
+
 Friedman, M., & Savage, L. J. (1948). The utility analysis of choices involving risk. *Journal of Political Economy, 56*(4), 279–304. <https://doi.org/10.1086/256692>
 
 > **Note**: Friedman & Savage proposed a double-inflection utility function — concave at low and high wealth, convex in between — to explain why people simultaneously buy insurance (risk-averse) and lottery tickets (risk-seeking). This is the theoretical foundation of Protocol 330's Economic Expected Value (EEV) framework.
 
 Kelly, J. L., Jr. (1956). A new interpretation of information rate. *Bell System Technical Journal, 35*(4), 917–926. <https://doi.org/10.1002/j.1538-7305.1956.tb03809.x>
 
-Peters, O. (2019). The ergodicity problem in economics. *Nature Physics, 15*(12), 1216–1221. <https://doi.org/10.1038/s41567-019-0732-0>
-
-> **Note**: Peters formalized why time-average growth and ensemble-average (expected value) diverge for multiplicative processes — the mathematical reason a positive-EV bet can still be a guaranteed path to ruin for an individual who must live through the sequence. This grounds Law #1 (No Irreversible Ruin) and the trading-risk protocols: Athena evaluates decisions on the *time-average* (your one life, played sequentially), not the ensemble average (a million parallel yous). Together with Kelly (1956), this is the quantitative backbone of the ruin-check gate.
-
 Mas-Colell, A., Whinston, M. D., & Green, J. R. (1995). *Microeconomic theory*. Oxford University Press.
 
 Nelson, P. (1970). Information and consumer behavior. *Journal of Political Economy, 78*(2), 311–329. <https://doi.org/10.1086/259630>
 
-> **Note**: Nelson's distinction between *search goods* (quality assessable before purchase) and *experience goods* (quality assessable only through use) explains why Athena's [Validation Status](../README.md#whats-enforced-in-code-vs-by-prompt) prescribes a personal trial rather than claiming spec-sheet superiority: compounding personalization is an experience good by construction — its value is a function of *your* accumulated context, which cannot exist before you use it.
-
-von Neumann, J., & Morgenstern, O. (1944). *Theory of games and economic behavior*. Princeton University Press.
-
-> **Note**: vNM formalized the axiomatic foundation of expected utility theory — completeness, transitivity, continuity, and independence. Their utility function is the standard against which all decision-under-uncertainty frameworks (including Friedman-Savage and Prospect Theory) are measured. Referenced in Protocol 330 (EEV).
+> **Note**: Nelson's distinction between *search goods* (quality assessable before purchase) and *experience goods* (quality assessable only through use) explains why [Why Athena](WHY_ATHENA.md#the-honest-test) and [What's Enforced in Code](../README.md#whats-enforced-in-code-vs-by-prompt) prescribe a personal trial rather than claiming spec-sheet superiority: compounding personalization is an experience good by construction — its value is a function of *your* accumulated context, which cannot exist before you use it.
 
 Pareto, V. (1896). *Cours d'économie politique* [Course of political economy]. F. Rouge.
 
 > **Note**: Pareto's work established the concept of *Pareto optimality* — a state where no dimension can be improved without degrading another. In Athena, this underpins Protocol 49 (Efficiency vs Robustness Trade-off): you operate on a Pareto frontier and choose your position explicitly. Protocol 106 (Min-Max Optimization) applies the same principle to procurement and resource allocation via the Sovereign Point (S = argmax U(c)/c).
 
-Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002). A fast and elitist multiobjective genetic algorithm: NSGA-II. *IEEE Transactions on Evolutionary Computation, 6*(2), 182–197. <https://doi.org/10.1109/4235.996017>
+Peters, O. (2019). The ergodicity problem in economics. *Nature Physics, 15*(12), 1216–1221. <https://doi.org/10.1038/s41567-019-0732-0>
 
-> **Note**: NSGA-II is the canonical algorithm for multi-objective Pareto optimization — finding the set of non-dominated solutions along a trade-off frontier. Referenced conceptually in Protocol 49 §49.9 (Pushing the Pareto Frontier) where Athena's architecture shifts the efficiency-robustness frontier outward.
+> **Note**: Peters formalized why time-average growth and ensemble-average (expected value) diverge for multiplicative processes — the mathematical reason a positive-EV bet can still be a guaranteed path to ruin for an individual who must live through the sequence. This grounds Law #1 (No Irreversible Ruin) and the trading-risk protocols: Athena evaluates decisions on the *time-average* (your one life, played sequentially), not the ensemble average (a million parallel yous). Together with Kelly (1956), this is the quantitative backbone of the ruin-check gate.
 
 Roy, B. (1991). The outranking approach and the foundations of ELECTRE methods. *Theory and Decision, 31*(1), 49–73. <https://doi.org/10.1007/BF00134132>
 
@@ -86,7 +84,9 @@ Saaty, T. L. (1980). *The analytic hierarchy process: Planning, priority setting
 
 > **Note on MCDA**: Multi-Criteria Decision Analysis (MCDA) is a family of methods, not a single paper. Athena's implementation draws primarily from weighted-sum models (Fishburn, 1967) and pairwise comparison (Saaty, 1980). See also: Belton, V., & Stewart, T. J. (2002). *Multiple criteria decision analysis: An integrated approach*. Springer.
 
-Fishburn, P. C. (1967). Additive utilities with incomplete product sets: Application to priorities and assignments. *Operations Research, 15*(3), 537–542.
+von Neumann, J., & Morgenstern, O. (1944). *Theory of games and economic behavior*. Princeton University Press.
+
+> **Note**: vNM formalized the axiomatic foundation of expected utility theory — completeness, transitivity, continuity, and independence. Their utility function is the standard against which all decision-under-uncertainty frameworks (including Friedman-Savage and Prospect Theory) are measured. Referenced in Protocol 330 (EEV).
 
 ---
 
@@ -154,7 +154,7 @@ Wu, J., & Axelrod, R. (1995). How to cope with noise in the iterated prisoner's 
 
 Black, S., & Darken, C. (2024). Scaling artificial intelligence for digital wargaming in support of decision-making. *arXiv preprint arXiv:2402.06075*. <https://arxiv.org/abs/2402.06075>
 
-> **Note**: Presented at NATO STO-MP-MSG-207 (2023). Evaluates scaling AI agents for interactive digital wargaming in decision-support contexts. Grounds Athena's branching scenario wargaming engine (`src/athena/intelligence/wargame.py`, `.agent/scripts/wargame_runner.py`).
+> **Note**: Presented at NATO STO-MP-MSG-207 (2023). Evaluates scaling AI agents for interactive digital wargaming in decision-support contexts. Grounds Athena's branching scenario wargaming engine (`src/athena/intelligence/wargame.py`, `examples/scripts/wargame_runner.py`).
 
 Caffrey, M. B., Jr. (2019). *On wargaming: How wargames have shaped history and how they may shape the future* (Newport Paper No. 43). Naval War College Press.
 
@@ -200,17 +200,17 @@ Schlesinger, L. B., Gardenier, A., Jarvis, J., & Sheehan-Cook, J. (2014). Crime 
 
 Besta, M., Blach, N., Kubicek, A., Gerstenberger, R., Podstawski, M., Gianinazzi, L., Gajda, J., Lehmann, T., Niewiadomski, H., Nyczyk, P., & Hoefler, T. (2024). Graph of thoughts: Solving elaborate problems with large language models. *Proceedings of the AAAI Conference on Artificial Intelligence, 38*(16), 17682–17690. <https://doi.org/10.1609/aaai.v38i16.29720> (<https://arxiv.org/abs/2308.09687>)
 
-Brown, T. B., Mann, B., Ryder, N., Subbiah, M., Kaplan, J., Dhariwal, P., ... & Amodei, D. (2020). Language models are few-shot learners. *Advances in Neural Information Processing Systems, 33*, 1877–1901. <https://arxiv.org/abs/2005.14165>
+Brown, T. B., Mann, B., Ryder, N., Subbiah, M., Kaplan, J., Dhariwal, P., Neelakantan, A., Shyam, P., Sastry, G., Askell, A., Agarwal, S., Herbert-Voss, A., Krueger, G., Henighan, T., Child, R., Ramesh, A., Ziegler, D. M., Wu, J., Winter, C., ... Amodei, D. (2020). Language models are few-shot learners. *Advances in Neural Information Processing Systems, 33*, 1877–1901. <https://arxiv.org/abs/2005.14165>
 
-Dell'Acqua, F., McFowland, E., III, Mollick, E. R., Lifshitz-Assaf, H., Kellogg, K., Rajendran, S., ... & Lakhani, K. R. (2023). Navigating the jagged technological frontier: Field experimental evidence of the effects of AI on knowledge worker productivity and quality. *Harvard Business School Technology & Operations Management Unit Working Paper No. 24-013*. <https://doi.org/10.2139/ssrn.4573321>
+Dell'Acqua, F., McFowland, E., III, Mollick, E. R., Lifshitz-Assaf, H., Kellogg, K., Rajendran, S., Krayer, L., Candelon, F., & Lakhani, K. R. (2023). Navigating the jagged technological frontier: Field experimental evidence of the effects of AI on knowledge worker productivity and quality. *Harvard Business School Technology & Operations Management Unit Working Paper No. 24-013*. <https://doi.org/10.2139/ssrn.4573321>
 
 Du, Y., Li, S., Torralba, A., Tenenbaum, J. B., & Mordatch, I. (2023). Improving factuality and reasoning in language models through multiagent debate. *arXiv preprint arXiv:2305.14325*. <https://arxiv.org/abs/2305.14325>
 
-Khattab, O., Singhvi, A., Maheshwari, P., Zhang, Z., Santhanam, K., Vardhamanan, S., ... & Potts, C. (2023). DSPy: Compiling declarative language model calls into self-improving pipelines. *arXiv preprint arXiv:2310.03714*. <https://arxiv.org/abs/2310.03714>
+Khattab, O., Singhvi, A., Maheshwari, P., Zhang, Z., Santhanam, K., Vardhamanan, S., Haq, S., Sharma, A., Joshi, T. T., Moazam, H., Miller, H., Zaharia, M., & Potts, C. (2023). DSPy: Compiling declarative language model calls into self-improving pipelines. *arXiv preprint arXiv:2310.03714*. <https://arxiv.org/abs/2310.03714>
 
 Lee, H., Xu, J., Seely, J., Lee, D., Sojoudi, S., Zaharia, M., & Tang, Y. (2026). Recursive self-improvement through multi-agent self-supervision. *arXiv preprint arXiv:2610.12176*. <https://arxiv.org/abs/2610.12176>
 
-Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., ... & Kiela, D. (2020). Retrieval-augmented generation for knowledge-intensive NLP tasks. *Advances in Neural Information Processing Systems, 33*, 9459–9474. <https://arxiv.org/abs/2005.11401>
+Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., Küttler, H., Lewis, M., Yih, W., Rocktäschel, T., Riedel, S., & Kiela, D. (2020). Retrieval-augmented generation for knowledge-intensive NLP tasks. *Advances in Neural Information Processing Systems, 33*, 9459–9474. <https://arxiv.org/abs/2005.11401>
 
 Liang, T., He, Z., Jiao, W., Wang, X., Wang, Y., Wang, R., Yang, Y., Shi, S., & Tu, Z. (2024). Encouraging divergent thinking in large language models through multi-agent debate. *Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing*, 17889–17904. <https://doi.org/10.18653/v1/2024.emnlp-main.992> (<https://arxiv.org/abs/2305.19118>)
 
@@ -220,7 +220,7 @@ Liu, Y., Wang, R., Chu, Y., Hao, B., Lin, Y., Liu, S., & Shao, M. (2026). RouteG
 
 Pandey, T., Ghukasyan, A., Goktas, O., & Radha, S. K. (2025). Adaptive graph of thoughts: Test-time adaptive reasoning unifying chain, tree, and graph structures. *arXiv preprint arXiv:2502.05078*. <https://arxiv.org/abs/2502.05078>
 
-Wei, J., Wang, X., Schuurmans, D., Bosma, M., Ichter, B., Xia, F., ... & Zhou, D. (2022). Chain-of-thought prompting elicits reasoning in large language models. *Advances in Neural Information Processing Systems, 35*, 24824–24837. <https://arxiv.org/abs/2201.11903>
+Wei, J., Wang, X., Schuurmans, D., Bosma, M., Ichter, B., Xia, F., Chi, E., Le, Q., & Zhou, D. (2022). Chain-of-thought prompting elicits reasoning in large language models. *Advances in Neural Information Processing Systems, 35*, 24824–24837. <https://arxiv.org/abs/2201.11903>
 
 Woodruff, D. P., Cohen-Addad, V., Jain, L., Mao, J., Zuo, S., Bateni, M., Branzei, S., Brenner, M. P., Chen, L., Feng, Y., Fortnow, L., Fu, G., Guan, Z., Hadizadeh, Z., Hajiaghayi, M. T., JafariRaviz, M., Javanmard, A., Karthik, C. S., Kawarabayashi, K., ... Mirrokni, V. (2026). Accelerating scientific research with Gemini: Case studies and common techniques. *arXiv preprint arXiv:2602.03837*. <https://arxiv.org/abs/2602.03837>
 
@@ -230,7 +230,7 @@ Yao, S., Yu, D., Zhao, J., Shafran, I., Griffiths, T. L., Cao, Y., & Narasimhan,
 
 ## Agent Architecture & Tool Use
 
-Schick, T., Dwivedi-Yu, J., Dessì, R., Raileanu, R., Lomeli, M., Hambro, E., ... & Scialom, T. (2024). Toolformer: Language models can teach themselves to use tools. *Advances in Neural Information Processing Systems, 36*. <https://arxiv.org/abs/2302.04761>
+Schick, T., Dwivedi-Yu, J., Dessì, R., Raileanu, R., Lomeli, M., Hambro, E., Zettlemoyer, L., Cancedda, N., & Scialom, T. (2024). Toolformer: Language models can teach themselves to use tools. *Advances in Neural Information Processing Systems, 36*. <https://arxiv.org/abs/2302.04761>
 
 Shinn, N., Cassano, F., Berman, E., Gopinath, A., Narasimhan, K., & Yao, S. (2024). Reflexion: Language agents with verbal reinforcement learning. *Advances in Neural Information Processing Systems, 36*. <https://arxiv.org/abs/2303.11366>
 
@@ -264,11 +264,11 @@ Wu, D., Wang, H., Yu, W., Zhang, Y., Chang, K.-W., & Yu, D. (2024). LongMemEval:
 
 ## Knowledge Graphs & GraphRAG
 
-Edge, D., Trinh, H., Cheng, N., Bradley, J., Chao, A., Mody, A., ... & Larson, J. (2024). From local to global: A graph RAG approach to query-focused summarization. *arXiv preprint arXiv:2404.16130*. <https://arxiv.org/abs/2404.16130>
-
-Traag, V. A., Waltman, L., & van Eck, N. J. (2019). From Louvain to Leiden: Guaranteeing well-connected communities. *Scientific Reports, 9*(1), 5233. <https://doi.org/10.1038/s41598-019-41695-z>
+Edge, D., Trinh, H., Cheng, N., Bradley, J., Chao, A., Mody, A., Truitt, S., Metropolitansky, D., Ness, R. O., & Larson, J. (2024). From local to global: A graph RAG approach to query-focused summarization. *arXiv preprint arXiv:2404.16130*. <https://arxiv.org/abs/2404.16130>
 
 Pan, S., Luo, L., Wang, Y., Chen, C., Wang, J., & Wu, X. (2024). Unifying large language models and knowledge graphs: A roadmap. *IEEE Transactions on Knowledge and Data Engineering, 36*(7), 3580–3599. <https://doi.org/10.1109/TKDE.2024.3352100> (<https://arxiv.org/abs/2306.08302>)
+
+Traag, V. A., Waltman, L., & van Eck, N. J. (2019). From Louvain to Leiden: Guaranteeing well-connected communities. *Scientific Reports, 9*(1), 5233. <https://doi.org/10.1038/s41598-019-41695-z>
 
 ---
 
@@ -288,41 +288,13 @@ Robertson, S. E., & Zaragoza, H. (2009). The probabilistic relevance framework: 
 
 ## Prompt Engineering & Context Window Management
 
-Wang, X., Wei, J., Schuurmans, D., Le, Q., Chi, E., Narang, S., ... & Zhou, D. (2023). Self-consistency improves chain of thought reasoning in language models. *International Conference on Learning Representations (ICLR)*. <https://arxiv.org/abs/2203.11171>
+Wang, X., Wei, J., Schuurmans, D., Le, Q., Chi, E., Narang, S., Chowdhery, A., & Zhou, D. (2023). Self-consistency improves chain of thought reasoning in language models. *International Conference on Learning Representations (ICLR)*. <https://arxiv.org/abs/2203.11171>
 
 Xu, F. F., Alon, U., Neubig, G., & Hellendoorn, V. J. (2022). A systematic evaluation of large language models of code. *Proceedings of the 6th ACM SIGPLAN International Symposium on Machine Programming*, 1–10. <https://arxiv.org/abs/2202.13169>
 
 Xu, X., Tao, C., Shen, T., Xu, C., Xu, H., Long, G., Lou, J.-G., & Ma, S. (2023). Re-reading improves reasoning in large language models. *arXiv preprint arXiv:2309.06275*. <https://arxiv.org/abs/2309.06275>
 
-Zhou, D., Schärli, N., Hou, L., Wei, J., Scales, N., Wang, X., ... & Chi, E. (2023). Least-to-most prompting enables complex reasoning in large language models. *International Conference on Learning Representations (ICLR)*. <https://arxiv.org/abs/2205.10625>
-
----
-
-## Business Strategy & Productivity
-
-Dalio, R. (2017). *Principles: Life and work*. Simon & Schuster.
-
-Graham, P. (2009). *Maker's schedule, manager's schedule*. <http://www.paulgraham.com/makersschedule.html>
-
-Juran, J. M. (1951). *Quality control handbook*. McGraw-Hill. [Origin of the 80/20 "vital few" principle, building on Pareto]
-
-Koch, R. (1998). *The 80/20 principle: The secret to achieving more with less*. Nicholas Brealey Publishing.
-
-Pearson, T. (2015). *The end of jobs: Money, meaning and freedom without the 9-to-5*. Lioncrest Publishing.
-
-Pearson, T. (2018, June 6). The ultimate guide to apprenticeships. *Mission.org*. <https://medium.com/the-mission/the-ultimate-guide-to-apprenticeships-54fc932683a2>
-
-Ries, E. (2011). *The lean startup: How today's entrepreneurs use continuous innovation to create radically successful businesses*. Crown Business.
-
-Snowden, D. J., & Boone, M. E. (2007). A leader's framework for decision making. *Harvard Business Review, 85*(11), 68–76.
-
-> **Note**: Introduced the Cynefin sensemaking framework (Clear, Complicated, Complex, Chaotic, Confusion). Directly grounds Protocol 525's progressive domain reclassification and cross-domain weighting matrix.
-
-Taleb, N. N. (2004). *Fooled by randomness: The hidden role of chance in life and in the markets* (2nd ed.). Random House.
-
-Taleb, N. N. (2012). *Antifragile: Things that gain from disorder*. Random House.
-
-Taleb, N. N. (2018). *Skin in the game: Hidden asymmetries in daily life*. Random House.
+Zhou, D., Schärli, N., Hou, L., Wei, J., Scales, N., Wang, X., Schuurmans, D., Cui, C., Bousquet, O., Le, Q., & Chi, E. (2023). Least-to-most prompting enables complex reasoning in large language models. *International Conference on Learning Representations (ICLR)*. <https://arxiv.org/abs/2205.10625>
 
 ---
 
@@ -338,7 +310,7 @@ Rumsfeld, D. H. (2002, February 12). DoD news briefing — Secretary Rumsfeld an
 
 ## AI Safety & Alignment
 
-Perez, E., Ringer, S., Lukošiūtė, K., Nguyen, K., Chen, E., Heiner, S., ... & Kaplan, J. (2023). Discovering language model behaviors with model-written evaluations. *Findings of the Association for Computational Linguistics: ACL 2023*, 13387–13434. <https://arxiv.org/abs/2212.09251>
+Perez, E., Ringer, S., Lukošiūtė, K., Nguyen, K., Chen, E., Heiner, S., Pettit, C., Olsson, C., Kundu, S., Kadavath, S., Jones, A., Chen, A., Mann, B., Israel, B., Seethor, B., McKinnon, C., Olah, C., Yan, D., Amodei, D., ... Kaplan, J. (2023). Discovering language model behaviors with model-written evaluations. *Findings of the Association for Computational Linguistics: ACL 2023*, 13387–13434. <https://arxiv.org/abs/2212.09251>
 
 > **Note on Sycophancy**: Sycophancy — the tendency of LLMs to agree with user's stated beliefs regardless of truthfulness — is a well-documented failure mode. Perez et al. (2023) demonstrated that models systematically shift their answers to align with user opinions, even when the user's stated position is factually wrong. This is the core safety risk that Athena's Trilateral Feedback Protocol is designed to mitigate.
 
@@ -358,13 +330,13 @@ Dubois, M., Ududec, C., Summerfield, C., & Luettgau, L. (2026). Ask don't tell: 
 
 > **Note**: Demonstrates that shifting prompts from affirmative telling to interrogative / epistemic questioning measurably reduces model sycophancy — informing Athena's pre-output questioning and anti-mirror hook interventions.
 
-Fanous, A., Goldberg, J., Agarwal, A. A., Lin, J., Zhou, A., Daneshjou, R., & Koyejo, S. (2025). SycEval: Evaluating LLM sycophancy. *Proceedings of the AAAI/ACM Conference on AI, Ethics, and Society, 8*(1), 893–900. <https://doi.org/10.1609/aies.v8i1.36598> (arXiv:2502.08177)
+Fanous, A., Goldberg, J., Agarwal, A. A., Lin, J., Zhou, A., Daneshjou, R., & Koyejo, S. (2025). SycEval: Evaluating LLM sycophancy. *Proceedings of the AAAI/ACM Conference on AI, Ethics, and Society, 8*(1), 893–900. <https://doi.org/10.1609/aies.v8i1.36598> (<https://arxiv.org/abs/2502.08177>)
 
-> **Note**: Measured a 58.19% overall sycophancy (capitulation) rate across ChatGPT-4o (56.71%), Claude-Sonnet, and Gemini-1.5-Pro (62.47%). Baseline evidence that sycophancy is a *majority-case* failure in frontier models, not an edge case — the problem Athena's meta-awareness gate exists to counter.
+> **Note**: Measured a 58.19% overall sycophancy rate across ChatGPT-4o (56.71%), Claude-Sonnet (57.44%), and Gemini-1.5-Pro (62.47%), comprising 43.52% progressive sycophancy (shifting toward the correct answer when nudged) and 14.66% regressive sycophancy (flipping from a correct answer to an incorrect one to agree with the user). Even the 14.66% regressive failure rate compounds materially once persistent user profiles are added (Jain et al., 2026) — the failure mode Athena's meta-awareness gate exists to counter.
 
 Jain, S., Park, C., Viana, M., Wilson, A., & Calacci, D. (2026). Interaction context often increases sycophancy in LLMs. *Proceedings of the 2026 CHI Conference on Human Factors in Computing Systems*, 1–26. <https://doi.org/10.1145/3772318.3791915> (<https://arxiv.org/abs/2509.12517>)
 
-> **Note**: The load-bearing citation for Athena's honesty pass (originally preprinted in 2025 as arXiv:2509.12517; published at CHI '26). Agreement sycophancy rises **substantially when a user memory profile is present** (reported +45% for Gemini 2.5 Pro) — i.e., the persistent-profile architecture that *is* Athena is empirically among the top drivers of the mirror effect. Cited directly in the README's [What's Enforced in Code](../README.md#whats-enforced-in-code-vs-by-prompt) as the strongest evidence against the design.
+> **Note**: The load-bearing citation for Athena's honesty pass (originally preprinted in 2025 as arXiv:2509.12517; published at CHI '26). Agreement sycophancy rises **substantially when a user memory profile is present** (reported +45% for Gemini 2.5 Pro) — i.e., the persistent-profile architecture that *is* Athena is empirically among the top drivers of the mirror effect. Cited directly in [Why Athena](WHY_ATHENA.md#the-human-augmentation-thesis) and reflected in the README's [What's Enforced in Code](../README.md#whats-enforced-in-code-vs-by-prompt) anti-sycophancy row as the strongest empirical evidence against unguarded persistent profiles.
 
 Kelley, S. W., & Riedl, C. (2026). Personalization increases affective alignment but has role-dependent effects on epistemic independence in LLMs. *arXiv preprint arXiv:2603.00024*. <https://arxiv.org/abs/2603.00024>
 
@@ -374,13 +346,13 @@ Kelley, S. W., & Riedl, C. (2026). Personalization increases affective alignment
 
 ## Information Theory & System Design
 
-Shannon, C. E. (1948). A mathematical theory of communication. *Bell System Technical Journal, 27*(3), 379–423. <https://doi.org/10.1002/j.1538-7305.1948.tb01338.x>
-
-> **Note**: Shannon's information theory provides the mathematical foundation for Athena's risk-proportional routing. The classification tier (SNIPER / STANDARD / ULTRA) is fundamentally a channel capacity problem: how much information about query risk can be extracted at minimal cost? The Λ complexity score is an entropy estimate that determines how much computational "bandwidth" to allocate.
-
 Graves, A. (2016). Adaptive computation time for recurrent neural networks. *arXiv preprint arXiv:1603.08983*. <https://arxiv.org/abs/1603.08983>
 
 > **Note**: Graves introduced the concept of *adaptive computation time* — allowing neural networks to allocate variable amounts of processing to different inputs based on difficulty. This is the ML-theoretic foundation of Athena's Λ-scoring: simple queries get SNIPER-level processing; complex queries get ULTRA-level processing. The system "thinks harder" when the input warrants it.
+
+Shannon, C. E. (1948). A mathematical theory of communication. *Bell System Technical Journal, 27*(3), 379–423. <https://doi.org/10.1002/j.1538-7305.1948.tb01338.x>
+
+> **Note**: Shannon's information theory provides the mathematical foundation for Athena's risk-proportional routing. The classification tier (SNIPER / STANDARD / ULTRA) is fundamentally a channel capacity problem: how much information about query risk can be extracted at minimal cost? The Λ complexity score is an entropy estimate that determines how much computational "bandwidth" to allocate.
 
 Tarjan, R. E. (1985). Amortized computational complexity. *SIAM Journal on Algebraic and Discrete Methods, 6*(2), 306–318. <https://doi.org/10.1137/0606031>
 
@@ -392,10 +364,6 @@ Tarjan, R. E. (1985). Amortized computational complexity. *SIAM Journal on Algeb
 
 Bastos, H., & Correia, L. (2026). From homeostatic principles to discrete emotions in an agent architecture – The HOmeostatic Regulation Architecture (HORA). In *Progress in Artificial Intelligence (EPIA 2025)*, Lecture Notes in Computer Science (pp. 400–412). Springer. <https://doi.org/10.1007/978-3-032-05176-9_31>
 
-von Bertalanffy, L. (1968). *General system theory: Foundations, development, applications*. George Braziller.
-
-> **Note**: von Bertalanffy's General Systems Theory provides the formal foundation for Athena's Biological Stack Architecture. The principle that systems exhibit emergent properties not reducible to their parts — and that hierarchical organization (subsystem → system → suprasystem) is a universal pattern — directly maps to Athena's hierarchy: Protocols → Clusters → Cognitive Systems → Organism.
-
 Keramati, M., & Gutkin, B. (2014). Homeostatic reinforcement learning for integrating reward collection and physiological stability. *eLife, 3*, Article e04811. <https://doi.org/10.7554/eLife.04811>
 
 Khan, I., & Lowe, R. (2024). Surprise! Using physiological stress for allostatic regulation under the active inference framework. *arXiv preprint arXiv:2406.08471*. <https://arxiv.org/abs/2406.08471>
@@ -404,7 +372,7 @@ Laurençon, H., Ségerie, C.-R., Lussange, J., & Gutkin, B. S. (2021). Continuou
 
 Meadows, D. H. (2008). *Thinking in systems: A primer* (D. Wright, Ed.). Chelsea Green Publishing.
 
-> **Note**: Meadows' principles of system dynamics (feedback loops, delays, leverage points, and structure driving behavior) provide the conceptual foundation for Athena's Meta-Pattern Engine (MP-1 through MP-14) and the Iceberg Model detailed in `docs/concepts/Systems_Thinking.md`.
+> **Note**: Meadows' principles of system dynamics (feedback loops, delays, leverage points, and structure driving behavior) provide the conceptual foundation for Athena's Meta-Pattern Engine (MP-1 through MP-19) and the Iceberg Model detailed in `docs/concepts/Systems_Thinking.md`.
 
 Minsky, M. (1986). *The society of mind*. Simon & Schuster.
 
@@ -418,6 +386,10 @@ Tiwari, D. (2025). Emotion-inspired learning signals (EILS): A homeostatic frame
 
 > **Note**: Together with Bastos & Correia (2026), Keramati & Gutkin (2014), Laurençon et al. (2021), and Khan & Lowe (2024), this computational homeostasis literature formalizes scalar drive-reduction and stress signals for autonomous agents — explicitly cited as the real-code theoretical lineage for Athena's advisory Protocol 517 (`ARC-517-homeostatic-pressure.md`).
 
+von Bertalanffy, L. (1968). *General system theory: Foundations, development, applications*. George Braziller.
+
+> **Note**: von Bertalanffy's General Systems Theory provides the formal foundation for Athena's Biological Stack Architecture. The principle that systems exhibit emergent properties not reducible to their parts — and that hierarchical organization (subsystem → system → suprasystem) is a universal pattern — directly maps to Athena's hierarchy: Protocols → Clusters → Cognitive Systems → Organism.
+
 ---
 
 ## Problem Framing & Wicked Problems
@@ -430,13 +402,23 @@ Howard, R. A. (1966). Information value theory. *IEEE Transactions on Systems Sc
 
 > **Note**: Howard formalized the concepts of Value of Information (VOI) and Expected Value of Information (EVI). Grounds the anti-rumination stop rule in `frame_ledger.py` (Rule R8): computational deliberation is terminated when the expected value of further analysis falls below the cost of a cheap empirical probe.
 
+Kurtz, C. F., & Snowden, D. J. (2003). The new dynamics of strategy: Sense-making in a complex and complicated world. *IBM Systems Journal, 42*(3), 462–483. <https://doi.org/10.1147/sj.423.0462>
+
 Rittel, H. W. J., & Webber, M. M. (1973). Dilemmas in a general theory of planning. *Policy Sciences, 4*(2), 155–169. <https://doi.org/10.1007/BF01405730>
 
 > **Note**: Rittel & Webber's formalization of "wicked problems" — problems that resist definition and have no stopping rule — is the theoretical basis for Protocol 504 (Problem Framing). Their insight that "the formulation of a wicked problem IS the problem" directly motivates P504's 5-gate diagnostic before any solution attempt.
 
+Snowden, D. J., & Boone, M. E. (2007). A leader's framework for decision making. *Harvard Business Review, 85*(11), 68–76.
+
+> **Note**: Originated by Snowden (1999) and formally introduced in Kurtz & Snowden (2003), then popularized for executives in Snowden & Boone (2007) with the original five domains (Simple, Complicated, Complex, Chaotic, Disorder — later renamed Clear and Confusion in 2019–2020). Directly grounds Protocol 525's progressive domain reclassification and cross-domain weighting matrix.
+
 Spradlin, D. (2012). Are you solving the right problem? *Harvard Business Review, 90*(9), 84–93.
 
-> **Note**: Spradlin's HBR framework for problem articulation — distinguishing between the stated problem and the actual problem — informed Protocol 504's emphasis on framing before execution. The observation that 85% of companies he studied were solving the wrong problem validates P504's existence.
+> **Note**: Spradlin's HBR framework introduces a 4-step problem-definition process — establishing the need, justifying the need, contextualizing prior attempts and constraints, and writing formal problem statements — that informed Protocol 504's emphasis on explicit problem articulation before execution.
+
+Wedell-Wedellsborg, T. (2017). Are you solving the right problems? *Harvard Business Review, 95*(1), 76–83.
+
+> **Note**: Surveyed 106 C-suite executives across 91 private- and public-sector organizations in 17 countries: 85% agreed their organizations are bad at problem diagnosis, and 87% agreed this flaw carries significant costs. Introduces structured problem reframing before solution execution, empirically validating Protocol 504's framing gates.
 
 ---
 
@@ -444,11 +426,39 @@ Spradlin, D. (2012). Are you solving the right problem? *Harvard Business Review
 
 Schwartz, R. C. (1995). *Internal family systems therapy*. Guilford Press.
 
-> **Note**: Schwartz's Internal Family Systems (IFS) model — which treats the psyche as a system of sub-personalities ("parts") with protective and exiled roles — provides the therapeutic framework for Athena's Inner Work cluster (#7) and the `therapeutic-ifs` skill. IFS is evidence-based and recognized by NREPP.
+> **Note**: Schwartz's Internal Family Systems (IFS) model — which treats the psyche as a system of sub-personalities ("parts") with protective and exiled roles — provides the therapeutic vocabulary for Athena's Inner Work cluster (#7) and the `therapeutic-ifs` skill. IFS was listed on SAMHSA's National Registry of Evidence-based Programs and Practices (NREPP) in 2015 prior to NREPP's discontinuation in January 2018; because its randomized controlled trial base remains narrower than CBT or ACT, Athena uses IFS strictly as a structured self-reflection vocabulary rather than clinical treatment.
 
 Young, J. E., Klosko, J. S., & Weishaar, M. E. (2003). *Schema therapy: A practitioner's guide*. Guilford Press.
 
 > **Note**: Schema Therapy's concept of "early maladaptive schemas" — stable, self-defeating patterns formed in childhood — grounds Athena's schema deconstruction skill. The 18-schema taxonomy provides the diagnostic vocabulary for Cluster #7's pattern detection.
+
+---
+
+## Practitioner, Industry & Operational Works
+
+Anthropic. (2025). *Project Vend: Can Claude run a small shop?* Anthropic Research. <https://www.anthropic.com/research/project-vend-1>
+
+Covey, S. R. (1989). *The 7 habits of highly effective people: Powerful lessons in personal change*. Free Press.
+
+Dalio, R. (2017). *Principles: Life and work*. Simon & Schuster.
+
+Graham, P. (2009). *Maker's schedule, manager's schedule*. <http://www.paulgraham.com/makersschedule.html>
+
+Juran, J. M. (1951). *Quality control handbook*. McGraw-Hill. [Origin of the 80/20 "vital few" principle, building on Pareto]
+
+Koch, R. (1998). *The 80/20 principle: The secret to achieving more with less*. Nicholas Brealey Publishing.
+
+Pearson, T. (2015). *The end of jobs: Money, meaning and freedom without the 9-to-5*. Lioncrest Publishing.
+
+Pearson, T. (2018, June 6). The ultimate guide to apprenticeships. *Mission.org*. <https://medium.com/the-mission/the-ultimate-guide-to-apprenticeships-54fc932683a2>
+
+Ries, E. (2011). *The lean startup: How today's entrepreneurs use continuous innovation to create radically successful businesses*. Crown Business.
+
+Taleb, N. N. (2004). *Fooled by randomness: The hidden role of chance in life and in the markets* (2nd ed.). Random House.
+
+Taleb, N. N. (2012). *Antifragile: Things that gain from disorder*. Random House.
+
+Taleb, N. N. (2018). *Skin in the game: Hidden asymmetries in daily life*. Random House.
 
 ---
 
@@ -482,4 +492,4 @@ For AI/ML papers, arXiv links are provided alongside formal publication details 
 
 ---
 
-*Last verified: 13 November 2026 — added Intelligence Analysis, Operational OSINT & Behavioral Forensics (Heuer, 1999; Pherson & Heuer, 2020; OHCHR & UC Berkeley Human Rights Center, 2022; Dawes, 1979; Grove & Meehl, 1996; Grove et al., 2000; Douglas et al., 2013; Hazelwood & Napier, 2004; Keppel & Weis, 2004; Schlesinger et al., 2014), Adversarial Wargaming (Perla, 1990; Caffrey, 2019; Black & Darken, 2024), Graph/Multi-Agent/Verification papers cited in protocols (Besta et al., 2024; Pandey et al., 2025; Liu et al., 2026; Xu et al., 2023; Lee et al., 2026; Woodruff et al., 2026; Dubois et al., 2026), and Computational Homeostasis (Bastos & Correia, 2026; Keramati & Gutkin, 2014; Laurençon et al., 2021; Khan & Lowe, 2024; Tiwari, 2025); upgraded Jain et al. (2026, CHI '26 DOI), Liang et al. (2024, EMNLP '24 DOI + corrected author roster), Pan et al. (2024, IEEE TKDE DOI), and Wang et al. (2024, Frontiers DOI); added missing co-author Berman to Shinn et al. (2024); confirmed Lyons v. OpenAI Foundation (No. 3:25-cv-11037-RS) federal caption; clarified Robertson & Zaragoza (2009) issue vs. monograph indexing and Arena AI Sept. 2026 snapshot provenance; fixed SICI DOI extraction in `citation_verifier.py` so Brier (1950) passes cleanly. **Full re-verification sweep this date: 48/48 DOIs (Crossref API via `citation_verifier.py`) + 39/39 arXiv IDs (arXiv export API), 0 failures.** Previous fact-checks: 20 October 2026; 4 October 2026; 5 September 2026; 23 July 2026; 22 July 2026; 5 July 2026; 6 June 2026 (S437).*
+*Last verified: 20 November 2026 — fixed Spradlin (2012) vs. Wedell-Wedellsborg (2017) 85% problem-diagnosis attribution, split SycEval (Fanous et al., 2025) 58.19% headline into 43.52% progressive vs. 14.66% regressive, added Kurtz & Snowden (2003) + Simple/Disorder->Clear/Confusion Cynefin lineage, updated Schwartz (1995) NREPP status to historical (listed 2015, discontinued 2018), added Cohen (1988), Fishburn (1967) DOI, and Anthropic (2025) Project Vend, repaired stale internal paths (`WHY_ATHENA.md`, `examples/scripts/wargame_runner.py`, `MP-1 through MP-19`), separated Practitioner, Industry & Operational Works from peer-reviewed sections, alphabetized all sections, and expanded all 10 APA 6th truncated author rosters to full APA 7th formatting. **Full re-verification sweep this date: 50/50 DOIs (Crossref API via `citation_verifier.py`) + 39/39 arXiv IDs (arXiv export API), 0 failures.** Previous fact-checks: 13 November 2026; 20 October 2026; 4 October 2026; 5 September 2026; 23 July 2026; 22 July 2026; 5 July 2026; 6 June 2026 (S437).*

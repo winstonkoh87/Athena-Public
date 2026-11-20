@@ -44,7 +44,7 @@ Athena is built on two legs:
 1. **It knows you** — owned, compounding, local-first context
 2. **It will disagree with you** — a code-enforced anti-sycophancy gate
 
-The uncomfortable truth: personalization alone is dangerous. User-memory profiles raise agreement sycophancy **+45%** on Gemini 2.5 Pro ([Jain et al. 2025](REFERENCES.md#sycophancy--the-personalization-tension)), atop a **~58%** frontier baseline ([SycEval 2025](https://arxiv.org/abs/2502.08177)). Athena is *built on* that mechanism. Its defense is a code-enforced meta-awareness gate that injects an anti-mirror kernel on loaded prompts, plus an explicitly advisory frame — the one condition shown to strengthen epistemic independence under personalization ([Kelley & Riedl 2026](https://arxiv.org/abs/2603.00024)).
+The uncomfortable truth: personalization alone is dangerous. User-memory profiles raise agreement sycophancy **+45%** on Gemini 2.5 Pro ([Jain et al. 2026](REFERENCES.md#sycophancy--the-personalization-tension)), atop a **58.2%** overall (**14.7%** regressive) frontier sycophancy baseline ([SycEval 2025](https://arxiv.org/abs/2502.08177)). Athena is *built on* that mechanism. Its defense is a code-enforced meta-awareness gate that injects an anti-mirror kernel on loaded prompts, plus an explicitly advisory frame — the one condition shown to strengthen epistemic independence under personalization ([Kelley & Riedl 2026](https://arxiv.org/abs/2603.00024)).
 
 Honest limits: the gate is Claude-Code-only today. Other IDEs have no equivalent hook, so independent vantage reverts to agent-discretion there.
 
