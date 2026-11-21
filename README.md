@@ -31,7 +31,7 @@ Athena solves this by separating **intelligence** (the rented model) from **stat
 
 | Dimension | Stateless Chatbots (Rented RAM) | Stateful Agent with Athena (Owned Hard Drive) |
 |:---|:---|:---|
-| **Memory & Context** | Amnesiac: starts from zero; 10-minute prompt prep tax | Continuous: `/start` restores active tasks & invariants in ~3.6K tokens and <1s via batched `boot_status.py` |
+| **Memory & Context** | Amnesiac: starts from zero; 10-minute prompt prep tax | Continuous: `/start` restores active tasks & invariants in 1 wave (`5.4 KB` Turn-1 `AGENTS.md`, `<1s` via `boot_status.py --bundle`) |
 | **Response Depth** | Generic median: broad consensus advice & textbook platitudes | Hyper-nuanced: conditioned on your real stack, balance sheet, & past post-mortems |
 | **Alignment & Rigor** | Sycophantic: agrees with whatever you say, validating bad ideas | Governed: irreversible-ruin blocker (Law #1); consigliere flags repeated blind spots |
 | **Data Sovereignty** | Vendor lock-in: cloud database fees, wiped on API deprecation | 100% Sovereign: local Git-tracked Markdown & SQLite on your machine |
@@ -68,16 +68,16 @@ Then type `/start` in your IDE's AI chat panel. Work normally. Type `/end` to sa
                                 ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  Athena SDK (src/athena/)                                               │
-│  ├── 1. Memory & Hybrid RAG: /start (~3.6K boot), 5-channel parallel    │
-│  │      RRF search, speculative "auto" local+ONNX fast-path, SQLite     │
-│  │      search_cache_vecs.db                                            │
+│  ├── 1. Memory & Hybrid RAG: 1-Wave /start, 5-channel parallel RRF      │
+│  │      + exponential decay, speculative "auto" (<= 5.5s wall cap),     │
+│  │      ONNX mini-batch rerank, self-healing search_cache_vecs.db       │
 │  ├── 2. Problem Framing & Meta-Triage: Lite/Strict frame_open, VOI      │
 │  │      (EVI), R1-R14 gates, Semantic Meta-Triage in context_gate       │
 │  ├── 3. Decision, Wargaming & Calibration: fail-closed real=True MCDA,  │
 │  │      EEV/Kelly/Ruin (gto_engine.py), Wargame, Brier calibration      │
-│  └── 4. Governance & Telemetry: Lambda risk router, Law #1 ruin blocker,│
-│         Trade Guardian (trade_guardian.py), O(1) 64KB JSONL tail gates  │
-│         (jsonl_tail.py)                                                 │
+│  └── 4. Governance & Telemetry: fail-closed PreToolUse (ruin, secrets,  │
+│         taint), diff-scoped Stop & doc-drift gates, Lambda router,      │
+│         Trade Guardian, and O(1) 64KB tail gates (jsonl_tail.py)        │
 └───────────────────────────────┬─────────────────────────────────────────┘
                                 │
                                 ▼
@@ -92,7 +92,7 @@ Then type `/start` in your IDE's AI chat panel. Work normally. Type `/end` to sa
 | Mode | Lifecycle | Token Budget | Retrieval & Compute Strategy |
 |:-----|:----------|:-------------|:-----------------------------|
 | **Sniper** (`SNIPER`, `Lambda < 10`) | Direct chat -> `/end` | ~500 tokens | `vector_mode="local"` (<50 ms local FTS5/lex/canonical, zero cloud RTT) |
-| **MinMax v2.0 (Default)** (`STANDARD`, `Lambda 10–30`) | `/start` -> work -> `/end` | ~3.6K boot tokens (`14.5 KB`, `-78.1%` vs. uncompacted boot) | `<1.0s` concurrent `scripts/boot_status.py`; speculative `"auto"` local+ONNX fast-path (`Lambda 10–14`) escalating to `"always"` hybrid vector+rerank (`Lambda >= 15`) |
+| **MinMax v2.2 (Default)** (`STANDARD`, `Lambda 10–30`) | 1-Wave `/start` -> work -> `/end` | `5.4 KB` Turn-1 `AGENTS.md` (`12.5 KB` / ~3.1K full boot set) | `<1.0s` parallel `scripts/boot_status.py --bundle` + `context_gate` (`<= 2` Turn-1 tool waves); speculative `"auto"` local+ONNX fast-path (`Lambda 10–25`, non-personal/non-web) escalating to `"always"` (`Lambda > 25`), hard `5.5s` non-blocking wall cap |
 | **MaxMax v4.0 (Curated Compute)** (`ULTRA`, `Lambda > 30`) | `/ultrastart` -> `/ultrathink` -> `/ultraend` | `<= 40K` boot ceiling (`< 20%` of 200K context window) | Surgical canonical/project slice loading (~145K+ tokens reserved for multi-track synthesis), 3-query parallel adversarial knowledge-base (Exocortex) pre-warming, and 3-mode `/ultrathink` orchestration (Native Swarm / API / HITL) |
 
 ## Repository Structure
@@ -132,13 +132,14 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 
 | Subsystem | Module / MCP Tool | What It Computes / Enforces |
 |:----------|:------------------|:----------------------------|
-| **Hybrid RAG & Speculative Context Gate** | `mcp_server.py` (`smart_search`, `context_gate`), `tools/search.py`, `core/cache.py` | Concurrent 5-channel RRF fusion (BM25 FTS5 + pgvector + filename headers + canonical/graph + ONNX cross-encoder rerank), `"local"`/`"auto"`/`"always"` vector routing, and zero-write-on-hit SQLite `search_cache_vecs.db` |
+| **Hybrid RAG & Speculative Context Gate** | `mcp_server.py` (`smart_search`, `context_gate`), `tools/search.py`, `core/cache.py` | Concurrent 5-channel RRF fusion (BM25 FTS5 + pgvector + canonical/headers + filenames + local learnings) + continuous exponential recency decay (`365.25d` half-life) + length-sorted ONNX mini-batch rerank (`MAX_LENGTH=256`), `"local"`/`"auto"`/`"always"` vector routing (`5.5s` non-blocking cap), and self-healing SQLite `search_cache_vecs.db` |
+| **Memory Security & Lifecycle** | `cli/memory.py` (`athena memory eval\|verify\|forget\|taint`), `core/taint.py`, `memory/{budgets,dream_verifier,forget,health,learnings}.py` | Zero-token TTL (`expires_at`), pinned negative-guardrail immunity (`pinned: true`), role-scoped startup context budgets, monotonic inbound taint quarantine, zero-LLM `/dream` transcript verifier, atomic cross-layer erasure, and zero-token health eval |
 | **Problem Framing & Meta-Triage** | `intelligence/frame_ledger.py` (`frame_open`, `frame_validate`, `frame_resolve`, `frame_status`), `mcp_server.py` (`context_gate`) | Lite (`lite=True`) + Strict framing, `EVI` stop-rule, `reframe_prior`, `R1-R14` commitment gates (low-reversibility/`ULTRA` fail-closed), `LUCK` band gate, and Semantic Meta-Triage |
 | **Quantitative Decision & Calibration** | `intelligence/gto_engine.py` (`decision_screen`), `intelligence/calibration.py` (`calibration_status`) | Fail-closed `real=True` MCDA (`veto_floors`/`ruin_inputs`, `preference_provenance`, `status_quo` baseline check), EEV, 1/3 Kelly, Ruin, Monte Carlo, Brier calibration, and SHA-256 receipts (`.athena/decision_receipts.jsonl`) |
 | **Adversarial Wargaming Engine** | `intelligence/wargame.py` (`athena-wargame`) | Two-turn sequential Blue vs. Red game trees with intra-turn path-dependent trough ruin, Red best-response optimization, and tamper-evident run receipts (`.athena/wargame_runs.jsonl`) |
 | **Counterparty OSINT & Trade Governance** | `intelligence/ucds_validator.py`, `tools/trade_guardian.py` | Deterministic Universal Counterparty Dossier Standard (`audit_ucds_dossier`) validator (Track A/B bifurcation, knockout gates, cashflow inversion) plus position/drawdown/sizing safety guards |
 | **Local Analytical SQL** | `duckdb_mcp_server.py` (`query`, `profile`, `list_tables`, `export_result`) | Zero-dependency DuckDB engine for profiling and querying large CSV, JSON, and Parquet datasets without exhausting LLM context windows |
-| **Runtime Governance & Batched Telemetry** | `core/governance.py`, `scripts/boot_status.py`, `.agent/scripts/hook_*.py`, `.agent/scripts/lib/jsonl_tail.py` | Concurrent `<1.0s` boot status, `O(1)` 64KB EOF tail verification gates, capability permissions, crisis life-safety screen (Protocol 509), shlex-tokenized destructive command blocker (ruin_structured.py), and secret egress scanner |
+| **Runtime Governance & Batched Telemetry** | `core/governance.py`, `scripts/boot_status.py`, `scripts/check_doc_drift.py`, `.agent/scripts/hook_*.py`, `.agent/scripts/security/block_*.py`, `.agent/scripts/lib/jsonl_tail.py` | Fail-closed PreToolUse guards (`"onFailure": "block"` — ruin, secrets, tainted memory), diff-scoped `<0.5s` Stop verifier (`hook_stop_verify.py`), CI doc-drift gate, concurrent `<1.0s` `boot_status.py --bundle`, `O(1)` 64KB EOF tail gates, capability permissions, and Protocol 509 crisis screen |
 
 ### What's enforced in code vs. by prompt
 
@@ -146,22 +147,22 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 
 | Claim | Status | Evidence |
 |:------|:-------|:---------|
-| **Storage & hybrid retrieval** — memories stored and surfaced when relevant | ✅ Shipped (`code-enforced`) | Hybrid RAG with document-level RRF + cross-encoder rerank, hardened through [logged regressions](docs/CHANGELOG.md) |
+| **Storage & hybrid retrieval** — memories stored and surfaced when relevant | ✅ Shipped (`code-enforced`) | Hybrid 5-channel RRF + exponential recency decay + ONNX mini-batch rerank + self-healing SQLite cache, hardened through [logged regressions](docs/CHANGELOG.md) |
 | **Portability** — Markdown and JSONL on your disk, movable across models | ✅ Shipped (`structural`) | Plain files on disk — inspect the repo |
 | **Quantitative decision screening & wargaming** — EEV, 1/3 Kelly, Ruin, MCDA, 2-turn game trees | ✅ Shipped (`code-available`) | [`gto_engine.py`](src/athena/intelligence/gto_engine.py) & [`wargame.py`](src/athena/intelligence/wargame.py) emit SHA-256 receipts (`107` tests); Stop hook blocks unreceipted numeric engine claims |
 | **Pre-registered problem framing** — Lite/Strict `frame_open`, `R1–R14` gates & holdout eval | ✅ Shipped (`code-available`) | [`frame_ledger.py`](src/athena/intelligence/frame_ledger.py) & [`tests/test_problem_solving_holdout.py`](tests/test_problem_solving_holdout.py) (30-case holdout + calibration) |
-| **Governed autonomy** — hooks block destructive commands, ungrounded claims, and secrets | ✅ Shipped (partial) | shlex-tokenized ruin check blocks canonical rm -rf / find -delete / mv / force-push / reset --hard / shutil.rmtree ([tests/test_ruin_structured.py](tests/test_ruin_structured.py)); shell indirection bypasses are [known and tracked](docs/TECH_DEBT.md#p2-bash-guard-shell-indirection-boundaries) |
+| **Governed autonomy** — hooks block destructive commands, ungrounded claims, and secrets | ✅ Shipped (partial) | Fail-closed PreToolUse hooks (`"onFailure": "block"`, exit `2` on malformed input) guard shlex-tokenized ruin (`rm -rf` / `find -delete` / `mv` / force-push / `reset --hard` / `shutil.rmtree`), secrets, and tainted-memory writes ([tests/test_ruin_structured.py](tests/test_ruin_structured.py), [tests/test_memory_hardening.py](tests/test_memory_hardening.py)); shell indirection bypasses are [known and tracked](docs/TECH_DEBT.md#p2-bash-guard-shell-indirection-boundaries) |
 | **Claim & citation tracing** — verifying numeric claims, denials, and cited repo paths | 🟡 Partial | GTO `GTO-xxxxxxxx` numeric receipts, opt-in universal-negative gate (`.agent/scripts/hook_epistemic_gate.py`), and non-blocking cited-path checks (`hook_stop_verify.py`); general prose claim-entailment is *not* solved |
-| **Compounding personalization** — session 2,000 recalls session 5 | 🟡 N=1 evidence | 2,100+ sessions, 410 active protocols, and 632 case studies by the author; no multi-user study |
-| **Anti-sycophancy** — personalization doesn't silently increase agreement | 🟡 Partial mitigation | Code-enforced meta-awareness gate (Claude Code hook); agent-discretion in hookless IDEs — see [honest limits](docs/ENGINEERING_DEPTH.md) |
+| **Compounding personalization** — session 2,000 recalls session 5 | 🟡 N=1 evidence | 2,100+ sessions, 410 active protocols, and 633 case studies by the author; no multi-user study |
+| **Anti-sycophancy** — personalization doesn't silently increase agreement | 🟡 Partial mitigation | Code-enforced meta-awareness gate (Claude Code hook + MCP `context_gate` bridge; 24-case holdout in [`tests/test_sycophancy_holdout.py`](tests/test_sycophancy_holdout.py) verifies `18/18` bait kernel injection & `0/6` false positives); downstream LLM behavior & hookless IDEs remain partial — see [honest limits](docs/ENGINEERING_DEPTH.md#6-anti-sycophancy-architecture--honest-limits) |
 
 > **Why publish this table?** Because the failure mode of this product category is self-mythologizing — describing aspirations in the present tense. Athena's own convention ([Epistemic Status](examples/workflows/references/_shared_extended.md#1-epistemic-status-convention-s534--anti-self-mythologizing)) requires labeling every mechanism as `code-enforced`, `code-available`, `agent-discretion`, or `aspirational`. This table is that convention applied to the README.
 
 ## Measured, Not Claimed
 
 ```bash
-# Run the batched boot status check (<1.0s concurrent telemetry + index health)
-python3 scripts/boot_status.py --json
+# Run the batched 1-wave boot status bundle (<1.0s concurrent telemetry; or --json)
+python3 scripts/boot_status.py --bundle
 
 # Run the test suite (including frame_ledger, gto_engine, and MinMax/MaxMax suites)
 pytest tests/ -v --tb=short
@@ -180,6 +181,10 @@ python3 examples/scripts/calibration_score.py
 pytest tests/test_problem_solving_holdout.py -v
 python3 scripts/eval_problem_solving_ab.py --dry-run
 
+# Run the 24-case profile-conditioned sycophancy holdout & zero-token memory health eval
+pytest tests/test_sycophancy_holdout.py tests/test_memory_hardening.py -v
+python3 scripts/memory_eval.py --fixtures
+
 # Run the local KV cache & TTFT benchmark (Ollama / llama.cpp)
 python scripts/benchmark_kv_cache.py --model qwen2.5-coder:14b
 
@@ -189,14 +194,16 @@ python examples/scripts/evaluator.py --k 5 --rerank
 
 | Metric | Value | Verification Command |
 |:-------|:------|:---------------------|
-| **MinMax v2.0 Boot & Warm Gate Latency** | **< 1.0s boot status / < 10 ms warm `context_gate` hit** | `pytest tests/test_minmax_remediation.py -v` |
+| **MinMax v2.2 Boot, ONNX Rerank & Warm Gate** | **< 1.0s boot / < 2.0s 50-doc ONNX batch / < 10 ms warm gate** | `pytest tests/test_minmax_remediation.py tests/test_embedding_cache_resilience.py -v` |
 | **Local TTFT Scaling (2K–3.6K Boot)** | **~35x–50x speedup vs 32K** | `python scripts/benchmark_kv_cache.py` |
 | **Retrieval Hit@5 (Strict)** | **0.569** (37 / 65) | `python examples/scripts/evaluator.py` |
 | **Retrieval MRR@5 (Strict)** | **0.472** | `python examples/scripts/evaluator.py` |
 | *Retrieval Hit@5 (Lenient)* | *0.892 (deprecated)* | *Partial substring match (inflated)* |
 | **Problem-Solving Holdout Benchmark** | **30 / 30 (20 traps caught, 0 false ULTRA)** | `pytest tests/test_problem_solving_holdout.py -v` |
-| **Unit & Red-Team Tests** | **850+ passed (100% of runnable local suite)** | `pytest tests/` |
-| **Secret Leaks (1,248+ commits)** | **0 detected** | Gitleaks + `privacy_scan.py` in CI |
+| **Sycophancy Gate Holdout (24-case)** | **18 / 18 bait recall, 0 / 6 false positives** | `pytest tests/test_sycophancy_holdout.py -v` |
+| **Memory Security & Lifecycle Fixtures** | **15 / 15 passed (TTL, taint quarantine, forget, budgets)** | `pytest tests/test_memory_hardening.py -v` |
+| **Unit & Red-Team Tests** | **920+ passed (100% of runnable local suite)** | `pytest tests/` |
+| **Secret Leaks (970+ public commits)** | **0 detected** | Gitleaks + `privacy_scan.py` in CI |
 | **Code Quality & Lints** | **0 ruff findings** | `ruff check src/ scripts/ tests/` |
 
 > **Anti-Goodhart Invariant**: Why did our reported Hit@5 shift from 0.89 to 0.57? Lenient substring matchers count partial word overlaps as "hits," inflating benchmark scores by ~36% without improving retrieval. We killed the lenient matcher because vanity metrics mask regressions. See the full breakdown: [Anti-Goodhart Benchmarking in RAG](docs/BENCHMARKS.md#the-anti-goodhart-shift-why-we-published-lower-numbers).

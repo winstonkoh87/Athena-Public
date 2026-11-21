@@ -291,7 +291,7 @@ def check_athena_yaml(yaml_path: Path, repo_root: Path) -> list[dict[str, Any]]:
                     "file": rel_yaml,
                     "line": line_num,
                     "target": str(budget),
-                    "message": f"boot_tokens={budget} in {rel_yaml}:{line_num} exceeds 5000 (MinMax v2.0 target ~3600)",
+                    "message": f"boot_tokens={budget} in {rel_yaml}:{line_num} exceeds 5000 (MinMax v2.2 target ~3600)",
                 }
             )
 
