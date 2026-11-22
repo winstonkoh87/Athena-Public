@@ -130,6 +130,8 @@ EXEMPTIONS: list[tuple[str, str, str]] = [
     (".context/CANONICAL.md", r".",
      "materialized view contains financial figures, subscription costs, and "
      "metrics with dollar signs and version-shaped numbers — never a version declaration"),
+    (".context/CANONICAL_ARCHIVE.md", r".",
+     "bitemporal archive of superseded CANONICAL.md entries — historical snapshots by construction"),
 
     # Wiki pages carry per-page version stamps, pinned to their publication date.
     ("docs/wiki/*", r".",
@@ -169,6 +171,8 @@ EXEMPTIONS: list[tuple[str, str, str]] = [
      "meta-protocols quoting version examples in diagnostic prose"),
     (".agent/skills/web-launch-gate/SKILL.md", r".",
      "skill references the v9.8.0 security sprint as historical context"),
+    (".agent/skills/*/SKILL.md", r"^#\s+.*\(v[0-9][0-9A-Za-z.\-]*",
+     "individual skill headings declare the skill's own revision version, never Athena's system version"),
 
     # Not this project's version at all.
     (".agent/CONNECTORS.md", r".",
