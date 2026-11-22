@@ -522,14 +522,15 @@ def _weekday_advisories(status: dict[str, Any]) -> list[str]:
     return advisories
 
 
-def _format_bundle(status: dict[str, Any], root: Path) -> str:
-    """One-shot MinMax v2.2 boot bundle: compact status + advisories + latest checkpoint + userContext."""
+def _format_bundle(status: dict[str, Any], root: Path, *, include_checkpoint: bool = True) -> str:
+    """One-shot MinMax v2.2 boot bundle: compact status + advisories + optional latest checkpoint + userContext."""
     parts = [_format_compact(status)]
     advisories = _weekday_advisories(status)
     if advisories:
         parts.extend(advisories)
-    parts.append("\n--- LATEST CHECKPOINT ---")
-    parts.append(_extract_latest_checkpoint(root))
+    if include_checkpoint:
+        parts.append("\n--- LATEST CHECKPOINT ---")
+        parts.append(_extract_latest_checkpoint(root))
     parts.append("\n--- USER CONTEXT ---")
     parts.append(_read_compact_user_context(root))
     return "\n".join(parts)
@@ -544,6 +545,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Emit compact telemetry + latest activeContext checkpoint + userContext in one call",
     )
+    parser.add_argument(
+        "--no-checkpoint",
+        action="store_true",
+        help="Omit LATEST CHECKPOINT in --bundle when SessionStart already injected it",
+    )
     parser.add_argument("--days", type=int, default=30, help="Commit lookback window for maintenance_ratio")
     parser.add_argument("--force-summaries", action="store_true", help="Force memory bank summary regeneration")
     args = parser.parse_args(argv)
@@ -552,7 +558,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(status, indent=2, default=str))
     elif args.bundle:
-        print(_format_bundle(status, PROJECT_ROOT))
+        print(_format_bundle(status, PROJECT_ROOT, include_checkpoint=not args.no_checkpoint))
     elif args.compact:
         print(_format_compact(status))
     else:

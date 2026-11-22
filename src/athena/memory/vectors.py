@@ -54,7 +54,13 @@ API_USAGE_LOG_PATH = _DEFAULT_API_USAGE_LOG_PATH
 _api_usage_lock = threading.Lock()
 
 
-def record_api_usage(endpoint: str, texts_count: int, total_chars: int, status_code: int) -> None:
+def record_api_usage(
+    endpoint: str,
+    texts_count: int,
+    total_chars: int,
+    status_code: int,
+    model: str = "gemini-embedding-001",
+) -> None:
     """Log structured API usage telemetry to .agent/telemetry/api_usage.jsonl (TD-081 Action 3)."""
     try:
         path = API_USAGE_LOG_PATH
@@ -63,7 +69,7 @@ def record_api_usage(endpoint: str, texts_count: int, total_chars: int, status_c
         path.parent.mkdir(parents=True, exist_ok=True)
         record = {
             "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "model": "gemini-embedding-001",
+            "model": model,
             "endpoint": endpoint,
             "texts": texts_count,
             "chars": total_chars,

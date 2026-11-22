@@ -118,6 +118,31 @@ class DeltaManifest:
 
         return curr_hash != stored.get("hash")
 
+    def is_within_cooldown(self, file_path: Path, cooldown_hours: float) -> bool:
+        """Return True if file_path was synced within the last `cooldown_hours`."""
+        if cooldown_hours <= 0:
+            return False
+
+        rel_path = self._get_rel_path(file_path)
+        stored = self.data.get("files", {}).get(rel_path)
+        if not isinstance(stored, dict):
+            return False
+
+        last_synced_raw = stored.get("last_synced")
+        if not isinstance(last_synced_raw, str) or not last_synced_raw.strip():
+            return False
+
+        try:
+            last_synced = datetime.fromisoformat(last_synced_raw.strip())
+        except ValueError:
+            return False
+
+        if last_synced.tzinfo is None:
+            last_synced = last_synced.replace(tzinfo=timezone.utc)
+
+        age_seconds = (datetime.now(timezone.utc) - last_synced).total_seconds()
+        return age_seconds < (cooldown_hours * 3600.0)
+
     def update_entry(self, file_path: Path, remote_id: str | None = None):
         """Update manifest entry after successful sync."""
         if not file_path.exists():

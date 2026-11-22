@@ -38,6 +38,7 @@ else:
 import hashlib
 import json
 import logging
+import os
 import re
 import time
 from datetime import datetime, timezone
@@ -80,6 +81,14 @@ mcp = FastMCP(
 
 logger = logging.getLogger("athena.mcp")
 
+
+def _resolve_env_vector_mode() -> str | None:
+    """Return optional ATHENA_VECTOR_MODE override ('local' | 'auto' | 'always')."""
+    mode = os.getenv("ATHENA_VECTOR_MODE", "").strip().lower()
+    if mode in ("local", "auto", "always"):
+        return mode
+    return None
+
 # ---------------------------------------------------------------------------
 # TOOL: smart_search
 # ---------------------------------------------------------------------------
@@ -119,6 +128,7 @@ def smart_search(
     perms.gate("smart_search")
 
     # Execute search directly without stdout hijacking (WS3.1 / M-1 fix)
+    effective_vector_mode = _resolve_env_vector_mode() or "always"
     results = run_search(
         query=query,
         limit=limit,
@@ -127,6 +137,7 @@ def smart_search(
         json_output=True,
         web=web,
         print_output=False,
+        vector_mode=effective_vector_mode,
     )
     if not isinstance(results, dict):
         results = {"results": [], "error": "Search returned invalid payload"}
@@ -1290,10 +1301,12 @@ def context_gate(
         pass
 
     # Choose MinMax retrieval posture:
+    # - ATHENA_VECTOR_MODE=local -> local-only standby (0 API cost, zero Degradation Guard blocks)
     # - SNIPER -> local-only (<0.5s)
     # - Low/Mid-complexity STANDARD (Lambda <= 25, non-personalised, no web) -> speculative local+ONNX ("auto") w/ quality-floor escalation
     # - High-complexity STANDARD / Decision / Web / ULTRA -> full parallel vector + lexical ("always")
-    if risk_level == RiskLevel.SNIPER:
+    env_vector_mode = _resolve_env_vector_mode()
+    if env_vector_mode == "local" or risk_level == RiskLevel.SNIPER:
         primary_vector_mode = "local"
     elif (
         risk_level == RiskLevel.STANDARD
@@ -1707,7 +1720,10 @@ def context_gate(
     _SESSION_GATE_STATE["last_user_state_fp"] = user_state_fp
     _SESSION_GATE_STATE["turn_index"] = int(_SESSION_GATE_STATE["turn_index"]) + 1
     if compact_follow_up and user_state_unchanged and isinstance(user_state, dict):
-        user_state = {**user_state, "_delta": "unchanged"}
+        user_state = {
+            "_delta": "unchanged",
+            "state_as_of": user_state.get("state_as_of"),
+        }
 
     session_delta = {
         "turn_index": int(_SESSION_GATE_STATE["turn_index"]),

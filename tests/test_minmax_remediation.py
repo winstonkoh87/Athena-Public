@@ -814,6 +814,47 @@ def test_boot_status_bundle_mode(tmp_path):
     assert "S100" not in proc.stdout
 
 
+def test_hook_auto_start_minmax_v22():
+    """hook_auto_start.py must inject 1-wave --bundle directive, skip Core_Identity, and include latest checkpoint."""
+    import re
+
+    import pytest
+
+    script = REPO_ROOT / ".agent" / "scripts" / "hook_auto_start.py"
+    if not script.exists():
+        pytest.skip("hook_auto_start.py not present in this repo layout")
+    athena_py = REPO_ROOT / ".agent" / "scripts" / "athena-py"
+    runner = str(athena_py) if (athena_py.exists() and os.access(athena_py, os.X_OK)) else sys.executable
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": str(REPO_ROOT)}
+
+    t0 = time.perf_counter()
+    proc = subprocess.run(
+        [runner, str(script)],
+        cwd=str(REPO_ROOT),
+        env=env,
+        input="{}",
+        capture_output=True,
+        text=True,
+        timeout=5,
+    )
+    elapsed = time.perf_counter() - t0
+
+    assert proc.returncode == 0, f"hook_auto_start.py failed: {proc.stderr}"
+    assert elapsed < 0.2, f"hook_auto_start.py exceeded 0.2s budget: {elapsed:.3f}s"
+    payload = json.loads(proc.stdout)
+    ctx = payload["hookSpecificOutput"]["additionalContext"]
+    assert "boot_status.py --bundle" in ctx
+    assert "Core_Identity.md" in ctx
+    assert "NOT" in ctx or "Do not" in ctx or "do not" in ctx
+
+    ac_path = REPO_ROOT / ".context" / "memory_bank" / "activeContext.md"
+    if ac_path.exists():
+        ac_text = ac_path.read_text(encoding="utf-8")
+        matches = re.findall(r"\[\[\s*(S\d+)\s*\|", ac_text)
+        if matches:
+            assert matches[-1] in ctx, f"Expected latest checkpoint {matches[-1]} in SessionStart additionalContext"
+
+
 def test_onnx_reranker_50_long_candidates_under_2s():
     """ONNX reranker must score 50 mixed/long candidates in < 2.0s via length-sorted mini-batches."""
     import pytest
@@ -849,4 +890,91 @@ def test_onnx_reranker_50_long_candidates_under_2s():
     assert all(int(r.id.split("-")[1]) < 10 for r in top), "Expected relevant long docs to rank above distractors"
 
 
+def test_boot_status_bundle_no_checkpoint_omits_checkpoint(tmp_path):
+    """scripts/boot_status.py --bundle --no-checkpoint must omit LATEST CHECKPOINT while retaining status and userContext."""
+    mem_dir = tmp_path / ".context" / "memory_bank"
+    mem_dir.mkdir(parents=True, exist_ok=True)
+    (mem_dir / "userContext.md").write_text("# User Context\n- Rate Floor: $150/hr\n", encoding="utf-8")
+    (mem_dir / "activeContext.md").write_text(
+        "[[ S101 |\n@focus: Latest active session\n!checkpoint ]]\n",
+        encoding="utf-8",
+    )
+
+    script = REPO_ROOT / "scripts" / "boot_status.py"
+    athena_py = REPO_ROOT / ".agent" / "scripts" / "athena-py"
+    runner = str(athena_py) if (athena_py.exists() and os.access(athena_py, os.X_OK)) else sys.executable
+    env = {**os.environ, "ATHENA_ROOT": str(tmp_path)}
+
+    t0 = time.perf_counter()
+    proc = subprocess.run(
+        [runner, str(script), "--bundle", "--no-checkpoint"],
+        cwd=str(REPO_ROOT),
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=5,
+    )
+    elapsed = time.perf_counter() - t0
+
+    assert proc.returncode == 0, f"boot_status.py --bundle --no-checkpoint failed: {proc.stderr}"
+    assert elapsed < 1.5, f"boot_status.py --bundle --no-checkpoint exceeded budget: {elapsed:.2f}s"
+    assert "⚡ Boot Status" in proc.stdout
+    assert "Rate Floor: $150/hr" in proc.stdout
+    assert "--- LATEST CHECKPOINT ---" not in proc.stdout
+    assert "S101" not in proc.stdout
+
+
+def test_context_gate_compact_follow_up_strips_unchanged_user_state():
+    """compact_follow_up=True with unchanged user_state must strip heavy unchanged keys down to delta marker."""
+    from athena.mcp_server import context_gate, reset_context_gate_session_state
+
+    reset_context_gate_session_state()
+
+    def fake_run_search(query, **kwargs):
+        return {
+            "results": [{"id": "c1", "content": "body", "rrf_score": 0.05}],
+            "user_state": {
+                "rate_floor": "$150/hr",
+                "active_pending": "big pending string",
+                "state_as_of": "2026-11-22T06:00:00+00:00",
+            },
+        }
+
+    with (
+        patch("athena.tools.meta_pattern_matcher.detect_latent_meta_patterns", return_value=[]),
+        patch("athena.tools.search.run_search", side_effect=fake_run_search),
+    ):
+        context_gate("Turn 1 query", limit=3, web=False)
+        second = context_gate("Turn 2 query", limit=3, web=False, compact_follow_up=True)
+
+    assert second["user_state"] == {
+        "_delta": "unchanged",
+        "state_as_of": "2026-11-22T06:00:00+00:00",
+    }
+
+
+def test_skill_descriptions_under_cold_prefill_budget():
+    """Combined SKILL.md frontmatter descriptions must stay <= 4,200 chars to minimize cold-prefill weight."""
+    import re
+
+    import pytest
+
+    skills_dir = REPO_ROOT / ".agent" / "skills"
+    if not skills_dir.is_dir():
+        pytest.skip(".agent/skills not present in this repo layout")
+    skill_files = sorted(skills_dir.glob("*/SKILL.md"))
+    assert len(skill_files) >= 44, f"Expected >= 44 active skills, found {len(skill_files)}"
+
+    total_desc_chars = 0
+    for path in skill_files:
+        text = path.read_text(encoding="utf-8")
+        m = re.search(r"^description:\s*(.+)$", text, re.M)
+        assert m is not None, f"Missing description frontmatter in {path}"
+        desc = m.group(1).strip()
+        assert desc, f"Empty description frontmatter in {path}"
+        total_desc_chars += len(desc)
+
+    assert total_desc_chars <= 4_200, (
+        f"Combined SKILL.md descriptions are {total_desc_chars} chars (> 4,200 char cold-prefill budget)"
+    )
 
