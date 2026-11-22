@@ -377,9 +377,9 @@ def check_restricted_signatures(changed_files: list[str]) -> list[str]:
         (r"sk-ant-[a-zA-Z0-9_-]{20,}", "Anthropic API signature"),  # pds:allow
         (r"ghp_[a-zA-Z0-9]{20,}", "GitHub PAT signature"),  # pds:allow
         (
-            r"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[a-zA-Z0-9_-]{30,}",
+            r"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[a-zA-Z0-9_-]{30,}",  # pds:allow
             "Supabase/JWT signature",
-        ),  # pds:allow
+        ),
         (r"AIza[0-9A-Za-z-_]{35}", "Google API signature"),  # pds:allow
     ]
 

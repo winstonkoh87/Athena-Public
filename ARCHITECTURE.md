@@ -1,6 +1,6 @@
 # Athena — Architecture Reference
 
-> **Last Updated**: 19 November 2026
+> **Last Updated**: 23 November 2026
 > **Version**: v10.0.6
 > **Canonical Counts**: See `.agent/config/CAPS.json` — if numbers in this file diverge, CAPS wins.
 > **Bionic Unit Spec**: `BIONIC_UNIT_SPEC.md` (private workspace) — the definitive human-AI augmentation mapping
@@ -41,7 +41,7 @@ Athena-Public/                       # Clean-lobby repository (32 tracked root e
 └── Makefile / LICENSE / llms.txt    # Build targets, MIT license & LLM index
 ```
 
-> **Canonical Counts (`CAPS.json`)**: `410 active + 51 archived = 461 protocols (26 categories)`, `44 active skills (17 archived)`, `78 workflows (57 root + 21 _domain/)`, `632 case studies`, `177 CANONICAL Section 4 entries`. See [`.agent/config/CAPS.json`](.agent/config/CAPS.json).
+> **Canonical Counts (`CAPS.json`)**: `410 active + 51 archived = 461 protocols (26 categories)`, `44 active skills (17 archived)`, `78 workflows (57 root + 21 _domain/)`, `633 case studies`, `177 CANONICAL Section 4 entries`. See [`.agent/config/CAPS.json`](.agent/config/CAPS.json).
 > **Decoupled Workspaces (External)**:
 > - **FX Trading Desk**: Isolated external workspace. Athena supplies cognitive governance, risk gates (`trading-risk-gate`, `structural-trading-gate`, `trade_guardian.py`), and variance shields (Law #1), while execution scripts and tick logs stay separate.
 > - **Media Production**: Centralized external pipelines (`imagen-studio`, `veo-choreographer`, Remotion). Binary renders and audio assets are excluded from the core repository.
