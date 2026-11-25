@@ -17,7 +17,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 if [ $# -eq 0 ]; then
   echo "Usage: $0 <action> [args...]" >&2
-  echo "Allowed actions: mcda, eev, kelly, ruin, monte-carlo, decision-mc, robustness, barbell, devaluation, borrow-audit, calibration-score" >&2
+  echo "Allowed actions: mcda, eev, kelly, ruin, monte-carlo, decision-mc, growth-rate, evpi, aggregate-ruin, robustness, barbell, devaluation, borrow-audit, wargame, calibration-score" >&2
   exit 1
 fi
 
@@ -25,7 +25,7 @@ ACTION="$1"
 shift
 
 case "${ACTION}" in
-  mcda|eev|kelly|ruin|monte-carlo|decision-mc|robustness|barbell|devaluation|borrow-audit)
+  mcda|eev|kelly|ruin|monte-carlo|decision-mc|growth-rate|evpi|aggregate-ruin|robustness|barbell|devaluation|borrow-audit|wargame)
     exec python3 "${REPO_ROOT}/src/athena/intelligence/gto_engine.py" --action "${ACTION}" "$@"
     ;;
   calibration-score)

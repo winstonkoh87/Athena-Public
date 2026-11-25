@@ -1,6 +1,6 @@
 {
   "_comment": "Canonical inventory counts for Project Athena. Single source of truth for pre-commit caps, audit asserts, and AGENTS.md regeneration. Update via .agent/scripts/sync_agents_md.py (runs automatically: pre-commit Gate 4 + shutdown.py Phase 1.5), not by hand.",
-  "_generated": "2026-11-23",
+  "_generated": "2026-11-26",
   "_generator": "S411 sync_agents_md.py automation (TD-028)",
   "version": {
     "framework": "v8.2-stable",
@@ -22,8 +22,8 @@
   },
   "workflows": {
     "root": 57,
-    "domain": 21,
-    "total": 78,
+    "domain": 22,
+    "total": 79,
     "cap": "uncapped",
     "cap_policy": "Workflows are uncapped as of v9.8.0. Domain workflows are dormant by default (_domain/ tier) and only activate on query match. The constraint is attention budget, not inventory size. TD-017 is now structurally resolved."
   },
@@ -33,14 +33,14 @@
     "cap_policy": "Entry count is uncapped as of 2026-05-07 (GTO alignment with protocols/workflows). The constraint is boot-load attention budget (~35K token ceiling / ~140KB), not entry count. Staleness thresholds (3mo/6mo) + quarterly /audit-canonical are the quality gates. Tiered loading ensures only relevant entries enter context per session.",
     "attention_budget_ceiling_tokens": 35000,
     "attention_budget_ceiling_bytes": 140000,
-    "current_bytes": 104651,
-    "current_utilization_pct": 74.8,
+    "current_bytes": 105289,
+    "current_utilization_pct": 75.2,
     "tier_1_always_boot": 64,
     "tier_2_domain_triggered": 112,
     "tier_3_on_demand": 1,
-    "boot_savings_pct": 52,
+    "boot_savings_pct": 51,
     "tier_map_path": ".agent/telemetry/tier_map.json",
-    "full_file_bytes": 428348
+    "full_file_bytes": 429318
   },
   "context_files": {
     "glossary": ".context/glossary.md",
@@ -54,7 +54,7 @@
   },
   "scripts": 290,
   "memories": {
-    "total_files": 6132,
+    "total_files": 6190,
     "path": ".context/memories/"
   },
   "paths": {
@@ -80,8 +80,8 @@
     "scripts": "find .agent/scripts -type f | wc -l"
   },
   "case_studies": {
-    "total_files": 633,
-    "uppercase_convention": 633,
-    "note": "633 CS-*.md files across 14 domains. See CASE_STUDY_INDEX.md."
+    "total_files": 636,
+    "uppercase_convention": 636,
+    "note": "636 CS-*.md files across 14 domains. See CASE_STUDY_INDEX.md."
   }
 }

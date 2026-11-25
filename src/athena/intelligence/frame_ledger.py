@@ -58,6 +58,9 @@ __all__ = [
     "Violation",
     "ValidationResult",
     "ValidationError",
+    "EXECUTABLE_GUARD_SUFFIXES",
+    "PROSE_ONLY_SUFFIXES",
+    "verify_guard_artifact",
     "build_frame",
     "validate_frame",
     "compute_evi",
@@ -89,6 +92,80 @@ TIER_CAPS: dict[str, int] = {"SNIPER": 2, "STANDARD": 15, "ULTRA": 55}
 # The pipeline's own published kill switch (problem_solving_thesis.md 6.0).
 THESIS_MIN_SKILL = 0.15
 THESIS_MIN_N = 50
+
+# S534 Edge-Case Ratchet guard classification: incident/edge-case frames must
+# close with an existing executable guard/test/config, never prose alone.
+EXECUTABLE_GUARD_SUFFIXES: frozenset[str] = frozenset(
+    {
+        ".py",
+        ".sh",
+        ".bash",
+        ".zsh",
+        ".ts",
+        ".tsx",
+        ".js",
+        ".mjs",
+        ".cjs",
+        ".mq4",
+        ".mq5",
+        ".pine",
+        ".sql",
+        ".json",
+        ".toml",
+        ".yaml",
+        ".yml",
+        ".rs",
+        ".go",
+        ".rb",
+    }
+)
+EXECUTABLE_GUARD_FILENAMES: frozenset[str] = frozenset({"Makefile", "Dockerfile", "Justfile"})
+PROSE_ONLY_SUFFIXES: frozenset[str] = frozenset(
+    {".md", ".markdown", ".txt", ".rst", ".docx", ".pdf", ".rtf"}
+)
+
+
+def verify_guard_artifact(path_str: str, *, base_dir: Path | None = None) -> dict[str, Any]:
+    """Verify whether a guard artifact exists and is executable/config rather than prose-only."""
+    cleaned = str(path_str or "").strip()
+    if not cleaned:
+        return {
+            "path": "",
+            "exists": False,
+            "guard_verified": False,
+            "guard_kind": "none",
+        }
+    p = Path(cleaned)
+    if not p.is_absolute() and base_dir is not None:
+        p = base_dir / p
+    if not p.is_file():
+        return {
+            "path": cleaned,
+            "exists": False,
+            "guard_verified": False,
+            "guard_kind": "missing",
+        }
+    suffix = p.suffix.lower()
+    if suffix in EXECUTABLE_GUARD_SUFFIXES or p.name in EXECUTABLE_GUARD_FILENAMES:
+        return {
+            "path": cleaned,
+            "exists": True,
+            "guard_verified": True,
+            "guard_kind": "executable",
+        }
+    if suffix in PROSE_ONLY_SUFFIXES:
+        return {
+            "path": cleaned,
+            "exists": True,
+            "guard_verified": False,
+            "guard_kind": "prose",
+        }
+    return {
+        "path": cleaned,
+        "exists": True,
+        "guard_verified": True,
+        "guard_kind": "other",
+    }
 
 # Self-sealing language: phrases that convert a hypothesis into something
 # that cannot be falsified because counter-evidence is re-absorbed as
@@ -939,6 +1016,8 @@ class FrameLedger:
         decision_receipt_id: str = "",
         evidence_refs: Iterable[str] = (),
         partially_observed: bool = False,
+        guard_artifact_path: str = "",
+        edge_case: bool = False,
     ) -> dict[str, Any]:
         """Record the observed outcome. Never edits the original frame."""
         rec = self.get(frame_id)
@@ -968,6 +1047,22 @@ class FrameLedger:
                     f"pre-registered outcome_band [{lo}, {hi}]. Default to PROCESS or INFORMATION."
                 )
 
+        guard_clean = str(guard_artifact_path or "").strip()
+        guard_info = verify_guard_artifact(guard_clean)
+        if edge_case and not guard_clean:
+            raise ValidationError(
+                "Edge-case resolution rejected (S534): edge_case=True requires a non-empty "
+                "guard_artifact_path pointing to an existing executable guard/test/config, "
+                "not prose-only closure."
+            )
+        if guard_clean and not guard_info["exists"]:
+            raise ValidationError(f"guard_artifact_path not found on disk: {guard_clean}")
+        if edge_case and guard_info["guard_kind"] == "prose":
+            raise ValidationError(
+                f"Edge-case resolution rejected (S534): prose-only artifact '{guard_clean}' "
+                "is not an executable guard. Ship a script, test, hook, or config guard."
+            )
+
         scored: dict[str, int] = {}
         for h in rec.hypotheses:
             if h.id in supported_set:
@@ -995,6 +1090,10 @@ class FrameLedger:
             "decision_receipt_id": decision_receipt_id.strip(),
             "evidence_refs": [str(r).strip() for r in evidence_refs if str(r).strip()],
             "partially_observed": bool(partially_observed),
+            "edge_case": bool(edge_case),
+            "guard_artifact_path": guard_info["path"],
+            "guard_verified": bool(guard_info["guard_verified"]),
+            "guard_kind": guard_info["guard_kind"],
         }
         self._append({"kind": "resolution", "id": frame_id, "resolution": resolution})
         return resolution
@@ -1057,6 +1156,25 @@ def score_frames(frames: list[FrameRecord]) -> dict[str, Any]:
     overdue_count = len(overdue_frame_ids)
     lite_opened = sum(1 for f in frames if str(f.frame_mode).lower() == "lite")
 
+    edge_case_resolved = sum(1 for f in resolved if bool(f.resolution.get("edge_case")))
+    guarded_resolutions = sum(
+        1
+        for f in resolved
+        if bool(f.resolution.get("guard_verified"))
+        and f.resolution.get("guard_kind") in ("executable", "other")
+    )
+    edge_case_guarded = sum(
+        1
+        for f in resolved
+        if bool(f.resolution.get("edge_case"))
+        and bool(f.resolution.get("guard_verified"))
+        and f.resolution.get("guard_kind") in ("executable", "other")
+    )
+    prose_only_edge_cases = edge_case_resolved - edge_case_guarded
+    guard_coverage_ratio = (
+        round(edge_case_guarded / edge_case_resolved, 4) if edge_case_resolved else None
+    )
+
     return {
         "frames_opened": opened,
         "user_frames_opened": user_opened,
@@ -1076,6 +1194,12 @@ def score_frames(frames: list[FrameRecord]) -> dict[str, Any]:
         "mean_regret": round(statistics.fmean(regret_values), 3) if regret_values else None,
         "mode_distribution": dict(sorted(mode_counts.items())),
         "tier_distribution": dict(sorted(tier_counts.items())),
+        "edge_case_ratchet": {
+            "edge_case_resolved": edge_case_resolved,
+            "guarded_resolutions": guarded_resolutions,
+            "prose_only_edge_cases": prose_only_edge_cases,
+            "guard_coverage_ratio": guard_coverage_ratio,
+        },
         "kill_switch_status": kill_switch,
     }
 
@@ -1169,6 +1293,7 @@ def calibration_report(ledger: FrameLedger, *, adoption_root: Path | str = ".") 
     frames = ledger.frames()
     stats = score_frames(frames)
     adoption = scan_adoption(adoption_root)
+    ec = stats["edge_case_ratchet"]
 
     lines = [
         "# Frame Calibration Ledger (generated)",
@@ -1190,6 +1315,7 @@ def calibration_report(ledger: FrameLedger, *, adoption_root: Path | str = ".") 
         f"| Mean self-reported regret (0-10) | {stats['mean_regret']} |",
         f"| Mode distribution | {stats['mode_distribution']} |",
         f"| Tier distribution | {stats['tier_distribution']} |",
+        f"| Edge-case ratchet (guarded/edge-case) | {ec['guarded_resolutions']}/{ec['edge_case_resolved']} (coverage: {ec['guard_coverage_ratio']}, prose-only leaks: {ec['prose_only_edge_cases']}) |",
         "",
         f"**Kill switch status**: {stats['kill_switch_status']}",
         "",
@@ -1292,6 +1418,9 @@ def _cmd_resolve(args: argparse.Namespace) -> int:
         regret=args.regret,
         note=args.note,
         decided_action=args.action,
+        classification=args.classification,
+        guard_artifact_path=args.guard_artifact,
+        edge_case=args.edge_case,
     )
     print(json.dumps(resolution, indent=2, sort_keys=True))
     return 0
@@ -1368,6 +1497,17 @@ def main(argv: list[str] | None = None) -> int:
     p_res.add_argument("--regret", type=float, default=None)
     p_res.add_argument("--note", default="")
     p_res.add_argument("--action", default="")
+    p_res.add_argument("--classification", default="", help="PROCESS, INFORMATION, or LUCK")
+    p_res.add_argument(
+        "--guard-artifact",
+        default="",
+        help="path to executable guard/test/config backing closure",
+    )
+    p_res.add_argument(
+        "--edge-case",
+        action="store_true",
+        help="enforce S534 non-prose executable guard requirement",
+    )
     p_res.set_defaults(func=_cmd_resolve)
 
     p_piv = sub.add_parser("pivot", help="record a frame-level pivot (diagnosis was wrong)")

@@ -86,7 +86,7 @@ def _embed_query_interactive(query: str) -> list[float]:
         return get_embedding(query)
 
 # Schema version for cache isolation — bump on any ranking/fusion change
-SEARCH_SCHEMA_VERSION = "2026-10-15.1"
+SEARCH_SCHEMA_VERSION = "2026-11-26.1"
 
 # Config
 # NOTE: Vector subtypes (case_study, session, protocol, etc.) each get their own

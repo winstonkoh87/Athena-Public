@@ -3,7 +3,7 @@
 > **Local-first memory, decision engine, and governance harness for AI agents — portable across IDEs.**
 > Persistent memory, numeric decision screening, and governed execution · Own the state, rent the intelligence · MIT Licensed
 
-*Last Updated: 2026-11-18 · v10.0.6*
+*Last Updated: 2026-11-26 · v10.0.6*
 
 Athena gives any LLM persistent memory, a deterministic decision and frame engine, and a governance harness across coding sessions. It operates seamlessly across Claude Code, Antigravity, Cursor, Gemini CLI, and VS Code.
 
@@ -57,7 +57,7 @@ Or use [GitHub Codespaces](https://codespaces.new/winstonkoh87/Athena-Public) fo
 | **🚀 [Getting Started](Getting-Started)** | Installation, first boot, workspace modes, CLI commands |
 | **📖 [Your First Session](../YOUR_FIRST_SESSION.md)** | The intent-first onboarding guide |
 | **🏗️ [Architecture](Architecture-Overview)** | Substrate layers, Hybrid RAG, MCP Server, Tech Stack |
-| **⚡ [Workflows](Workflow-Reference)** | `/start`, `/end`, `/do`, `/osint`, `/gto` and 78 commands |
+| **⚡ [Workflows](Workflow-Reference)** | `/start`, `/end`, `/do`, `/osint`, `/gto` and 79 commands |
 | **🎯 [Use Cases](Use-Cases)** | Decision-making, research, planning, meta-thinking |
 | **📈 [The Compounding Effect](The-Compounding-Effect)** | Why Athena gets smarter over time |
 | **🧠 [Philosophy](Philosophy)** | Own the state. Rent the intelligence. |
@@ -67,6 +67,6 @@ Or use [GitHub Codespaces](https://codespaces.new/winstonkoh87/Athena-Public) fo
 
 ## 📊 Community & Scale
 
-- **1M+** Reddit Views · **#1 All-Time** on r/ChatGPT · **#2 All-Time** on r/GeminiAI
-- **461** Protocols (**410** active across 26 categories) · **288** Scripts · **78** Slash Workflows · **44** Skills
+- **1.5M+** Reddit Views · **#1 All-Time** on r/ChatGPT · **#2 All-Time** on r/GeminiAI
+- **461** Protocols (**410** active across 26 categories) · **290** Scripts · **79** Slash Workflows · **44** Skills
 - **2,100+** Sessions Logged · **MIT Licensed** · [Main Repository](https://github.com/winstonkoh87/Athena-Public)

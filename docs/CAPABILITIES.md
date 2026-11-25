@@ -11,11 +11,11 @@
 |--------|-------|
 | **Automation Scripts** | 290 |
 | **Decision Protocols** | 461 (410 active + 51 archived, 26 categories) |
-| **Orchestration Workflows** | 78 (57 root + 21 domain) |
+| **Orchestration Workflows** | 79 (57 root + 22 domain) |
 | **Skills** | 44 active (43 with context_trigger), 17 archived |
-| **Case Studies** | 633 |
+| **Case Studies** | 636 |
 | **Total Sessions** | 2,100+ |
-| **Memory Files** | 6,132 |
+| **Memory Files** | 6,190 |
 
 ---
 
@@ -171,7 +171,7 @@
 
 ---
 
-## ⚙️ Orchestration Workflows (78: 57 root + 21 domain)
+## ⚙️ Orchestration Workflows (79: 57 root + 22 domain)
 
 | Workflow | Description |
 |----------|-------------|
@@ -227,7 +227,7 @@ athena/
 
 ---
 
-## 📖 Case Study Categories (633 total)
+## 📖 Case Study Categories (636 total)
 
 | Category | Examples |
 |----------|----------|

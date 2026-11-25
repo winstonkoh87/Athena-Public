@@ -1433,7 +1433,325 @@ class TestWave3_FailClosedMCDAAndProvenance:
         assert "ABSENT" in table
 
 
+class TestAudit20261124_GTORemediation:
+    """Red-run regression tests for 2026-11-24 GTO & governance red-team defects."""
+
+    def test_receipt_gate_no_global_whitelist_bypass(self, tmp_path):
+        """F2: A valid historical GTO receipt must not whitelist unrelated/stale claims across sentences."""
+        import json
+
+        from athena.intelligence.gto_engine import find_unreceipted_engine_claims
+
+        receipts_file = tmp_path / "receipts.jsonl"
+        receipts_file.write_text(
+            json.dumps({
+                "receipt_id": "GTO-a12e5652",
+                "ts": "2026-11-15T04:29:46+00:00",
+                "action": "mcda",
+            }) + "\n",
+            encoding="utf-8",
+        )
+
+        # Sentence 1 cites GTO-a12e5652, Sentence 2 makes unreceipted claims -> must still flag Sentence 2
+        text = (
+            "Per GTO-a12e5652, basil seeds tied.\n"
+            "Our decision Monte Carlo confirms Policy X passes Law #1 PASS."
+        )
+        violations = find_unreceipted_engine_claims(text, receipts_path=receipts_file)
+        assert any("Monte Carlo confirms" in v for v in violations)
+        assert any("Law #1 PASS" in v for v in violations)
+
+        # Stale receipt predating min_ts on same sentence -> must still flag
+        same_sentence = "Monte Carlo confirms Policy X (GTO-a12e5652)."
+        stale_violations = find_unreceipted_engine_claims(
+            same_sentence,
+            receipts_path=receipts_file,
+            min_ts="2026-11-24T05:00:00+00:00",
+        )
+        assert any("Monte Carlo confirms" in v for v in stale_violations)
+
+        # Fresh receipt >= min_ts on same sentence -> allowed
+        fresh_violations = find_unreceipted_engine_claims(
+            same_sentence,
+            receipts_path=receipts_file,
+            min_ts="2026-11-15T04:29:45+00:00",
+        )
+        assert fresh_violations == []
+
+    def test_mc_p90_tail_ruin_gate_and_neg_inf_growth_verdict(self):
+        """F3: Gate ruin on P90 draw ruin and fail non-ergodic (-inf growth) candidates."""
+        from athena.intelligence.gto_engine import run_decision_monte_carlo
+
+        # 1. Tail P90 > 5% under tail_uncertainty=3.0 must fail Law #1 even when mean <= 5%
+        res_tail = run_decision_monte_carlo(
+            ["TailRisk"],
+            {"TailRisk": [(0.97, 100.0, False), (0.03, -100.0, True)]},
+            tail_uncertainty=3.0,
+            n=2000,
+            seed=42,
+        )
+        stats_tail = res_tail.candidate_stats["TailRisk"]
+        assert stats_tail.p90_ruin_pct is not None and stats_tail.p90_ruin_pct > 5.0
+        assert stats_tail.ruin_gate_passed is False
+        assert "FAIL (Law #1 Ruin" in stats_tail.verdict
+        assert res_tail.top_candidate == "NONE"
+
+        # 2. Candidate with median_growth == -inf must never get PASS verdict
+        res_growth = run_decision_monte_carlo(
+            ["HighRisk", "Safe"],
+            {
+                "HighRisk": [(0.96, 10000.0, False), (0.04, -50000.0, True)],
+                "Safe": [(1.0, 500.0, False)],
+            },
+            wealth=10000.0,
+            prob_jitter=0.0,
+            seed=42,
+        )
+        assert res_growth.top_candidate == "Safe"
+        assert res_growth.candidate_stats["HighRisk"].median_growth == -float("inf")
+        assert "FAIL" in res_growth.candidate_stats["HighRisk"].verdict
+        assert "PASS" not in res_growth.candidate_stats["HighRisk"].verdict
+
+        # 3. All candidates non-ergodic (-inf growth) -> top_candidate == "NONE"
+        res_all_neg = run_decision_monte_carlo(
+            ["A", "B"],
+            {
+                "A": [(0.97, 5000.0), (0.03, -10000.0)],
+                "B": [(0.98, 2000.0), (0.02, -10000.0)],
+            },
+            wealth=10000.0,
+            prob_jitter=0.0,
+            seed=42,
+        )
+        assert res_all_neg.top_candidate == "NONE"
+
+    def test_real_decision_confidence_no_hardcoded_070(self, tmp_path):
+        """F4: Real-decision calibration entries must use explicit confidence or 0.50 unstated prior, never 0.70."""
+        from athena.intelligence.gto_engine import compute_eev, log_decision_receipt
+
+        cal_file = tmp_path / "CALIBRATION_LEDGER.md"
+        cal_template = (
+            "# Calibration Ledger\n\n"
+            "## Active Predictions\n\n"
+            "<!-- TEMPLATE -->\n"
+            "-->\n\n"
+            "### CAL-001\n"
+            "- **Claim**: Prior\n"
+        )
+        cal_file.write_text(cal_template, encoding="utf-8")
+
+        res = compute_eev(mev=500.0, eu=100.0, eo=50.0)
+        receipts_file = tmp_path / "receipts.jsonl"
+
+        # Explicit confidence=0.55
+        receipt_exp = log_decision_receipt(
+            action="eev",
+            inputs={"mev": 500.0, "eu": 100.0, "eo": 50.0},
+            result=res,
+            receipts_path=receipts_file,
+            real_decision=True,
+            review_date="2026-12-20",
+            prediction="Explicit confidence tracked accurately",
+            cal_ledger_path=cal_file,
+            confidence=0.55,
+        )
+        assert receipt_exp["confidence"] == 0.55
+        content_exp = cal_file.read_text(encoding="utf-8")
+        assert "- **Probability**: 0.55" in content_exp
+
+        # Unstated confidence on EEV -> 0.50 unstated prior, never 0.70
+        cal_file_unstated = tmp_path / "CALIBRATION_LEDGER_UNSTATED.md"
+        cal_file_unstated.write_text(cal_template, encoding="utf-8")
+        receipt_unstated = log_decision_receipt(
+            action="eev",
+            inputs={"mev": 500.0, "eu": 100.0, "eo": 50.0},
+            result=res,
+            receipts_path=receipts_file,
+            real_decision=True,
+            review_date="2026-12-20",
+            prediction="Unstated prior defaults to 0.50",
+            cal_ledger_path=cal_file_unstated,
+        )
+        assert receipt_unstated["confidence"] is None
+        content_unstated = cal_file_unstated.read_text(encoding="utf-8")
+        assert "- **Probability**: 0.50" in content_unstated
+        assert "UNSTATED PRIOR" in content_unstated
+        assert "- **Probability**: 0.70" not in content_unstated
+
+        # Invalid confidence raises ValueError
+        for bad_conf in (1.5, -0.1):
+            with pytest.raises(ValueError, match="confidence"):
+                log_decision_receipt(
+                    action="eev",
+                    inputs={"mev": 500.0},
+                    result=res,
+                    receipts_path=receipts_file,
+                    confidence=bad_conf,
+                )
+
+    def test_mcda_weak_vs_strict_dominance_label(self):
+        """F5: Weak dominance (ties on some criteria) must print Pareto-dominates, not strictly dominates."""
+        from athena.intelligence.gto_engine import compute_mcda
+
+        res = compute_mcda(
+            ["A", "B"],
+            ["X", "Y"],
+            [0.5, 0.5],
+            {"A": [5.0, 5.0], "B": [5.0, 4.0]},
+        )
+        assert any("Pareto-dominates" in obs for obs in res.pairwise_dominance)
+        assert not any("strictly dominates" in obs for obs in res.pairwise_dominance)
+
+    def test_cli_growth_rate_and_gto_exec_allowlist(self, capsys):
+        """F6: CLI supports growth-rate action and gto_exec.sh allows wargame and growth-rate."""
+        import json
+        from pathlib import Path
+
+        from athena.intelligence.gto_engine import main
+
+        rc = main([
+            "--action", "growth-rate",
+            "--input", json.dumps({"wealth": 10000.0, "states": [[0.5, 1000.0], [0.5, -500.0]]}),
+            "--no-receipt",
+            "--json",
+        ])
+        assert rc == 0
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert data["result"] > 0.0
+
+        repo_root = Path(__file__).resolve().parent.parent
+        gto_exec_text = (repo_root / "scripts" / "gto_exec.sh").read_text(encoding="utf-8")
+        assert "wargame" in gto_exec_text
+        assert "growth-rate" in gto_exec_text
 
 
+class TestPhaseA_MathCore:
+    """Red-run tests for Phase A Math Core: EVPI, Aggregate Ruin, and Score-Noise/Range-Margin MCDA."""
+
+    def test_compute_evpi_textbook_and_dominant(self):
+        """Phase A1: compute_evpi computes textbook VOI, net probe value, and input validation."""
+        from athena.intelligence.gto_engine import compute_evpi
+
+        world_states = [
+            (0.5, {"A": 100.0, "B": 0.0}),
+            (0.5, {"A": 0.0, "B": 100.0}),
+        ]
+        res = compute_evpi(world_states)
+        assert res.evpi == pytest.approx(50.0)
+        assert res.expected_without_info == pytest.approx(50.0)
+        assert res.expected_with_info == pytest.approx(100.0)
+
+        res_ok = compute_evpi(world_states, probe_cost=20.0)
+        assert res_ok.net_voi == pytest.approx(30.0)
+        assert "PROBE JUSTIFIED" in res_ok.verdict
+
+        res_skip = compute_evpi(world_states, probe_cost=60.0)
+        assert res_skip.net_voi == pytest.approx(-10.0)
+        assert "SKIP PROBE" in res_skip.verdict
+
+        dom_states = [
+            (0.6, {"A": 100.0, "B": 10.0}),
+            (0.4, {"A": 100.0, "B": 10.0}),
+        ]
+        res_dom = compute_evpi(dom_states)
+        assert res_dom.evpi == 0.0
+        assert "ZERO VOI" in res_dom.verdict
+
+        with pytest.raises(ValueError, match="sum to 1.0"):
+            compute_evpi([(0.5, {"A": 10.0})])
+        with pytest.raises(ValueError, match="probe_cost"):
+            compute_evpi(world_states, probe_cost=-5.0)
+        with pytest.raises(ValueError, match="option"):
+            compute_evpi([(0.5, {"A": 10.0, "B": 0.0}), (0.5, {"A": 0.0, "C": 10.0})])
+
+    def test_aggregate_ruin_independent_and_correlated(self):
+        """Phase A2: aggregate_ruin catches multi-bet ruin budget overflow and correlated group Frechet bounds."""
+        from athena.intelligence.gto_engine import aggregate_ruin
+
+        res_20 = aggregate_ruin([0.049] * 20)
+        expected_20 = 1.0 - (1.0 - 0.049) ** 20
+        assert res_20.independent_ruin == pytest.approx(expected_20, rel=1e-6)
+        assert res_20.conservative_ruin == pytest.approx(res_20.independent_ruin, rel=1e-6)
+        assert res_20.violates_budget is True
+        assert "VETO" in res_20.verdict
+
+        res_ok = aggregate_ruin([0.02, 0.02])
+        assert res_ok.conservative_ruin == pytest.approx(0.0396, rel=1e-6)
+        assert res_ok.violates_budget is False
+        assert "PASS" in res_ok.verdict
+
+        res_corr = aggregate_ruin([
+            {"name": "Leg1", "p_ruin": 0.03, "group": "fx"},
+            {"name": "Leg2", "p_ruin": 0.03, "group": "fx"},
+        ])
+        assert res_corr.independent_ruin == pytest.approx(0.0591, rel=1e-6)
+        assert res_corr.conservative_ruin == pytest.approx(0.06, rel=1e-6)
+        assert res_corr.violates_budget is True
+
+        with pytest.raises(ValueError, match="empty"):
+            aggregate_ruin([])
+        with pytest.raises(ValueError, match="p_ruin"):
+            aggregate_ruin([1.2])
+        with pytest.raises(ValueError, match="budget"):
+            aggregate_ruin([0.01], budget=0.0)
+
+    def test_mcda_score_noise_fragility_and_range_margin(self):
+        """Phase A3: compute_mcda exposes score_flip_rate, range-invariant margin, and EVPI tie guidance."""
+        from athena.intelligence.gto_engine import compute_mcda
+
+        scores = {
+            "A": [8.5, 6.0, 7.0, 6.0],
+            "B": [6.0, 7.0, 7.0, 7.0],
+            "C": [5.0, 6.0, 8.0, 8.0],
+        }
+        res = compute_mcda(
+            ["A", "B", "C"],
+            ["MEV", "EU", "Robust", "Revers"],
+            [0.35, 0.25, 0.25, 0.15],
+            scores,
+        )
+        assert res.score_flip_rate > 0.10
+        assert "[SCORE-FRAGILE:" in res.verdict
+        assert "EVPI" in res.verdict
+        assert "ROUTE TO PATH D" in res.verdict
+
+        sc = {"A": [7.0, 6.0], "B": [6.0, 6.1]}
+        lo = compute_mcda(["A", "B"], ["X", "Y"], [0.5, 0.5], sc)
+        hi = compute_mcda(["A", "B"], ["X", "Y"], [0.5, 0.5], {k: [v + 10.0 for v in vs] for k, vs in sc.items()})
+        assert lo.margin_pct_of_range == pytest.approx(hi.margin_pct_of_range, rel=1e-6)
+        assert lo.margin_pct_of_range > 0.0
+
+    def test_cli_evpi_and_aggregate_ruin_and_gto_exec(self, capsys):
+        """Phase A4: CLI & gto_exec.sh support evpi and aggregate-ruin."""
+        import json
+        from pathlib import Path
+
+        from athena.intelligence.gto_engine import main
+
+        rc_evpi = main([
+            "--action", "evpi",
+            "--input", json.dumps({"world_states": [[0.5, {"A": 100, "B": 0}], [0.5, {"A": 0, "B": 100}]], "probe_cost": 20}),
+            "--no-receipt",
+            "--json",
+        ])
+        assert rc_evpi == 0
+        out_evpi = json.loads(capsys.readouterr().out)
+        assert out_evpi["evpi"] == pytest.approx(50.0)
+
+        rc_agg = main([
+            "--action", "aggregate-ruin",
+            "--input", json.dumps({"exposures": [0.049, 0.049]}),
+            "--no-receipt",
+            "--json",
+        ])
+        assert rc_agg == 0
+        out_agg = json.loads(capsys.readouterr().out)
+        assert out_agg["violates_budget"] is True
+
+        repo_root = Path(__file__).resolve().parent.parent
+        gto_exec_text = (repo_root / "scripts" / "gto_exec.sh").read_text(encoding="utf-8")
+        assert "evpi" in gto_exec_text
+        assert "aggregate-ruin" in gto_exec_text
 
 

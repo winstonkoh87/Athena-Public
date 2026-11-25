@@ -76,7 +76,48 @@ def compile_fts_query(query: str) -> str:
     return " ".join(tokens)
 
 
+_FTS_STOPWORDS: frozenset[str] = frozenset({
+    "the", "and", "for", "is", "in", "to", "of", "a", "an", "on", "at", "by",
+    "or", "not", "with", "from", "as", "be", "are", "was", "were", "that",
+    "this", "it", "how", "what", "why", "when", "where", "who", "do", "does",
+    "did", "about", "my", "me", "we", "our", "you", "your", "have", "has",
+    "had", "can", "could", "should", "would", "will", "into", "over", "under",
+    "but", "if", "then", "than", "so",
+})
+
+
+def compile_relaxed_fts_query(query: str) -> str:
+    """Compile a stopword-filtered OR FTS5 fallback query from >= 2 content terms."""
+    compiled = compile_fts_query(query)
+    if not compiled:
+        return ""
+    parts = re.findall(r'"[^"]+"\s*\*?|\S+', compiled)
+    terms: list[str] = []
+    seen: set[str] = set()
+    for part in parts:
+        raw = part.strip('"').rstrip("*").strip().lower()
+        if len(raw) < 2 or raw in _FTS_STOPWORDS:
+            continue
+        candidates = [part]
+        if part.startswith('"') and "-" in raw:
+            candidates.extend(
+                tok
+                for tok in re.findall(r"[a-z0-9]+", raw)
+                if len(tok) >= 2 and tok not in _FTS_STOPWORDS
+            )
+        for cand in candidates:
+            key = cand.lower()
+            if key not in seen:
+                seen.add(key)
+                terms.append(cand)
+    return " OR ".join(terms) if len(terms) >= 2 else ""
+
+
 class ExocortexFTS:
+    INDEX_SCHEMA_VERSION: str = "2"
+    RELAX_MIN_HITS: int = 5
+    RELAX_BACKFILL_CAP: int = 8
+
     def __init__(self, db_path: Path | None = None):
         self.db_path = db_path if db_path is not None else config.PROJECT_ROOT / ".athena" / "exocortex_fts.db"
         self._ensure_db_dir()
@@ -132,6 +173,7 @@ class ExocortexFTS:
             config.CONTEXT_DIR,
             config.AGENT_DIR / "skills",
             config.AGENT_DIR / "workflows",
+            config.PROJECT_ROOT / "docs",
         ]
         dirs_to_search.extend(config.get_extra_knowledge_dirs(config.PROJECT_ROOT))
 
@@ -200,6 +242,10 @@ class ExocortexFTS:
         cursor.execute("INSERT INTO index_meta (key, value) VALUES ('indexed_at', ?)", (now_ts,))
         cursor.execute("INSERT INTO index_meta (key, value) VALUES ('file_count', ?)", (str(file_count),))
         cursor.execute("INSERT INTO index_meta (key, value) VALUES ('total_size', ?)", (str(total_size),))
+        cursor.execute(
+            "INSERT INTO index_meta (key, value) VALUES ('index_version', ?)",
+            (self.INDEX_SCHEMA_VERSION,),
+        )
 
         conn.commit()
         conn.close()
@@ -225,18 +271,24 @@ class ExocortexFTS:
         return results
 
     def is_stale(self, max_age_hours: float = 24.0, min_file_count: int = 100) -> bool:
-        """Determines if the FTS index is missing, corrupted, underpopulated, or older than max_age_hours."""
+        """Determines if the FTS index is missing, outdated, underpopulated, or older than max_age_hours."""
         if not self.db_path.exists():
             return True
         st = self.stats()
-        if st["file_count"] < min_file_count or st["total_size"] < 1000:
+        if (
+            st["file_count"] < min_file_count
+            or st["total_size"] < 1000
+            or st.get("index_version") != self.INDEX_SCHEMA_VERSION
+        ):
             return True
         now_ts = time.time()
         age_hours = (now_ts - st["indexed_at"]) / 3600.0
         return age_hours > max_age_hours
 
-    def search(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
-        """BM25-ranked keyword search."""
+    def search(
+        self, query: str, limit: int = 10, *, relax_or: bool = True
+    ) -> list[dict[str, Any]]:
+        """BM25-ranked keyword search with starvation-gated OR backfill."""
         if not query.strip():
             return []
 
@@ -270,8 +322,7 @@ class ExocortexFTS:
 
             try:
                 cursor.execute(sql, (compiled_query, limit))
-                rows = cursor.fetchall()
-                return self._format_results(rows)
+                rows = [dict(r) for r in cursor.fetchall()]
             except sqlite3.OperationalError:
                 # Resilient fallback: extract purely alphanumeric tokens
                 tokens = re.findall(r"\w+", query)
@@ -279,8 +330,30 @@ class ExocortexFTS:
                     return []
                 fallback_query = " ".join(f'"{t}"' for t in tokens if t)
                 cursor.execute(sql, (fallback_query, limit))
-                rows = cursor.fetchall()
-                return self._format_results(rows)
+                rows = [dict(r) for r in cursor.fetchall()]
+
+            if relax_or and len(rows) < min(limit, self.RELAX_MIN_HITS):
+                or_query = compile_relaxed_fts_query(query)
+                or_term_count = or_query.count(" OR ") + 1 if or_query else 0
+                if or_query and (len(rows) == 0 or or_term_count >= 3):
+                    seen_paths = {r["file_path"] for r in rows}
+                    target_total = min(limit, len(rows) + self.RELAX_BACKFILL_CAP)
+                    worst_strict = max((r["bm25_score"] for r in rows), default=None)
+                    try:
+                        cursor.execute(sql, (or_query, target_total + len(seen_paths)))
+                        or_rows = [
+                            dict(r)
+                            for r in cursor.fetchall()
+                            if r["file_path"] not in seen_paths
+                        ]
+                        for idx, row in enumerate(or_rows[: max(0, target_total - len(rows))]):
+                            if worst_strict is not None:
+                                row["bm25_score"] = worst_strict + 0.5 + idx * 0.1
+                            rows.append(row)
+                    except sqlite3.OperationalError:
+                        pass
+
+            return self._format_results(rows[:limit])
         except Exception:
             return []
         finally:
@@ -289,10 +362,11 @@ class ExocortexFTS:
 
     def stats(self) -> dict[str, Any]:
         """Returns indexed file count, total content size, last indexed timestamp."""
-        stats_dict = {
+        stats_dict: dict[str, Any] = {
             "file_count": 0,
             "total_size": 0,
-            "indexed_at": 0
+            "indexed_at": 0,
+            "index_version": "",
         }
 
         try:
@@ -307,6 +381,8 @@ class ExocortexFTS:
                     stats_dict['total_size'] = int(r['value'])
                 elif r['key'] == 'indexed_at':
                     stats_dict['indexed_at'] = int(r['value'])
+                elif r['key'] == 'index_version':
+                    stats_dict['index_version'] = str(r['value'])
         except sqlite3.OperationalError:
             pass # Table doesn't exist
         finally:
@@ -323,7 +399,7 @@ class ExocortexFTS:
         # Escape internal quotes if necessary
         clean_phrase = phrase.replace('"', '""')
         query = f'"{clean_phrase}"'
-        return self.search(query, limit)
+        return self.search(query, limit, relax_or=False)
 
     def search_prefix(self, prefix: str, limit: int = 10) -> list[dict[str, Any]]:
         """Prefix search for autocomplete."""
@@ -331,4 +407,4 @@ class ExocortexFTS:
             return []
         clean_prefix = prefix.replace('"', '""')
         query = f'"{clean_prefix}" *'
-        return self.search(query, limit)
+        return self.search(query, limit, relax_or=False)

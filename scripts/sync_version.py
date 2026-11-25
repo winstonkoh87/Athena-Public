@@ -127,6 +127,10 @@ EXEMPTIONS: list[tuple[str, str, str]] = [
      "specification documents pinned to their creation-time version"),
     (".context/self_optimization/*", r".",
      "daily self-RSI logs referencing the version they ran under"),
+    (".context/domains/*", r".",
+     "domain knowledge bases and report-up digests carry domain-local revisions, not Athena's system version"),
+    (".context/client_work/*", r".",
+     "client work trackers carry engagement-local revisions, not Athena's system version"),
     (".context/CANONICAL.md", r".",
      "materialized view contains financial figures, subscription costs, and "
      "metrics with dollar signs and version-shaped numbers — never a version declaration"),

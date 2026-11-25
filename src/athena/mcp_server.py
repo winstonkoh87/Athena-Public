@@ -265,18 +265,18 @@ def _collect_quicksave_audit_warnings(text: str) -> list[str]:
             for rec in tail_records
             if "receipt_id" in rec and str(rec["receipt_id"]) not in void_ids
         }
-        cited_ids = re.findall(r"\b(GTO-[0-9a-fA-F]{8})\b", text)
-        if not any(rid in valid_ids for rid in cited_ids):
-            # Receipts are pre-verified via bounded tail read above; pass a dummy path so
-            # find_unreceipted_engine_claims never O(N)-scans a multi-MB receipt log.
-            unreceipted = find_unreceipted_engine_claims(
-                text, Path("/nonexistent/decision_receipts.jsonl")
+        # Receipts are pre-verified via bounded tail read above; enforce sentence-local
+        # receipt binding without O(N)-scanning the full JSONL log.
+        unreceipted = find_unreceipted_engine_claims(
+            text,
+            receipts_path=None,
+            valid_receipt_ids=valid_ids,
+        )
+        if unreceipted:
+            warnings.append(
+                f"UNRECEIPTED_GTO_CLAIM: {', '.join(unreceipted)} "
+                "(cite valid GTO-xxxxxxxx receipt or tag [agent-estimate])."
             )
-            if unreceipted:
-                warnings.append(
-                    f"UNRECEIPTED_GTO_CLAIM: {', '.join(unreceipted)} "
-                    "(cite valid GTO-xxxxxxxx receipt or tag [agent-estimate])."
-                )
     except Exception:
         pass
 
@@ -1011,6 +1011,8 @@ def frame_resolve(
     decision_receipt_id: str = "",
     evidence_refs: str = "",
     partially_observed: bool = False,
+    guard_artifact_path: str = "",
+    edge_case: bool = False,
 ) -> dict:
     """Score a locked frame against reality at its REVIEW date.
 
@@ -1032,6 +1034,8 @@ def frame_resolve(
         decision_receipt_id: optional GTO decision receipt id linking decision to frame.
         evidence_refs: optional comma-separated file paths or receipt ids supporting resolution.
         partially_observed: True if resolving early/partially without full horizon observation.
+        guard_artifact_path: optional path to an executable guard/test/config backing closure.
+        edge_case: True for edge-case/incident frames; requires guard_artifact_path (non-prose).
 
     Returns:
         dict with the resolution record.
@@ -1054,6 +1058,8 @@ def frame_resolve(
         decision_receipt_id=decision_receipt_id,
         evidence_refs=[e.strip() for e in evidence_refs.split(",") if e.strip()],
         partially_observed=partially_observed,
+        guard_artifact_path=guard_artifact_path,
+        edge_case=edge_case,
     )
     return {"frame_id": frame_id, "resolution": resolution}
 
@@ -1117,6 +1123,7 @@ def decision_screen(
     review_date: str = "",
     prediction: str = "",
     frame_id: str = "",
+    confidence: float | None = None,
 ) -> dict:
     """Execute a strategic decision evaluation via the GTO numerical engine.
 
@@ -1126,12 +1133,14 @@ def decision_screen(
 
     Args:
         action: Calculation action to execute ('eev', 'kelly', 'ruin', 'monte-carlo',
-            'mcda', 'decision-mc', 'robustness', 'barbell', 'devaluation', 'borrow-audit', 'wargame').
+            'mcda', 'decision-mc', 'growth-rate', 'evpi', 'aggregate-ruin', 'robustness',
+            'barbell', 'devaluation', 'borrow-audit', 'wargame').
         payload_json: JSON string containing action parameters.
         real: True if this evaluation backs a consequential real-world decision.
         review_date: Calibration review date (YYYY-MM-DD) for real decisions.
         prediction: Anticipated outcome / hypothesis for calibration tracking.
         frame_id: Optional pre-registered problem frame id linking this decision receipt.
+        confidence: Optional explicit probability/confidence prior [0.0, 1.0] for calibration logging.
 
     Returns:
         dict containing receipt_id, action, verdict, top, ascii_table, and result data.
@@ -1154,6 +1163,7 @@ def decision_screen(
         review_date=review_date or None,
         prediction=prediction or None,
         frame_id=frame_id or None,
+        confidence=confidence,
     )
 
     result_dict = _serialize_for_json(asdict(res)) if hasattr(res, "__dataclass_fields__") else {"result": res}

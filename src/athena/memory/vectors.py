@@ -537,6 +537,7 @@ def get_embeddings_batch(
     dims: int | None = None,
     batch_size: int = 25,
     max_retries: int = 7,
+    deadline: float | None = None,
 ) -> list[list[float] | None]:
     """Embed many texts via Gemini :batchEmbedContents, warming the persistent cache.
 
@@ -591,6 +592,13 @@ def get_embeddings_batch(
     new_embeddings: dict[str, list[float]] = {}
 
     for start in range(0, len(misses), batch_size):
+        if deadline is not None and time.monotonic() >= deadline:
+            print(
+                f"  ⏰ Soft runtime deadline reached at batch {start // batch_size}/{total_batches}; "
+                "flushing cached embeddings and stopping cleanly.",
+                flush=True,
+            )
+            break
         group = misses[start : start + batch_size]
         reqs = []
         for _, t, _ in group:

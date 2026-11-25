@@ -564,6 +564,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--real", action="store_true", help="Mark decision receipt as real")
     parser.add_argument("--review-date", type=str, default=None, help="Calibration review date (YYYY-MM-DD)")
     parser.add_argument("--prediction", type=str, default=None, help="Falsifiable prediction claim")
+    parser.add_argument("--confidence", type=float, default=None, help="Explicit probability/confidence prior [0.0, 1.0] for calibration tracking")
     parser.add_argument("--receipts-path", type=str, default=None, help="Override receipts JSONL path")
     parser.add_argument("--json", action="store_true", help="Output result as JSON")
 
@@ -614,6 +615,7 @@ def main(argv: list[str] | None = None) -> int:
         real_decision=args.real,
         review_date=args.review_date,
         prediction=args.prediction,
+        confidence=args.confidence,
     )
     receipt_id = rec_entry.get("receipt_id", "GTO-unknown") if isinstance(rec_entry, dict) else str(rec_entry)
 

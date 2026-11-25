@@ -35,8 +35,10 @@ BVI_FREEZE_EXPOSURE_PCT: float = 15.0
 
 __all__ = [
     "compute_eev",
+    "compute_evpi",
     "compute_half_kelly",
     "compute_ruin_probability",
+    "aggregate_ruin",
     "run_monte_carlo_simulation",
     "run_decision_monte_carlo",
     "compute_growth_rate",
@@ -94,26 +96,26 @@ CAPABILITY_MANIFEST: dict[str, dict[str, Any]] = {
     },
     "decision_screen": {
         "computes": "Unified strategic decision evaluation with verified decision receipt logging",
-        "typed_inputs": ["action", "payload", "real", "review_date", "prediction"],
-        "defaults": {"real": False, "review_date": None, "prediction": None},
+        "typed_inputs": ["action", "payload", "real", "review_date", "prediction", "confidence"],
+        "defaults": {"real": False, "review_date": None, "prediction": None, "confidence": None},
         "does_not": ["unverified subjective claims"],
     },
     "execute_decision_action": {
         "computes": "Execution of GTO calculation actions with verified decision receipt logging",
-        "typed_inputs": ["action", "payload", "real", "review_date", "prediction", "no_receipt", "receipts_path", "cal_ledger_path"],
-        "defaults": {"real": False, "review_date": None, "prediction": None, "no_receipt": False, "cal_ledger_path": None},
+        "typed_inputs": ["action", "payload", "real", "review_date", "prediction", "confidence", "no_receipt", "receipts_path", "cal_ledger_path"],
+        "defaults": {"real": False, "review_date": None, "prediction": None, "confidence": None, "no_receipt": False, "cal_ledger_path": None},
         "does_not": ["uncalibrated claims", "unverified predictions"],
     },
     "log_decision_receipt": {
         "computes": "Append verified decision receipt with SHA-256 digest to decision_receipts.jsonl",
-        "typed_inputs": ["action", "inputs", "result", "receipts_path", "real_decision", "review_date", "prediction", "cal_ledger_path"],
-        "defaults": {"real_decision": False, "review_date": None, "prediction": None, "cal_ledger_path": None},
+        "typed_inputs": ["action", "inputs", "result", "receipts_path", "real_decision", "review_date", "prediction", "cal_ledger_path", "frame_id", "confidence"],
+        "defaults": {"real_decision": False, "review_date": None, "prediction": None, "cal_ledger_path": None, "frame_id": None, "confidence": None},
         "does_not": ["in-place mutation of existing receipts (append-only)"],
     },
     "find_unreceipted_engine_claims": {
-        "computes": "Scan text for GTO assertions lacking a valid receipt ID or [agent-estimate] tag",
-        "typed_inputs": ["text", "receipts_path"],
-        "defaults": {},
+        "computes": "Scan text sentence-by-sentence for GTO assertions lacking a valid turn-bound receipt ID or [agent-estimate] tag",
+        "typed_inputs": ["text", "receipts_path", "min_ts", "valid_receipt_ids"],
+        "defaults": {"min_ts": None, "valid_receipt_ids": None},
         "does_not": ["arbitrary semantic validation"],
     },
     "get_receipts_path": {
@@ -127,6 +129,18 @@ CAPABILITY_MANIFEST: dict[str, dict[str, Any]] = {
         "typed_inputs": ["mev", "eu", "eo", "discount", "utility"],
         "defaults": {"discount": 0.15, "utility": 0.0},
         "does_not": ["multi-criteria scoring", "ruin probability calculation", "stochastic simulation"],
+    },
+    "compute_evpi": {
+        "computes": "Expected Value of Perfect Information (EVPI) and probe net Value of Information across discrete world states",
+        "typed_inputs": ["world_states", "probe_cost"],
+        "defaults": {"probe_cost": None},
+        "does_not": ["noisy signal likelihood (EVSI)", "endogenous adversary response", "calibrated probabilities"],
+    },
+    "aggregate_ruin": {
+        "computes": "Portfolio-level aggregate ruin across independent and correlated exposure groups under Law #1 budget",
+        "typed_inputs": ["exposures", "budget"],
+        "defaults": {"budget": 0.05},
+        "does_not": ["copula / continuous correlation matrices", "intra-horizon compounding recovery"],
     },
     "compute_half_kelly": {
         "computes": "Full Kelly fraction, Half-Kelly fraction, and ruin-capped fraction",
@@ -159,7 +173,7 @@ CAPABILITY_MANIFEST: dict[str, dict[str, Any]] = {
         "does_not": ["multi-asset portfolio covariance", "regime shifts", "continuous time dynamics"],
     },
     "run_decision_monte_carlo": {
-        "computes": "Sensitivity analysis, growth-rate ranking, and outcome sampling of candidate decisions",
+        "computes": "Sensitivity analysis, growth-rate ranking, P90 Law #1 ruin gating, and outcome sampling of candidate decisions",
         "typed_inputs": ["candidates", "states", "is_ruin (boolean flag)", "n", "prob_jitter", "wealth", "materiality", "barrier", "sample_outcomes", "tail_uncertainty"],
         "defaults": {"n": 2000, "prob_jitter": 0.20, "LAW1_MAX_RUIN": 0.05, "materiality": 0.01, "barrier": 0.0, "sample_outcomes": False, "tail_uncertainty": 1.0},
         "does_not": [
@@ -171,9 +185,9 @@ CAPABILITY_MANIFEST: dict[str, dict[str, Any]] = {
         ],
     },
     "compute_mcda": {
-        "computes": "Multi-Criteria Decision Analysis with linear normalization and weighted summation",
-        "typed_inputs": ["candidates", "criteria", "weights", "scores", "veto_floors", "preference_provenance"],
-        "defaults": {"LAW1_MAX_RUIN": 0.05, "preference_provenance": "stated"},
+        "computes": "Multi-Criteria Decision Analysis with linear normalization, weighted summation, and score-noise/range-margin diagnostics",
+        "typed_inputs": ["candidates", "criteria", "weights", "scores", "veto_floors", "preference_provenance", "score_noise"],
+        "defaults": {"LAW1_MAX_RUIN": 0.05, "preference_provenance": "stated", "score_noise": 1.0},
         "does_not": ["non-linear utility interactions", "probabilistic criteria", "adversarial counter-play"],
     },
     "derive_ruin_floors": {
@@ -193,8 +207,8 @@ CAPABILITY_MANIFEST: dict[str, dict[str, Any]] = {
     },
     "gto_screen": {
         "computes": "Integrated fail-closed screening combining Law #1 ruin veto and MCDA ranking",
-        "typed_inputs": ["candidates", "criteria", "weights", "scores", "ruin_estimates", "veto_floors", "preference_provenance"],
-        "defaults": {"LAW1_MAX_RUIN": 0.05, "preference_provenance": "stated"},
+        "typed_inputs": ["candidates", "criteria", "weights", "scores", "ruin_estimates", "veto_floors", "preference_provenance", "score_noise"],
+        "defaults": {"LAW1_MAX_RUIN": 0.05, "preference_provenance": "stated", "score_noise": 1.0},
         "does_not": ["causal DAG modeling", "open system equilibrium solving"],
     },
     "compute_dual_vault_barbell": {
@@ -393,6 +407,7 @@ class CandidateSimulationStats:
     outcome_p10: float | None = None
     outcome_p90: float | None = None
     realized_ruin_pct: float | None = None
+    p90_ruin_pct: float | None = None
 
 
 @dataclass
@@ -488,6 +503,65 @@ class RobustnessResult:
 
 
 @dataclass
+class EVPIResult:
+    evpi: float
+    expected_without_info: float
+    expected_with_info: float
+    best_under_uncertainty: str
+    expected_by_option: dict[str, float]
+    probe_cost: float | None
+    net_voi: float | None
+    verdict: str
+
+    def to_ascii_table(self) -> str:
+        lines = [
+            "============================================================",
+            "        EXPECTED VALUE OF PERFECT INFORMATION (EVPI)        ",
+            "============================================================",
+            f"  Best Under Uncertainty        : {self.best_under_uncertainty}",
+            f"  EV Without Perfect Info       : S${self.expected_without_info:,.2f}",
+            f"  EV With Perfect Info          : S${self.expected_with_info:,.2f}",
+            f"  EVPI Ceiling                  : S${self.evpi:,.2f}",
+        ]
+        if self.probe_cost is not None and self.net_voi is not None:
+            lines.append(f"  Probe Cost                    : S${self.probe_cost:,.2f}")
+            lines.append(f"  Net VOI (EVPI - Cost)         : S${self.net_voi:+,.2f}")
+        lines.extend([
+            "------------------------------------------------------------",
+            f"  Strategic Verdict             : {self.verdict}",
+            "============================================================",
+        ])
+        return "\n".join(lines)
+
+
+@dataclass
+class AggregateRuinResult:
+    n_exposures: int
+    independent_ruin: float
+    conservative_ruin: float
+    budget: float
+    violates_budget: bool
+    group_ruins: dict[str, float]
+    verdict: str
+
+    def to_ascii_table(self) -> str:
+        lines = [
+            "============================================================",
+            "            AGGREGATE PORTFOLIO RUIN AUDIT (LAW #1)         ",
+            "============================================================",
+            f"  Standing Exposures            : {self.n_exposures}",
+            f"  Independent Ruin (1-prod)     : {self.independent_ruin * 100:.2f}%",
+            f"  Conservative Ruin (Frechet)   : {self.conservative_ruin * 100:.2f}%",
+            f"  Declared Ruin Budget          : {self.budget * 100:.2f}%",
+            f"  Budget Violation              : {'YES (HARD VETO)' if self.violates_budget else 'NO (Within Budget)'}",
+            "------------------------------------------------------------",
+            f"  Strategic Verdict             : {self.verdict}",
+            "============================================================",
+        ]
+        return "\n".join(lines)
+
+
+@dataclass
 class MCDAResult:
     candidates: list[str]
     criteria: list[str]
@@ -510,6 +584,8 @@ class MCDAResult:
     condorcet_winner: str | None = None
     preference_provenance: str = "stated"
     has_baseline_option: bool = False
+    score_flip_rate: float = 0.0
+    margin_pct_of_range: float = 0.0
 
     def to_ascii_table(self) -> str:
         lines = [
@@ -518,8 +594,9 @@ class MCDAResult:
             "============================================================",
             f"  Top Candidate             : {self.winner} (Score: {self.composite_scores.get(self.winner, 0.0):.3f})",
             f"  Runner-Up                 : {self.runner_up} (Score: {self.composite_scores.get(self.runner_up, 0.0):.3f})",
-            f"  Winning Margin            : +{self.margin_abs:.3f} (+{self.margin_pct:.1f}%)",
+            f"  Winning Margin            : +{self.margin_abs:.3f} (+{self.margin_pct:.1f}% | {self.margin_pct_of_range:.1f}% of range)",
             f"  Sensitivity (±10% Weights): {self.stability_verdict}",
+            f"  Score-Noise Flip Rate     : {self.score_flip_rate * 100:.1f}%",
             f"  Strategic Verdict         : {self.verdict}",
             f"  Pairwise Condorcet Winner : {self.condorcet_winner or 'NONE (cycle/tie)'}",
             f"  Preference Provenance     : {self.preference_provenance}",
@@ -743,6 +820,180 @@ def compute_eev(
         roi_percent=roi_percent,
         verdict=verdict,
         utility=utility,
+    )
+
+
+def compute_evpi(
+    world_states: list[tuple[float, dict[str, float]] | list[Any] | dict[str, Any]],
+    *,
+    probe_cost: float | None = None,
+) -> EVPIResult:
+    """Computes Expected Value of Perfect Information (EVPI) over discrete world states.
+
+    EVPI = sum_s p_s * max_a U(a, s) - max_a sum_s p_s * U(a, s)
+    """
+    if not world_states:
+        raise ValueError("world_states must not be empty")
+    if probe_cost is not None:
+        if (
+            isinstance(probe_cost, bool)
+            or not isinstance(probe_cost, (int, float))
+            or not math.isfinite(float(probe_cost))
+            or float(probe_cost) < 0.0
+        ):
+            raise ValueError(f"probe_cost must be a non-negative finite number, got {probe_cost}")
+        probe_cost_val: float | None = float(probe_cost)
+    else:
+        probe_cost_val = None
+
+    parsed: list[tuple[float, dict[str, float]]] = []
+    option_keys: set[str] | None = None
+
+    for item in world_states:
+        if isinstance(item, (tuple, list)):
+            if len(item) != 2:
+                raise ValueError(f"State entry must have 2 elements (prob, payoffs), got {len(item)}")
+            raw_p, raw_payoffs = item[0], item[1]
+        elif isinstance(item, dict):
+            if "prob" not in item or "payoffs" not in item:
+                raise ValueError("State dict must contain 'prob' and 'payoffs' keys")
+            raw_p, raw_payoffs = item["prob"], item["payoffs"]
+        else:
+            raise TypeError(f"State must be tuple, list, or dict, got {type(item)}")
+
+        if isinstance(raw_p, bool) or not isinstance(raw_p, (int, float)) or not math.isfinite(float(raw_p)) or float(raw_p) < 0.0:
+            raise ValueError(f"State probability must be finite and non-negative, got {raw_p}")
+        p = float(raw_p)
+
+        if not isinstance(raw_payoffs, dict) or not raw_payoffs:
+            raise ValueError("Each state payoffs must be a non-empty dict of option -> payoff")
+
+        clean_payoffs: dict[str, float] = {}
+        for opt, val in raw_payoffs.items():
+            if isinstance(val, bool) or not isinstance(val, (int, float)) or not math.isfinite(float(val)):
+                raise ValueError(f"Payoff for option '{opt}' must be finite, got {val}")
+            clean_payoffs[str(opt)] = float(val)
+
+        if option_keys is None:
+            option_keys = set(clean_payoffs.keys())
+        elif set(clean_payoffs.keys()) != option_keys:
+            raise ValueError(
+                f"Inconsistent option sets across states: expected {sorted(option_keys)}, got {sorted(clean_payoffs.keys())}"
+            )
+        parsed.append((p, clean_payoffs))
+
+    prob_sum = sum(p for p, _ in parsed)
+    if abs(prob_sum - 1.0) > 1e-5:
+        raise ValueError(f"State probabilities must sum to 1.0, got {prob_sum:.6f}")
+
+    assert option_keys is not None
+    options = sorted(option_keys)
+    expected_by_option = {
+        opt: sum(p * payoffs[opt] for p, payoffs in parsed)
+        for opt in options
+    }
+    best_under_uncertainty = max(options, key=lambda o: (expected_by_option[o], o))
+    expected_without_info = expected_by_option[best_under_uncertainty]
+    expected_with_info = sum(p * max(payoffs.values()) for p, payoffs in parsed)
+    evpi = max(0.0, expected_with_info - expected_without_info)
+    if evpi <= 1e-12:
+        evpi = 0.0
+
+    if evpi == 0.0:
+        net_voi = (-probe_cost_val) if probe_cost_val is not None else None
+        verdict = "ZERO VOI (Dominant option exists; do not pay for probe)"
+    elif probe_cost_val is not None:
+        net_voi = evpi - probe_cost_val
+        if net_voi > 0.0:
+            verdict = f"PROBE JUSTIFIED (EVPI S${evpi:,.2f} > cost S${probe_cost_val:,.2f})"
+        else:
+            verdict = f"SKIP PROBE (EVPI S${evpi:,.2f} <= cost S${probe_cost_val:,.2f}; pick more reversible)"
+    else:
+        net_voi = None
+        verdict = f"MAX PROBE CEILING: S${evpi:,.2f}"
+
+    return EVPIResult(
+        evpi=evpi,
+        expected_without_info=expected_without_info,
+        expected_with_info=expected_with_info,
+        best_under_uncertainty=best_under_uncertainty,
+        expected_by_option=expected_by_option,
+        probe_cost=probe_cost_val,
+        net_voi=net_voi,
+        verdict=verdict,
+    )
+
+
+def aggregate_ruin(
+    exposures: list[float | int | dict[str, Any]],
+    *,
+    budget: float = LAW1_MAX_RUIN,
+) -> AggregateRuinResult:
+    """Computes portfolio aggregate ruin across standing exposures under a Law #1 budget.
+
+    Independent exposures combine as 1 - prod(1 - p_i). Exposures sharing a non-empty
+    'group' use the conservative Frechet upper bound min(1.0, sum(p_i)) within that group.
+    """
+    if not exposures:
+        raise ValueError("exposures list must not be empty")
+    if (
+        isinstance(budget, bool)
+        or not isinstance(budget, (int, float))
+        or not math.isfinite(float(budget))
+        or not (0.0 < float(budget) <= 1.0)
+    ):
+        raise ValueError(f"budget must be finite in (0.0, 1.0], got {budget}")
+    budget_val = float(budget)
+
+    all_ps: list[float] = []
+    grouped: dict[str, list[float]] = {}
+
+    for idx, item in enumerate(exposures):
+        if isinstance(item, dict):
+            if "p_ruin" not in item:
+                raise ValueError(f"Exposure dict at index {idx} missing 'p_ruin'")
+            raw_p = item["p_ruin"]
+            raw_group = item.get("group")
+            group_key = str(raw_group).strip() if (raw_group is not None and str(raw_group).strip()) else f"indep_{idx}"
+        else:
+            raw_p = item
+            group_key = f"indep_{idx}"
+
+        if (
+            isinstance(raw_p, bool)
+            or not isinstance(raw_p, (int, float))
+            or not math.isfinite(float(raw_p))
+            or not (0.0 <= float(raw_p) <= 1.0)
+        ):
+            raise ValueError(f"p_ruin at index {idx} must be finite in [0.0, 1.0], got {raw_p}")
+        p_val = float(raw_p)
+        all_ps.append(p_val)
+        grouped.setdefault(group_key, []).append(p_val)
+
+    independent_ruin = 1.0 - math.prod(1.0 - p for p in all_ps)
+    group_ruins = {g: min(1.0, sum(ps)) for g, ps in grouped.items()}
+    conservative_ruin = 1.0 - math.prod(1.0 - gp for gp in group_ruins.values())
+    violates_budget = conservative_ruin > budget_val
+
+    if violates_budget:
+        verdict = (
+            f"VETO (Aggregate Ruin {conservative_ruin * 100:.2f}% > "
+            f"{budget_val * 100:.2f}% budget across {len(all_ps)} exposures)"
+        )
+    else:
+        verdict = (
+            f"PASS (Aggregate Ruin {conservative_ruin * 100:.2f}% <= "
+            f"{budget_val * 100:.2f}% budget across {len(all_ps)} exposures)"
+        )
+
+    return AggregateRuinResult(
+        n_exposures=len(all_ps),
+        independent_ruin=independent_ruin,
+        conservative_ruin=conservative_ruin,
+        budget=budget_val,
+        violates_budget=violates_budget,
+        group_ruins=group_ruins,
+        verdict=verdict,
     )
 
 
@@ -1369,8 +1620,10 @@ def run_decision_monte_carlo(
         pos_eev_count = sum(1 for val in eevs if val > 0)
         pct_eev_pos = (pos_eev_count / n) * 100.0
 
+        sorted_ruin_pcts = sorted(ruin_pct_trajectories[c])
+        p90_ruin_pct = sorted_ruin_pcts[p90_idx]
         mean_ruin_pct = sum(ruin_pct_trajectories[c]) / n
-        ruin_gate_passed = mean_ruin_pct <= (LAW1_MAX_RUIN * 100.0)
+        ruin_gate_passed = p90_ruin_pct <= (LAW1_MAX_RUIN * 100.0)
 
         # Growth statistics
         if wealth is not None:
@@ -1396,8 +1649,15 @@ def run_decision_monte_carlo(
             outcome_p90 = None
             realized_ruin_pct = None
 
+        is_neg_inf_growth = (
+            median_growth is not None
+            and math.isinf(median_growth)
+            and median_growth < 0
+        )
         if not ruin_gate_passed:
-            verdict = f"FAIL (Law #1 Ruin >= {LAW1_MAX_RUIN * 100.0:.0f}%)"
+            verdict = f"FAIL (Law #1 Ruin P90={p90_ruin_pct:.2f}% > {LAW1_MAX_RUIN * 100.0:.0f}%)"
+        elif is_neg_inf_growth:
+            verdict = "FAIL (Non-Ergodic: Negative Infinite Log-Wealth Growth)"
         elif p10_eev > 0:
             verdict = "PASS (Robust)"
         elif pct_eev_pos >= 70.0:
@@ -1422,19 +1682,28 @@ def run_decision_monte_carlo(
             outcome_p10=outcome_p10,
             outcome_p90=outcome_p90,
             realized_ruin_pct=realized_ruin_pct,
+            p90_ruin_pct=p90_ruin_pct,
         )
 
     vetoed_candidates = [c for c in candidates if not candidate_stats[c].ruin_gate_passed]
     eligible_cands = [c for c in candidates if candidate_stats[c].ruin_gate_passed]
     if eligible_cands:
         if use_growth_ranking:
-            top_candidate = max(
-                eligible_cands,
-                key=lambda c: (
-                    candidate_stats[c].median_growth if candidate_stats[c].median_growth is not None else -float("inf"),
-                    winner_frequencies[c],
-                ),
-            )
+            ergodic_cands = [
+                c for c in eligible_cands
+                if candidate_stats[c].median_growth is not None
+                and not (math.isinf(candidate_stats[c].median_growth) and candidate_stats[c].median_growth < 0)
+            ]
+            if ergodic_cands:
+                top_candidate = max(
+                    ergodic_cands,
+                    key=lambda c: (
+                        candidate_stats[c].median_growth if candidate_stats[c].median_growth is not None else -float("inf"),
+                        winner_frequencies[c],
+                    ),
+                )
+            else:
+                top_candidate = "NONE"
         else:
             top_candidate = max(eligible_cands, key=lambda c: winner_frequencies[c])
     else:
@@ -1743,6 +2012,9 @@ def compute_mcda(
     hard_vetoes: dict[str, list[str]] | None = None,
     ruin_exemptions: dict[str, str] | None = None,
     preference_provenance: str = "stated",
+    score_noise: float = 1.0,
+    score_noise_trials: int = 2000,
+    score_noise_seed: int = 42,
 ) -> MCDAResult:
     """Computes Multiple-Criteria Decision Analysis (MCDA) with deterministic sensitivity and §3A veto screening.
 
@@ -1753,13 +2025,23 @@ def compute_mcda(
     2. Hard-constraint feasibility screen (DEC-500 §3A VETO) — fail-closed on unknown keys.
     3. Base composite scoring using normalized weights (DEC-500 §3C-3D) on feasible candidates.
     4. Pairwise dominance inspection (§3F).
-    5. ±10% weight perturbation sensitivity testing across each criterion (§3E).
+    5. ±10% weight perturbation sensitivity testing across each criterion (§3E) + ±score_noise fragility check.
     6. Deterministic stability verification and Path D / Path E routing.
     """
     if preference_provenance not in ("stated", "revealed"):
         raise ValueError(
             f"preference_provenance must be 'stated' or 'revealed', got {preference_provenance!r}"
         )
+    if (
+        isinstance(score_noise, bool)
+        or not isinstance(score_noise, (int, float))
+        or math.isnan(float(score_noise))
+        or math.isinf(float(score_noise))
+        or float(score_noise) < 0.0
+    ):
+        raise ValueError(f"score_noise must be a non-negative finite number, got {score_noise}")
+    if isinstance(score_noise_trials, bool) or int(score_noise_trials) <= 0:
+        raise ValueError(f"score_noise_trials must be positive, got {score_noise_trials}")
     has_baseline = _has_baseline_candidate(candidates)
     if not candidates:
         raise ValueError("candidates list cannot be empty")
@@ -1942,16 +2224,34 @@ def compute_mcda(
         margin_abs = winner_score
         margin_pct = 100.0
 
+    all_feasible_scores = [
+        score_matrix[cand][crit]
+        for cand in feasible_candidates
+        for crit in criteria
+    ]
+    score_span = (max(all_feasible_scores) - min(all_feasible_scores)) if all_feasible_scores else 0.0
+    margin_pct_of_range = (
+        (margin_abs / score_span * 100.0)
+        if len(ranked) > 1 and score_span > 0.0
+        else (100.0 if len(ranked) == 1 and score_span > 0.0 else 0.0)
+    )
+
     # Pairwise dominance checks on feasible candidates
     pairwise_dominance: list[str] = []
     for i, c1 in enumerate(feasible_candidates):
         for c2 in feasible_candidates[i + 1:]:
-            c1_dom = all(score_matrix[c1][crit] >= score_matrix[c2][crit] for crit in criteria) and any(score_matrix[c1][crit] > score_matrix[c2][crit] for crit in criteria)
-            c2_dom = all(score_matrix[c2][crit] >= score_matrix[c1][crit] for crit in criteria) and any(score_matrix[c2][crit] > score_matrix[c1][crit] for crit in criteria)
-            if c1_dom:
+            c1_strict = all(score_matrix[c1][crit] > score_matrix[c2][crit] for crit in criteria)
+            c1_pareto = all(score_matrix[c1][crit] >= score_matrix[c2][crit] for crit in criteria) and any(score_matrix[c1][crit] > score_matrix[c2][crit] for crit in criteria)
+            c2_strict = all(score_matrix[c2][crit] > score_matrix[c1][crit] for crit in criteria)
+            c2_pareto = all(score_matrix[c2][crit] >= score_matrix[c1][crit] for crit in criteria) and any(score_matrix[c2][crit] > score_matrix[c1][crit] for crit in criteria)
+            if c1_strict:
                 pairwise_dominance.append(f"'{c1}' strictly dominates '{c2}' across all criteria")
-            elif c2_dom:
+            elif c1_pareto:
+                pairwise_dominance.append(f"'{c1}' Pareto-dominates '{c2}' (better on at least one criterion, never worse)")
+            elif c2_strict:
                 pairwise_dominance.append(f"'{c2}' strictly dominates '{c1}' across all criteria")
+            elif c2_pareto:
+                pairwise_dominance.append(f"'{c2}' Pareto-dominates '{c1}' (better on at least one criterion, never worse)")
             elif abs(base_scores[c1] - base_scores[c2]) < 1e-9:
                 pairwise_dominance.append(f"'{c1}' and '{c2}' are in an exact composite tie ({base_scores[c1]:.3f})")
 
@@ -2042,6 +2342,24 @@ def compute_mcda(
                 f"Condorcet divergence: pairwise Condorcet winner is '{condorcet_winner}', whereas weighted-sum winner is '{winner}'"
             )
 
+    score_flip_rate = 0.0
+    if len(feasible_candidates) >= 2 and score_noise > 0.0 and score_noise_trials > 0:
+        rng = random.Random(score_noise_seed)
+        flips = 0
+        for _ in range(score_noise_trials):
+            trial_scores = {
+                cand: sum(
+                    normalized_weights[crit]
+                    * (score_matrix[cand][crit] + rng.uniform(-score_noise, score_noise))
+                    for crit in criteria
+                )
+                for cand in feasible_candidates
+            }
+            trial_winner = max(feasible_candidates, key=trial_scores.__getitem__)
+            if trial_winner != winner:
+                flips += 1
+        score_flip_rate = flips / score_noise_trials
+
     if is_stable:
         if len(feasible_candidates) == 1:
             stability_verdict = "ROBUST (Sole surviving feasible candidate after hard-constraint screen)"
@@ -2058,9 +2376,12 @@ def compute_mcda(
     else:
         stability_verdict = "UNSTABLE (Rank flips or margin < 5% under perturbation)"
         if veto_screen_applied:
-            verdict = "UNSTABLE / TIE DETECTED -> DO NOT FORCE PICK; ROUTE TO PATH D (EXPERIMENT) OR PATH E (WAIT)"
+            verdict = "UNSTABLE / TIE DETECTED -> DO NOT FORCE PICK; ROUTE TO PATH D ONLY IF EVPI > PROBE COST, ELSE TAKE MORE REVERSIBLE OPTION"
         else:
-            verdict = "ADVISORY ONLY (NO VETO SCREEN) -> UNSTABLE / TIE DETECTED; ROUTE TO PATH D OR PATH E"
+            verdict = "ADVISORY ONLY (NO VETO SCREEN) -> UNSTABLE / TIE DETECTED; ROUTE TO PATH D ONLY IF EVPI > PROBE COST, ELSE PATH E"
+
+    if score_flip_rate > 0.10:
+        verdict += f" [SCORE-FRAGILE: winner flips in {score_flip_rate * 100:.1f}% of ±{score_noise:g} score draws]"
 
     return MCDAResult(
         candidates=candidates,
@@ -2084,6 +2405,8 @@ def compute_mcda(
         condorcet_winner=condorcet_winner,
         preference_provenance=preference_provenance,
         has_baseline_option=has_baseline,
+        score_flip_rate=score_flip_rate,
+        margin_pct_of_range=margin_pct_of_range,
     )
 
 
@@ -2228,6 +2551,9 @@ def gto_screen(
     sensitivity_pct: float = 0.10,
     margin_threshold_pct: float = 5.0,
     preference_provenance: str = "stated",
+    score_noise: float = 1.0,
+    score_noise_trials: int = 2000,
+    score_noise_seed: int = 42,
 ) -> MCDAResult:
     """Fail-closed GTO decision screening entry point.
 
@@ -2271,6 +2597,9 @@ def gto_screen(
         sensitivity_pct=sensitivity_pct,
         margin_threshold_pct=margin_threshold_pct,
         preference_provenance=preference_provenance,
+        score_noise=score_noise,
+        score_noise_trials=score_noise_trials,
+        score_noise_seed=score_noise_seed,
     )
 
 
@@ -2565,6 +2894,8 @@ def extract_top(res: Any) -> str:
         return str(res.minimax_regret_winner)
     if hasattr(res, "winner") and res.winner:
         return str(res.winner)
+    if hasattr(res, "best_under_uncertainty") and res.best_under_uncertainty:
+        return str(res.best_under_uncertainty)
     if hasattr(res, "preferred_strategy") and res.preferred_strategy:
         return str(res.preferred_strategy)
     return "N/A"
@@ -2580,11 +2911,25 @@ def log_decision_receipt(
     prediction: str | None = None,
     cal_ledger_path: Path | None = None,
     frame_id: str | None = None,
+    confidence: float | None = None,
 ) -> dict[str, Any]:
     """Append a verified decision receipt to .athena/decision_receipts.jsonl.
 
     When real_decision is True, also appends a CALIBRATION_LEDGER entry (09-30 T4.1).
     """
+    if confidence is not None:
+        if (
+            isinstance(confidence, bool)
+            or not isinstance(confidence, (int, float))
+            or math.isnan(confidence)
+            or math.isinf(confidence)
+            or not (0.0 <= float(confidence) <= 1.0)
+        ):
+            raise ValueError(f"confidence must be a finite number in [0.0, 1.0], got {confidence}")
+        conf_val: float | None = round(float(confidence), 4)
+    else:
+        conf_val = None
+
     if isinstance(inputs, str):
         inputs_str = inputs
     elif isinstance(inputs, dict):
@@ -2617,6 +2962,7 @@ def log_decision_receipt(
         "review_date": review_date if review_date else None,
         "prediction": prediction if prediction else None,
         "frame_id": frame_id if frame_id else None,
+        "confidence": conf_val,
     }
 
     path = receipts_path or get_receipts_path()
@@ -2640,13 +2986,26 @@ def log_decision_receipt(
                 claim = prediction if prediction else f"GTO decision '{action}' recommendation '{top}' achieves superior performance with verdict '{verdict}'."
                 domain = "trading" if action in ("kelly", "ruin", "drawdown") else "technical"
 
+                if conf_val is not None:
+                    prob_val = conf_val
+                    prior_note = ""
+                elif isinstance(result, DecisionMonteCarloResult) and result.top_candidate != "NONE":
+                    prob_val = max(
+                        0.05,
+                        min(0.75, result.winner_frequencies.get(result.top_candidate, 50.0) / 100.0),
+                    )
+                    prior_note = " [MC winner-freq prior, capped <= 0.75]"
+                else:
+                    prob_val = 0.50
+                    prior_note = " [UNSTATED PRIOR: defaulted to 0.50; supply confidence explicitly]"
+
                 cal_entry = (
                     f"### {new_cal_id}\n"
                     f"- **Claim**: {claim}\n"
-                    f"- **Probability**: 0.70\n"
+                    f"- **Probability**: {prob_val:.2f}\n"
                     f"- **Deadline**: {dl}\n"
                     f"- **Domain**: {domain}\n"
-                    f"- **Rationale**: Real decision logged via GTO Engine receipt {receipt_id}. Action: {action}. Verdict: {verdict}. Top: {top}.\n"
+                    f"- **Rationale**: Real decision logged via GTO Engine receipt {receipt_id}. Action: {action}. Verdict: {verdict}. Top: {top}.{prior_note}\n"
                     f"- **Source**: {receipt_id}\n"
                     f"- **Outcome**: pending\n"
                     f"- **Resolved**: —\n\n"
@@ -2679,6 +3038,7 @@ def execute_decision_action(
     receipts_path: Path | None = None,
     cal_ledger_path: Path | None = None,
     frame_id: str | None = None,
+    confidence: float | None = None,
 ) -> tuple[Any, dict[str, Any] | None]:
     """Execute a strategic decision action and optionally log a decision receipt."""
     res: Any
@@ -2725,6 +3085,9 @@ def execute_decision_action(
                 ruin_inputs=payload.get("ruin_inputs"),
                 ruin_exempt=ruin_exempt,
                 preference_provenance=pref_prov,
+                score_noise=payload.get("score_noise", 1.0),
+                score_noise_trials=payload.get("score_noise_trials", 2000),
+                score_noise_seed=payload.get("score_noise_seed", 42),
                 **extra_kwargs,
             )
         else:
@@ -2750,6 +3113,9 @@ def execute_decision_action(
                 veto_floors=payload.get("veto_floors"),
                 ruin_exemptions=dict(ruin_exempt) if ruin_exempt else None,
                 preference_provenance=pref_prov,
+                score_noise=payload.get("score_noise", 1.0),
+                score_noise_trials=payload.get("score_noise_trials", 2000),
+                score_noise_seed=payload.get("score_noise_seed", 42),
             )
     elif action == "decision-mc":
         raw_states = payload["states"]
@@ -2775,6 +3141,16 @@ def execute_decision_action(
             wealth=payload["wealth"],
             states=states_list,
             barrier=payload.get("barrier", 0.0),
+        )
+    elif action == "evpi":
+        res = compute_evpi(
+            world_states=payload["world_states"],
+            probe_cost=payload.get("probe_cost"),
+        )
+    elif action == "aggregate-ruin":
+        res = aggregate_ruin(
+            exposures=payload["exposures"],
+            budget=LAW1_MAX_RUIN if payload.get("budget") is None else payload["budget"],
         )
     elif action == "eev":
         res = compute_eev(
@@ -2869,6 +3245,7 @@ def execute_decision_action(
             prediction=prediction,
             cal_ledger_path=cal_ledger_path,
             frame_id=frame_id,
+            confidence=confidence,
         )
 
     return res, receipt
@@ -2887,41 +3264,66 @@ UNRECEIPTED_CLAIM_PATTERNS: list[str] = [
 ]
 
 
+def _parse_utc_ts(raw: Any) -> datetime | None:
+    if isinstance(raw, datetime):
+        dt = raw
+    elif isinstance(raw, str) and raw.strip():
+        try:
+            dt = datetime.fromisoformat(raw.strip().replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    else:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
 def find_unreceipted_engine_claims(
     text: str,
     receipts_path: Path | None = None,
+    *,
+    min_ts: datetime | str | None = None,
+    valid_receipt_ids: set[str] | None = None,
 ) -> list[str]:
-    """Scan text for GTO engine assertions that lack a valid receipt or [agent-estimate] tag.
+    """Scan text sentence-by-sentence for GTO assertions that lack a valid receipt or [agent-estimate] tag.
 
     Vocabulary heuristic; catches recurrences of known phrasings, not paraphrases.
     Returns a list of unreceipted claim phrases found in the text.
-    Allowed if a valid GTO-xxxxxxxx receipt ID cited in the text exists in the
-    last 500 lines of .athena/decision_receipts.jsonl, or if the individual
-    sentence containing the claim carries '[agent-estimate]'.
+    Each sentence/line must carry '[agent-estimate]' or a valid GTO-xxxxxxxx receipt ID
+    (optionally restricted to receipts with ts >= min_ts - 2s).
     """
     if not text:
         return []
 
-    path = receipts_path or get_receipts_path()
-    valid_receipt_ids: set[str] = set()
+    if valid_receipt_ids is not None:
+        valid_ids = {str(rid) for rid in valid_receipt_ids}
+    else:
+        path = receipts_path or get_receipts_path()
+        valid_ids = set()
+        min_dt: datetime | None = None
+        min_ts_invalid = False
+        if min_ts is not None and not (isinstance(min_ts, str) and not min_ts.strip()):
+            min_dt = _parse_utc_ts(min_ts)
+            if min_dt is None:
+                min_ts_invalid = True
 
-    if path.exists():
-        try:
-            valid_receipt_ids = {
-                str(r["receipt_id"])
-                for r in iter_receipts(receipts_path=path, include_void=False)
-                if "receipt_id" in r
-            }
-        except Exception:
-            pass
+        if path.exists() and not min_ts_invalid:
+            try:
+                for rec in iter_receipts(receipts_path=path, include_void=False):
+                    rid = rec.get("receipt_id")
+                    if not rid:
+                        continue
+                    if min_dt is not None:
+                        rec_dt = _parse_utc_ts(rec.get("ts"))
+                        if rec_dt is None or rec_dt < min_dt - timedelta(seconds=2):
+                            continue
+                    valid_ids.add(str(rid))
+            except Exception:
+                pass
 
-    # If any valid receipt ID from receipts file is cited in the text, all claims are receipted
-    cited_ids = re.findall(r"\b(GTO-[0-9a-fA-F]{8})\b", text)
-    if any(rid in valid_receipt_ids for rid in cited_ids):
-        return []
-
-    # Check sentence-by-sentence
-    sentences = re.split(r"(?<=[.!?\n])\s+", text)
+    # Check sentence-by-sentence (sentence punctuation + whitespace, or newline boundaries)
+    sentences = re.split(r"(?<=[.!?])\s+|\n+", text)
     violations: list[str] = []
 
     for sentence in sentences:
@@ -2929,6 +3331,9 @@ def find_unreceipted_engine_claims(
         if not s_clean:
             continue
         if "[agent-estimate]" in s_clean.lower():
+            continue
+        sent_ids = re.findall(r"\b(GTO-[0-9a-fA-F]{8})\b", s_clean)
+        if any(rid in valid_ids for rid in sent_ids):
             continue
         for pat in UNRECEIPTED_CLAIM_PATTERNS:
             m = re.search(pat, s_clean, re.IGNORECASE)
@@ -2951,6 +3356,9 @@ def main(argv: list[str] | None = None) -> int:
             "monte-carlo",
             "mcda",
             "decision-mc",
+            "growth-rate",
+            "evpi",
+            "aggregate-ruin",
             "robustness",
             "barbell",
             "devaluation",
@@ -2967,6 +3375,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--real", action="store_true", default=False, help="Flag this run as a consequential real decision")
     parser.add_argument("--review-date", type=str, default=None, help="Calibration review date (YYYY-MM-DD)")
     parser.add_argument("--prediction", type=str, default=None, help="Anticipated hypothesis / prediction for calibration tracking")
+    parser.add_argument("--confidence", type=float, default=None, help="Explicit probability/confidence prior [0.0, 1.0] for calibration tracking")
     parser.add_argument("--no-receipt", action="store_true", default=False, help="Skip appending to decision receipts")
     parser.add_argument("--cal-ledger", type=str, default=None, help="Path to CALIBRATION_LEDGER.md (for --real logging)")
 
@@ -3048,6 +3457,26 @@ def main(argv: list[str] | None = None) -> int:
             input_val = args.mc_json or args.input
             if not input_val:
                 raise ValueError("--mc-json is required when --action is decision-mc")
+            if os.path.exists(input_val):
+                with open(input_val, encoding="utf-8") as f:
+                    payload = json.load(f)
+            else:
+                payload = json.loads(input_val)
+        elif args.action == "growth-rate":
+            input_val = args.input or args.mc_json
+            if not input_val:
+                print("Error: --action growth-rate requires --input <states.json>", file=sys.stderr)
+                return 2
+            if os.path.exists(input_val):
+                with open(input_val, encoding="utf-8") as f:
+                    payload = json.load(f)
+            else:
+                payload = json.loads(input_val)
+        elif args.action in ("evpi", "aggregate-ruin"):
+            input_val = args.input or args.mc_json
+            if not input_val:
+                print(f"Error: --action {args.action} requires --input <payload.json>", file=sys.stderr)
+                return 2
             if os.path.exists(input_val):
                 with open(input_val, encoding="utf-8") as f:
                     payload = json.load(f)
@@ -3170,6 +3599,7 @@ def main(argv: list[str] | None = None) -> int:
             prediction=args.prediction,
             no_receipt=args.no_receipt,
             cal_ledger_path=Path(args.cal_ledger) if args.cal_ledger else None,
+            confidence=args.confidence,
         )
 
         if args.json:
