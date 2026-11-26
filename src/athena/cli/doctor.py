@@ -680,20 +680,20 @@ def check_15_harness_integrity(root: Path, fix: bool = False) -> list[CheckResul
             cfg = json.loads(claude_settings.read_text(encoding="utf-8"))
             hooks = cfg.get("hooks", {})
             has_pretool = "PreToolUse" in hooks
-            has_stop = "Stop" in hooks
-            if has_pretool and has_stop:
-                results.append(CheckResult("Claude Hooks Parity", PASS, "PreToolUse and Stop hooks registered"))
+            has_posttool = "PostToolUse" in hooks
+            if has_pretool:
+                msg = (
+                    "PreToolUse and PostToolUse hooks registered"
+                    if has_posttool
+                    else "PreToolUse hooks registered"
+                )
+                results.append(CheckResult("Claude Hooks Parity", PASS, msg))
             else:
-                missing = []
-                if not has_pretool:
-                    missing.append("PreToolUse")
-                if not has_stop:
-                    missing.append("Stop")
                 results.append(
                     CheckResult(
                         "Claude Hooks Parity",
                         WARN,
-                        f"Missing hooks in .claude/settings.json: {', '.join(missing)}",
+                        "Missing hooks in .claude/settings.json: PreToolUse",
                         "Run 'athena init --profile hooks-only' to scaffold .claude/settings.json",
                     )
                 )

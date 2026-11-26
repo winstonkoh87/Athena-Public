@@ -27,7 +27,7 @@ Every protocol or system that claims a mechanism declares its enforcement status
 
 ## 2. Artifact-Anchored Retrieval & Server-Side Constraints
 
-1. **Constraints server-side; routing client-side**: Survival rules (Law #1 Ruin, credential protection, grounding) live in `mcp_server.py` instructions and `stop_governance_gate.py`.
+1. **Constraints server-side; routing client-side**: Survival rules (Law #1 Ruin, credential protection, grounding) live in `mcp_server.py` instructions, `PreToolUse`/`PostToolUse` hooks, and pre-commit/CI gates (Stop hooks removed).
 2. **Artifact-anchored over intention-anchored**: All `plan.md` / `spec-driven-dev` artifacts MUST contain a `Grounding & Prior Precedents` block (missing block = malformed plan).
 3. **Write-time memory scoping**: When filing via MCP or `quicksave.py`, declare `scope: project | platform | general`. Claims marked `verified` require terminal execution proof; claims marked `general` require an explicit domain-independence rationale.
 

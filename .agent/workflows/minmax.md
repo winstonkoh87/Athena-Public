@@ -18,7 +18,7 @@ tools:
 ## Core Optimization Function
 
 `maximize(quality / (latency_s * token_cost))` subject to **hard non-negotiable safety and quality floors**:
-- Never skip Law #1 ruin checks (`trading-risk-gate`), Protocol 509 crisis hotlines, Protocol 574 substance decode, or Lambda >= 10 verification (`stop_governance_gate.py`).
+- Never skip Law #1 ruin checks (`trading-risk-gate`), Protocol 509 crisis hotlines, Protocol 574 substance decode, or Lambda >= 10 verification (`context_gate`).
 - Reduce redundant I/O, serial blocking, duplicate payloads, and unread boilerplate — never reduce reasoning accuracy.
 - **Round-Trip Amdahl Law (v2.2)**: Sequential LLM round-trips dominate sub-second local Python latency by `10x-50x`. Minimize sequential tool waves first (0-1 wave Turn-1 boot), enforce hard non-blocking external caps second (`INTERACTIVE_EXTRA_TIMEOUT_S = 5.5s`, interactive `get_embedding(..., max_retries=1, timeout=4.0, floor_delay=0.0)`), and optimize local milliseconds third.
 
@@ -33,7 +33,7 @@ tools:
 | **STANDARD High (`> 25` / Personal / Web) & ULTRA (`> 30`)** | `vector_mode="always"` single-wave parallel Local + Vector (`max_retries=1, timeout=4.0s, floor_delay=0.0s`) + non-blocking `wait_on_exit=False` on timeout | `<= 5.5s` hard wall cap; `< 20 ms` cache hit | Degraded-recall explicit warning + immediate `executor.shutdown(wait=False)` |
 | **ONNX Reranker & `QueryCache` Vectors** | Length-sorted mini-batches (`MAX_LENGTH=256`, `batch_size=8`, `intra_op=4`, `allow_spinning=0`) + single-key `QueryCache._save_vecs_to_db(upsert_key=...)` | `< 0.5s` for 50 candidates; zero disk write on hit | CrossEncoder fallback only if ONNX assets absent |
 | **Embedding Cache Self-Heal** | `PersistentEmbeddingCache._quarantine_and_recreate()` on malformed SQLite | `< 50 ms` automatic quarantine & clean DB recreate | Disables disk cache cleanly for process if recreation fails |
-| **JSONL Telemetry & Stop Hooks** | Tail-seek reader (`<= 64 KB`) + size-based rotation in `shutdown.py` | `O(1)`, `< 15 ms` | Automatic archive rotation when logs exceed threshold |
+| **JSONL Telemetry & Rotation** | Tail-seek reader (`<= 64 KB`) + size-based rotation in `shutdown.py` | `O(1)`, `< 15 ms` | Automatic archive rotation when logs exceed threshold |
 | **CLI Search (`smart_search.py`)** | In-process execution with `ThreadPoolExecutor` timeout guard | Eliminates ~0.6s subprocess spawn overhead | Timeout message identifies stalled stage |
 
 ## Behavioral Rules

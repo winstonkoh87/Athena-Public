@@ -50,18 +50,6 @@
           }
         ]
       }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/.agent/scripts/athena-py\" .agent/scripts/hook_stop_verify.py",
-            "timeout": 8,
-            "statusMessage": "Output verifier (LaTeX/ASCII/secrets)"
-          }
-        ]
-      }
     ]
   },
   "env": {

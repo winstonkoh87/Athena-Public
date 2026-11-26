@@ -18,7 +18,7 @@ tools:
 ## Core Optimization Function
 
 `maximize(quality / (latency_s * token_cost))` subject to **hard non-negotiable safety and quality floors**:
-- Never skip Law #1 ruin checks (`trading-risk-gate`), Protocol 509 crisis hotlines, Protocol 574 substance decode, or Lambda >= 10 verification (`stop_governance_gate.py`).
+- Never skip Law #1 ruin checks (`trading-risk-gate`), Protocol 509 crisis hotlines, Protocol 574 substance decode, or Lambda >= 10 verification (`context_gate`).
 - Reduce redundant I/O, serial blocking, duplicate payloads, and unread boilerplate — never reduce reasoning accuracy.
 
 ## Mechanical Latency & Token SLO Matrix
@@ -31,7 +31,7 @@ tools:
 | **STANDARD Light (`Lambda 10-14`, non-personal/non-web)** | `vector_mode="auto"` speculative parallel Local+ONNX vs Remote Vector | `< 0.5s` when >= 2 non-boot hits & ONNX `top_logit >= 1.0` (`>= 2.5` for `< 3` words) | Automatically awaits parallel remote vector if local quality floor fails |
 | **STANDARD Deep (`Lambda >= 15` / Personal) & ULTRA (`> 30`)** | `vector_mode="always"` single-wave parallel Local + Vector + conditional Web | `< 2.0s` cold; `< 20 ms` cache hit | Degraded-recall explicit warning + retry on API error |
 | **QueryCache & Vectors** | Read-only RAM lookup on hit; embeddings offloaded to SQLite `search_cache_vecs.db` | Zero disk write on read hit | Writes only on cache miss / store |
-| **JSONL Telemetry & Stop Hooks** | Tail-seek reader (`<= 64 KB`) + size-based rotation in `shutdown.py` | `O(1)`, `< 15 ms` | Automatic archive rotation when logs exceed threshold |
+| **JSONL Telemetry & Rotation** | Tail-seek reader (`<= 64 KB`) + size-based rotation in `shutdown.py` | `O(1)`, `< 15 ms` | Automatic archive rotation when logs exceed threshold |
 | **CLI Search (`smart_search.py`)** | In-process execution with `ThreadPoolExecutor` timeout guard | Eliminates ~0.6s subprocess spawn overhead | Timeout message identifies stalled stage |
 
 ## Behavioral Rules

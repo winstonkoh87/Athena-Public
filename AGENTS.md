@@ -13,14 +13,14 @@
 - **State & Context**: `.context/CANONICAL.md`, `.context/PROTOCOL_SUMMARIES.md`, `.context/memory_bank/activeContext.md`
 - **Workflows**: `.agent/workflows/_shared.md`, `start.md`, `end.md`, `think.md`, `ultrastart.md`, `ultrathink.md`, `ultraend.md`, `minmax.md`
 - **SDK & MCP**: `src/athena/mcp_server.py` (20 Athena MCP tools + DuckDB server), `src/athena/intelligence/` (`frame_ledger.py`, `gto_engine.py`, `wargame.py`, `calibration.py`, `ucds_validator.py`), `src/athena/core/` (`gate_meta.py`, `lambda_scorer.py`, `permissions.py`, `ruin_structured.py`), `src/athena/tools/` (`search.py`, `personalisation.py`, `web_triggers.py`, `meta_pattern_matcher.py`)
-- **Hooks & Scripts**: `.agent/scripts/hook_meta_awareness_gate.py`, `hook_epistemic_gate.py`, `hook_crisis_gate.py`, `hook_stop_verify.py`, `check_governance_skip.py`, `check_latex_leak.py`, `harness_score.py`; `scripts/boot_status.py`, `scripts/check_doc_drift.py`, `shutdown.py`, `eval_problem_solving_ab.py`
+- **Hooks & Scripts**: `.agent/scripts/hook_meta_awareness_gate.py`, `hook_epistemic_gate.py`, `hook_crisis_gate.py`, `hook_post_edit_lint.py`, `hook_stop_verify.py` (shared lint helper), `check_governance_skip.py`, `check_latex_leak.py`, `harness_score.py`; `scripts/boot_status.py`, `scripts/check_doc_drift.py`, `shutdown.py`, `eval_problem_solving_ab.py`
 - **Example Skills**: `examples/skills/` (including `examples/skills/decision/substance-decode/SKILL.md` and `bionic-decision-engine/SKILL.md`)
 
 ---
 
 ## Problem-Solving & Decision Workflow
 
-1. **External Verification Mandate**: Call `context_gate(query: str, limit: int = 10, web: bool | None = None, compact_follow_up: bool = False)` directly (skip schema-read hops):
+1. **External Verification Mandate** *(agent-discretion; Stop hooks removed — do not re-add)*: Call `context_gate(query: str, limit: int = 10, web: bool | None = None, compact_follow_up: bool = False)` directly (skip schema-read hops):
    - `SNIPER (Lambda < 10)`: Exempt (`vector_mode="local"`).
    - `STANDARD (Lambda 10-30)`: Call `context_gate(query)` and resolve missing signals before answering (`vector_mode="auto"` speculative local+ONNX for `<= 25` non-personal/non-web; `"always"` otherwise).
    - `ULTRA (Lambda > 30)`: Call `context_gate(query)` with semantic search plus verification; isolate tracks in `/ultrathink` for irreversible decisions.

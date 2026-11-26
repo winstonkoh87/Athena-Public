@@ -89,7 +89,7 @@ The heaviest-weighted pillar. These are the mechanical gates that prevent bad ou
 |:---|:---|
 | **Session lifecycle hooks** | `/start` boot sequence and `/end` teardown run automatically, ensuring context is loaded and insights are filed. |
 | **Input-side gates** | Pre-tool-use interception blocks dangerous operations (secret leaks, ruin-class actions) before they execute. |
-| **Output-side gate** | A `<300ms` verification hook runs on the Stop lifecycle event *before* turn delivery — catches LaTeX leaks, credential exposure, and syntax errors. |
+| **Post-edit & commit gates** | A `PostToolUse (Edit\|Write)` linter checks syntax, LaTeX leaks, and credential exposure on touched files right after editing, backed by pre-commit and CI gates (turn-end Stop hooks removed). |
 | **Repo gates at commit** | Git hooks validate every commit (secret scanning, blocklist enforcement, version consistency). |
 | **CI gates** | GitHub Actions enforce link integrity, privacy scans, CodeQL, and harness score thresholds. |
 | **Loop / budget middleware** | Prevents runaway agent loops and enforces token budgets. |

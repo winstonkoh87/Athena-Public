@@ -155,3 +155,36 @@ class TestCommitterValidation:
 
         errors = validate_files(["src/athena/cli/doctor.py", "README.md"])
         assert len(errors) == 0
+
+
+class TestClaudeHooksParity:
+    """Verify doctor Claude hooks check accepts PreToolUse without Stop."""
+
+    def test_hooks_only_settings_without_stop_passes(self, tmp_path):
+        """Claude Hooks Parity passes when PreToolUse is wired without Stop hooks."""
+        import json
+
+        from athena.cli.doctor import PASS, check_15_harness_integrity
+
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir(parents=True)
+        (claude_dir / "settings.json").write_text(
+            json.dumps(
+                {
+                    "hooks": {
+                        "PreToolUse": [
+                            {
+                                "matcher": "Bash",
+                                "hooks": [{"type": "command", "command": "echo ok"}],
+                            }
+                        ]
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        results = check_15_harness_integrity(tmp_path)
+        parity = [r for r in results if r.name == "Claude Hooks Parity"]
+        assert len(parity) == 1
+        assert parity[0].status == PASS

@@ -3,7 +3,7 @@
 > **Local-first memory, decision engine, and governance harness for AI agents — portable across IDEs.**
 > Persistent memory, numeric decision screening, and governed execution · Own the state, rent the intelligence · MIT Licensed
 
-*Last Updated: 2026-11-26 · v10.0.6*
+*Last Updated: 2026-11-27 · v10.0.6*
 
 Athena gives any LLM persistent memory, a deterministic decision and frame engine, and a governance harness across coding sessions. It operates seamlessly across Claude Code, Antigravity, Cursor, Gemini CLI, and VS Code.
 
@@ -12,7 +12,7 @@ Athena gives any LLM persistent memory, a deterministic decision and frame engin
 | **Own the State** | Complete data sovereignty | Plain Markdown on your machine, git-versioned. No vendor lock-in. |
 | **Rent the Intelligence** | Model-agnostic reasoning | Swap models anytime (Gemini 3.8, Claude, GPT). Your memory stays. |
 | **Compounding Memory** | Longitudinal context accretion | Chunk-level hybrid RAG (BM25 + vector + RRF + cross-encoder rerank). |
-| **Governed Autonomy** | Structural ruin prevention | Law #1 (No Irreversible Ruin), Stop Governance Gate, deterministic receipts. |
+| **Governed Autonomy** | Structural ruin prevention | Law #1 (No Irreversible Ruin), PreToolUse/PostToolUse gates, deterministic receipts. |
 | **Zero Infrastructure Cost** | High-performance sovereignty | Local SQLite FTS5 + pgvector on Supabase free tier ($0/month). |
 
 > [!TIP]

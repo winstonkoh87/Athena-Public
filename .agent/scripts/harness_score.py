@@ -150,9 +150,14 @@ def run_probe(probe_name: str, claude_settings: dict) -> float:
             return 0.60  # text injection
         return 0.10
 
-    elif probe_name == "output_stop_gate":
+    elif probe_name in ("post_edit_lint_gate", "output_stop_gate"):
         if "Stop" in hooks or "SubagentStop" in hooks:
             return 0.85
+        if (
+            "PostToolUse" in hooks
+            and (REPO_ROOT / ".agent" / "scripts" / "hook_post_edit_lint.py").exists()
+        ):
+            return 0.60
         return 0.05
 
     elif probe_name == "ci_hard_fail":
@@ -252,7 +257,12 @@ def run_probe(probe_name: str, claude_settings: dict) -> float:
     elif probe_name == "output_quality_oracle":
         if "Stop" in hooks:
             return 0.75
-        if (REPO_ROOT / ".agent" / "scripts" / "check_latex_leak.py").exists():
+        has_post = "PostToolUse" in hooks
+        has_latex = (REPO_ROOT / ".agent" / "scripts" / "check_latex_leak.py").exists()
+        has_drift = (REPO_ROOT / "scripts" / "check_doc_drift.py").exists()
+        if has_post and has_latex and has_drift:
+            return 0.65
+        if has_latex:
             return 0.30
         return 0.05
 

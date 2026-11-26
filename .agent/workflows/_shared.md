@@ -28,7 +28,7 @@ last_updated: 2026-11-14
 - **SNIPER (Λ < 10)**: Direct answer; search exempt (`vector_mode="local"`).
 - **STANDARD (Λ 10-30)**: Call `context_gate(query)` or `smart_search` first; satisfy `missing`. Speculative fast-path runs for Λ 10-14 non-personalised/non-web queries; Λ >= 15 escalates to parallel vector + local. Default = STANDARD unless certain low-risk.
 - **ULTRA (Λ > 30)**: Call `context_gate(query)`; requires semantic AND (web OR page-read).
-- **Enforced by**: `.agents/hooks.json` (`stop_governance_gate.py`).
+- **Enforced by**: Agent discretion paired with MCP `context_gate` telemetry & `quicksave` audit warnings (Stop hooks removed).
 
 - **Substance Decode Lens (PAT-574, Λ >= 10)**: For T1 inbound narratives, T2 outbound commits (run Receiver-Frame Simulation), T3 third-party verdicts, T4 stakes (~S$100+; capital -> `trading-risk-gate`), or T5 felt-evidence: Prior -> Discriminators -> Sign check (MP-16) -> Payoff-weighted action (`substance-decode` / `hook_meta_awareness_gate.py`).
 - **Mandatory Search & OSINT Triggers**: Always search Exocortex first on **Names/People**, **Past Decisions**, **Empirical Data**, **Project Codes**, or **Protocols/CS**; run **Protocol 580 (`/osint`)** before advising/pricing any external entity; use `search_web` / `read_url_content` for volatile facts.

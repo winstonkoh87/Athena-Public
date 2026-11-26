@@ -535,3 +535,22 @@ def test_hook_post_edit_lint_single_file_feedback(tmp_path: Path) -> None:
     )
     assert clean_proc.returncode == 0
     assert clean_proc.stdout.strip() == ""
+
+
+def test_no_stop_hooks_registered() -> None:
+    """Ensure active hook manifests do not register deprecated Stop hooks."""
+    for rel_path in (".claude/settings.json", ".agents/hooks.json", ".agent/hooks.json"):
+        cfg_path = REPO_ROOT / rel_path
+        if not cfg_path.exists():
+            continue
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+        hooks = cfg.get("hooks", {})
+        assert "Stop" not in hooks, f"Deprecated Stop hook found in {rel_path}"
+        for entries in hooks.values():
+            if not isinstance(entries, list):
+                continue
+            for entry in entries:
+                for hook in entry.get("hooks", []):
+                    cmd = hook.get("command", "")
+                    assert "hook_stop_verify.py" not in cmd
+                    assert "stop_governance_gate.py" not in cmd

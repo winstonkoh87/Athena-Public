@@ -4,12 +4,12 @@ tracks:
   - src/athena/intelligence/gto_engine.py
   - src/athena/intelligence/frame_ledger.py
   - .agent/scripts/security/block_secrets.py
-  - .agent/scripts/hook_stop_verify.py
+  - .agent/scripts/hook_post_edit_lint.py
 ---
 
 # Engineering Depth
 
-> **Last Updated**: 26 November 2026
+> **Last Updated**: 27 November 2026
 > **Version**: v10.0.6
 
 This document details the retrieval physics, runtime governance, and honest mechanism boundaries built into Athena across 2,100+ sessions.
@@ -76,11 +76,11 @@ Park et al. (2023) rank agent memories by a weighted sum of **Recency**, **Impor
 2. **Single-Pass Concurrent Telemetry**: `scripts/boot_status.py` probes accountability streaks, frame ledger calibration, due decisions, learnings backlog, and FTS/vector index health in parallel (`<1.0s` wall time).
 3. **Adaptive Routing**: Queries are classified into `SNIPER` (`Lambda < 10`, local-only), `STANDARD` (`Lambda 10-30`, speculative hybrid search), or `ULTRA` (`Lambda > 30`, hybrid search + web/page verification).
 
-### 2.2 Fail-Closed PreToolUse, PostToolUse Lint & Turn-Scoped Stop Hooks
+### 2.2 Fail-Closed PreToolUse & PostToolUse Edit Lint Hooks
 
-- **PreToolUse Security Guards (`.agent/scripts/security/`)**: `block_secrets.py` (stdlib-only single-process gate blocking reads/edits of `.env*`, private keys, and credential files AND blocking `Edit|Write` to durable memory stores while session taint quarantine is active) and `block_ruin.py` (shlex-tokenized Law #1 blocker for destructive shell commands + shell secret reads) run with `"onFailure": "block"` and fail closed (`exit 2`) on empty or malformed stdin. Both Claude Code (`.claude/settings.json`) and Antigravity (`.agents/hooks.json`) normalize payloads through `.agent/scripts/lib/hook_io.py`.
+- **PreToolUse Security Guards (`.agent/scripts/security/`)**: `block_secrets.py` (stdlib-only single-process gate blocking reads/edits of `.env*`, private keys, and credential files AND blocking `Edit|Write` to durable memory stores while session taint quarantine is active) and `block_ruin.py` (shlex-tokenized Law #1 blocker for destructive shell commands + shell secret reads) run with `"onFailure": "block"` and fail closed (`exit 2`) on empty or malformed stdin. Claude Code (`.claude/settings.json`) normalizes payloads through `.agent/scripts/lib/hook_io.py`.
 - **Single-File PostToolUse Edit Linter (`.agent/scripts/hook_post_edit_lint.py`)**: Non-blocking `PostToolUse (Edit|Write)` check (~50ms) verifying `py_compile`, diff-scoped LaTeX/currency leaks, and restricted secret patterns on the single hot file immediately after each edit.
-- **Turn-Scoped Stop Verifier (`.agent/scripts/hook_stop_verify.py`)**: Enforces Protocol 509 crisis referrals, GTO decision receipts (`GTO-xxxxxxxx`), diff-scoped LaTeX/currency checks (`check_latex_leak.py --diff-only`), restricted signatures, Python syntax, and missing cited paths across turn-touched files before completion (with loop guards and audited non-safety waivers via `ATHENA_HOOK_WAIVER` / `.athena/hook_waivers.jsonl`).
+- **Retired Turn-End Stop Hooks**: Active `Stop` lifecycle hooks were intentionally removed from `.claude/settings.json` due to low signal-to-latency ratio and repeated-turn friction; `.agent/scripts/hook_stop_verify.py` remains in-tree only to provide `check_restricted_signatures` to `hook_post_edit_lint.py` and standalone CLI/test checks.
 
 ### 2.3 Monotonic Taint Quarantine, Dream Verifier, Atomic Forget & Health Evals
 

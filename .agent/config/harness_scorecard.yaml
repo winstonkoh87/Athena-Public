@@ -19,10 +19,10 @@ pillars:
         C: 0.95
         probe: "input_gates"
       1.3:
-        name: "Output-side gate before user delivery"
+        name: "Post-edit diff lint & hygiene gate"
         w: 0.20
-        C: 0.85
-        probe: "output_stop_gate"
+        C: 0.60
+        probe: "post_edit_lint_gate"
       1.4:
         name: "Repo gates at commit"
         w: 0.12

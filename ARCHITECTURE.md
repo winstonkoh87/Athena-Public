@@ -25,7 +25,7 @@ Athena-Public/                       # Clean-lobby repository (32 tracked root e
 │   ├── scripts/                     #   Reference automation & audit scripts (ucds_audit.py, wargame_runner.py, ...)
 │   ├── skills/ & protocols/         #   Curated public subset (of 44 skills & 410 active protocols, 26 categories)
 │   └── case_studies/, demos/, templates/
-├── scripts/                         # 50 curated public runtime scripts (boot_status.py, hook_stop_verify.py, harness_score.py, ...)
+├── scripts/                         # 50 curated public runtime scripts (boot_status.py, check_doc_drift.py, harness_score.py, ...)
 ├── src/                             # Athena SDK source (113 Python files across 11 subpackages)
 │   └── athena/                      #   auditors, boot, cli, core, eval, generators, intelligence, lifecycle, memory, templates, tools
 ├── supabase/                        # Cloud vector store schema & RPC migrations
@@ -93,10 +93,10 @@ Athena-Public/                       # Clean-lobby repository (32 tracked root e
 
 | Stage | Human Analog | Athena Implementation | Epistemic Status |
 |:------|:-------------|:----------------------|:-----------------|
-| **① Transduction** | Sensory receptors fire simultaneously | Agent-pull via `context_gate` / `search.py` across 5 hybrid channels (4 local: Canonical, FTS5 BM25, Framework/KB Docs, Filenames + 1 remote: Supabase pgvector) + conditional Web Search, verified at turn end by `stop_governance_gate.py` | `code-enforced` |
+| **① Transduction** | Sensory receptors fire simultaneously | Agent-pull via `context_gate` / `search.py` across 5 hybrid channels (4 local: Canonical, FTS5 BM25, Framework/KB Docs, Filenames + 1 remote: Supabase pgvector) + conditional Web Search, paired with `quicksave` telemetry & agent-discretion verification (Stop hooks removed) | `Mixed (code-enforced search + agent-discretion)` |
 | **② Attention Gate** | Thalamus filters — only relevant signals pass | Weighted RRF fusion (k=60) + FlashRank cross-encoder reranker | `code-enforced` |
-| **③ Executive Function** | Prefrontal cortex — plan, inhibit, decide | Law #1 gates ruin (`block_ruin.py`); P509 crisis referral (`hook_crisis_gate.py`, `hook_stop_verify.py`); Circuit breaker (`circuit-breaker`); Λ scores risk (suppresses SNIPER web in code; depth is agent discretion) | Mixed (`code-enforced` gates + `agent-discretion`) |
-| **Response** | Motor cortex — act | Agent generates output, Stop verification gate checks formatting/hotlines/secrets | `code-enforced` Stop gate |
+| **③ Executive Function** | Prefrontal cortex — plan, inhibit, decide | Law #1 gates ruin (`block_ruin.py`); P509 crisis referral (`hook_crisis_gate.py`); Circuit breaker (`circuit-breaker`); Λ scores risk (suppresses SNIPER web in code; depth is agent discretion) | Mixed (`code-enforced` gates + `agent-discretion`) |
+| **Response** | Motor cortex — act | Agent generates output; `PostToolUse` edit lint checks formatting/secrets/syntax on touched files (`hook_post_edit_lint.py`), backed by pre-commit and CI gates (Stop hooks removed) | `code-enforced` Pre/PostToolUse + CI |
 
 ### What's NOT Linear
 
@@ -276,7 +276,7 @@ src/athena/tools/search.py (vector_mode: "local" | "auto" | "always" + grep fall
 | Level | Lambda Score | Protocol | Latency |
 |:------|-------------:|:---------|--------:|
 | SNIPER | < 10 | Direct answer. Search exempt (`vector_mode="local"` when used). | ~1s |
-| STANDARD | 10-30 | Triple-Lock (`context_gate` / `vector_mode="auto"` -> Speak, `stop_governance_gate.py` verified; `quicksave` at milestones / `/end`) | ~2-5s |
+| STANDARD | 10-30 | Dual-Lock (`context_gate` / `vector_mode="auto"` -> Speak; `quicksave` audit warnings at milestones / `/end`; Stop hooks removed) | ~2-5s |
 | ULTRA | > 30 | Triple-Lock + MaxMax v4.0 (`vector_mode="always"`, `<=40K` curated boot, Frame/Decision gates) | Deep / Curated |
 
 ---
@@ -336,9 +336,9 @@ src/athena/tools/search.py (vector_mode: "local" | "auto" | "always" + grep fall
 - **`src/athena/core/db.py`**: Unified SQLite connection factory (`connect_sqlite` with `WAL` journal mode, `busy_timeout`, and validated `synchronous` PRAGMA) and database path resolver (`resolve_athena_db_path`), backing `QueryCache` (`cache.py`) and `PersistentEmbeddingCache` (`vectors.py`).
 - **`src/athena/core/jsonl_tail.py`**: Shared O(1) bounded EOF-seek JSONL tail reader and gzip log rotator (`read_jsonl_tail_lines`, `read_tail_jsonl_records`, `read_latest_jsonl_record`, `rotate_jsonl_if_oversized`), re-exported via `.agent/scripts/lib/jsonl_tail.py` and `examples/scripts/lib/jsonl_tail.py`.
 - **`scripts/boot_status.py`**: Single-pass parallel boot status aggregator replacing legacy sequential shell calls (`<1.0s` target wall time), surfacing Frame Ledger overdue review counts.
-- **Control-Plane Routing & Retrieval Integrity**: Deterministic `< 0.5 ms` 3-stage Intel Officer posture classification (`src/athena/core/lambda_scorer.py::assess_intel_posture`, surfaced on `classify_turn` and `context_gate`), thread-local request-scoped channel health tracking + `retrieval-receipt-v2` emission (`src/athena/tools/search.py`), post-search governance marking (`src/athena/mcp_server.py`), and turn-bound stale-receipt enforcement in `examples/scripts/stop_governance_gate.py`.
+- **Control-Plane Routing & Retrieval Integrity**: Deterministic `< 0.5 ms` 3-stage Intel Officer posture classification (`src/athena/core/lambda_scorer.py::assess_intel_posture`, surfaced on `classify_turn` and `context_gate`), thread-local request-scoped channel health tracking + `retrieval-receipt-v2` emission (`src/athena/tools/search.py`), post-search governance marking (`src/athena/mcp_server.py`), and standalone receipt-audit helpers in `examples/scripts/stop_governance_gate.py` (retired from active Stop hooks).
 - **`src/athena/tools/trade_guardian.py`**: Deterministic FX trade holding-duration guardrail (`TradeGuardian` with sweet-spot, optimal, and danger holding thresholds).
-- **Governance & Stop Audit Gates**: `scripts/hook_stop_verify.py` & `examples/scripts/stop_governance_gate.py` (O(1) tail-scan Stop hooks) paired with non-blocking `audit_warnings` in `src/athena/mcp_server.py::quicksave` (`_has_raw_latex_delimiters` + bounded-tail `read_tail_jsonl_records` + `find_unreceipted_engine_claims`).
+- **Governance, PostToolUse & Quicksave Audit Gates**: PreToolUse security guards (`.agent/scripts/security/block_*.py`) and `PostToolUse` diff linter (`.agent/scripts/hook_post_edit_lint.py`) paired with non-blocking `audit_warnings` in `src/athena/mcp_server.py::quicksave` (`_has_raw_latex_delimiters` + bounded-tail `read_tail_jsonl_records` + `find_unreceipted_engine_claims`); legacy Stop hook scripts (`.agent/scripts/hook_stop_verify.py` & `examples/scripts/stop_governance_gate.py`) remain in-tree only as library/CLI utilities.
 - **`src/athena/tools/citation_verifier.py`**: Automated Crossref API client with title similarity scoring and DOI metadata verification (shipped S1032).
 - **`scripts/contrast_check.py`**: Deterministic W3C WCAG 2.1 relative luminance checker with built-in reference self-tests (shipped S1055).
 

@@ -76,7 +76,7 @@ Then type `/start` in your IDE's AI chat panel. Work normally. Type `/end` to sa
 │  ├── 3. Decision, Wargaming & Calibration: fail-closed real=True MCDA,  │
 │  │      EEV/Kelly/Ruin (gto_engine.py), Wargame, Brier calibration      │
 │  └── 4. Governance & Telemetry: fail-closed PreToolUse (ruin, secrets,  │
-│         taint), diff-scoped Stop & doc-drift gates, Lambda router,      │
+│         taint), PostToolUse lint & doc-drift gates, Lambda router,      │
 │         Trade Guardian, and O(1) 64KB tail gates (jsonl_tail.py)        │
 └───────────────────────────────┬─────────────────────────────────────────┘
                                 │
@@ -139,7 +139,7 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 | **Adversarial Wargaming Engine** | `intelligence/wargame.py` (`athena-wargame`) | Two-turn sequential Blue vs. Red game trees with intra-turn path-dependent trough ruin, Red best-response optimization, and tamper-evident run receipts (`.athena/wargame_runs.jsonl`) |
 | **Counterparty OSINT & Trade Governance** | `intelligence/ucds_validator.py`, `tools/trade_guardian.py` | Deterministic Universal Counterparty Dossier Standard (`audit_ucds_dossier`) validator (Track A/B bifurcation, knockout gates, cashflow inversion) plus position/drawdown/sizing safety guards |
 | **Local Analytical SQL** | `duckdb_mcp_server.py` (`query`, `profile`, `list_tables`, `export_result`) | Zero-dependency DuckDB engine for profiling and querying large CSV, JSON, and Parquet datasets without exhausting LLM context windows |
-| **Runtime Governance & Batched Telemetry** | `core/governance.py`, `scripts/boot_status.py`, `scripts/check_doc_drift.py`, `.agent/scripts/hook_*.py`, `.agent/scripts/security/block_*.py`, `.agent/scripts/lib/jsonl_tail.py` | Fail-closed PreToolUse guards (`"onFailure": "block"` — ruin, secrets, tainted memory), diff-scoped `<0.5s` Stop verifier (`hook_stop_verify.py`), CI doc-drift gate, concurrent `<1.0s` `boot_status.py --bundle`, `O(1)` 64KB EOF tail gates, capability permissions, and Protocol 509 crisis screen |
+| **Runtime Governance & Batched Telemetry** | `core/governance.py`, `scripts/boot_status.py`, `scripts/check_doc_drift.py`, `.agent/scripts/hook_*.py`, `.agent/scripts/security/block_*.py`, `.agent/scripts/lib/jsonl_tail.py` | Fail-closed PreToolUse guards (`"onFailure": "block"` — ruin, secrets, tainted memory), PostToolUse edit linter (`hook_post_edit_lint.py`), CI doc-drift gate, concurrent `<1.0s` `boot_status.py --bundle`, `O(1)` 64KB EOF tail gates, capability permissions, and Protocol 509 crisis screen |
 
 ### What's enforced in code vs. by prompt
 
@@ -149,10 +149,10 @@ Athena is not just a prompt pack — it ships executable Python engines and two 
 |:------|:-------|:---------|
 | **Storage & hybrid retrieval** — memories stored and surfaced when relevant | ✅ Shipped (`code-enforced`) | Hybrid 5-channel RRF + exponential recency decay + ONNX mini-batch rerank + self-healing SQLite cache, hardened through [logged regressions](docs/CHANGELOG.md) |
 | **Portability** — Markdown and JSONL on your disk, movable across models | ✅ Shipped (`structural`) | Plain files on disk — inspect the repo |
-| **Quantitative decision screening & wargaming** — EEV, 1/3 Kelly, Ruin, MCDA, 2-turn game trees | ✅ Shipped (`code-available`) | [`gto_engine.py`](src/athena/intelligence/gto_engine.py) & [`wargame.py`](src/athena/intelligence/wargame.py) emit SHA-256 receipts (`107` tests); Stop hook blocks unreceipted numeric engine claims |
+| **Quantitative decision screening & wargaming** — EEV, 1/3 Kelly, Ruin, MCDA, 2-turn game trees | ✅ Shipped (`code-available`) | [`gto_engine.py`](src/athena/intelligence/gto_engine.py) & [`wargame.py`](src/athena/intelligence/wargame.py) emit SHA-256 receipts (`107` tests); `quicksave` emits non-blocking warnings on unreceipted engine claims (Stop hooks removed) |
 | **Pre-registered problem framing** — Lite/Strict `frame_open`, `R1–R14` gates & holdout eval | ✅ Shipped (`code-available`) | [`frame_ledger.py`](src/athena/intelligence/frame_ledger.py) & [`tests/test_problem_solving_holdout.py`](tests/test_problem_solving_holdout.py) (30-case holdout + calibration) |
 | **Governed autonomy** — hooks block destructive commands, ungrounded claims, and secrets | ✅ Shipped (partial) | Fail-closed PreToolUse hooks (`"onFailure": "block"`, exit `2` on malformed input) guard shlex-tokenized ruin (`rm -rf` / `find -delete` / `mv` / force-push / `reset --hard` / `shutil.rmtree`), secrets, and tainted-memory writes ([tests/test_ruin_structured.py](tests/test_ruin_structured.py), [tests/test_memory_hardening.py](tests/test_memory_hardening.py)); shell indirection bypasses are [known and tracked](docs/TECH_DEBT.md#p2-bash-guard-shell-indirection-boundaries) |
-| **Claim & citation tracing** — verifying numeric claims, denials, and cited repo paths | 🟡 Partial | GTO `GTO-xxxxxxxx` numeric receipts, opt-in universal-negative gate (`.agent/scripts/hook_epistemic_gate.py`), and non-blocking cited-path checks (`hook_stop_verify.py`); general prose claim-entailment is *not* solved |
+| **Claim & citation tracing** — verifying numeric claims, denials, and cited repo paths | 🟡 Partial | GTO `GTO-xxxxxxxx` numeric receipts, opt-in universal-negative gate (`.agent/scripts/hook_epistemic_gate.py`), and PostToolUse diff lint (`.agent/scripts/hook_post_edit_lint.py`); general prose claim-entailment is *not* solved |
 | **Compounding personalization** — session 2,000 recalls session 5 | 🟡 N=1 evidence | 2,100+ sessions, 410 active protocols, and 636 case studies by the author; no multi-user study |
 | **Anti-sycophancy** — personalization doesn't silently increase agreement | 🟡 Partial mitigation | Code-enforced meta-awareness gate (Claude Code hook + MCP `context_gate` bridge; 24-case holdout in [`tests/test_sycophancy_holdout.py`](tests/test_sycophancy_holdout.py) verifies `18/18` bait kernel injection & `0/6` false positives); downstream LLM behavior & hookless IDEs remain partial — see [honest limits](docs/ENGINEERING_DEPTH.md#6-anti-sycophancy-architecture--honest-limits) |
 
