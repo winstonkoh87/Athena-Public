@@ -1,3 +1,9 @@
+---
+tracks:
+  - src/athena/cli/init.py
+  - scripts/boot_status.py
+---
+
 # Getting Started
 
 > **Last Updated**: 22 July 2026
@@ -47,6 +53,10 @@ cd ~/MyAssistant
 
 # Initialize Athena workspace with all templates
 athena init
+
+# Or adopt incrementally:
+# athena init --profile minimal     # 3 plain Markdown files + AGENTS.md
+# athena init --profile hooks-only  # PreToolUse secret + ruin guards only
 ```
 
 This creates the full structure:

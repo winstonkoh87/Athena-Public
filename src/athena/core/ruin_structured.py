@@ -13,9 +13,94 @@ class StructuredRuinCheck:
     Structured Ruin Check Engine.
     Evaluates execution safety against workspace root boundaries and capability levels.
     """
+
+    _SAFE_ENV_TEMPLATES = frozenset(
+        {".env.example", ".env.sample", ".env.template", ".env.dist"}
+    )
+    _SECRET_BASENAMES = frozenset(
+        {
+            ".env",
+            "secrets.json",
+            "id_rsa",
+            "id_ed25519",
+            "id_ecdsa",
+            "id_dsa",
+            ".npmrc",
+            ".netrc",
+            ".pypirc",
+            "credentials.json",
+            "service-account.json",
+        }
+    )
+    _SECRET_EXTS = (".pem", ".key", ".p12", ".pfx")
+    _SECRET_READERS = frozenset(
+        {
+            "cat",
+            "head",
+            "tail",
+            "less",
+            "more",
+            "grep",
+            "egrep",
+            "fgrep",
+            "rg",
+            "sed",
+            "awk",
+            "bat",
+            "strings",
+            "base64",
+            "xxd",
+            "hexdump",
+            "cp",
+            "scp",
+            "pbcopy",
+            "xclip",
+        }
+    )
+    _PATTERN_FIRST_READERS = frozenset({"grep", "egrep", "fgrep", "rg", "sed", "awk"})
+
     def __init__(self, workspace_root: Path | None = None, capability_level: int = 2):
         self.workspace_root = (workspace_root or Path.cwd()).resolve()
         self.capability_level = capability_level  # 1=read, 2=write, 3=admin, 4=dangerous
+
+    @classmethod
+    def _is_secret_target_token(cls, token: str) -> bool:
+        clean = token.strip("'\"")
+        if not clean or clean.startswith("-"):
+            return False
+        posix_lower = clean.replace("\\", "/").lower()
+        base_lower = Path(posix_lower).name
+        if base_lower == ".env" or (
+            base_lower.startswith(".env.") and base_lower not in cls._SAFE_ENV_TEMPLATES
+        ):
+            return True
+        if base_lower in cls._SECRET_BASENAMES or base_lower.endswith(cls._SECRET_EXTS):
+            return True
+        return any(seg in posix_lower for seg in ("/.aws/credentials", ".aws/credentials", "/.ssh/id_", ".ssh/id_"))
+
+    @classmethod
+    def _extract_reader_file_tokens(cls, cmd_name: str, tokens: list[str]) -> list[str]:
+        positionals: list[str] = []
+        has_explicit_pattern_flag = False
+        skip_next = False
+        flags_with_arg = {"-n", "-c", "-m", "-A", "-B", "-C", "-e", "-f", "--regexp", "--file"}
+        for tok in tokens[1:]:
+            if skip_next:
+                skip_next = False
+                continue
+            if tok.startswith("-"):
+                if tok in ("-e", "--regexp"):
+                    has_explicit_pattern_flag = True
+                if tok in flags_with_arg:
+                    skip_next = True
+                continue
+            positionals.append(tok)
+
+        if cmd_name in cls._PATTERN_FIRST_READERS and not has_explicit_pattern_flag and len(positionals) >= 2:
+            return positionals[1:]
+        if cmd_name in cls._PATTERN_FIRST_READERS and not has_explicit_pattern_flag:
+            return []
+        return positionals
 
     def check_command(self, command: str) -> tuple[bool, list[str]]:
         """
@@ -62,6 +147,15 @@ class StructuredRuinCheck:
                 if any(x in py_code for x in ("shutil.rmtree", "os.remove", "os.unlink", "os.rmdir")) and \
                    any(target in py_code for target in (".context", ".agent", "CANONICAL", "PROJECTS", "/")):
                     return False, ["python_destructive_call"]
+                if any(x in py_code for x in ("open(", "read_text(", "read_bytes(", "Path(")):
+                    py_lower = py_code.lower()
+                    for safe in self._SAFE_ENV_TEMPLATES:
+                        py_lower = py_lower.replace(safe, "")
+                    if any(
+                        sec in py_lower
+                        for sec in (".env", "secrets.json", "id_rsa", "id_ed25519", "credentials.json", ".pem", ".key", ".p12")
+                    ):
+                        return False, ["secret_file_shell_access"]
 
         # 2. Destructive Git command inspection
         if cmd_name == "git":
@@ -99,6 +193,26 @@ class StructuredRuinCheck:
                 clean_src = src.strip("'\"").rstrip("/")
                 if clean_src in (".context", ".agent") or clean_src.startswith((".context/", ".agent/")):
                     return False, ["moving_protected_memory_path"]
+
+        # 3d. Secret-file shell read protection across chained subcommands
+        subcommands: list[list[str]] = []
+        current_seg: list[str] = []
+        for tok in tokens:
+            if tok in ("&&", "||", ";", "|"):
+                if current_seg:
+                    subcommands.append(current_seg)
+                    current_seg = []
+            else:
+                current_seg.append(tok)
+        if current_seg:
+            subcommands.append(current_seg)
+
+        for seg in subcommands:
+            seg_cmd = Path(seg[0]).name.lower()
+            if seg_cmd in self._SECRET_READERS:
+                for file_tok in self._extract_reader_file_tokens(seg_cmd, seg):
+                    if self._is_secret_target_token(file_tok):
+                        return False, ["secret_file_shell_access"]
 
         # 4. Token-level destructive action detection
         destructive_verbs = {"rm", "unlink", "truncate", "shred", "dd"}

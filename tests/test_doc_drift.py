@@ -14,6 +14,7 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
 from check_doc_drift import (  # noqa: E402
+    check_agents_hooks,
     check_agents_index,
     check_athena_yaml,
     check_hook_paths,
@@ -109,6 +110,27 @@ def test_hook_paths_and_athena_yaml_checks(tmp_path: Path) -> None:
     yaml_findings = check_athena_yaml(yaml_file, tmp_path)
     yaml_codes = {f["code"] for f in yaml_findings}
     assert yaml_codes == {"STALE_BOOT_BUDGET", "DEAD_COMMENT_REF"}
+
+
+def test_agents_hooks_check_catches_missing_and_allows_valid(tmp_path: Path) -> None:
+    agents_dir = tmp_path / ".agents"
+    scripts_dir = tmp_path / ".agent" / "scripts"
+    agents_dir.mkdir(parents=True)
+    scripts_dir.mkdir(parents=True)
+    (scripts_dir / "ok.py").write_text("", encoding="utf-8")
+
+    hooks_json = agents_dir / "hooks.json"
+    hooks_json.write_text(
+        '{"gate": {"PreToolUse": [{"matcher": "run_command", "hooks": [{"command": ".agent/scripts/ok.py"}, {"command": ".agent/scripts/ghost.py"}]}], "Stop": [{"command": ".agent/scripts/ok.py"}]}}',
+        encoding="utf-8",
+    )
+    findings = check_agents_hooks(hooks_json, tmp_path)
+    assert len(findings) == 1
+    assert findings[0]["code"] == "MISSING_HOOK_SCRIPT"
+    assert findings[0]["target"] == ".agent/scripts/ghost.py"
+
+    (scripts_dir / "ghost.py").write_text("", encoding="utf-8")
+    assert check_agents_hooks(hooks_json, tmp_path) == []
 
 
 def test_live_repo_doc_drift_check_passes() -> None:

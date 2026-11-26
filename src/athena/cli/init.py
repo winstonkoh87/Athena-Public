@@ -166,15 +166,22 @@ import json
 import sys
 from pathlib import Path
 
-SENSITIVE = {
+GUARDED_NAMES = {
     ".env",
-    ".env.local",
     "secrets.json",
     "id_rsa",
     "id_ed25519",
-    ".pem",
-    ".key",
+    "id_ecdsa",
+    "id_dsa",
+    ".npmrc",
+    ".netrc",
+    ".pypirc",
+    "credentials.json",
+    "service-account.json",
 }
+SAFE_ENV_TEMPLATES = {".env.example", ".env.sample", ".env.template", ".env.dist"}
+GUARDED_EXTS = (".pem", ".key", ".p12", ".pfx", ".jks", ".keystore")
+GUARDED_SEGMENTS = ("/.aws/credentials", "/.ssh/id_", "/.gnupg/")
 
 
 def main() -> None:
@@ -183,33 +190,51 @@ def main() -> None:
             return
         raw = sys.stdin.read()
         if not raw.strip():
-            return
+            raise ValueError("Empty stdin payload")
         data = json.loads(raw)
         if not isinstance(data, dict):
             raise ValueError("Expected JSON object on stdin")
-        tool_input = data.get("tool_input") or {}
+        if "toolCall" in data:
+            tc = data.get("toolCall")
+            if not isinstance(tc, dict):
+                raise ValueError("Expected toolCall JSON object")
+            tool_input = tc.get("args") or {}
+        else:
+            tool_input = data.get("tool_input") or {}
         if not isinstance(tool_input, dict):
             raise ValueError("Expected tool_input JSON object")
         file_path = (
             tool_input.get("file_path")
             or tool_input.get("path")
+            or tool_input.get("Path")
             or tool_input.get("target_file")
+            or tool_input.get("TargetFile")
+            or tool_input.get("AbsolutePath")
             or ""
         )
         if not file_path:
             return
-        path_obj = Path(file_path)
-        if path_obj.name in SENSITIVE or any(
-            file_path.endswith(ext) for ext in (".pem", ".key", ".p12")
+        name_lower = Path(file_path).name.lower()
+        posix_lower = file_path.replace("\\\\", "/").lower()
+        is_dotenv = name_lower == ".env" or (
+            name_lower.startswith(".env.") and name_lower not in SAFE_ENV_TEMPLATES
+        )
+        if (
+            is_dotenv
+            or name_lower in GUARDED_NAMES
+            or name_lower.endswith(GUARDED_EXTS)
+            or any(seg in posix_lower for seg in GUARDED_SEGMENTS)
         ):
-            print(
-                f"BLOCKED: Access to {file_path} denied. Sensitive credential pattern detected.",
-                file=sys.stderr,
-            )
+            reason = f"BLOCKED: Access to {file_path} denied. Sensitive file pattern detected."
+            if "toolCall" in data or "hookEventName" in data:
+                print(json.dumps({"decision": "deny", "reason": reason}))
+                print(reason, file=sys.stderr)
+                sys.exit(0)
+            print(reason, file=sys.stderr)
             sys.exit(2)
     except Exception as exc:
         print(
-            f"BLOCKED (fail-closed): Secret protection gate error while inspecting input: {exc}",
+            f"BLOCKED (fail-closed): File protection gate error while inspecting input: {exc}",
             file=sys.stderr,
         )
         sys.exit(2)
@@ -283,19 +308,32 @@ def main() -> None:
             return
         raw = sys.stdin.read()
         if not raw.strip():
-            return
+            raise ValueError("Empty stdin payload")
         data = json.loads(raw)
         if not isinstance(data, dict):
             raise ValueError("Expected JSON object on stdin")
-        tool_input = data.get("tool_input") or {}
+        if "toolCall" in data:
+            tc = data.get("toolCall")
+            if not isinstance(tc, dict):
+                raise ValueError("Expected toolCall JSON object")
+            tool_input = tc.get("args") or {}
+        else:
+            tool_input = data.get("tool_input") or {}
         if not isinstance(tool_input, dict):
             raise ValueError("Expected tool_input JSON object")
-        command = tool_input.get("command") or tool_input.get("cmd") or ""
+        command = (
+            tool_input.get("command")
+            or tool_input.get("cmd")
+            or tool_input.get("CommandLine")
+            or ""
+        )
         if command and not is_safe_command(command):
-            print(
-                f"BLOCKED by Law #1 (No Irreversible Ruin): {command}",
-                file=sys.stderr,
-            )
+            reason = f"BLOCKED by Law #1 (No Irreversible Ruin): {command}"
+            if "toolCall" in data or "hookEventName" in data:
+                print(json.dumps({"decision": "deny", "reason": reason}))
+                print(reason, file=sys.stderr)
+                sys.exit(0)
+            print(reason, file=sys.stderr)
             sys.exit(2)
     except Exception as exc:
         print(

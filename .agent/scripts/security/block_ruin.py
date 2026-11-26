@@ -2,17 +2,33 @@
 """
 athena.security.block_ruin
 ==========================
-PreToolUse hook for Bash tool execution in AI IDEs (Claude Code, etc.).
+PreToolUse hook for Bash / run_command tool execution in AI IDEs (Claude Code, Antigravity).
 Blocks destructive or irreversible shell commands using StructuredRuinCheck (Law #1: No Ruin).
 """
 
-import json
+from __future__ import annotations
+
 import re
 import sys
 from pathlib import Path
 
+SCRIPTS_DIR = Path(__file__).resolve().parent.parent
+LIB_DIR = SCRIPTS_DIR / "lib"
+for _p in (SCRIPTS_DIR, LIB_DIR):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
+
+from hook_io import (  # noqa: E402
+    detect_harness,
+    emit_pretool_allow,
+    emit_pretool_block,
+    extract_shell_command,
+    extract_tool_call,
+    read_hook_stdin,
+)
+
 # 1. Resolve repo src directory relative to this hook script
-_src_dir = Path(__file__).resolve().parents[3] / "src"
+_src_dir = SCRIPTS_DIR.parent.parent / "src"
 if _src_dir.exists() and str(_src_dir) not in sys.path:
     sys.path.insert(0, str(_src_dir))
 
@@ -47,7 +63,7 @@ def check_command_safe(command: str) -> bool:
     return True
 
 
-def main():
+def main() -> None:
     # CLI / Interactive manual test mode
     if sys.stdin.isatty():
         if len(sys.argv) > 1:
@@ -57,35 +73,36 @@ def main():
                 sys.exit(2)
         return
 
-    # IDE Hook Mode (JSON via stdin)
-    try:
-        raw = sys.stdin.read()
-        if not raw.strip():
-            return
-
-        data = json.loads(raw)
-        if not isinstance(data, dict):
-            raise ValueError("Expected JSON object on stdin")
-
-        tool_input = data.get("tool_input") or {}
-        if not isinstance(tool_input, dict):
-            raise ValueError("Expected tool_input JSON object")
-
-        command = tool_input.get("command") or tool_input.get("cmd") or ""
-
-        if command and not check_command_safe(command):
-            print(
-                f"🚨 BLOCKED by Athena Law #1 (No Irreversible Ruin):\n"
-                f"   Destructive command detected and halted: {command}",
-                file=sys.stderr,
-            )
-            sys.exit(2)  # Exit 2 tells IDE hook runner to abort tool execution
-    except Exception as exc:
+    # IDE Hook Mode (JSON via stdin, fail-closed on empty/malformed stdin)
+    data, err = read_hook_stdin(fail_closed_on_empty=True)
+    if err is not None:
         print(
-            f"🚨 BLOCKED (fail-closed) by Athena Law #1: Ruin gate failed to parse tool input: {exc}",
+            f"🚨 BLOCKED (fail-closed) by Athena Law #1: Ruin gate failed to parse tool input: {err}",
             file=sys.stderr,
         )
         sys.exit(2)
+
+    if data is None:
+        return
+
+    harness = detect_harness(data)
+    try:
+        _, tool_args = extract_tool_call(data)
+    except Exception as exc:
+        emit_pretool_block(
+            f"🚨 BLOCKED (fail-closed) by Athena Law #1: Ruin gate failed to parse tool input: {exc}",
+            harness,
+        )
+
+    command = extract_shell_command(tool_args)
+    if command and not check_command_safe(command):
+        emit_pretool_block(
+            f"🚨 BLOCKED by Athena Law #1 (No Irreversible Ruin):\n"
+            f"   Destructive command detected and halted: {command}",
+            harness,
+        )
+
+    emit_pretool_allow(harness)
 
 
 if __name__ == "__main__":

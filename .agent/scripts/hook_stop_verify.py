@@ -3,22 +3,23 @@
 hook_stop_verify.py — Output-Side Stop Hook Verifier
 ===================================================
 
-Runs on agent turn completion (Stop event) before the user sees the output.
-Enforces fast (<3s) deterministic gates on changed files:
+Runs on agent turn completion (Stop event) across Claude Code and Antigravity.
+Enforces fast deterministic gates on turn-scoped modified files and model text:
   - Gate 0: Protocol 509 crisis referral & GTO decision receipt verification
   - Gate 1: Diff-scoped LaTeX/KaTeX math delimiter leaks
   - Gate 2: API secrets/tokens in changed files
   - Gate 3: Python syntax validity on touched scripts
   - Gate 4: Diff-scoped currency truncation check (when check_currency_integrity.py exists)
-  - Advisory: Non-blocking cited repo path check (warnings only)
+  - Advisory: Cited repo path existence check (surfaces systemMessage + warnings)
 
 Contract:
-  - If any gate fails: prints JSON {"decision": "block", "reason": ...} + stderr, exits 2
-  - If all gates pass: prints JSON {"decision": "allow", ...}, exits 0
+  - Claude Code: exit 2 + JSON {"decision": "block", ...} on violation; exit 0 on allow.
+  - Antigravity: exit 0 + JSON {"decision": "continue", "reason": ...} on violation; allow on pass.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import py_compile
@@ -31,10 +32,19 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 SRC_DIR = REPO_ROOT / "src"
 SCRIPTS_DIR = Path(__file__).resolve().parent
-if str(SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(SRC_DIR))
-if str(SCRIPTS_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPTS_DIR))
+LIB_DIR = SCRIPTS_DIR / "lib"
+for _p in (SRC_DIR, SCRIPTS_DIR, LIB_DIR):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
+
+from hook_io import (  # noqa: E402
+    check_hook_waiver,
+    detect_harness,
+    emit_stop_allow,
+    emit_stop_block,
+    extract_turn_texts_universal,
+    extract_turn_write_context,
+)
 
 try:
     from athena.core.lambda_scorer import detect_crisis_signal
@@ -54,52 +64,16 @@ CRISIS_HOTLINE_TOKENS = (
 )
 
 _CITED_PATH_RE = re.compile(
-    r"`((?:src/athena|\.agent/scripts|scripts|tests)/[A-Za-z0-9_./-]+\.(?:py|md|json|yaml|yml|sh))"
+    r"`((?:src/athena|\.agent/scripts|\.agent/skills|\.agent/workflows|\.agent/config|\.context|scripts|tests|docs)/[A-Za-z0-9_./-]+\.(?:py|md|json|yaml|yml|toml|sh))"
     r"(?::L?\d+(?:-L?\d+)?|#L\d+(?:-L?\d+)?)?`"
 )
+_FENCED_BLOCK_RE = re.compile(r"```[\s\S]*?```")
 _CURRENCY_LINE_RE = re.compile(r":L(\d+):")
 
 
 def _extract_turn_texts(payload: dict | None) -> tuple[str, str]:
     """Extract (user_prompt, assistant_reply) once from Stop payload or transcript."""
-    if not payload or not isinstance(payload, dict):
-        return "", ""
-
-    user_prompt = ""
-    assistant_reply = ""
-
-    transcript_path = payload.get("transcript_path")
-    if transcript_path and os.path.exists(transcript_path):
-        try:
-            with open(transcript_path, encoding="utf-8") as tf:
-                lines = tf.readlines()[-30:]
-                for line in reversed(lines):
-                    try:
-                        rec = json.loads(line)
-                        msg = rec.get("message", {})
-                        role = msg.get("role")
-                        content = msg.get("content", "")
-                        if isinstance(content, list):
-                            content = " ".join(
-                                c.get("text", "") for c in content if isinstance(c, dict)
-                            )
-                        if role == "assistant" and not assistant_reply:
-                            assistant_reply = content
-                        elif role == "user" and not user_prompt:
-                            user_prompt = content
-                        if user_prompt and assistant_reply:
-                            break
-                    except Exception:
-                        continue
-        except Exception:
-            pass
-
-    if not user_prompt:
-        user_prompt = payload.get("prompt") or payload.get("user_prompt") or ""
-    if not assistant_reply:
-        assistant_reply = payload.get("text") or payload.get("reply") or ""
-
-    return user_prompt, assistant_reply
+    return extract_turn_texts_universal(payload)
 
 
 def check_crisis_referral(
@@ -112,7 +86,6 @@ def check_crisis_referral(
     if not payload or not isinstance(payload, dict):
         return []
 
-    # Honour stop_hook_active to avoid loop
     if payload.get("stop_hook_active"):
         return []
 
@@ -175,15 +148,16 @@ def check_decision_receipts(
 def find_missing_cited_paths(
     text: str, repo_root: Path | None = None
 ) -> list[str]:
-    """Return backticked relative repo paths cited in text that do not exist on disk."""
+    """Return backticked relative repo paths cited outside fenced code blocks that do not exist on disk."""
     if not text:
         return []
 
+    clean_text = _FENCED_BLOCK_RE.sub("", text)
     root = (repo_root or REPO_ROOT).resolve()
     missing: list[str] = []
     seen: set[str] = set()
 
-    for match in _CITED_PATH_RE.finditer(text):
+    for match in _CITED_PATH_RE.finditer(clean_text):
         rel = match.group(1)
         if rel in seen:
             continue
@@ -296,9 +270,6 @@ def check_currency_leaks(
     tracked_set: set[str] | None = None,
     added_map: dict[str, set[int]] | None = None,
 ) -> list[str]:
-    # Exclude files that *describe* corruption (audit reports, red-team reviews)
-    # rather than *exhibiting* it. These contain illustrative examples like
-    # "S$1,181.03 -> S,181.03" which are not actual data corruption.
     AUDIT_EXCLUSIONS = [
         "currency_corruption_report",
         "REDTEAM_REVIEW",
@@ -372,7 +343,9 @@ def _file_matches_pattern(file_path: Path, pattern: str) -> bool:
         return False
 
 
-def check_restricted_signatures(changed_files: list[str]) -> list[str]:
+def check_restricted_signatures(
+    changed_files: list[str], repo_root: Path | None = None
+) -> list[str]:
     RESTRICTED_PATTERNS = [
         (r"sk-ant-[a-zA-Z0-9_-]{20,}", "Anthropic API signature"),  # pds:allow
         (r"ghp_[a-zA-Z0-9]{20,}", "GitHub PAT signature"),  # pds:allow
@@ -383,12 +356,12 @@ def check_restricted_signatures(changed_files: list[str]) -> list[str]:
         (r"AIza[0-9A-Za-z-_]{35}", "Google API signature"),  # pds:allow
     ]
 
+    root = repo_root or REPO_ROOT
     violations = []
     for rel_path in changed_files:
-        full_path = REPO_ROOT / rel_path
+        full_path = root / rel_path
         if not full_path.exists() or full_path.is_dir():
             continue
-        # Skip scanning gitignored / binary / test mock files
         if any(ign in rel_path for ign in [".git/", "tests/", "node_modules/", ".venv/"]):
             continue
 
@@ -414,44 +387,97 @@ def check_python_syntax(changed_files: list[str]) -> list[str]:
     return violations
 
 
-def main():
+def _scope_changed_files(
+    stdin_payload: dict | None, *, scan_repo: bool
+) -> tuple[list[str], list[str], set[str] | None]:
+    """Determine which changed files to verify for this Stop invocation."""
+    if stdin_payload is None:
+        tracked, untracked = get_changed_files_partitioned()
+        return tracked, untracked, set(tracked)
+
+    explicit = stdin_payload.get("changed_files")
+    if isinstance(explicit, list):
+        files = sorted({str(x).strip() for x in explicit if str(x).strip()})
+        return files, [], None
+
+    write_ctx = extract_turn_write_context(stdin_payload, repo_root=REPO_ROOT)
+    if write_ctx["has_transcript"]:
+        written: set[str] = write_ctx["written_files"]
+        had_shell: bool = write_ctx["had_shell_exec"]
+        turn_ts: float | None = write_ctx["turn_start_ts"]
+        if not written and not had_shell:
+            return [], [], set()
+
+        raw_tracked, raw_untracked = get_changed_files_partitioned()
+
+        def _include(rel: str) -> bool:
+            if rel in written:
+                return True
+            if had_shell and turn_ts is not None:
+                try:
+                    return (REPO_ROOT / rel).stat().st_mtime >= (turn_ts - 2.0)
+                except OSError:
+                    return False
+            return False
+
+        tracked = [f for f in raw_tracked if _include(f)]
+        untracked = [f for f in raw_untracked if _include(f)]
+        return tracked, untracked, set(tracked)
+
+    if scan_repo or os.environ.get("ATHENA_STOP_SCAN_REPO") == "1":
+        tracked, untracked = get_changed_files_partitioned()
+        return tracked, untracked, set(tracked)
+
+    return [], [], set()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Output-Side Stop Hook Verifier")
+    parser.add_argument(
+        "--scan-repo",
+        action="store_true",
+        help="Scan all dirty repo files even when stdin has no transcript",
+    )
+    args, _ = parser.parse_known_args()
+
     start_time = time.time()
 
-    # Read stdin if available (Claude Code Stop event payload)
     stdin_payload = None
     if not sys.stdin.isatty():
         try:
             raw_stdin = sys.stdin.read()
             if raw_stdin.strip():
-                stdin_payload = json.loads(raw_stdin)
+                parsed = json.loads(raw_stdin)
+                if isinstance(parsed, dict):
+                    stdin_payload = parsed
         except Exception:
             pass
 
-    errors: list[str] = []
+    harness = detect_harness(stdin_payload)
+
+    crisis_errors: list[str] = []
+    sig_errors: list[str] = []
+    waivable_errors: list[str] = []
     warnings: list[str] = []
 
-    # 0. Turn-text gates (crisis referral, GTO receipts, non-blocking cited-path check)
     if stdin_payload:
         user_prompt, assistant_reply = _extract_turn_texts(stdin_payload)
-        crisis_errors = check_crisis_referral(
-            stdin_payload, user_prompt=user_prompt, assistant_reply=assistant_reply
+        crisis_errors.extend(
+            check_crisis_referral(
+                stdin_payload, user_prompt=user_prompt, assistant_reply=assistant_reply
+            )
         )
-        if crisis_errors:
-            errors.extend(crisis_errors)
-
-        receipt_errors = check_decision_receipts(
-            stdin_payload, assistant_reply=assistant_reply
+        waivable_errors.extend(
+            check_decision_receipts(stdin_payload, assistant_reply=assistant_reply)
         )
-        if receipt_errors:
-            errors.extend(receipt_errors)
-
         missing_paths = find_missing_cited_paths(assistant_reply, repo_root=REPO_ROOT)
         if missing_paths:
             warnings.extend(f"Cited path not found on disk: {p}" for p in missing_paths)
 
-    tracked_changed, untracked_changed = get_changed_files_partitioned()
+    tracked_changed, untracked_changed, tracked_set = _scope_changed_files(
+        stdin_payload, scan_repo=args.scan_repo
+    )
     changed_files = sorted(set(tracked_changed) | set(untracked_changed))
-    tracked_set = set(tracked_changed)
 
     if changed_files:
         shared_added_map: dict[str, set[int]] | None = None
@@ -466,30 +492,41 @@ def main():
             except Exception:
                 shared_added_map = None
 
-        # 1. LaTeX leaks (diff-scoped for tracked files)
-        latex_errors = check_latex_leaks(
-            changed_files, tracked_set=tracked_set, added_map=shared_added_map
+        waivable_errors.extend(
+            check_latex_leaks(
+                changed_files, tracked_set=tracked_set, added_map=shared_added_map
+            )
         )
-        if latex_errors:
-            errors.extend(latex_errors)
-
-        # 2. Restricted signature check
-        sig_errors = check_restricted_signatures(changed_files)
-        if sig_errors:
-            errors.extend(sig_errors)
-
-        # 3. Python syntax
-        py_errors = check_python_syntax(changed_files)
-        if py_errors:
-            errors.extend(py_errors)
-
-        # 4. Currency integrity (diff-scoped for tracked files)
-        curr_errors = check_currency_leaks(
-            changed_files, tracked_set=tracked_set, added_map=shared_added_map
+        sig_errors.extend(check_restricted_signatures(changed_files))
+        waivable_errors.extend(check_python_syntax(changed_files))
+        waivable_errors.extend(
+            check_currency_leaks(
+                changed_files, tracked_set=tracked_set, added_map=shared_added_map
+            )
         )
-        if curr_errors:
-            errors.extend(curr_errors)
 
+    if waivable_errors:
+        is_reentry = bool(
+            stdin_payload
+            and (
+                stdin_payload.get("stop_hook_active")
+                or stdin_payload.get("continuationActive")
+            )
+        )
+        if is_reentry:
+            warnings.extend(
+                f"Loop guard allowed after retry: {err}" for err in waivable_errors[:5]
+            )
+            waivable_errors = []
+        else:
+            waiver = check_hook_waiver("hook_stop_verify", REPO_ROOT)
+            if waiver:
+                warnings.extend(
+                    f"Waived ({waiver}): {err}" for err in waivable_errors[:5]
+                )
+                waivable_errors = []
+
+    errors = crisis_errors + sig_errors + waivable_errors
     elapsed_ms = round((time.time() - start_time) * 1000, 1)
 
     if errors:
@@ -498,24 +535,16 @@ def main():
             + "\n".join(f"  - {err}" for err in errors[:10])
             + "\nPlease fix the above violations before completing the turn."
         )
-        payload: dict[str, object] = {
-            "decision": "block",
-            "reason": reason,
-            "latency_ms": elapsed_ms,
-        }
+        extra: dict[str, object] = {"latency_ms": elapsed_ms}
         if warnings:
-            payload["warnings"] = warnings
-        print(json.dumps(payload, indent=2))
-        # Claude Code hooks: exit 2 = blocking, exit 1 = non-blocking (ignored).
-        # stderr is fed back to Claude as the error message on exit 2.
-        print(reason, file=sys.stderr)
-        sys.exit(2)
+            extra["warnings"] = warnings
+        emit_stop_block(reason, harness, extra=extra)
     else:
-        payload = {"decision": "allow", "latency_ms": elapsed_ms}
+        extra = {"latency_ms": elapsed_ms}
         if warnings:
-            payload["warnings"] = warnings
-        print(json.dumps(payload))
-        sys.exit(0)
+            extra["warnings"] = warnings
+            extra["systemMessage"] = "WARNING: " + "; ".join(warnings)
+        emit_stop_allow(harness, extra=extra)
 
 
 if __name__ == "__main__":

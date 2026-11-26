@@ -1,3 +1,9 @@
+---
+tracks:
+  - src/athena/tools/search.py
+  - src/athena/tools/fts_search.py
+---
+
 # Semantic Search: 5-Channel Parallel Hybrid RAG
 
 > **Last Updated**: 13 November 2026  

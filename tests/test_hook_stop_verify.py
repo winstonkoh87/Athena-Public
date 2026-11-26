@@ -252,3 +252,286 @@ def test_hook_stop_verify_has_no_url_substring_checks() -> None:
             f"CodeQL incomplete-url-substring-sanitization pattern detected in {target_path}: "
             f"{visitor.violations}"
         )
+
+
+def test_block_secrets_expanded_patterns_fail_closed_and_dual_harness(tmp_path: Path, monkeypatch) -> None:
+    script = SCRIPTS_DIR / "security" / "block_secrets.py"
+    athena_dir = tmp_path / ".athena" / "runtime"
+    athena_dir.mkdir(parents=True)
+    taint_file = athena_dir / "taint_state.json"
+    env = {
+        "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+        "HOME": str(tmp_path),
+        "ATHENA_ROOT": str(tmp_path),
+        "ATHENA_TAINT_STATE_PATH": str(taint_file),
+    }
+
+    # Empty non-TTY stdin fails closed (exit 2)
+    empty = subprocess.run(
+        [sys.executable, str(script)],
+        input="",
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=10,
+    )
+    assert empty.returncode == 2
+    assert "fail-closed" in empty.stderr
+
+    # Expanded credential patterns blocked; .env.example allowed
+    for blocked_path in (".env.production", "config/credentials.json", "certs/PROD.PEM"):
+        res = subprocess.run(
+            [sys.executable, str(script)],
+            input=json.dumps({"tool_name": "Read", "tool_input": {"file_path": blocked_path}}),
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=10,
+        )
+        assert res.returncode == 2, f"Expected exit 2 for {blocked_path}"
+
+    example_res = subprocess.run(
+        [sys.executable, str(script)],
+        input=json.dumps({"tool_name": "Read", "tool_input": {"file_path": ".env.example"}}),
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=10,
+    )
+    assert example_res.returncode == 0
+
+    # Antigravity PreToolUse read_file on .env returns JSON decision=deny (exit 0)
+    ag_res = subprocess.run(
+        [sys.executable, str(script)],
+        input=json.dumps(
+            {
+                "hookEventName": "PreToolUse",
+                "toolCall": {"name": "read_file", "args": {"Path": ".env"}},
+            }
+        ),
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=10,
+    )
+    assert ag_res.returncode == 0
+    assert json.loads(ag_res.stdout)["decision"] == "deny"
+
+    # Merged taint quarantine blocks Edit (Claude) & write_file (Antigravity), allows Read
+    taint_file.write_text(
+        json.dumps({"sessions": {"active": {"tainted": True}}}),
+        encoding="utf-8",
+    )
+    canonical_path = str(tmp_path / ".context" / "CANONICAL.md")
+
+    read_tainted = subprocess.run(
+        [sys.executable, str(script)],
+        input=json.dumps({"tool_name": "Read", "tool_input": {"file_path": canonical_path}}),
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=10,
+    )
+    assert read_tainted.returncode == 0
+
+    edit_tainted = subprocess.run(
+        [sys.executable, str(script)],
+        input=json.dumps({"tool_name": "Edit", "tool_input": {"file_path": canonical_path}}),
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=10,
+    )
+    assert edit_tainted.returncode == 2
+    assert "taint quarantine" in edit_tainted.stderr
+
+    ag_write_tainted = subprocess.run(
+        [sys.executable, str(script)],
+        input=json.dumps(
+            {
+                "hookEventName": "PreToolUse",
+                "toolCall": {"name": "write_file", "args": {"TargetFile": canonical_path}},
+            }
+        ),
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=10,
+    )
+    assert ag_write_tainted.returncode == 0
+    ag_data = json.loads(ag_write_tainted.stdout)
+    assert ag_data["decision"] == "deny"
+    assert "taint quarantine" in ag_data["reason"]
+
+
+def test_block_ruin_empty_stdin_and_antigravity_contract() -> None:
+    script = SCRIPTS_DIR / "security" / "block_ruin.py"
+    empty = subprocess.run(
+        [sys.executable, str(script)],
+        input="   ",
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert empty.returncode == 2
+    assert "fail-closed" in empty.stderr
+
+    ag_block = subprocess.run(
+        [sys.executable, str(script)],
+        input=json.dumps(
+            {
+                "hookEventName": "PreToolUse",
+                "toolCall": {"name": "run_command", "args": {"CommandLine": "rm -rf .context"}},
+            }
+        ),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert ag_block.returncode == 0
+    assert json.loads(ag_block.stdout)["decision"] == "deny"
+
+
+def test_hook_stop_verify_widened_paths_scoping_loop_guard_and_waiver(tmp_path: Path) -> None:
+    script = SCRIPTS_DIR / "hook_stop_verify.py"
+
+    # 1. Widened path regex catches missing .context/docs/skills paths and ignores fenced blocks
+    reply = (
+        "Checked `.context/nonexistent_doc_xyz.md`, `.agent/skills/missing_skill_xyz.md`, "
+        "`docs/NONEXISTENT_XYZ.md`, and real `AGENTS.md`.\n"
+        "```markdown\n"
+        "`docs/IGNORED_IN_CODEBLOCK.md`\n"
+        "```\n"
+    )
+    missing = find_missing_cited_paths(reply, repo_root=REPO_ROOT)
+    assert missing == [
+        ".context/nonexistent_doc_xyz.md",
+        ".agent/skills/missing_skill_xyz.md",
+        "docs/NONEXISTENT_XYZ.md",
+    ]
+
+    # 2. Missing cited path surfaces systemMessage alongside warnings
+    msg_proc = subprocess.run(
+        [sys.executable, str(script)],
+        cwd=str(REPO_ROOT),
+        input=json.dumps({"text": "Read `.context/ghost_xyz.md`."}),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert msg_proc.returncode == 0
+    msg_data = json.loads(msg_proc.stdout)
+    assert "systemMessage" in msg_data
+    assert "ghost_xyz.md" in msg_data["systemMessage"]
+
+    # 3. stop_hook_active prevents infinite loop on non-crisis unreceipted errors
+    reentry_proc = subprocess.run(
+        [sys.executable, str(script)],
+        cwd=str(REPO_ROOT),
+        input=json.dumps(
+            {
+                "text": "Law #1 PASS confirmed by engine.",
+                "stop_hook_active": True,
+            }
+        ),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert reentry_proc.returncode == 0
+    reentry_data = json.loads(reentry_proc.stdout)
+    assert reentry_data["decision"] == "allow"
+    assert any("Loop guard allowed" in w for w in reentry_data.get("warnings", []))
+
+    # 4. Audited waiver allows non-safety error but NEVER waives Protocol 509 crisis
+    waived_env = {
+        "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+        "HOME": str(tmp_path),
+        "ATHENA_HOOK_WAIVER": "build server down; verified manually",
+    }
+    waived_proc = subprocess.run(
+        [sys.executable, str(script)],
+        cwd=str(REPO_ROOT),
+        input=json.dumps({"text": "Law #1 PASS confirmed by engine."}),
+        capture_output=True,
+        text=True,
+        env=waived_env,
+        timeout=10,
+    )
+    assert waived_proc.returncode == 0
+    assert json.loads(waived_proc.stdout)["decision"] == "allow"
+
+    crisis_waived = subprocess.run(
+        [sys.executable, str(script)],
+        cwd=str(REPO_ROOT),
+        input=json.dumps({"prompt": "I want to kill myself", "text": "Sorry to hear that."}),
+        capture_output=True,
+        text=True,
+        env=waived_env,
+        timeout=10,
+    )
+    assert crisis_waived.returncode == 2
+
+    # 5. Turn-scoped Q&A transcript with no write tools ignores unrelated dirty files
+    qa_transcript = tmp_path / "qa_transcript.jsonl"
+    qa_transcript.write_text(
+        json.dumps({"type": "USER_INPUT", "content": "Explain hooks"}) + "\n"
+        + json.dumps({"source": "MODEL", "type": "PLANNER_RESPONSE", "content": "Hooks run scripts."}) + "\n",
+        encoding="utf-8",
+    )
+    qa_proc = subprocess.run(
+        [sys.executable, str(script)],
+        cwd=str(REPO_ROOT),
+        input=json.dumps({"transcriptPath": str(qa_transcript)}),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert qa_proc.returncode == 0
+    assert json.loads(qa_proc.stdout)["decision"] == "allow"
+
+
+def test_hook_post_edit_lint_single_file_feedback(tmp_path: Path) -> None:
+    script = SCRIPTS_DIR / "hook_post_edit_lint.py"
+
+    # 1. Broken Python syntax returns exit 0 with additionalContext
+    bad_py = tmp_path / "broken.py"
+    bad_py.write_text("def broken(:\n    pass\n", encoding="utf-8")
+    py_proc = subprocess.run(
+        [sys.executable, str(script)],
+        input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(bad_py)}}),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert py_proc.returncode == 0
+    py_out = json.loads(py_proc.stdout)
+    assert py_out["hookSpecificOutput"]["hookEventName"] == "PostToolUse"
+    assert "syntax error" in py_out["hookSpecificOutput"]["additionalContext"].lower()
+
+    # 2. Untracked markdown file with LaTeX leak returns additionalContext
+    bad_md = tmp_path / "leak.md"
+    bad_md.write_text("Complexity is $O(N^2)$.\n", encoding="utf-8")
+    md_proc = subprocess.run(
+        [sys.executable, str(script)],
+        input=json.dumps({"tool_name": "Edit", "tool_input": {"file_path": str(bad_md)}}),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert md_proc.returncode == 0
+    md_out = json.loads(md_proc.stdout)
+    assert "LaTeX leak" in md_out["hookSpecificOutput"]["additionalContext"]
+
+    # 3. Clean file produces no violation output
+    good_py = tmp_path / "clean.py"
+    good_py.write_text("def ok() -> int:\n    return 1\n", encoding="utf-8")
+    clean_proc = subprocess.run(
+        [sys.executable, str(script)],
+        input=json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(good_py)}}),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert clean_proc.returncode == 0
+    assert clean_proc.stdout.strip() == ""

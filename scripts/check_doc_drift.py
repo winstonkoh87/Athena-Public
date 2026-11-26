@@ -148,6 +148,7 @@ def check_markdown_links(doc_path: Path, repo_root: Path) -> list[dict[str, Any]
     return findings
 
 
+
 def check_agents_index(agents_path: Path, repo_root: Path) -> list[dict[str, Any]]:
     """Audit AGENTS.md for retired index files and non-existent indexed repo paths."""
     if not agents_path.exists():
@@ -210,6 +211,7 @@ def check_agents_index(agents_path: Path, repo_root: Path) -> list[dict[str, Any
     return findings
 
 
+
 def check_hook_paths(settings_path: Path, repo_root: Path) -> list[dict[str, Any]]:
     """Verify every .agent/scripts/*.py referenced in .claude/settings.json exists."""
     if not settings_path.exists():
@@ -270,6 +272,69 @@ def check_hook_paths(settings_path: Path, repo_root: Path) -> list[dict[str, Any
     return findings
 
 
+def check_agents_hooks(hooks_path: Path, repo_root: Path) -> list[dict[str, Any]]:
+    """Verify every .agent/scripts/*.py referenced in .agents/hooks.json exists."""
+    if not hooks_path.exists():
+        return []
+
+    findings: list[dict[str, Any]] = []
+    rel_hooks = str(hooks_path.relative_to(repo_root))
+    try:
+        data = json.loads(hooks_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return [
+            {
+                "severity": "error",
+                "code": "INVALID_HOOKS_JSON",
+                "file": rel_hooks,
+                "line": 1,
+                "target": rel_hooks,
+                "message": f"Failed to parse {rel_hooks}: {exc}",
+            }
+        ]
+
+    if not isinstance(data, dict):
+        return []
+
+    commands: list[str] = []
+    for events in data.values():
+        if not isinstance(events, dict):
+            continue
+        for entries in events.values():
+            if not isinstance(entries, list):
+                continue
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                if "hooks" in entry and isinstance(entry["hooks"], list):
+                    for hook in entry["hooks"]:
+                        if isinstance(hook, dict) and hook.get("command"):
+                            commands.append(str(hook["command"]))
+                elif entry.get("command"):
+                    commands.append(str(entry["command"]))
+
+    seen: set[str] = set()
+    for cmd in commands:
+        for m in _HOOK_SCRIPT_RE.finditer(cmd):
+            script_rel = m.group(1)
+            if script_rel in seen:
+                continue
+            seen.add(script_rel)
+            if not (repo_root / script_rel).exists():
+                findings.append(
+                    {
+                        "severity": "error",
+                        "code": "MISSING_HOOK_SCRIPT",
+                        "file": rel_hooks,
+                        "line": 1,
+                        "target": script_rel,
+                        "message": f"Hook script '{script_rel}' referenced in {rel_hooks} does not exist",
+                    }
+                )
+
+    return findings
+
+
 def check_athena_yaml(yaml_path: Path, repo_root: Path) -> list[dict[str, Any]]:
     """Verify athena.yaml has no stale boot_tokens budget or dead hooks/hooks.yaml ref."""
     if not yaml_path.exists():
@@ -315,6 +380,7 @@ def check_athena_yaml(yaml_path: Path, repo_root: Path) -> list[dict[str, Any]]:
             )
 
     return findings
+
 
 
 def _is_git_repo(repo_root: Path) -> bool:
@@ -432,6 +498,7 @@ def check_tracked_docs(
     return findings
 
 
+
 def run_audit(repo_root: Path) -> dict[str, Any]:
     """Run all instruction, link, config, and source-bound doc drift checks."""
     root = repo_root.resolve()
@@ -440,12 +507,14 @@ def run_audit(repo_root: Path) -> dict[str, Any]:
     agents_path = root / "AGENTS.md"
     readme_path = root / "README.md"
     settings_path = root / ".claude" / "settings.json"
+    agents_hooks_path = root / ".agents" / "hooks.json"
     yaml_path = root / "athena.yaml"
 
     findings.extend(check_agents_index(agents_path, root))
     findings.extend(check_markdown_links(agents_path, root))
     findings.extend(check_markdown_links(readme_path, root))
     findings.extend(check_hook_paths(settings_path, root))
+    findings.extend(check_agents_hooks(agents_hooks_path, root))
     findings.extend(check_athena_yaml(yaml_path, root))
     findings.extend(check_tracked_docs(root))
 

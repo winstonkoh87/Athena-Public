@@ -40,7 +40,7 @@
     "tier_3_on_demand": 1,
     "boot_savings_pct": 51,
     "tier_map_path": ".agent/telemetry/tier_map.json",
-    "full_file_bytes": 429318
+    "full_file_bytes": 432085
   },
   "context_files": {
     "glossary": ".context/glossary.md",
@@ -52,9 +52,9 @@
     "retrieval_audit_script": ".agent/scripts/retrieval_audit.py",
     "canonical_tier_analysis": ".agent/scripts/canonical_tier_analysis.py"
   },
-  "scripts": 290,
+  "scripts": 292,
   "memories": {
-    "total_files": 6190,
+    "total_files": 6195,
     "path": ".context/memories/"
   },
   "paths": {
@@ -80,8 +80,8 @@
     "scripts": "find .agent/scripts -type f | wc -l"
   },
   "case_studies": {
-    "total_files": 636,
-    "uppercase_convention": 636,
-    "note": "636 CS-*.md files across 14 domains. See CASE_STUDY_INDEX.md."
+    "total_files": 637,
+    "uppercase_convention": 637,
+    "note": "637 CS-*.md files across 14 domains. See CASE_STUDY_INDEX.md."
   }
 }

@@ -92,3 +92,27 @@ def test_read_only_multi_path_commands_allowed():
     assert checker.check_command("sed -n '1,10p' .agent/scripts/a.py .agent/scripts/b.py")[0] is True
     assert checker.check_command("cat .context/CANONICAL.md .agent/config/CAPS.json")[0] is True
 
+
+def test_secret_file_shell_reads_blocked_and_examples_allowed():
+    checker = StructuredRuinCheck(Path("."))
+    for bad_cmd in (
+        "cat .env",
+        "head -n 5 .env.production",
+        "grep SECRET .env.local",
+        "cat ~/.ssh/id_rsa",
+        "echo ok && cat .env",
+        "python3 -c \"print(open('.env').read())\"",
+    ):
+        allowed, flags = checker.check_command(bad_cmd)
+        assert allowed is False, f"Expected block for: {bad_cmd}"
+        assert "secret_file_shell_access" in flags
+
+    for safe_cmd in (
+        "cat .env.example",
+        "cat .context/CANONICAL.md",
+        "grep '.env' src/athena/cli/init.py",
+        "python3 -c \"print(open('.env.example').read())\"",
+    ):
+        allowed, _ = checker.check_command(safe_cmd)
+        assert allowed is True, f"Expected allow for: {safe_cmd}"
+

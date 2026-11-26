@@ -372,6 +372,18 @@ def test_block_tainted_memory_hook_fail_closed(tmp_path, monkeypatch):
     assert bad.returncode == 2
     assert "BLOCKED (fail-closed)" in bad.stderr
 
+    # (a2) Empty non-TTY stdin must also fail closed (exit 2)
+    empty = subprocess.run(
+        [sys.executable, str(hook_script)],
+        input="",
+        text=True,
+        capture_output=True,
+        env=env,
+        timeout=10,
+    )
+    assert empty.returncode == 2
+    assert "BLOCKED (fail-closed)" in empty.stderr
+
     # (b) Untainted write to CANONICAL.md passes (exit 0)
     canon_payload = json.dumps({"tool_input": {"file_path": str(tmp_path / ".context" / "CANONICAL.md")}})
     clean = subprocess.run(

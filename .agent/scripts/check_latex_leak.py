@@ -48,6 +48,10 @@ def is_latex_leak(line):
     # Pre-strip numeric currency (e.g., $100, S$1,300, US$10K, $0.07, S$-557.53, -$500) and currency rates ($/hr) to prevent false pairing
     clean_line = re.sub(r"(?:[A-Za-z]{1,3}\$?|\$)?-?\$?[0-9]+[\d\.,]*(?:k|K|m|M)?", "", line)
     clean_line = re.sub(r"\$/(?:hr|h|day|month|year|lot|pip|MTok)\b", "", clean_line)
+    # Strip parenthesized currency unit headers like (S$), (US$), ($)
+    clean_line = re.sub(r"\(\s*(?:[A-Za-z]{1,3})?\$\s*\)", "", clean_line)
+    # Strip standalone prefix currency codes not followed by word chars or backslash commands
+    clean_line = re.sub(r"(?<!\\)\b(?:S|US|AU|AUD|SG|SGD|HK|NZ|CA)\$(?![\w\\])", "", clean_line)
 
     # Check dollar pairs
     matches = DOLLAR_PAIR_PATTERN.findall(clean_line)

@@ -694,7 +694,7 @@ def check_15_harness_integrity(root: Path, fix: bool = False) -> list[CheckResul
                         "Claude Hooks Parity",
                         WARN,
                         f"Missing hooks in .claude/settings.json: {', '.join(missing)}",
-                        "Sync settings from .agent/config/settings.json",
+                        "Run 'athena init --profile hooks-only' to scaffold .claude/settings.json",
                     )
                 )
         except Exception as e:
