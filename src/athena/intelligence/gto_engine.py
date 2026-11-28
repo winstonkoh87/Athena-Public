@@ -1689,11 +1689,11 @@ def run_decision_monte_carlo(
     eligible_cands = [c for c in candidates if candidate_stats[c].ruin_gate_passed]
     if eligible_cands:
         if use_growth_ranking:
-            ergodic_cands = [
-                c for c in eligible_cands
-                if candidate_stats[c].median_growth is not None
-                and not (math.isinf(candidate_stats[c].median_growth) and candidate_stats[c].median_growth < 0)
-            ]
+            ergodic_cands: list[str] = []
+            for c in eligible_cands:
+                mg = candidate_stats[c].median_growth
+                if mg is not None and not (math.isinf(mg) and mg < 0):
+                    ergodic_cands.append(c)
             if ergodic_cands:
                 top_candidate = max(
                     ergodic_cands,

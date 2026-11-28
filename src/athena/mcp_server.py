@@ -927,7 +927,7 @@ def frame_open(
         )
         voi_verdict = voi.verdict
         voi_net_evi = voi.net_evi
-    return {
+    out: dict = {
         "frame_id": frame.id,
         "frame_mode": frame.frame_mode,
         "ok": result.ok,
@@ -938,6 +938,32 @@ def frame_open(
         "ledger": str(DEFAULT_LEDGER),
         "contract_report": result.to_ascii(),
     }
+
+    priors = [float(h.prior) for h in frame.hypotheses if h.prior is not None]
+    max_prior = max(priors) if priors else 0.0
+    if max_prior >= 0.80:
+        try:
+            from athena.intelligence.calibration import get_calibration_status
+
+            cal = get_calibration_status()
+            if cal.get("status") == "ok":
+                shrink = cal.get("shrinkage") or {}
+                k_val = float(shrink.get("k", 1.0))
+                n_val = int(cal.get("resolved", 0))
+                reliable = bool(cal.get("sample_reliable", False))
+                if not reliable or k_val < 0.75:
+                    out["overconfidence_advisory"] = {
+                        "max_prior": round(max_prior, 4),
+                        "shrunk_prior": round(0.5 + k_val * (max_prior - 0.5), 3),
+                        "k": round(k_val, 4),
+                        "n": n_val,
+                        "sample_reliable": reliable,
+                        "message": "Cite base-rate audit (DEC-140) before committing >= 0.80 confidence.",
+                    }
+        except Exception:
+            pass
+
+    return out
 
 
 @mcp.tool(

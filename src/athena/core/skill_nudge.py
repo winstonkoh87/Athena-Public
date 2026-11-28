@@ -64,8 +64,8 @@ SKILL_REGISTRY: dict[str, dict] = {
         ],
         "hint": "Mathematical proof that High WR / Low RR dominates. Use for position sizing analysis.",
     },
-    "Protocol 46: ZenithFX Constraints": {
-        "primary": ["zenithfx", "forex", "fx trading"],
+    "Protocol 46: Trading Desk Constraints": {
+        "primary": ["trading desk", "forex", "fx trading"],
         "secondary": ["trading", "scam", "signal", "broker", "leverage"],
         "hint": "Trading constraint framework. Risk boundaries and broker evaluation.",
     },

@@ -149,13 +149,25 @@ def _run_calibration() -> dict[str, Any]:
 def _run_decisions_due() -> dict[str, Any]:
     """Scan calibration ledger and decision log for overdue reviews and emit receipt."""
     try:
-        from decisions_due import check_cal_ledger, check_decision_log, get_current_date
+        import decisions_due as dd
 
-        today = get_current_date()
-        cal_due = check_cal_ledger(today)
-        dec_due, dateless_count = check_decision_log(today)
-        total_due = len(cal_due) + len(dec_due)
-        summary = f"Decisions: {total_due} due for review | {dateless_count} dateless legacy"
+        today = dd.get_current_date()
+        cal_due = dd.check_cal_ledger(today)
+        if hasattr(dd, "classify_decision_log"):
+            dec_cls = dd.classify_decision_log(today)
+            dec_due = dec_cls["due_items"]
+            unscheduled_recent = int(dec_cls["unscheduled_recent"])  # type: ignore[arg-type]
+            historical_archived = int(dec_cls["historical_archived"])  # type: ignore[arg-type]
+            dateless_count = int(dec_cls["dateless_total"])  # type: ignore[arg-type]
+        else:
+            dec_due, dateless_count = dd.check_decision_log(today)
+            unscheduled_recent = dateless_count
+            historical_archived = 0
+        total_due = len(cal_due) + len(dec_due)  # type: ignore[arg-type]
+        summary = (
+            f"Decisions: {total_due} due for review | "
+            f"{unscheduled_recent} recent unscheduled ({historical_archived} historical archived)"
+        )
         _emit_receipt(
             name="decisions_due",
             rc=0,
@@ -163,6 +175,8 @@ def _run_decisions_due() -> dict[str, Any]:
             extra={
                 "total_due": total_due,
                 "dateless_count": dateless_count,
+                "unscheduled_recent": unscheduled_recent,
+                "historical_archived": historical_archived,
                 "scanned_date": str(today),
             },
         )
@@ -170,6 +184,8 @@ def _run_decisions_due() -> dict[str, Any]:
             "scanned_date": str(today),
             "total_due": total_due,
             "dateless_decisions": dateless_count,
+            "unscheduled_recent": unscheduled_recent,
+            "historical_archived": historical_archived,
             "cal_overdue": cal_due,
             "decisions_due": dec_due,
             "summary": summary,
@@ -369,8 +385,12 @@ def _format_digest(status: dict[str, Any]) -> str:
     cal_brier = cal.get("brier")
     cal_resolved = cal.get("resolved", 0)
     cal_overdue = cal.get("overdue_ids") or []
+    cal_shrink = (cal.get("shrinkage") or {}).get("k")
+    cal_low_n = cal_resolved < 30
     if cal_brier is not None:
-        cal_line = f"Brier={cal_brier:.4f} (n={cal_resolved}, overdue={len(cal_overdue)})"
+        shrink_tag = f", shrink k={cal_shrink:.2f}" if cal_shrink is not None else ""
+        sample_tag = ", low-sample" if cal_low_n else ""
+        cal_line = f"Brier={cal_brier:.4f} (n={cal_resolved}{sample_tag}{shrink_tag}, overdue={len(cal_overdue)})"
         if cal_overdue:
             cal_line += f" [{', '.join(cal_overdue[:5])}]"
     else:
@@ -428,8 +448,12 @@ def _format_compact(status: dict[str, Any]) -> str:
     if due_d > 0:
         lines.append(f"   ⚠️ Decisions due: {dd.get('summary', '')}")
     if cal_brier is not None and cal_brier > 0.25:
+        cal_resolved = cal.get("resolved", 0)
+        cal_shrink = (cal.get("shrinkage") or {}).get("k")
+        low_tag = " < 30 low-sample" if cal_resolved < 30 else ""
+        shrink_tag = f"; shrink k={cal_shrink:.2f}" if cal_shrink is not None else ""
         lines.append(
-            f"   ⚠️ Calibration alert: Brier {cal_brier:.4f} > 0.25 (n={cal.get('resolved', 0)})"
+            f"   ⚠️ Calibration alert: Brier {cal_brier:.4f} > 0.25 (n={cal_resolved}{low_tag}{shrink_tag})"
             + (f" | Overdue CAL: {', '.join(cal_overdue[:5])}" if cal_overdue else "")
         )
     elif cal_overdue:

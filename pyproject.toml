@@ -134,6 +134,9 @@ no_implicit_optional = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--tb=short -q"
+filterwarnings = [
+    "ignore:The '(timeout|verify)' parameter is deprecated:DeprecationWarning:supabase\\._sync\\.client",
+]
 
 [tool.coverage.run]
 source = ["src/athena"]

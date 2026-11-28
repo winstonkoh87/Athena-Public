@@ -342,8 +342,8 @@ def extract_threads(focus: str, tags: list[str], content: str) -> list[str]:
             "canonical",
         ],
         "TH-002": ["portfolio", "resume", "linkedin", "github profile", "recruiter"],
-        "TH-003": ["zenithfx", "trading", "gatekeeper", "bcm", "risk"],
-        "TH-004": ["melvin", "portfolio", "essays"],
+        "TH-003": ["trading_desk", "trading", "gatekeeper", "bcm", "risk"],
+        "TH-004": ["client_work", "portfolio", "essays"],
         "TH-005": ["session log", "template", "yaml", "migration", "checkpoint"],
     }
 

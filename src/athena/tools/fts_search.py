@@ -7,6 +7,7 @@ import re
 import sqlite3
 import sys
 import time
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -257,7 +258,9 @@ class ExocortexFTS:
             "elapsed_time": elapsed
         }
 
-    def _format_results(self, rows: list[sqlite3.Row]) -> list[dict[str, Any]]:
+    def _format_results(
+        self, rows: Sequence[sqlite3.Row | dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         results = []
         for row in rows:
             r_dict = dict(row)

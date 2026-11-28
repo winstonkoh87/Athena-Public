@@ -21,14 +21,18 @@ from typing import Any
 from athena.core.config import PROJECT_ROOT
 
 __all__ = [
+    "MIN_RELIABLE_N",
     "get_calibration_ledger_path",
     "parse_ledger",
     "validate_pre_registration",
+    "fit_linear_shrinkage",
     "compute_scores",
     "domain_breakdown",
     "get_calibration_status",
     "format_calibration_report",
 ]
+
+MIN_RELIABLE_N = 30
 
 
 def get_calibration_ledger_path() -> Path:
@@ -156,6 +160,47 @@ def validate_pre_registration(
     return warnings
 
 
+def fit_linear_shrinkage(predictions: list[dict[str, Any]]) -> dict[str, Any]:
+    """Fit Brier-optimal linear shrinkage p' = 0.5 + k * (p - 0.5), k in [0, 1]."""
+    outcome_map = {"true": 1.0, "false": 0.0, "partial": 0.5}
+    resolved = [
+        p for p in predictions
+        if str(p.get("outcome", "")).lower() in outcome_map
+    ]
+    n = len(resolved)
+    if n == 0:
+        return {
+            "k": 1.0,
+            "raw_brier": None,
+            "shrunk_brier": None,
+            "n": 0,
+            "sample_reliable": False,
+        }
+
+    pairs = [
+        (float(p.get("probability", 0.5)), outcome_map[str(p.get("outcome", "")).lower()])
+        for p in resolved
+    ]
+    xs = [prob - 0.5 for prob, _ in pairs]
+    ys = [actual - 0.5 for _, actual in pairs]
+    denom = sum(x * x for x in xs)
+    if denom <= 1e-12:
+        k = 1.0
+    else:
+        raw_k = sum(x * y for x, y in zip(xs, ys, strict=True)) / denom
+        k = max(0.0, min(1.0, raw_k))
+
+    raw_brier = sum((prob - actual) ** 2 for prob, actual in pairs) / n
+    shrunk_brier = sum(((0.5 + k * (prob - 0.5)) - actual) ** 2 for prob, actual in pairs) / n
+    return {
+        "k": round(k, 4),
+        "raw_brier": round(raw_brier, 4),
+        "shrunk_brier": round(shrunk_brier, 4),
+        "n": n,
+        "sample_reliable": n >= MIN_RELIABLE_N,
+    }
+
+
 def compute_scores(predictions: list[dict[str, Any]]) -> dict[str, Any]:
     """Compute Brier score, log-loss, and 0.1-wide calibration buckets."""
     resolved = [
@@ -164,6 +209,7 @@ def compute_scores(predictions: list[dict[str, Any]]) -> dict[str, Any]:
     ]
     pending_n = len([p for p in predictions if str(p.get("outcome", "")).lower() == "pending"])
     voided_n = len([p for p in predictions if str(p.get("outcome", "")).lower() == "void"])
+    shrinkage = fit_linear_shrinkage(predictions)
 
     if not resolved:
         return {
@@ -174,6 +220,8 @@ def compute_scores(predictions: list[dict[str, Any]]) -> dict[str, Any]:
             "brier": None,
             "log_loss": None,
             "calibration": {},
+            "shrinkage": shrinkage,
+            "sample_reliable": False,
         }
 
     brier_sum = 0.0
@@ -222,6 +270,8 @@ def compute_scores(predictions: list[dict[str, Any]]) -> dict[str, Any]:
         "brier": round(brier_sum / n, 4),
         "log_loss": round(log_loss_sum / n, 4),
         "calibration": calibration,
+        "shrinkage": shrinkage,
+        "sample_reliable": n >= MIN_RELIABLE_N,
     }
 
 
@@ -253,6 +303,8 @@ def get_calibration_status(
             "brier": None,
             "log_loss": None,
             "calibration": {},
+            "shrinkage": fit_linear_shrinkage([]),
+            "sample_reliable": False,
             "by_domain": {},
             "overdue_ids": [],
             "overdue": [],
@@ -338,6 +390,20 @@ def format_calibration_report(status: dict[str, Any]) -> str:
             band = "(needs improvement)"
         lines.append(f"  Brier Score:        {brier:.4f}  {band}")
         lines.append(f"  Log-Loss:           {status['log_loss']:.4f}")
+        n_res = int(status.get("resolved", 0))
+        sample_reliable = bool(status.get("sample_reliable", n_res >= MIN_RELIABLE_N))
+        if sample_reliable:
+            lines.append(f"  Sample Reliability: OK (n={n_res} >= {MIN_RELIABLE_N})")
+        else:
+            lines.append(
+                f"  Sample Reliability: LOW (n={n_res} < {MIN_RELIABLE_N}; treat Brier as directional only)"
+            )
+        shrinkage = status.get("shrinkage") or {}
+        if shrinkage.get("shrunk_brier") is not None:
+            lines.append(
+                f"  Shrinkage k:        {shrinkage['k']:.3f}  "
+                f"(shrunk Brier: {shrinkage['shrunk_brier']:.4f}; p' = 0.5 + k*(p - 0.5))"
+            )
         lines.append("")
 
         cal_buckets = status.get("calibration") or {}

@@ -107,3 +107,135 @@ def test_mcp_calibration_status_tool(tmp_path: Path, monkeypatch: pytest.MonkeyP
     assert isinstance(out, dict)
     assert out["status"] == "unconfigured"
     assert "brier" in out
+
+
+def test_fit_linear_shrinkage_overconfident_data() -> None:
+    from athena.intelligence.calibration import fit_linear_shrinkage
+
+    preds = [
+        {"probability": 0.90, "outcome": "true" if i < 7 else "false"}
+        for i in range(10)
+    ]
+    # (0.9 - 0.5) = 0.4; mean(actual - 0.5) = 0.7 - 0.5 = 0.2 -> optimal k = 0.2 / 0.4 = 0.5
+    fit = fit_linear_shrinkage(preds)
+    assert fit["k"] == pytest.approx(0.5, abs=1e-4)
+    assert fit["shrunk_brier"] < fit["raw_brier"]
+    assert fit["n"] == 10
+    assert fit["sample_reliable"] is False
+
+
+def test_fit_linear_shrinkage_well_calibrated_and_reliable_n() -> None:
+    from athena.intelligence.calibration import MIN_RELIABLE_N, fit_linear_shrinkage
+
+    assert MIN_RELIABLE_N == 30
+    # 30 predictions at 0.80 with exactly 24 hits (80% hit rate) -> k == 1.0
+    preds = [
+        {"probability": 0.80, "outcome": "true" if i < 24 else "false"}
+        for i in range(30)
+    ]
+    fit = fit_linear_shrinkage(preds)
+    assert fit["k"] == pytest.approx(1.0, abs=1e-4)
+    assert fit["n"] == 30
+    assert fit["sample_reliable"] is True
+
+
+def test_fit_linear_shrinkage_constant_half_edge_case() -> None:
+    from athena.intelligence.calibration import fit_linear_shrinkage
+
+    preds = [{"probability": 0.50, "outcome": "true"}, {"probability": 0.50, "outcome": "false"}]
+    fit = fit_linear_shrinkage(preds)
+    assert fit["k"] == 1.0
+    assert fit["n"] == 2
+    assert fit["sample_reliable"] is False
+
+
+def test_format_calibration_report_shows_shrinkage_and_low_n_caveat(tmp_path: Path) -> None:
+    from athena.intelligence.calibration import (
+        format_calibration_report,
+        get_calibration_status,
+    )
+
+    ledger = tmp_path / "CALIBRATION_LEDGER.md"
+    ledger.write_text(
+        """# Calibration Ledger
+
+### CAL-001
+- **Claim**: Overconfident claim A
+- **Probability**: 0.90
+- **Deadline**: 2026-01-10
+- **Domain**: technical
+- **Outcome**: true
+- **Resolved**: 2026-01-11
+
+### CAL-002
+- **Claim**: Overconfident claim B
+- **Probability**: 0.90
+- **Deadline**: 2026-01-15
+- **Domain**: technical
+- **Outcome**: false
+- **Resolved**: 2026-01-16
+""",
+        encoding="utf-8",
+    )
+    res = get_calibration_status(ledger_path=ledger, as_of="2026-11-28")
+    assert res["sample_reliable"] is False
+    assert res["shrinkage"]["k"] == pytest.approx(0.0, abs=1e-4)
+
+    report = format_calibration_report(res)
+    assert "$" not in report
+    assert "Shrinkage k" in report
+    assert "n=2 < 30" in report
+
+
+def test_frame_open_emits_non_breaking_overconfidence_advisory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import json
+
+    from athena.core.permissions import get_permissions
+    from athena.intelligence import frame_ledger
+    from athena.mcp_server import frame_open
+
+    ledger = tmp_path / "CALIBRATION_LEDGER.md"
+    ledger.write_text(
+        """# Calibration Ledger
+
+### CAL-001
+- **Claim**: Overconfident claim A
+- **Probability**: 0.90
+- **Deadline**: 2026-01-10
+- **Domain**: technical
+- **Outcome**: true
+- **Resolved**: 2026-01-11
+
+### CAL-002
+- **Claim**: Overconfident claim B
+- **Probability**: 0.90
+- **Deadline**: 2026-01-15
+- **Domain**: technical
+- **Outcome**: false
+- **Resolved**: 2026-01-16
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("ATHENA_CAL_LEDGER_PATH", str(ledger))
+    monkeypatch.setattr(frame_ledger, "DEFAULT_LEDGER", tmp_path / "frames.jsonl")
+
+    perms = get_permissions()
+    perms.set_secret_mode(False)
+
+    fn = getattr(frame_open, "fn", frame_open)
+    payload = json.dumps({
+        "literal_request": "Ship calibration advisory test",
+        "candidate_reframe": "Attach non-blocking overconfidence warning at high priors",
+        "discriminating_test": "Verify frame_open returns ok=True with DEC-140 advisory",
+        "review_date": "2026-12-31",
+        "reframe_prior": 0.85,
+        "reversibility": 4,
+    })
+    out = fn(payload, session="test-cal", lite=True)
+    assert out["ok"] is True
+    assert "overconfidence_advisory" in out
+    adv = out["overconfidence_advisory"]
+    assert adv["max_prior"] == pytest.approx(0.85, abs=1e-4)
+    assert "DEC-140" in adv["message"]
